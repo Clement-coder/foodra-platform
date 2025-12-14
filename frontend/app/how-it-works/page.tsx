@@ -5,6 +5,7 @@ import { UserPlus, ShoppingBag, GraduationCap, DollarSign, TrendingUp, CheckCirc
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 export default function HowItWorksPage() {
   const steps = [
@@ -61,6 +62,25 @@ export default function HowItWorksPage() {
         "Access various funding sources",
         "Receive guidance on fund management",
       ],
+    },
+  ]
+
+  const faqs = [
+    {
+      question: "Is Foodra free to use?",
+      answer: "Yes, creating an account and listing products is completely free. We only charge a small commission on successful sales.",
+    },
+    {
+      question: "How do I receive payments?",
+      answer: "Payments are processed securely through our platform. Once a sale is confirmed, funds are transferred directly to your registered bank account.",
+    },
+    {
+      question: "Can I apply for multiple training programs?",
+      answer: "You can enroll in as many training programs as you like to expand your knowledge and skills.",
+    },
+    {
+      question: "What documents do I need for funding applications?",
+      answer: "Basic requirements include your farm registration, ID, and a business plan. Specific requirements vary by funding source.",
     },
   ]
 
@@ -160,60 +180,40 @@ export default function HowItWorksPage() {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Frequently Asked Questions</h2>
           </div>
 
-          <div className="space-y-4">
-            {[
-              {
-                q: "Is Foodra free to use?",
-                a: "Yes, creating an account and listing products is completely free. We only charge a small commission on successful sales.",
-              },
-              {
-                q: "How do I receive payments?",
-                a: "Payments are processed securely through our platform. Once a sale is confirmed, funds are transferred directly to your registered bank account.",
-              },
-              {
-                q: "Can I apply for multiple training programs?",
-                a: "You can enroll in as many training programs as you like to expand your knowledge and skills.",
-              },
-              {
-                q: "What documents do I need for funding applications?",
-                a: "Basic requirements include your farm registration, ID, and a business plan. Specific requirements vary by funding source.",
-              },
-            ].map((faq, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold text-lg text-foreground mb-2">{faq.q}</h3>
-                    <p className="text-muted-foreground">{faq.a}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+          <Accordion type="single" collapsible className="w-full">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger>{faq.question}</AccordionTrigger>
+                <AccordionContent>{faq.answer}</AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-[#118C4C] to-[#0d6d3a] text-white">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
-          <p className="text-lg text-white/90 mb-8">
-            Join Foodra today and take your farming business to the next level
-          </p>
-          <Link href="/marketplace">
-           <Button
-  size="lg"
-  variant="default"
-  className="bg-white text-[#118C4C] hover:bg-white/90"
->
-  Start Now
-</Button>
-
-          </Link>
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <Card className="bg-gradient-to-br from-[#118C4C] to-[#0d6d3a] text-white border-0 overflow-hidden">
+            <div className="p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="text-center md:text-left">
+                <h2 className="text-3xl md:text-4xl font-bold mb-3">Ready to Get Started?</h2>
+                <p className="text-lg text-white/90 max-w-2xl">
+                  Join Foodra today and take your farming business to the next level.
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <Link href="/marketplace">
+                  <button
+                    
+                    className="bg-white text-green-700 hover:bg-white/90 text-lg px-8 py-2 rounded-md"
+                  >
+                    Start Now
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </Card>
         </div>
       </section>
     </div>
