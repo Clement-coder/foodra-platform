@@ -1,0 +1,71 @@
+// Core TypeScript interfaces and types for the Foodra app
+
+export interface User {
+  id: string
+  name: string
+  phone: string
+  location: string
+  avatar: string
+  role?: "farmer" | "admin"
+}
+
+export interface Product {
+  id: string
+  productName: string
+  category: string
+  quantity: number
+  pricePerUnit: number
+  description: string
+  image: string
+  location: string
+  farmerId: string
+  farmerName: string
+  createdAt: string
+}
+
+export interface Training {
+  id: string
+  title: string
+  summary: string
+  description: string
+  date: string
+  mode: "online" | "offline"
+  location?: string
+  instructor: string
+  capacity: number
+  enrolled: number
+  image: string
+}
+
+export interface FundingApplication {
+  id: string
+  userId: string
+  fullName: string
+  phoneNumber: string
+  location: string
+  farmSize: number
+  farmType: string
+  yearsOfExperience: number
+  amountRequested: number
+  expectedOutcome: string
+  status: "Pending" | "Approved" | "Rejected"
+  submittedAt: string
+}
+
+export interface Enrollment {
+  id: string
+  userId: string
+  trainingId: string
+  fullName: string
+  phoneNumber: string
+  location: string
+  enrolledAt: string
+}
+
+export interface CartItem {
+  productId: string
+  productName: string
+  pricePerUnit: number
+  quantity: number
+  image: string
+}
