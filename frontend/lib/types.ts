@@ -69,3 +69,21 @@ export interface CartItem {
   quantity: number
   image: string
 }
+
+export interface OrderItem {
+  productId: string
+  productName: string
+  pricePerUnit: number
+  quantity: number
+  image: string
+}
+
+export interface Order {
+  id: string
+  userId: string
+  items: OrderItem[]
+  totalAmount: number
+  status: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled"
+  createdAt: string
+  updatedAt: string
+}

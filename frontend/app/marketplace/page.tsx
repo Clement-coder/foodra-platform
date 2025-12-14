@@ -60,14 +60,23 @@ export default function MarketplacePage() {
             {searchQuery ? `Search results for "${searchQuery}"` : "Browse fresh products from local farmers"}
           </p>
         </div>
-        {user && (
-          <Link href="/listing/new">
-            <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
-              <Plus className="h-4 w-4" />
-              List Product
-            </Button>
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          {user && (
+            <Link href="/orders">
+              <Button variant="outline" className="gap-2">
+                View My Orders
+              </Button>
+            </Link>
+          )}
+          {user && (
+            <Link href="/listing/new">
+              <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
+                <Plus className="h-4 w-4" />
+                List Product
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Category Filter */}
