@@ -106,7 +106,9 @@ export default function LandingHero() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white/10 bg-white/30 w-full"
+                  className="border-gray-600 text-white z-20 
+                   bg-white/10 hover:bg-white/30 
+                   backdrop-blur-md p-2 w-full"
                 >
                   How It Works
                 </Button>
@@ -116,7 +118,6 @@ export default function LandingHero() {
         </motion.div>
       </AnimatePresence>
 
-      {/* LEFT ARROW */}
       <button
         onClick={slidePrev}
         className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 
