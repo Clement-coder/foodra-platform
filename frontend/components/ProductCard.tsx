@@ -80,9 +80,9 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <CardFooter className="p-4 pt-0 flex gap-2">
           <Link href={`/marketplace/${product.id}`} className="flex-1">
-            <Button variant="outline" className="w-full bg-transparent">
-              View Details
-            </Button>
+            <button className="w-full border border-green-700 flex items-center gap-1 justify-center hover:bg-green-100 duration-300 ease-in-out rounded-xl text-green-600 text-center py-2 px-4  bg-transparent">
+              <span>View</span> <span>Details</span>
+            </button>
           </Link>
           <Button
             onClick={handleAddToCart}
