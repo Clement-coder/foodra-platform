@@ -203,7 +203,7 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/marketplace" className="w-full sm:w-auto">
-                  <button className="gap-2 text-center mx-auto flex items-center py-3 text-xl px-4  rounded-xl bg-white  text-green-600 hover:bg-white/90 w-full">
+                  <button className="gap-2 text-center mx-auto flex items-center justify-center py-3 text-xl px-4  rounded-xl bg-white  text-green-600 hover:bg-white/90 w-full">
                     Get Started Now
                     <ArrowRight className="h-5 w-5" />
                   </button>
