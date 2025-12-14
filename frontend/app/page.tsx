@@ -121,18 +121,18 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/marketplace" className="w-full sm:w-auto">
-                  <button className="gap-2 text-center mx-auto flex items-center justify-center py-3 text-xl px-4  rounded-xl bg-white  text-green-600 hover:bg-white/90 w-full">
-                    Get Started Now
+                  <button className="gap-2 text-center mx-auto flex items-center justify-center py-3 text-xl px-4 rounded-xl bg-white text-green-600 hover:bg-white/90 w-full">
+                    Explore Marketplace
                     <ArrowRight className="h-5 w-5" />
                   </button>
                 </Link>
-                <Link href="/training" className="w-full sm:w-auto">
+                <Link href="/how-it-works" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"
                     className="border-white text-white hover:bg-white/10 bg-transparent w-full"
                   >
-                    Browse Training
+                    How It Works
                   </Button>
                 </Link>
               </div>
