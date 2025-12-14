@@ -214,6 +214,7 @@ export default function LandingPage() {
                     variant="outline"
                     className="border-white text-white hover:bg-white/10 bg-transparent w-full"
                   >
+                    
                     Browse Training
                   </Button>
                 </Link>
