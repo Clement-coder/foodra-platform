@@ -71,8 +71,8 @@
 }
 
 @theme inline {
-  --font-sans: "poppins", "Geist Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-sans: "poppins", "poppins";
+  --font-mono: "poppins", "poppins";
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
