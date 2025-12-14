@@ -130,12 +130,12 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button onClick={handleEditProfile} variant="outline" className="gap-2 bg-transparent">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button onClick={handleEditProfile} variant="outline" className="gap-2 bg-transparent w-full">
                   <Edit className="h-4 w-4" />
                   Edit Profile
                 </Button>
-                <Button onClick={handleSignOut} variant="outline" className="gap-2 bg-transparent text-red-600">
+                <Button onClick={handleSignOut} variant="outline" className="gap-2 bg-transparent text-red-600 w-full">
                   <LogOut className="h-4 w-4" />
                   Sign Out
                 </Button>
@@ -208,11 +208,11 @@ export default function ProfilePage() {
             required
           />
 
-          <div className="flex gap-3 pt-4">
-            <Button type="submit" className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Button type="submit" className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white w-full">
               Save Changes
             </Button>
-            <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} className="flex-1">
+            <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} className="flex-1 w-full">
               Cancel
             </Button>
           </div>

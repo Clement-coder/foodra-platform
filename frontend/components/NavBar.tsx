@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { ShoppingCart, Search, User } from "lucide-react"
+import { ShoppingCart, Search, User, Wallet } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
@@ -102,6 +102,15 @@ useEffect(() => {
                   {cartCount}
                 </span>
               )}
+            </Link>
+
+            {/* Wallet Link */}
+            <Link
+              href="/wallet"
+              className="relative p-2 hover:bg-accent rounded-lg transition-colors"
+              aria-label="Wallet"
+            >
+              <Wallet className="h-5 w-5 text-foreground" />
             </Link>
 
             {/* Auth buttons */}
