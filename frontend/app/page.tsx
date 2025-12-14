@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowRight, ShoppingBag, GraduationCap, DollarSign, Users, TrendingUp, Shield } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -65,25 +66,33 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#EAF5ED] to-white dark:from-[#118C4C]/10 dark:to-background py-20 px-4">
-        <div className="container mx-auto">
-          <div className="max-w-4xl mx-auto text-center">
+      <section className="relative min-h-[60vh] py-20 flex items-center justify-center text-center">
+        <Image
+          src="/WhatsApp Image 2025-12-14 at 07.27.36.jpeg"
+          alt="Nigerian Farmer"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/60 z-10"></div> {/* Overlay */}
+        <div className="relative z-20 container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 text-balance">
+              <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 text-balance">
                 Empowering Nigerian Farmers to <span className="text-[#118C4C]">Thrive</span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 text-pretty max-w-2xl mx-auto">
+              <p className="text-lg md:text-xl text-white/90 mb-8 text-pretty max-w-2xl mx-auto">
                 Connect with markets, access training, and secure funding all in one platform designed for farmers
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/marketplace">
-                  <Button size="lg" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
+                <Link href="/marketplace" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
                     Explore Marketplace
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
-                <Link href="/how-it-works">
-                  <Button size="lg" variant="outline" className="bg-transparent">
+                <Link href="/how-it-works" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full bg-transparent border-white text-white hover:bg-white/10">
                     How It Works
                   </Button>
                 </Link>
@@ -193,17 +202,17 @@ export default function LandingPage() {
                 Join thousands of farmers already growing their business with Foodra
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/marketplace">
-                  <button className="gap-2  flex items-center py-3 text-xl px-4  rounded-xl bg-white  text-green-600 hover:bg-white/90">
+                <Link href="/marketplace" className="w-full sm:w-auto">
+                  <button className="gap-2 text-center mx-auto flex items-center py-3 text-xl px-4  rounded-xl bg-white  text-green-600 hover:bg-white/90 w-full">
                     Get Started Now
                     <ArrowRight className="h-5 w-5" />
                   </button>
                 </Link>
-                <Link href="/training">
+                <Link href="/training" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-white text-white hover:bg-white/10 bg-transparent"
+                    className="border-white text-white hover:bg-white/10 bg-transparent w-full"
                   >
                     Browse Training
                   </Button>
