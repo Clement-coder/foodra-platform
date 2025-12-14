@@ -12,6 +12,8 @@ import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 import type { User as UserType, CartItem } from "@/lib/types"
 import { demoUser } from "@/lib/sampleData"
 
+import ProfileDropdown from "./ProfileDropdown"
+
 export function NavBar() {
   const router = useRouter()
   const pathname = usePathname()
@@ -115,12 +117,17 @@ useEffect(() => {
 
             {/* Auth buttons */}
             {user ? (
-              <Link href="/profile">
-                <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                  <User className="h-4 w-4" />
-                  <span className="hidden sm:inline">{user.name}</span>
-                </Button>
-              </Link>
+              <>
+                <div className="md:hidden">
+                  <Link href="/profile">
+                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                      <User className="h-4 w-4" />
+                      <span className="hidden sm:inline">{user.name}</span>
+                    </Button>
+                  </Link>
+                </div>
+                <ProfileDropdown user={user} />
+              </>
             ) : (
               <Button onClick={handleSignIn} size="sm" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
                 <span className="hidden sm:inline">Sign in with Privy</span>
