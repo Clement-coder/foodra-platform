@@ -133,7 +133,7 @@ export default function ProfilePage() {
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <Button onClick={handleEditProfile} variant="outline" className="gap-2 bg-transparent w-full">
                   <Edit className="h-4 w-4" />
-                  Edit Profile
+                  <span>Edit</span> <span>Profile</span>
                 </Button>
                 <Button onClick={handleSignOut} variant="outline" className="gap-2 bg-transparent text-red-600 w-full">
                   <LogOut className="h-4 w-4" />
