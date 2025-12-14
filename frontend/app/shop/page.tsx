@@ -92,7 +92,7 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-12">
       <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8">Shopping Cart</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -108,12 +108,12 @@ export default function ShopPage() {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-muted  flex-shrink-0">
                       <Image
                         src={item.image || "/placeholder.svg"}
                         alt={item.productName}
                         fill
-                        className="object-cover"
+                        className="object-cover relative top-4"
                       />
                     </div>
 
