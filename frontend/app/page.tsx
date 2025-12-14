@@ -194,10 +194,10 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/marketplace">
-                  <Button size="lg" className="gap-2 bg-white text-[#118C4C] hover:bg-white/90">
+                  <button className="gap-2  flex items-center py-3 text-xl px-4  rounded-xl bg-white  text-green-600 hover:bg-white/90">
                     Get Started Now
                     <ArrowRight className="h-5 w-5" />
-                  </Button>
+                  </button>
                 </Link>
                 <Link href="/training">
                   <Button
