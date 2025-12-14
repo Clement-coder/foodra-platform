@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { NavBar } from "@/components/NavBar"
 import { BottomTabBar } from "@/components/BottomTableBar"
+import Footer from "@/components/Footer"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -43,6 +44,7 @@ export default function RootLayout({
         <NavBar />
         <main className="min-h-screen pb-20 md:pb-8">{children}</main>
         <BottomTabBar />
+        <Footer />
         <Analytics />
       </body>
     </html>
