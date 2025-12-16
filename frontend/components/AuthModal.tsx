@@ -19,10 +19,10 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   return (
     <Modal isOpen={isOpen} onOpenChange={onClose} placement="center" backdrop="blur">
-      <ModalContent>
+      <ModalContent className="border border-green-700 bg-linear-to-tl from-green-200 via-green-100 to-white p-6 rounded-xl">
         {(modalOnClose) => (
           <>
-            <ModalHeader className="flex flex-col gap-1 items-center">
+            <ModalHeader className="flex flex-col  gap-3  items-center">
               <LockClosedIcon className="h-12 w-12 text-red-500" />
               <h2 className="text-xl font-semibold">Access Denied</h2>
             </ModalHeader>

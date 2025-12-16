@@ -191,8 +191,8 @@ function WalletPage() {
 
         {/* Wallet Address */}
         {user?.wallet?.address && (
-          <Card className="mb-8">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-2">
+          <Card className="mb-8 bg-linear-to-br from-green-50 via-green-100 to-yellow-100">
+            <CardHeader className="flex flex-col  sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-2">
               <h2 className="text-sm font-medium text-muted-foreground">Wallet Address</h2>
               <Button variant="ghost" size="sm" onClick={copyToClipboard}>
                 <Copy className="h-4 w-4" />
@@ -205,8 +205,8 @@ function WalletPage() {
         )}
 
         {/* Wallet Balance */}
-        <Card className="mb-8">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="mb-8 bg-linear-to-br from-green-50 via-green-100 to-blue-200">
+          <CardHeader className="flex flex-row items-center justify-between  space-y-0 pb-2">
             <h2 className="text-sm font-medium text-muted-foreground">Current Balance</h2>
             <div className="flex items-center gap-2">
               <Button 
@@ -252,7 +252,7 @@ function WalletPage() {
 
         {/* Transaction History */}
         <Card>
-          <CardHeader className="pb-4">
+          <CardHeader className="pb-4 bg-linear-to-br from-green-100 via-blue-100">
             <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Transaction History</h2>
