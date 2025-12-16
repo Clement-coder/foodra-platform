@@ -16,10 +16,11 @@ import { fundingApplicationSchema, type FundingApplicationFormData } from "@/lib
 import type { User, FundingApplication } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
+import { usePrivy } from "@privy-io/react-auth"
 
 function ApplyFundingPage() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
+  const { user: privyUser } = usePrivy() // Get user from Privy
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -33,25 +34,45 @@ function ApplyFundingPage() {
   })
 
   useEffect(() => {
-    // Check if user is logged in
-  const storedUser = loadFromLocalStorage<User | null>("foodra_user", null)
-    if (!storedUser) {
+    if (!privyUser) {
       router.push("/")
-      return
+      return;
     }
-    setUser(storedUser)
 
     // Pre-fill form with user data
-    setValue("fullName", storedUser.name)
-    setValue("phoneNumber", storedUser.phone)
-    setValue("location", storedUser.location)
-  }, [router, setValue])
+    // Full Name from Privy user
+    const getUserDisplayName = () => {
+      if (!privyUser) return ""
+      return (
+        privyUser.google?.name ||
+        privyUser.github?.name ||
+        privyUser.twitter?.name ||
+        privyUser.email?.address?.split("@")[0] ||
+        ""
+      )
+    }
+    setValue("fullName", getUserDisplayName())
+
+    // Phone Number from localStorage
+    const savedPhoneNumber = loadFromLocalStorage<string>("user_phone_number", "")
+    if (savedPhoneNumber) {
+      setValue("phoneNumber", savedPhoneNumber)
+    } else if (privyUser.phone?.number) {
+      setValue("phoneNumber", privyUser.phone.number)
+    }
+
+    // Location from localStorage
+    const savedLocation = loadFromLocalStorage<string>("user_location", "")
+    if (savedLocation) {
+      setValue("location", savedLocation)
+    }
+  }, [router, setValue, privyUser])
 
   const onSubmit = (data: FundingApplicationFormData) => {
     setIsSubmitting(true)
     setNotification(null)
 
-    if (!user) {
+    if (!privyUser) {
       setNotification({
         type: "error",
         message: "User information is missing. Please sign in again.",
@@ -74,7 +95,7 @@ function ApplyFundingPage() {
       // Create new funding application
       const newApplication: FundingApplication = {
         id: `fund-${Date.now()}`,
-        userId: user.id,
+        userId: privyUser.id,
         fullName: data.fullName,
         phoneNumber: data.phoneNumber,
         location: data.location,
@@ -110,7 +131,7 @@ function ApplyFundingPage() {
     }
   }
 
-  if (!user) {
+  if (!privyUser) {
     return null
   }
 
@@ -149,6 +170,7 @@ function ApplyFundingPage() {
                     error={errors.fullName?.message}
                     placeholder="Your full name"
                     required
+                    readOnly
                   />
 
                   <FormInput
@@ -158,6 +180,7 @@ function ApplyFundingPage() {
                     placeholder="+234XXXXXXXXX"
                     helperText="Include country code (e.g., +234)"
                     required
+                    readOnly
                   />
 
                   <FormInput
@@ -166,6 +189,7 @@ function ApplyFundingPage() {
                     error={errors.location?.message}
                     placeholder="City, State"
                     required
+                    readOnly
                   />
                 </div>
               </div>

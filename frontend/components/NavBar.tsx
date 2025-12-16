@@ -3,11 +3,11 @@
 import { usePrivy } from "@privy-io/react-auth"
 import type React from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ShoppingCart, Search, Wallet } from "lucide-react"
 import ProfileDropdown from "./ProfileDropdown"
 import SignupButton from "./SignupButton"
-import { loadFromLocalStorage } from "@/lib/localStorage" // Assuming loadFromLocalStorage is still used for cart
+import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage" // Assuming loadFromLocalStorage is still used for cart
 
 // Type definition for CartItem (if not already defined and used elsewhere consistently)
 interface CartItem {
@@ -24,27 +24,48 @@ export function NavBar() {
   const { authenticated, user, login } = usePrivy()
   const [cartCount, setCartCount] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
+  const previousUserId = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    // Determine the correct cart key based on authentication status
-    const cartKey = authenticated && user ? `foodra_cart_${user.id}` : "foodra_cart_guest";
-
-    // Load cart count
-    const currentCart = loadFromLocalStorage<CartItem[]>(cartKey, []);
-    setCartCount(currentCart.length);
-
-    // Listen for cart updates
-    const handleStorage = () => {
-      const updatedCart = loadFromLocalStorage<CartItem[]>(cartKey, []);
+    const handleCartUpdate = () => {
+      const currentCartKey = authenticated && user ? `foodra_cart_${user.id}` : "foodra_cart_guest";
+      const updatedCart = loadFromLocalStorage<CartItem[]>(currentCartKey, []);
       setCartCount(updatedCart.length);
     };
 
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener("cartUpdated", handleStorage);
+    // Initial load or when user/auth status changes
+    if (authenticated && user) {
+      // User is authenticated
+      if (user.id !== previousUserId.current) {
+        // New authenticated user, load their cart
+        const userCartKey = `foodra_cart_${user.id}`;
+        const userCart = loadFromLocalStorage<CartItem[]>(userCartKey, []);
+        setCartCount(userCart.length);
+        previousUserId.current = user.id;
+      } else {
+        // Same authenticated user, just update count from their cart
+        handleCartUpdate();
+      }
+    } else {
+      // User is not authenticated (guest)
+      if (previousUserId.current !== undefined) {
+        // User logged out, switch to guest cart
+        const guestCartKey = "foodra_cart_guest";
+        const guestCart = loadFromLocalStorage<CartItem[]>(guestCartKey, []);
+        setCartCount(guestCart.length);
+        previousUserId.current = undefined; // Reset previous user ID
+      } else {
+        // Still a guest, or initial load as guest
+        handleCartUpdate();
+      }
+    }
+
+    window.addEventListener("storage", handleCartUpdate);
+    window.addEventListener("cartUpdated", handleCartUpdate);
 
     return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("cartUpdated", handleStorage);
+      window.removeEventListener("storage", handleCartUpdate);
+      window.removeEventListener("cartUpdated", handleCartUpdate);
     };
   }, [pathname, authenticated, user]); // Depend on authenticated and user to update cart based on login state
 
@@ -64,7 +85,6 @@ export function NavBar() {
             href="/"
             className="flex items-center space-x-2 text-2xl font-bold text-[#118C4C] hover:opacity-80 transition-opacity"
           >
-            <span>🍽️</span>
             <span>Foodra</span>
           </a>
 

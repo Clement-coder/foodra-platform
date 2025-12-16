@@ -12,6 +12,7 @@ interface ProfileDropdownProps {
 }
 
 const dropdownLinks = [
+  { name: "Profile", href: "/profile", icon: User },
   { name: "Home", href: "/", icon: Home },
   { name: "Market", href: "/marketplace", icon: ShoppingBag },
   { name: "Training", href: "/training", icon: GraduationCap },
