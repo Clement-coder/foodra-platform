@@ -58,7 +58,7 @@ export default function LandingHero() {
   }
 
   return (
-    <section className="relative h-[7500px] md:h-[700px] lg:h-[735px] overflow-hidden">
+    <section className="relative h-[750px] md:h-[700px] lg:h-[735px] overflow-hidden">
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={current}
@@ -106,8 +106,8 @@ export default function LandingHero() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-gray-600 text-white z-20 
-                   bg-white/10 hover:bg-white/30 
+                  className="border-none text-white z-20 
+                   bg-white/20 hover:bg-white/30 
                    backdrop-blur-md p-2 w-full"
                 >
                   How It Works

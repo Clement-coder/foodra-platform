@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import type { Product, CartItem } from "@/lib/types"
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
+import { usePrivy } from "@privy-io/react-auth"
 
 interface ProductCardProps {
   product: Product
@@ -16,12 +17,16 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false)
+  const { authenticated, user } = usePrivy()
 
   const handleAddToCart = () => {
     setIsAdding(true)
 
+    // Determine the correct cart key based on authentication status
+    const cartKey = authenticated && user ? `foodra_cart_${user.id}` : "foodra_cart_guest";
+
     // Load current cart
-    const cart = loadFromLocalStorage<CartItem[]>("foodra_cart", [])
+    const cart = loadFromLocalStorage<CartItem[]>(cartKey, [])
 
     // Check if product already in cart
     const existingItem = cart.find((item) => item.productId === product.id)
@@ -41,7 +46,7 @@ export function ProductCard({ product }: ProductCardProps) {
     }
 
     // Save updated cart
-    saveToLocalStorage("foodra_cart", cart)
+    saveToLocalStorage(cartKey, cart)
 
     // Dispatch custom event for cart update
     window.dispatchEvent(new Event("cartUpdated"))
