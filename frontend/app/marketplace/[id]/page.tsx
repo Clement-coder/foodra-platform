@@ -11,9 +11,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/Skeleton"
 import { NotificationDiv } from "@/components/NotificationDiv"
 import type { Product, CartItem } from "@/lib/types"
+import withAuth from "../../../components/withAuth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 
-export default function ProductDetailPage() {
+function ProductDetailPage() {
   const router = useRouter()
   const params = useParams();
   const id = params.id as string; // Cast id to string
@@ -161,3 +162,5 @@ export default function ProductDetailPage() {
     </div>
   )
 }
+
+export default withAuth(ProductDetailPage);

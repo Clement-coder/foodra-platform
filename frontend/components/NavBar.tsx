@@ -1,58 +1,52 @@
 "use client"
 
+import { usePrivy } from "@privy-io/react-auth"
 import type React from "react"
-
-import { useState, useEffect } from "react"
-import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { ShoppingCart, Search, User, Wallet } from "lucide-react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
-import type { User as UserType, CartItem } from "@/lib/types"
-import { demoUser } from "@/lib/sampleData"
-
+import { useState, useEffect } from "react"
+import { ShoppingCart, Search, Wallet } from "lucide-react"
 import ProfileDropdown from "./ProfileDropdown"
+import SignupButton from "./SignupButton"
+import { loadFromLocalStorage } from "@/lib/localStorage" // Assuming loadFromLocalStorage is still used for cart
+
+// Type definition for CartItem (if not already defined and used elsewhere consistently)
+interface CartItem {
+  productId: string;
+  productName: string;
+  pricePerUnit: number;
+  quantity: number;
+  image: string;
+}
 
 export function NavBar() {
   const router = useRouter()
   const pathname = usePathname()
-  const [user, setUser] = useState<UserType | null>(null)
+  const { authenticated, user, login } = usePrivy()
   const [cartCount, setCartCount] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
 
-useEffect(() => {
-  // Load user from localStorage
-  const storedUser = loadFromLocalStorage<UserType | null>("foodra_user", null)
-  setUser(storedUser)
+  useEffect(() => {
+    // Determine the correct cart key based on authentication status
+    const cartKey = authenticated && user ? `foodra_cart_${user.id}` : "foodra_cart_guest";
 
-  // Load cart count
-  const cart = loadFromLocalStorage<CartItem[]>("foodra_cart", [])
-  setCartCount(cart?.length || 0)
+    // Load cart count
+    const currentCart = loadFromLocalStorage<CartItem[]>(cartKey, []);
+    setCartCount(currentCart.length);
 
-  // Listen for cart updates
-  const handleStorage = () => {
-    const updatedCart = loadFromLocalStorage<CartItem[]>("foodra_cart", [])
-    setCartCount(updatedCart?.length || 0)
-  }
+    // Listen for cart updates
+    const handleStorage = () => {
+      const updatedCart = loadFromLocalStorage<CartItem[]>(cartKey, []);
+      setCartCount(updatedCart.length);
+    };
 
-  window.addEventListener("storage", handleStorage)
-  // Custom event for same-page cart updates
-  window.addEventListener("cartUpdated", handleStorage)
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("cartUpdated", handleStorage);
 
-  return () => {
-    window.removeEventListener("storage", handleStorage)
-    window.removeEventListener("cartUpdated", handleStorage)
-  }
-}, [pathname])
-
-
-  const handleSignIn = () => {
-    // Simulate Privy login by saving demo user to localStorage
-    saveToLocalStorage("foodra_user", demoUser)
-    setUser(demoUser)
-    router.push("/profile")
-  }
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("cartUpdated", handleStorage);
+    };
+  }, [pathname, authenticated, user]); // Depend on authenticated and user to update cart based on login state
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,96 +56,95 @@ useEffect(() => {
   }
 
   return (
-    <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="sticky top-0 z-30 bg-card border-b border-border shadow-sm"
-    >
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-4">
+    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <h1 className="text-2xl font-bold text-[#118C4C]">Foodra</h1>
-          </Link>
+          <a
+            href="/"
+            className="flex items-center space-x-2 text-2xl font-bold text-[#118C4C] hover:opacity-80 transition-opacity"
+          >
+            <span>🍽️</span>
+            <span>Foodra</span>
+          </a>
 
           {/* Search bar - hidden on mobile */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="search"
-                placeholder="Search anything..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C]"
-                aria-label="Search anything"
-              />
-            </div>
+          <form
+            onSubmit={handleSearch}
+            className="hidden md:flex flex-1 max-w-md mx-8 relative"
+          >
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
+            />
+            <input
+              type="search"
+              placeholder="Search anything"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
+              aria-label="Search anything"
+            />
           </form>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center space-x-4">
             {/* Cart indicator */}
-            <Link
+            <a
               href="/shop"
-              className="relative p-2 hover:bg-accent rounded-lg transition-colors"
+              className="relative p-2 hover:bg-accent rounded-lg transition-colors md:flex items-center space-x-2"
               aria-label={`Shopping cart with ${cartCount} items`}
             >
-              <ShoppingCart className="h-5 w-5 text-foreground" />
+              <ShoppingCart
+                className="h-6 w-6 text-foreground"
+              />
+              <span className="hidden md:inline text-sm font-medium">Shop</span>
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#118C4C] text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#118C4C] text-white text-xs flex items-center justify-center font-semibold">
                   {cartCount}
                 </span>
               )}
-            </Link>
+            </a>
 
             {/* Wallet Link */}
-            <Link
-              href="/wallet"
-              className="relative p-2 hover:bg-accent rounded-lg transition-colors"
-              aria-label="Wallet"
-            >
-              <Wallet className="h-5 w-5 text-foreground" />
-            </Link>
+            {authenticated && (
+              <a
+                href="/wallet"
+                className="p-2 hover:bg-accent rounded-lg transition-colors md:flex items-center space-x-2"
+              >
+                <Wallet
+                  className="h-6 w-6"
+                />
+                <span className="hidden md:inline text-sm font-medium">Wallet</span>
+              </a>
+            )}
 
             {/* Auth buttons */}
-            {user ? (
-              <>
-                <div className="md:hidden">
-                  <Link href="/profile">
-                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                      <User className="h-4 w-4" />
-                      <span className="hidden sm:inline">{user.name}</span>
-                    </Button>
-                  </Link>
-                </div>
-                <ProfileDropdown user={user} />
-              </>
+            {authenticated && user ? (
+              <ProfileDropdown user={user} />
             ) : (
-              <Button onClick={handleSignIn} size="sm" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
-                <span className="hidden sm:inline">Sign in with Privy</span>
-                <span className="sm:hidden">Sign in</span>
-              </Button>
+              <SignupButton />
             )}
           </div>
         </div>
 
         {/* Mobile search bar */}
-        <form onSubmit={handleSearch} className="md:hidden mt-3">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="search"
-              placeholder="Search anything..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C]"
-              aria-label="Search anything"
-            />
-          </div>
+        <form
+          onSubmit={handleSearch}
+          className="md:hidden pb-4 relative"
+        >
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
+          />
+          <input
+            type="search"
+            placeholder="Search anything"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
+            aria-label="Search anything"
+          />
         </form>
       </div>
-    </motion.nav>
+    </nav>
   )
 }

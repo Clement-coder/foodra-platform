@@ -10,9 +10,10 @@ import { ProductCard } from "@/components/ProductCard"
 import { GridLayout } from "@/components/GridLayout"
 import { Skeleton } from "@/components/Skeleton"
 import type { Product, User } from "@/lib/types"
+import withAuth from "../../components/withAuth";
 import { loadFromLocalStorage } from "@/lib/localStorage"
 
-export default function MarketplacePage() {
+function MarketplacePage() {
   const searchParams = useSearchParams()
   const searchQuery = searchParams.get("search") || ""
 
@@ -134,3 +135,5 @@ export default function MarketplacePage() {
     </div>
   )
 }
+
+export default withAuth(MarketplacePage);

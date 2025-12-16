@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { initializeSampleData } from "@/lib/sampleData"
 import HeroSection from "@/components/HeroSection"
+import SignupButton from "@/components/SignupButton"
 
 export default function LandingPage() {
   useEffect(() => {

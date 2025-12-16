@@ -8,10 +8,11 @@ import { ArrowLeft, PackageOpen, Calendar, DollarSign } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import withAuth from "../../components/withAuth";
 import { loadFromLocalStorage } from "@/lib/localStorage"
 import type { Order } from "@/lib/types"
 
-export default function OrdersPage() {
+function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
@@ -157,3 +158,5 @@ export default function OrdersPage() {
     </div>
   )
 }
+
+export default withAuth(OrdersPage);
