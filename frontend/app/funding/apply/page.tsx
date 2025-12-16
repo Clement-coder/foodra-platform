@@ -14,9 +14,10 @@ import { FormSelect } from "@/components/FormSelector"
 import { NotificationDiv } from "@/components/NotificationDiv"
 import { fundingApplicationSchema, type FundingApplicationFormData } from "@/lib/schemas"
 import type { User, FundingApplication } from "@/lib/types"
+import withAuth from "../../../components/withAuth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 
-export default function ApplyFundingPage() {
+function ApplyFundingPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
@@ -267,3 +268,5 @@ export default function ApplyFundingPage() {
     </div>
   )
 }
+
+export default withAuth(ApplyFundingPage);

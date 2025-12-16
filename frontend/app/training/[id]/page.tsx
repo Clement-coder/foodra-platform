@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/Skeleton"
 import type { Training, User, Enrollment } from "@/lib/types"
+import withAuth from "../../../components/withAuth";
 import { loadFromLocalStorage } from "@/lib/localStorage"
 import { format } from "date-fns"
 
-export default function TrainingDetailPage() {
+function TrainingDetailPage() {
   const router = useRouter()
   const params = useParams();
   const id = params.id as string; // Cast id to string
@@ -227,3 +228,5 @@ export default function TrainingDetailPage() {
     </div>
   )
 }
+
+export default withAuth(TrainingDetailPage);

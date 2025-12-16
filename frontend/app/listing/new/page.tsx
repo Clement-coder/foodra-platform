@@ -15,9 +15,10 @@ import { ImageMockUploader } from "@/components/ImageMockUploader"
 import { NotificationDiv } from "@/components/NotificationDiv"
 import { productListingSchema, type ProductListingFormData } from "@/lib/schemas"
 import type { User, Product } from "@/lib/types"
+import withAuth from "../../../components/withAuth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 
-export default function NewListingPage() {
+function NewListingPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [imageBase64, setImageBase64] = useState("")
@@ -202,3 +203,5 @@ const products = loadFromLocalStorage<Product[]>("foodra_products", [])
     </div>
   )
 }
+
+export default withAuth(NewListingPage);

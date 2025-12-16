@@ -1,14 +1,14 @@
 "use client"
 
+import { User as PrivyUser } from "@privy-io/react-auth"
 import { useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, ShoppingBag, GraduationCap, DollarSign, User } from "lucide-react"
+import { Home, ShoppingBag, GraduationCap, DollarSign, User, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { User as UserType } from "@/lib/types"
 
 interface ProfileDropdownProps {
-  user: UserType
+  user: PrivyUser
 }
 
 const dropdownLinks = [
@@ -32,12 +32,13 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      <Link href="/profile">
-        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-          <User className="h-4 w-4" />
-          <span className="hidden sm:inline">{user.name}</span>
-        </Button>
-      </Link>
+      <Button variant="outline" size="sm" className="gap-2 bg-transparent hover:bg-accent transition-colors">
+        <User className="h-4 w-4" />
+        <span className="hidden sm:inline">
+          Profile
+        </span>
+        <ChevronDown className="h-4 w-4" />
+      </Button>
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -49,13 +50,13 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
             className="absolute right-0 mt-2 w-56 bg-card/80 backdrop-blur-lg border border-border/50 rounded-lg shadow-2xl z-40 overflow-hidden"
           >
             <div className="p-2">
-              {dropdownLinks.map((link, index) => (
+              {dropdownLinks.map((link) => (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className="flex items-center p-3 text-sm text-muted-foreground rounded-md hover:bg-accent/50 hover:text-foreground transition-colors duration-150"
+                  className="flex items-center gap-3 p-3 text-sm text-muted-foreground rounded-md hover:bg-accent/50 hover:text-foreground transition-colors duration-150"
                 >
-                  <link.icon className="h-5 w-5 mr-3 text-[#118C4C]" />
+                  <link.icon className="h-5 w-5 text-[#118C4C]" />
                   <span>{link.name}</span>
                 </Link>
               ))}

@@ -6,6 +6,7 @@ import { NavBar } from "@/components/NavBar"
 import { BottomTabBar } from "@/components/BottomTableBar"
 import Footer from "@/components/Footer"
 import "./globals.css"
+import Providers from "./Provider"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
@@ -41,11 +42,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <NavBar />
+        <Providers>
+         <NavBar />
         <main className="min-h-screen pb-20 md:pb-8">{children}</main>
         <BottomTabBar />
         <Footer />
         <Analytics />
+        </Providers>
+       
       </body>
     </html>
   )

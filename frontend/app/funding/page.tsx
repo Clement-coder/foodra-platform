@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { FundingCard } from "@/components/FundingCard"
 import type { FundingApplication, User } from "@/lib/types"
+import withAuth from "../../components/withAuth";
 import { loadFromLocalStorage } from "@/lib/localStorage"
 
-export default function FundingPage() {
+function FundingPage() {
   const [applications, setApplications] = useState<FundingApplication[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [filter, setFilter] = useState<"all" | "Pending" | "Approved" | "Rejected">("all")
@@ -201,3 +202,5 @@ export default function FundingPage() {
     </div>
   )
 }
+
+export default withAuth(FundingPage);

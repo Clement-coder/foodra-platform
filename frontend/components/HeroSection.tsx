@@ -58,7 +58,7 @@ export default function LandingHero() {
   }
 
   return (
-    <section className="relative h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden">
+    <section className="relative h-[7500px] md:h-[700px] lg:h-[735px] overflow-hidden">
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={current}

@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/Skeleton"
 import type { Training, User, Enrollment } from "@/lib/types"
+import withAuth from "../../../components/withAuth";
 import { loadFromLocalStorage } from "@/lib/localStorage"
 import { format } from "date-fns"
 
-export default function TrainingDetailPage({ params }: { params: { id: string } }) {
+function TrainingDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [training, setTraining] = useState<Training | null>(null)
   const [loading, setLoading] = useState(true)
@@ -225,3 +226,5 @@ export default function TrainingDetailPage({ params }: { params: { id: string } 
     </div>
   )
 }
+
+export default withAuth(TrainingDetailPage);

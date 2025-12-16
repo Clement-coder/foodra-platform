@@ -8,9 +8,10 @@ import { GridLayout } from "@/components/GridLayout"
 import { Skeleton } from "@/components/Skeleton"
 import { Button } from "@/components/ui/button"
 import type { Training } from "@/lib/types"
+import withAuth from "../../components/withAuth";
 import { loadFromLocalStorage } from "@/lib/localStorage"
 
-export default function TrainingPage() {
+function TrainingPage() {
   const [trainings, setTrainings] = useState<Training[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "online" | "offline">("all")
@@ -98,3 +99,5 @@ export default function TrainingPage() {
     </div>
   )
 }
+
+export default withAuth(TrainingPage);

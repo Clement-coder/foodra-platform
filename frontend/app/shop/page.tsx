@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
 import type { CartItem } from "@/lib/types"
+import withAuth from "../../components/withAuth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 
-export default function ShopPage() {
+function ShopPage() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
@@ -250,3 +251,5 @@ export default function ShopPage() {
     </div>
   )
 }
+
+export default withAuth(ShopPage);
