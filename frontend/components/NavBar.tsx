@@ -77,7 +77,7 @@ export function NavBar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full p-2 bg-background backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -85,25 +85,27 @@ export function NavBar() {
             href="/"
             className="flex items-center space-x-2 text-2xl font-bold text-[#118C4C] hover:opacity-80 transition-opacity"
           >
-            <span>Foodra</span>
+            <img src="/foodra_logo.jpeg" alt="Foodra Logo" className="h-16 rounded-bl-2xl rounded-tr-3xl" />
           </a>
 
           {/* Search bar - hidden on mobile */}
           <form
             onSubmit={handleSearch}
-            className="hidden md:flex flex-1 max-w-md mx-8 relative"
+            className="hidden md:flex flex-1 max-w-md mx-8"
           >
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
-            />
-            <input
-              type="search"
-              placeholder="Search anything"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
-              aria-label="Search anything"
-            />
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <input
+                type="search"
+                placeholder="Search anything"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
+                aria-label="Search anything"
+              />
+            </div>
           </form>
 
           {/* Right side actions */}
@@ -150,19 +152,21 @@ export function NavBar() {
         {/* Mobile search bar */}
         <form
           onSubmit={handleSearch}
-          className="md:hidden pb-4 relative"
+          className="md:hidden pb-4"
         >
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
-          />
-          <input
-            type="search"
-            placeholder="Search anything"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
-            aria-label="Search anything"
-          />
+          <div className="relative w-full">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Search className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <input
+              type="search"
+              placeholder="Search anything"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
+              aria-label="Search anything"
+            />
+          </div>
         </form>
       </div>
     </nav>

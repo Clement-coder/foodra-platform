@@ -6,9 +6,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Button,
 } from "@nextui-org/react";
-import { LockClosedIcon } from "@heroicons/react/24/outline";
+import Image from "next/image";
 import SignupButton from "./SignupButton";
 
 interface AuthModalProps {
@@ -23,7 +22,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         {(modalOnClose) => (
           <>
             <ModalHeader className="flex flex-col  gap-3  items-center">
-              <LockClosedIcon className="h-12 w-12 text-red-500" />
+              <Image src="/foodra_logo.jpeg" alt="Foodra Logo" width={100} height={100} className="rounded-bl-2xl rounded-tr-3xl" />
               <h2 className="text-xl font-semibold">Access Denied</h2>
             </ModalHeader>
             <ModalBody className="text-center">

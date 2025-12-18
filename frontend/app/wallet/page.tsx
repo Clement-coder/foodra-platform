@@ -250,7 +250,6 @@ function WalletPage() {
           </Button>
         </div>
 
-        {/* Transaction History */}
         <Card>
           <CardHeader className="pb-4 bg-linear-to-br from-green-100 via-blue-100">
             <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
