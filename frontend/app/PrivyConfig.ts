@@ -10,5 +10,6 @@ export const privyConfig: PrivyClientConfig = {
   loginMethods: ['github', 'google', 'twitter', 'sms'],
   appearance: {
     showWalletLoginFirst: true,
+    logo: '/foodra_logo.jpeg',
   },
 };

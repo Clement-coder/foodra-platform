@@ -42,6 +42,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
+        <style>
+          {`
+            [data-privy-logo] {
+              border-bottom-left-radius: 1rem;
+              border-top-right-radius: 1.5rem;
+            }
+          `}
+        </style>
         <Providers>
          <NavBar />
         <main className="min-h-screen pb-20 md:pb-8">{children}</main>
