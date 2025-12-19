@@ -92,6 +92,7 @@ export default function LandingPage() {
                     <div className="bg-green-100 dark:bg-green-900/20 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
                       <item.icon className="h-7 w-7 text-green-600" />
                     </div>
+                    
                     <h3 className="text-xl font-semibold text-foreground mb-3">{item.title}</h3>
                     <p className="text-muted-foreground leading-relaxed">{item.description}</p>
                   </CardContent>
