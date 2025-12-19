@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ShoppingBag, GraduationCap, DollarSign, Users, TrendingUp, Shield, ArrowRight } from "lucide-react"
+import { ShoppingBag, GraduationCap, DollarSign, Users, TrendingUp, Shield, ArrowRight, Target, Eye, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { initializeSampleData } from "@/lib/sampleData"
@@ -34,6 +34,11 @@ export default function LandingPage() {
     { icon: TrendingUp, title: "Business Growth", description: "Tools and resources to scale your farm" },
   ]
 
+  const missionAndVision = [
+    { icon: Eye, title: "Vision", description: "To contribute towards an Africa that does not depend on the outside world to feed her. Using the least available resources to maximize the capacity of the African food production and supply chain. Through the application of technology, available financial support, and market availability, smallholder farmers will boost in capacity and in turn boost the African food capacity." },
+    { icon: Target, title: "Mission", description: "To offer value to African farmers through sustainable practices and a sustainable supply chain. This includes sustainable practices that protect our environment, a sustainable supply chain that ensures fair value distribution, and farmer empowerment through technology and market access." },
+  ]
+
   return (
     <div className="min-h-screen">
       <HeroSection />
@@ -43,7 +48,13 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {stats.map((stat, index) => (
-              <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: index * 0.1 }} className="text-center">
+              <motion.div 
+                key={stat.label} 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ duration: 0.5, delay: index * 0.1 }} 
+                className="text-center"
+              >
                 <div className="flex justify-center mb-3">
                   <div className="bg-[#118C4C]/10 p-3 rounded-full">
                     <stat.icon className="h-6 w-6 text-[#118C4C]" />
@@ -51,6 +62,40 @@ export default function LandingPage() {
                 </div>
                 <p className="text-3xl font-bold text-foreground">{stat.value}</p>
                 <p className="text-muted-foreground">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Mission & Vision Section */}
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Our Mission & Vision</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Building the future of African agriculture, one farmer at a time
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {missionAndVision.map((item, index) => (
+              <motion.div 
+                key={item.title} 
+                initial={{ opacity: 0, y: 20 }} 
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+                viewport={{ once: true }}
+              >
+                <Card className="h-full hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="bg-green-100 dark:bg-green-900/20 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
+                      <item.icon className="h-7 w-7 text-green-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground mb-3">{item.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed">{item.description}</p>
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </div>
@@ -69,7 +114,12 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <motion.div key={feature.title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: index * 0.15 }}>
+              <motion.div 
+                key={feature.title} 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+              >
                 <Card className="h-full hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                     <div className={`${feature.bg} w-14 h-14 rounded-lg flex items-center justify-center mb-4`}>
@@ -95,7 +145,13 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {benefits.map((benefit, index) => (
-              <motion.div key={benefit.title} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: index * 0.1 }} className="flex gap-4">
+              <motion.div 
+                key={benefit.title} 
+                initial={{ opacity: 0, x: -20 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                transition={{ duration: 0.5, delay: index * 0.1 }} 
+                className="flex gap-4"
+              >
                 <div className="flex-shrink-0">
                   <div className="bg-[#118C4C] text-white p-3 rounded-lg">
                     <benefit.icon className="h-6 w-6" />
