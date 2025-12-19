@@ -17,11 +17,13 @@ import { profileUpdateSchema, type ProfileUpdateFormData } from "@/lib/schemas"
 import { usePrivy } from "@privy-io/react-auth"
 import withAuth from "@/components/withAuth"
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
+import { SignOutModal } from "@/components/SignOutModal"
 
 function ProfilePage() {
   const router = useRouter()
   const { user, logout } = usePrivy()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
   const [accountType, setAccountType] = useState<string | null>(null)
   const [location, setLocation] = useState<string | null>(null)
@@ -157,17 +159,8 @@ function ProfilePage() {
     }
   }, [user, setValue])
 
-  const handleSignOut = async () => {
-    try {
-      await logout()
-      router.push("/")
-    } catch (error) {
-      console.error("Error signing out:", error)
-      setNotification({
-        type: "error",
-        message: "Failed to sign out. Please try again.",
-      })
-    }
+  const handleSignOut = () => {
+    setIsSignOutModalOpen(true)
   }
 
   const handleEditProfile = () => {
@@ -496,6 +489,13 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
           </div>
         </form>
       </Modal>
+
+      {/* Sign Out Confirmation Modal */}
+      <SignOutModal
+        isOpen={isSignOutModalOpen}
+        onClose={() => setIsSignOutModalOpen(false)}
+        logout={logout}
+      />
     </div>
   )
 }
