@@ -43,7 +43,6 @@ export default function LandingPage() {
     <div className="min-h-screen">
       <HeroSection />
 
-      {/* Stats Section */}
       <section className="py-12 bg-card border-y border-border">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto">
@@ -68,7 +67,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Mission & Vision Section */}
       <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-12">
