@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { usePrivy } from "@privy-io/react-auth"
+import { usePrivy, useWallets, useSendTransaction } from "@privy-io/react-auth"
+import { useAccount } from "wagmi"
 import { ethers } from "ethers"
-import { useSendTransaction } from "wagmi"
 import { QRCodeSVG } from "qrcode.react"
 import { FormInput } from "@/components/FormInput"
 import { DollarSign, History, PlusCircle, MinusCircle, ArrowUpCircle, ArrowDownCircle, Copy, RefreshCcw, Wallet } from "lucide-react"
@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
 import { NotificationDiv } from "@/components/NotificationDiv"
 import withAuth from "../../components/withAuth"
+import { baseSepolia } from "viem/chains"
 
 interface Transaction {
   hash: string;
@@ -23,157 +24,168 @@ interface Transaction {
 }
 
 function WalletPage() {
-  const { user } = usePrivy();
-  const { sendTransaction } = useSendTransaction();
-  const [balance, setBalance] = useState<string>("0");
-  const [ethToUsdRate, setEthToUsdRate] = useState<number | null>(null);
+  const { user } = usePrivy()
+  const { wallets } = useWallets()
+  const { chainId } = useAccount()
+  const { sendTransaction } = useSendTransaction()
+  const [balance, setBalance] = useState<string>("0")
+  const [ethToUsdRate, setEthToUsdRate] = useState<number | null>(null)
   const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false)
   const [isWithdrawFundsModalOpen, setIsWithdrawFundsModalOpen] = useState(false)
   const [isConfirmWithdrawModalOpen, setIsConfirmWithdrawModalOpen] = useState(false)
-  const [recipientAddress, setRecipientAddress] = useState("");
-  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [recipientAddress, setRecipientAddress] = useState("")
+  const [withdrawAmount, setWithdrawAmount] = useState("")
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [transactionFilter, setTransactionFilter] = useState<"all" | "send" | "receive">("all");
-  const [isRefreshingTransactions, setIsRefreshingTransactions] = useState(false);
-  const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [transactionFilter, setTransactionFilter] = useState<"all" | "send" | "receive">("all")
+  const [isRefreshingTransactions, setIsRefreshingTransactions] = useState(false)
+  const [isRefreshingBalance, setIsRefreshingBalance] = useState(false)
+  const [recipientError, setRecipientError] = useState<string | null>(null)
+  const [amountError, setAmountError] = useState<string | null>(null)
 
-  const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by the user
+const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by the user
 
   const fetchWalletData = async () => {
     if (user?.wallet?.address) {
       try {
-        // Fetch balance
-        const provider = new ethers.JsonRpcProvider("https://sepolia.base.org");
-        const balance = await provider.getBalance(user.wallet.address);
-        setBalance(ethers.formatEther(balance));
+        // Add a small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000))
 
-        // Fetch transactions
+        const provider = new ethers.JsonRpcProvider("https://sepolia.base.org")
+        const balance = await provider.getBalance(user.wallet.address)
+        setBalance(ethers.formatEther(balance))
+
         const response = await fetch(
           `https://api-sepolia.basescan.org/api?module=account&action=txlist&address=${user.wallet.address}&startblock=0&endblock=99999999&sort=desc&apikey=${BASESCAN_API_KEY}`
-        );
-        const data = await response.json();
+        )
+        const data = await response.json()
         if (data.status === "1" && Array.isArray(data.result)) {
-          setTransactions(data.result);
+          setTransactions(data.result)
         } else if (data.message === "No transactions found") {
-          // This is not an error, just no transactions yet
-          setTransactions([]);
+          setTransactions([])
         } else {
-          console.error("Error fetching transactions:", data.message);
-          // Don't show error notification for "No transactions found"
+          console.error("Error fetching transactions:", data.message)
           if (data.message !== "No transactions found") {
-            setNotification({ type: "error", message: "Error fetching transactions." });
+            setNotification({ type: "error", message: "Error fetching transactions." })
           }
         }
       } catch (error) {
-        console.error("Error fetching wallet data:", error);
-        setNotification({ type: "error", message: "Error fetching wallet data." });
+        console.error("Error fetching wallet data:", error)
+        setNotification({ type: "error", message: "Error fetching wallet data." })
       }
     }
-  };
+  }
 
   const fetchEthRate = async () => {
     try {
-      const rateResponse = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
-      const rateData = await rateResponse.json();
+      const rateResponse = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
+      const rateData = await rateResponse.json()
       if (rateData.ethereum && rateData.ethereum.usd) {
-        setEthToUsdRate(rateData.ethereum.usd);
+        setEthToUsdRate(rateData.ethereum.usd)
       }
     } catch (error) {
-      console.error("Error fetching ETH to USD rate:", error);
+      console.error("Error fetching ETH to USD rate:", error)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchWalletData();
-    fetchEthRate();
-  }, [user]);
+    fetchWalletData()
+    fetchEthRate()
+  }, [user])
+
+  useEffect(() => {
+    // Real-time validation for recipient address
+    if (recipientAddress && !ethers.isAddress(recipientAddress)) {
+      setRecipientError("Please enter a valid recipient address.")
+    } else {
+      setRecipientError(null)
+    }
+
+    // Real-time validation for withdrawal amount
+    if (withdrawAmount) {
+      if (parseFloat(withdrawAmount) <= 0) {
+        setAmountError("Please enter a valid amount.")
+      } else if (parseFloat(withdrawAmount) > parseFloat(balance)) {
+        setAmountError("Insufficient balance.")
+      } else {
+        setAmountError(null)
+      }
+    } else {
+      setAmountError(null)
+    }
+  }, [recipientAddress, withdrawAmount, balance])
 
   const handleRefreshWalletData = async () => {
-    setIsRefreshingBalance(true);
-    await fetchWalletData();
-    await fetchEthRate();
-    setIsRefreshingBalance(false);
-    setNotification({ type: "success", message: "Wallet data refreshed!" });
-  };
+    setIsRefreshingBalance(true)
+    await fetchWalletData()
+    await fetchEthRate()
+    setIsRefreshingBalance(false)
+    setNotification({ type: "success", message: "Wallet data refreshed!" })
+  }
 
   const handleRefreshTransactions = async () => {
-    setIsRefreshingTransactions(true);
-    await fetchWalletData(); // fetchWalletData already includes transaction fetching
-    setIsRefreshingTransactions(false);
-    setNotification({ type: "success", message: "Transaction history refreshed!" });
-  };
+    setIsRefreshingTransactions(true)
+    await fetchWalletData()
+    setIsRefreshingTransactions(false)
+    setNotification({ type: "success", message: "Transaction history refreshed!" })
+  }
 
   const copyToClipboard = () => {
     if (user?.wallet?.address) {
-      navigator.clipboard.writeText(user.wallet.address);
-      setNotification({ type: "success", message: "Address copied to clipboard!" });
+      navigator.clipboard.writeText(user.wallet.address)
+      setNotification({ type: "success", message: "Address copied to clipboard!" })
     }
-  };
+  }
 
-  const handleWithdraw = async () => {
-    try {
-      // Validation
-      if (!recipientAddress || !ethers.isAddress(recipientAddress)) {
-        setNotification({ type: "error", message: "Please enter a valid recipient address." });
-        return;
-      }
-
-      if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
-        setNotification({ type: "error", message: "Please enter a valid amount." });
-        return;
-      }
-
-      if (parseFloat(withdrawAmount) > parseFloat(balance)) {
-        setNotification({ type: "error", message: "Insufficient balance." });
-        return;
-      }
-
-      // Close withdraw modal and open confirmation modal
-      setIsWithdrawFundsModalOpen(false);
-      setIsConfirmWithdrawModalOpen(true);
-    } catch (error) {
-      console.error("Error validating withdrawal:", error);
-      setNotification({ type: "error", message: "Error processing withdrawal." });
+  const handleWithdraw = () => {
+    if (recipientError || amountError || !recipientAddress || !withdrawAmount) {
+      return
     }
-  };
+    setIsWithdrawFundsModalOpen(false)
+    setIsConfirmWithdrawModalOpen(true)
+  }
 
   const confirmWithdraw = async () => {
     try {
-      const valueInWei = ethers.parseEther(withdrawAmount);
+      const valueInWei = ethers.parseEther(withdrawAmount)
 
       await sendTransaction({
         to: recipientAddress as `0x${string}`,
         value: valueInWei,
-      });
+        chainId: baseSepolia.id,
+      },
+      {
+        address: wallets[0].address
+      })
 
-      setNotification({ type: "success", message: "Transaction submitted successfully!" });
-      setIsConfirmWithdrawModalOpen(false);
-      setRecipientAddress("");
-      setWithdrawAmount("");
+      setNotification({ type: "success", message: "Transaction submitted successfully!" })
+      setIsConfirmWithdrawModalOpen(false)
+      setRecipientAddress("")
+      setWithdrawAmount("")
 
-      // Refresh wallet data after a short delay
       setTimeout(() => {
-        fetchWalletData();
-      }, 3000);
+        fetchWalletData()
+      }, 3000)
     } catch (error) {
-      console.error("Error sending transaction:", error);
-      setNotification({ type: "error", message: "Transaction failed. Please try again." });
-      setIsConfirmWithdrawModalOpen(false);
+      console.error("Error sending transaction:", error)
+      setNotification({ type: "error", message: "Transaction failed. Please try again." })
+      setIsConfirmWithdrawModalOpen(false)
     }
-  };
+  }
 
   const filteredTransactions = transactions.filter((txn) => {
-    if (!user?.wallet?.address) return false;
-    if (transactionFilter === "all") return true;
+    if (!user?.wallet?.address) return false
+    if (transactionFilter === "all") return true
     if (transactionFilter === "send") {
-      return txn.from.toLowerCase() === user.wallet.address.toLowerCase();
+      return txn.from.toLowerCase() === user.wallet.address.toLowerCase()
     }
     if (transactionFilter === "receive") {
-      return txn.to.toLowerCase() === user.wallet.address.toLowerCase();
+      return txn.to.toLowerCase() === user.wallet.address.toLowerCase()
     }
-    return true;
-  });
+    return true
+  })
+
+  const isWithdrawButtonDisabled = !!recipientError || !!amountError || !recipientAddress || !withdrawAmount
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -189,7 +201,6 @@ function WalletPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8">My Wallet</h1>
 
-        {/* Wallet Address */}
         {user?.wallet?.address && (
           <Card className="mb-8 bg-linear-to-br from-green-50 via-green-100 to-yellow-100">
             <CardHeader className="flex flex-col  sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-2">
@@ -204,15 +215,14 @@ function WalletPage() {
           </Card>
         )}
 
-        {/* Wallet Balance */}
         <Card className="mb-8 bg-linear-to-br from-green-50 via-green-100 to-blue-200">
           <CardHeader className="flex flex-row items-center justify-between  space-y-0 pb-2">
             <h2 className="text-sm font-medium text-muted-foreground">Current Balance</h2>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleRefreshWalletData} 
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRefreshWalletData}
                 title="Refresh balance and rate"
                 disabled={isRefreshingBalance}
               >
@@ -238,7 +248,6 @@ function WalletPage() {
           </CardContent>
         </Card>
 
-        {/* Actions */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
           <Button onClick={() => setIsAddFundsModalOpen(true)} className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2" title="Add funds to your wallet by scanning the QR code or copying the address.">
             <PlusCircle className="h-5 w-5" />
@@ -260,8 +269,8 @@ function WalletPage() {
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    transactionFilter === "all" 
-                      ? "bg-[#118C4C] text-white" 
+                    transactionFilter === "all"
+                      ? "bg-[#118C4C] text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                   onClick={() => setTransactionFilter("all")}
@@ -270,8 +279,8 @@ function WalletPage() {
                 </button>
                 <button
                   className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    transactionFilter === "send" 
-                      ? "bg-[#118C4C] text-white" 
+                    transactionFilter === "send"
+                      ? "bg-[#118C4C] text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                   onClick={() => setTransactionFilter("send")}
@@ -280,18 +289,18 @@ function WalletPage() {
                 </button>
                 <button
                   className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    transactionFilter === "receive" 
-                      ? "bg-[#118C4C] text-white" 
+                    transactionFilter === "receive"
+                      ? "bg-[#118C4C] text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                   onClick={() => setTransactionFilter("receive")}
                 >
                   Receive
                 </button>
-                <button 
-                  className="p-2 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50" 
-                  onClick={handleRefreshTransactions} 
-                  title="Refresh transactions" 
+                <button
+                  className="p-2 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50"
+                  onClick={handleRefreshTransactions}
+                  title="Refresh transactions"
                   disabled={isRefreshingTransactions}
                 >
                   <RefreshCcw className={`h-4 w-4 text-muted-foreground ${isRefreshingTransactions ? "animate-spin" : ""}`} />
@@ -342,7 +351,6 @@ function WalletPage() {
         </Card>
       </motion.div>
 
-      {/* Add Funds Modal */}
       <Modal
         isOpen={isAddFundsModalOpen}
         onClose={() => setIsAddFundsModalOpen(false)}
@@ -366,7 +374,6 @@ function WalletPage() {
         </div>
       </Modal>
 
-      {/* Withdraw Funds Modal */}
       <Modal
         isOpen={isWithdrawFundsModalOpen}
         onClose={() => setIsWithdrawFundsModalOpen(false)}
@@ -374,27 +381,32 @@ function WalletPage() {
       >
         <div className="space-y-4">
           <p className="text-muted-foreground">Enter the recipient address and the amount you wish to withdraw.</p>
-          <FormInput
-            label="Recipient Address"
-            placeholder="0x..."
-            value={recipientAddress}
-            onChange={(e) => setRecipientAddress(e.target.value)}
-            required
-          />
-          <FormInput
-            label="Amount (ETH)"
-            placeholder="0.0"
-            value={withdrawAmount}
-            onChange={(e) => setWithdrawAmount(e.target.value)}
-            required
-          />
-          <Button onClick={handleWithdraw} className="w-full bg-red-600 hover:bg-red-700 text-white">
-            Withdraw
+          <div>
+            <FormInput
+              label="Recipient Address"
+              placeholder="0x..."
+              value={recipientAddress}
+              onChange={(e) => setRecipientAddress(e.target.value)}
+              required
+            />
+            {recipientError && <p className="text-red-500 text-sm mt-1">{recipientError}</p>}
+          </div>
+          <div>
+            <FormInput
+              label="Amount (ETH)"
+              placeholder="0.0"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+              required
+            />
+            {amountError && <p className="text-red-500 text-sm mt-1">{amountError}</p>}
+          </div>
+          <Button onClick={handleWithdraw} className="w-full bg-red-600 hover:bg-red-700 text-white" disabled={isWithdrawButtonDisabled}>
+            Continue
           </Button>
         </div>
       </Modal>
 
-      {/* Confirm Withdraw Modal */}
       <Modal
         isOpen={isConfirmWithdrawModalOpen}
         onClose={() => setIsConfirmWithdrawModalOpen(false)}
@@ -426,4 +438,4 @@ function WalletPage() {
   )
 }
 
-export default withAuth(WalletPage);
+export default withAuth(WalletPage)
