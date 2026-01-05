@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@hookform/resolvers": "^5.2.2",
     "@nextui-org/react": "^2.6.11",
     "@privy-io/react-auth": "^3.8.1",
