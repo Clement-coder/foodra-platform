@@ -12,7 +12,7 @@ const SLIDE_INTERVAL = 5000
 const slides = [
   {
     image: "/WhatsApp Image 2025-12-14 at 07.27.36.jpeg",
-    text: "Empowering Nigerian Farmers to Thrive",
+    text: "Empowering African Farmers to Thrive",
   },
   {
     image: "/WhatsApp Image 2025-12-14 at 07.27.37.jpeg",

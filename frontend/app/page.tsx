@@ -9,11 +9,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { initializeSampleData } from "@/lib/sampleData"
 import HeroSection from "@/components/HeroSection"
 import SignupButton from "@/components/SignupButton"
+import GetInTouch from "@/components/GetInTouch"
 
 export default function LandingPage() {
   useEffect(() => {
     initializeSampleData()
-  }, [])
+   }, [])
 
   // --- Features, stats, benefits ---
   const features = [
@@ -165,6 +166,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <GetInTouch />
 
       {/* CTA Section */}
       <section className="py-20 px-4">

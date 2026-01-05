@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { NavBar } from "@/components/NavBar"
 import { BottomTabBar } from "@/components/BottomTableBar"
 import Footer from "@/components/Footer"
+import { CartProvider } from "@/lib/useCart"
 import "./globals.css"
 import Providers from "./Provider"
 
@@ -14,7 +15,6 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Foodra - Empowering Nigerian Farmers",
   description: "Connect farmers with markets, training, and funding opportunities",
-  generator: "v0.app",
   icons: {
     icon: [
       {
@@ -51,13 +51,14 @@ export default function RootLayout({
           `}
         </style>
         <Providers>
-         <NavBar />
-        <main className="min-h-screen pb-20 md:pb-8">{children}</main>
-        <BottomTabBar />
-        <Footer />
-        <Analytics />
+          <CartProvider>
+            <NavBar />
+            <main className="min-h-screen pb-20 md:pb-8">{children}</main>
+            <BottomTabBar />
+            <Footer />
+          </CartProvider>
+          <Analytics />
         </Providers>
-       
       </body>
     </html>
   )
