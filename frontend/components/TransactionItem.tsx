@@ -16,13 +16,17 @@ interface Transaction {
 interface TransactionItemProps {
   txn: Transaction;
   userAddress: string;
+  ethToUsdcRate: number | null;
+  ethToNgnRate: number | null;
 }
 
-export function TransactionItem({ txn, userAddress }: TransactionItemProps) {
+export function TransactionItem({ txn, userAddress, ethToUsdcRate, ethToNgnRate }: TransactionItemProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const isSender = txn.from.toLowerCase() === userAddress.toLowerCase()
   const isReceiver = txn.to.toLowerCase() === userAddress.toLowerCase()
+
+  const ethValue = parseFloat(ethers.formatEther(txn.value))
 
   const toggleOpen = () => setIsOpen(!isOpen)
 
@@ -54,7 +58,7 @@ export function TransactionItem({ txn, userAddress }: TransactionItemProps) {
             }`}
           >
             {isReceiver ? "+" : "-"}
-            {ethers.formatEther(txn.value)} ETH
+            {ethValue.toFixed(6)} ETH
           </p>
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
@@ -96,6 +100,18 @@ export function TransactionItem({ txn, userAddress }: TransactionItemProps) {
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
+              {ethToUsdcRate && (
+                <div className="flex justify-between">
+                  <p className="font-medium text-muted-foreground">Value (USDC):</p>
+                  <p className="font-mono">~${(ethValue * ethToUsdcRate).toFixed(2)}</p>
+                </div>
+              )}
+              {ethToNgnRate && (
+                <div className="flex justify-between">
+                  <p className="font-medium text-muted-foreground">Value (NGN):</p>
+                  <p className="font-mono">~₦{(ethValue * ethToNgnRate).toFixed(2)}</p>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

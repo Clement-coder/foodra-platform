@@ -31,6 +31,8 @@ function WalletPage() {
   const { sendTransaction } = useSendTransaction()
   const [balance, setBalance] = useState<string>("0")
   const [ethToUsdRate, setEthToUsdRate] = useState<number | null>(null)
+  const [ethToUsdcRate, setEthToUsdcRate] = useState<number | null>(null)
+  const [ethToNgnRate, setEthToNgnRate] = useState<number | null>(null)
   const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false)
   const [isWithdrawFundsModalOpen, setIsWithdrawFundsModalOpen] = useState(false)
   const [isConfirmWithdrawModalOpen, setIsConfirmWithdrawModalOpen] = useState(false)
@@ -79,10 +81,16 @@ function WalletPage() {
 
   const fetchEthRate = async () => {
     try {
-      const rateResponse = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
+      const rateResponse = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd,ngn")
       const rateData = await rateResponse.json()
-      if (rateData.ethereum && rateData.ethereum.usd) {
-        setEthToUsdRate(rateData.ethereum.usd)
+      if (rateData.ethereum) {
+        if (rateData.ethereum.usd) {
+          setEthToUsdRate(rateData.ethereum.usd)
+          setEthToUsdcRate(rateData.ethereum.usd) // Assuming 1 USDC = 1 USD
+        }
+        if (rateData.ethereum.ngn) {
+          setEthToNgnRate(rateData.ethereum.ngn)
+        }
       }
     } catch (error) {
       console.error("Error fetching ETH to USD rate:", error)
@@ -235,17 +243,22 @@ function WalletPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-2">
-              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#118C4C]">{balance} ETH</div>
-              {ethToUsdRate && (
-                <div className="text-2xl sm:text-3xl font-semibold text-muted-foreground">
-                  ~${(parseFloat(balance) * ethToUsdRate).toFixed(2)} USD
+            <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#118C4C] mb-2">{balance} ETH</div>
+            <div className="space-y-1 text-muted-foreground">
+              {ethToUsdcRate && (
+                <div className="text-lg sm:text-xl font-semibold">
+                  ~${(parseFloat(balance) * ethToUsdcRate).toFixed(2)} USDC
+                </div>
+              )}
+              {ethToNgnRate && (
+                <div className="text-lg sm:text-xl font-semibold">
+                  ~₦{(parseFloat(balance) * ethToNgnRate).toFixed(2)} NGN
                 </div>
               )}
             </div>
             {ethToUsdRate && (
-              <p className="mt-2 text-sm text-muted-foreground">
-                Rate: 1 ETH = ${ethToUsdRate.toFixed(2)} USD
+              <p className="mt-4 text-sm text-muted-foreground">
+                Current rate: 1 ETH = ${ethToUsdRate.toFixed(2)} USD
               </p>
             )}
           </CardContent>
@@ -326,7 +339,13 @@ function WalletPage() {
             ) : (
               <div className="divide-y divide-border">
                 {filteredTransactions.map((txn) => (
-                  <TransactionItem key={txn.hash} txn={txn} userAddress={user!.wallet!.address} />
+                  <TransactionItem
+                    key={txn.hash}
+                    txn={txn}
+                    userAddress={user!.wallet!.address}
+                    ethToUsdcRate={ethToUsdcRate}
+                    ethToNgnRate={ethToNgnRate}
+                  />
                 ))}
               </div>
             )}
