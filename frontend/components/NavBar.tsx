@@ -28,10 +28,12 @@ export function NavBar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <span className="flex items-center gap-4">
+            
             <a
               href="/"
               className="flex items-center space-x-2 text-2xl font-bold text-[#118C4C] hover:opacity-80  mb-3 transition-opacity"
             >
+
               <img
                 src="/foodra_logo.jpeg"
                 alt="Foodra Logo"
