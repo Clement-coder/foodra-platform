@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import localFont from "next/font/local"
 import { Analytics } from "@vercel/analytics/next"
 import { NavBar } from "@/components/NavBar"
 import { BottomTabBar } from "@/components/BottomTableBar"
@@ -9,9 +9,45 @@ import { CartProvider } from "@/lib/useCart"
 import "./globals.css"
 import Providers from "./Provider"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+// ---- LOCAL FONTS ----
 
+// Geist (download and put in public/fonts/Geist/)
+// Geist
+// const geist = localFont({
+//   src: [
+//     {
+//       path: "../public/fonts/Geist/Geist-Regular.ttf", // ✅ correct
+//       weight: "400",
+//       style: "normal",
+//     },
+//     {
+//       path: "../public/fonts/Geist/Geist-Bold.ttf",
+//       weight: "700",
+//       style: "normal",
+//     },
+//   ],
+//   variable: "--font-geist-sans",
+// })
+
+// Geist Mono
+const geistMono = localFont({
+  src: [
+    {
+      path: "../public/fonts/Geist_Mono/static/GeistMono-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/Geist_Mono/static/GeistMono-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-geist-mono",
+})
+
+
+// ---- METADATA ----
 export const metadata: Metadata = {
   title: "Foodra - Empowering Nigerian Farmers",
   description: "Connect farmers with markets, training, and funding opportunities",
@@ -34,14 +70,15 @@ export const metadata: Metadata = {
   },
 }
 
+// ---- ROOT LAYOUT ----
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="font-sans antialiased">
+    <html lang="en" className={`${geistMono.variable}`}>
+      <body className="antialiased">
         <style>
           {`
             [data-privy-logo] {

@@ -22,9 +22,9 @@ interface Order {
 interface CartContextType {
   cartItems: CartItem[];
   addToCart: (product: Product) => void;
-  removeFromCart: (productId: number) => void;
-  incrementQuantity: (productId: number) => void;
-  decrementQuantity: (productId: number) => void;
+  removeFromCart: (productId: string) => void;
+  incrementQuantity: (productId: string) => void;
+  decrementQuantity: (productId: string) => void;
   cartCount: number;
   clearCart: () => void;
   checkout: () => void;
@@ -90,13 +90,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const removeFromCart = (productId: number) => {
+  const removeFromCart = (productId: string) => {
     setCartItems((prevItems) =>
       prevItems.filter((item) => item.id !== productId)
     );
   };
 
-  const incrementQuantity = (productId: number) => {
+  const incrementQuantity = (productId: string) => {
     setCartItems((prevItems) =>
       prevItems.map((item) =>
         item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
@@ -104,7 +104,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const decrementQuantity = (productId: number) => {
+  const decrementQuantity = (productId: string) => {
     setCartItems((prevItems) =>
       prevItems.map((item) =>
         item.id === productId && item.quantity > 1
