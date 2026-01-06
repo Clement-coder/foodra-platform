@@ -3,18 +3,20 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { usePrivy, useWallets, useSendTransaction } from "@privy-io/react-auth"
-import { useAccount } from "wagmi"
+import { useAccount, useSwitchChain } from "wagmi"
 import { ethers } from "ethers"
 import { QRCodeSVG } from "qrcode.react"
 import { FormInput } from "@/components/FormInput"
-import { DollarSign, History, PlusCircle, MinusCircle, ArrowUpCircle, ArrowDownCircle, Copy, RefreshCcw, Wallet } from "lucide-react"
+import { DollarSign, History, PlusCircle, MinusCircle, ArrowUpCircle, ArrowDownCircle, Copy, RefreshCcw, Wallet, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
 import { NotificationDiv } from "@/components/NotificationDiv"
 import { TransactionItem } from "@/components/TransactionItem"
 import withAuth from "../../components/withAuth"
-import { baseSepolia } from "viem/chains"
+import { base, baseSepolia } from "viem/chains"
+import type { Chain } from "viem"
+
 
 interface Transaction {
   hash: string;
@@ -29,6 +31,7 @@ function WalletPage() {
   const { wallets } = useWallets()
   const { chainId } = useAccount()
   const { sendTransaction } = useSendTransaction()
+  const { switchChain } = useSwitchChain()
   const [balance, setBalance] = useState<string>("0")
   const [ethToUsdRate, setEthToUsdRate] = useState<number | null>(null)
   const [ethToUsdcRate, setEthToUsdcRate] = useState<number | null>(null)
@@ -46,6 +49,14 @@ function WalletPage() {
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false)
   const [recipientError, setRecipientError] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
+  // const [selectedChain, setSelectedChain] = useState(baseSepolia)
+  const [selectedChain, setSelectedChain] = useState<Chain>(baseSepolia)
+
+
+  const handleChainSwitch = (chainId: number) => {
+    switchChain({ chainId })
+    setSelectedChain(chainId === base.id ? base : baseSepolia)
+  }
 
   const fetchWalletData = async () => {
     if (user?.wallet?.address) {
@@ -53,13 +64,16 @@ function WalletPage() {
         // Add a small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000))
 
-        const provider = new ethers.JsonRpcProvider("https://sepolia.base.org")
+        const provider = new ethers.JsonRpcProvider(selectedChain.id === base.id ? "https://mainnet.base.org" : "https://sepolia.base.org")
         const balance = await provider.getBalance(user.wallet.address)
         setBalance(ethers.formatEther(balance))
 
-        const response = await fetch(
-          `https://api.routescan.io/v2/network/testnet/evm/84532/etherscan/api?module=account&action=txlist&address=${user.wallet.address}&startblock=0&endblock=99999999&sort=desc&apikey=${process.env.NEXT_PUBLIC_BASESCAN_API_KEY}`
-        )
+        const apiUrl =
+          selectedChain.id === base.id
+            ? `https://api.routescan.io/v2/network/mainnet/evm/8453/etherscan/api?module=account&action=txlist&address=${user.wallet.address}&startblock=0&endblock=99999999&sort=desc&apikey=${process.env.NEXT_PUBLIC_BASESCAN_API_KEY}`
+            : `https://api.routescan.io/v2/network/testnet/evm/84532/etherscan/api?module=account&action=txlist&address=${user.wallet.address}&startblock=0&endblock=99999999&sort=desc&apikey=${process.env.NEXT_PUBLIC_BASESCAN_API_KEY}`
+
+        const response = await fetch(apiUrl)
 
         const data = await response.json()
         if (data.status === "1" && Array.isArray(data.result)) {
@@ -100,7 +114,7 @@ function WalletPage() {
   useEffect(() => {
     fetchWalletData()
     fetchEthRate()
-  }, [user])
+  }, [user, selectedChain])
 
   useEffect(() => {
     // Real-time validation for recipient address
@@ -279,12 +293,41 @@ function WalletPage() {
           </Button>
         </div>
 
+  <div className="flex justify-end mb-4">
+  <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1">
+    <Button
+      onClick={() => handleChainSwitch(base.id)}
+      className={`rounded-full px-4 py-1 text-sm font-medium transition-all ${
+        selectedChain.id === base.id
+          ? "bg-[#118C4C] text-white shadow"
+          : "bg-transparent  border border-green-700 hover:bg-[#118C4C]/10"
+      }`}
+    >
+      Mainnet
+    </Button>
+
+    <Button
+      onClick={() => handleChainSwitch(baseSepolia.id)}
+      className={`rounded-full px-4 py-1 text-sm font-medium transition-all ${
+        selectedChain.id === baseSepolia.id
+          ? "bg-[#118C4C] text-white shadow"
+          : "bg-transparent border border-green-700 hover:bg-[#118C4C]/10"
+      }`}
+    >
+      Testnet
+    </Button>
+  </div>
+</div>
+
+
         <Card>
           <CardHeader className="pb-4 bg-gradient-to-br from-green-100 via-blue-100 to-green-50">
             <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Transaction History</h2>
-                <p className="text-sm text-muted-foreground">Recent transactions on the Base Sepolia network.</p>
+                <p className="text-sm text-muted-foreground">
+                  Recent transactions on the {selectedChain.id === base.id ? "Base" : "Base Sepolia"} network.
+                </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <button
@@ -345,6 +388,7 @@ function WalletPage() {
                     userAddress={user!.wallet!.address}
                     ethToUsdcRate={ethToUsdcRate}
                     ethToNgnRate={ethToNgnRate}
+                    selectedChain={selectedChain}
                   />
                 ))}
               </div>

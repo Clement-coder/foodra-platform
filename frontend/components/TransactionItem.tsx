@@ -13,14 +13,19 @@ interface Transaction {
   timeStamp: string;
 }
 
+import { base, baseSepolia } from "viem/chains";
+
+// ...
+
 interface TransactionItemProps {
   txn: Transaction;
   userAddress: string;
   ethToUsdcRate: number | null;
   ethToNgnRate: number | null;
+  selectedChain: any;
 }
 
-export function TransactionItem({ txn, userAddress, ethToUsdcRate, ethToNgnRate }: TransactionItemProps) {
+export function TransactionItem({ txn, userAddress, ethToUsdcRate, ethToNgnRate, selectedChain }: TransactionItemProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const isSender = txn.from.toLowerCase() === userAddress.toLowerCase()
@@ -29,6 +34,8 @@ export function TransactionItem({ txn, userAddress, ethToUsdcRate, ethToNgnRate 
   const ethValue = parseFloat(ethers.formatEther(txn.value))
 
   const toggleOpen = () => setIsOpen(!isOpen)
+
+  const basescanUrl = selectedChain.id === base.id ? "https://basescan.org" : "https://sepolia.basescan.org";
 
   return (
     <div className="border-b border-border last:border-b-0">
@@ -89,7 +96,7 @@ export function TransactionItem({ txn, userAddress, ethToUsdcRate, ethToNgnRate 
               <div className="flex justify-between items-center">
                 <p className="font-medium text-muted-foreground">Transaction Hash:</p>
                 <a
-                  href={`https://sepolia.basescan.org/tx/${txn.hash}`}
+                  href={`${basescanUrl}/tx/${txn.hash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-blue-600 hover:underline"
