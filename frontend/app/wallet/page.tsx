@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
 import { NotificationDiv } from "@/components/NotificationDiv"
+import { TransactionItem } from "@/components/TransactionItem"
 import withAuth from "../../components/withAuth"
 import { baseSepolia } from "viem/chains"
 
@@ -33,6 +34,7 @@ function WalletPage() {
   const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false)
   const [isWithdrawFundsModalOpen, setIsWithdrawFundsModalOpen] = useState(false)
   const [isConfirmWithdrawModalOpen, setIsConfirmWithdrawModalOpen] = useState(false)
+  const [isComingSoonModalOpen, setIsComingSoonModalOpen] = useState(false)
   const [recipientAddress, setRecipientAddress] = useState("")
   const [withdrawAmount, setWithdrawAmount] = useState("")
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
@@ -42,8 +44,6 @@ function WalletPage() {
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false)
   const [recipientError, setRecipientError] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
-
-const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by the user
 
   const fetchWalletData = async () => {
     if (user?.wallet?.address) {
@@ -56,8 +56,9 @@ const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by th
         setBalance(ethers.formatEther(balance))
 
         const response = await fetch(
-          `https://api-sepolia.basescan.org/api?module=account&action=txlist&address=${user.wallet.address}&startblock=0&endblock=99999999&sort=desc&apikey=${BASESCAN_API_KEY}`
+          `https://api.routescan.io/v2/network/testnet/evm/84532/etherscan/api?module=account&action=txlist&address=${user.wallet.address}&startblock=0&endblock=99999999&sort=desc&apikey=${process.env.NEXT_PUBLIC_BASESCAN_API_KEY}`
         )
+
         const data = await response.json()
         if (data.status === "1" && Array.isArray(data.result)) {
           setTransactions(data.result)
@@ -100,6 +101,8 @@ const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by th
     } else {
       setRecipientError(null)
     }
+
+    
 
     // Real-time validation for withdrawal amount
     if (withdrawAmount) {
@@ -202,8 +205,8 @@ const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by th
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8">My Wallet</h1>
 
         {user?.wallet?.address && (
-          <Card className="mb-8 bg-linear-to-br from-green-50 via-green-100 to-yellow-100">
-            <CardHeader className="flex flex-col  sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-2">
+          <Card className="mb-8 bg-gradient-to-br from-green-50 via-green-100 to-yellow-100">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-2">
               <h2 className="text-sm font-medium text-muted-foreground">Wallet Address</h2>
               <Button variant="ghost" size="sm" onClick={copyToClipboard}>
                 <Copy className="h-4 w-4" />
@@ -215,8 +218,8 @@ const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by th
           </Card>
         )}
 
-        <Card className="mb-8 bg-linear-to-br from-green-50 via-green-100 to-blue-200">
-          <CardHeader className="flex flex-row items-center justify-between  space-y-0 pb-2">
+        <Card className="mb-8 bg-gradient-to-br from-green-50 via-green-100 to-blue-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <h2 className="text-sm font-medium text-muted-foreground">Current Balance</h2>
             <div className="flex items-center gap-2">
               <Button
@@ -248,7 +251,7 @@ const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by th
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <Button onClick={() => setIsAddFundsModalOpen(true)} className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2" title="Add funds to your wallet by scanning the QR code or copying the address.">
             <PlusCircle className="h-5 w-5" />
             Add Funds
@@ -257,10 +260,14 @@ const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by th
             <MinusCircle className="h-5 w-5" />
             Withdraw Funds
           </Button>
+          <Button onClick={() => setIsComingSoonModalOpen(true)} variant="outline" className="gap-2" title="Bridge funds to another network.">
+            <Wallet className="h-5 w-5" />
+            Bridge Funds
+          </Button>
         </div>
 
         <Card>
-          <CardHeader className="pb-4 bg-linear-to-br from-green-100 via-blue-100">
+          <CardHeader className="pb-4 bg-gradient-to-br from-green-100 via-blue-100 to-green-50">
             <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Transaction History</h2>
@@ -308,8 +315,8 @@ const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by th
                 <History className="h-5 w-5 text-muted-foreground" />
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="p-4">
+</CardHeader>
+<CardContent className="p-4">
             {filteredTransactions.length === 0 ? (
               <div className="p-6 text-muted-foreground text-center flex flex-col items-center justify-center">
                 <Wallet className="h-12 w-12 mb-4 text-gray-400" />
@@ -319,31 +326,7 @@ const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by th
             ) : (
               <div className="divide-y divide-border">
                 {filteredTransactions.map((txn) => (
-                  <div key={txn.hash} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 gap-2">
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                      {txn.to.toLowerCase() === user?.wallet?.address.toLowerCase() ? (
-                        <ArrowDownCircle className="h-5 w-5 text-[#118C4C] flex-shrink-0" />
-                      ) : (
-                        <ArrowUpCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground">
-                          {txn.to.toLowerCase() === user?.wallet?.address.toLowerCase() ? "Receive" : "Send"} ETH
-                        </p>
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                          {new Date(parseInt(txn.timeStamp) * 1000).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <p
-                      className={`font-bold text-base sm:text-lg whitespace-nowrap ${
-                        txn.to.toLowerCase() === user?.wallet?.address.toLowerCase() ? "text-[#118C4C]" : "text-red-600"
-                      }`}
-                    >
-                      {txn.to.toLowerCase() === user?.wallet?.address.toLowerCase() ? "+" : "-"}
-                      {ethers.formatEther(txn.value)} ETH
-                    </p>
-                  </div>
+                  <TransactionItem key={txn.hash} txn={txn} userAddress={user!.wallet!.address} />
                 ))}
               </div>
             )}
@@ -432,6 +415,19 @@ const BASESCAN_API_KEY = "E6TZM8EDB2HT8PT9H37QQ6TT78VWV2MEQ6"; // Provided by th
               Confirm Withdrawal
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isComingSoonModalOpen}
+        onClose={() => setIsComingSoonModalOpen(false)}
+        title="Feature Coming Soon"
+      >
+        <div className="space-y-4 text-center">
+          <p className="text-muted-foreground">The fund bridging functionality is currently under development and will be available soon. Stay tuned for updates!</p>
+          <Button onClick={() => setIsComingSoonModalOpen(false)} className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+            Close
+          </Button>
         </div>
       </Modal>
     </div>
