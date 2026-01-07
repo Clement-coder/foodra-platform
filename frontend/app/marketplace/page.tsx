@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Filter } from "lucide-react";
+import { Plus, Filter, PackageOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
@@ -66,7 +66,8 @@ function MarketplacePage() {
         <div className="flex items-center gap-2">
           {authenticated && (
             <Link href="/orders">
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2 flex items-center ">
+                <PackageOpen  />
                 View My Orders
               </Button>
             </Link>
