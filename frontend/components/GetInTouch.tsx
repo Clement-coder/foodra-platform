@@ -83,11 +83,11 @@ const GetInTouch = () => {
             viewport={{ once: true }}
           >
             <form onSubmit={handleSubmit} className="w-full max-w-xl mx-auto">
-              <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-2 rounded-full shadow-lg border">
+              <div className="flex flex-col sm:flex-row items-center gap-4 bg-card p-2 shadow-lg border w-full rounded-md">
                 <div className="relative flex-grow w-full">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   <input
-                    className="pl-12 pr-4 py-3 border w-full bg-transparent rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                    className="pl-12 pr-4 py-3 border w-full bg-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground sm:text-base text-sm"
                     type="email"
                     placeholder="Enter your email address"
                     value={email}
@@ -97,7 +97,7 @@ const GetInTouch = () => {
                 </div>
 
                 <button
-                  className="flex-shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 px-6 rounded-full w-full sm:w-auto flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50"
+                  className="flex-shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 px-6 rounded-md w-full sm:w-auto flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50"
                   type="submit"
                   disabled={status === "loading" || status === "success"}
                 >
