@@ -34,12 +34,7 @@ const withAuth = <P extends object>(
       return <WrappedComponent {...props} />;
     }
 
-    return (
-      <>
-        <WrappedComponent {...props} />
-        <AuthModal isOpen={modalOpen} onClose={handleCloseModal} />
-      </>
-    );
+    return <AuthModal isOpen={modalOpen} onClose={handleCloseModal} />;
   };
 
   return ComponentWithAuth;

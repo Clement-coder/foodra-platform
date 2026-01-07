@@ -1,16 +1,7 @@
 import type { Product, Training, User, Order } from "./types"
 
-// Demo user object
-export const demoUser: User = {
-  id: "demo-1",
-  name: "Demo User",
-  phone: "+2348012345678",
-  location: "Lagos",
-  avatar: "/farmer-avatar.png",
-  role: "farmer",
-}
 
-// Sample products for marketplace
+
 export const sampleProducts: Product[] = [
   {
     id: "prod-1",
@@ -150,44 +141,7 @@ export const sampleTraining: Training[] = [
   },
 ]
 
-// Sample orders
-export const sampleOrders: Order[] = [
-  {
-    id: "order-1",
-    userId: "demo-1",
-    items: [
-      { productId: "prod-1", productName: "Fresh Tomatoes", pricePerUnit: 250, quantity: 2, image: "https://upload.wikimedia.org/wikipedia/commons/e/e2/Healthy_Red_Tomatoes_are_Wet_and_Organic.png" },
-      { productId: "prod-3", productName: "Fresh Chicken Eggs", pricePerUnit: 80, quantity: 12, image: "https://picsum.photos/seed/eggs/800/600" },
-    ],
-    totalAmount: 1460,
-    status: "Delivered",
-    createdAt: "2025-11-20T10:00:00Z",
-    updatedAt: "2025-11-22T12:00:00Z",
-  },
-  {
-    id: "order-2",
-    userId: "demo-1",
-    items: [
-      { productId: "prod-2", productName: "Organic Rice", pricePerUnit: 450, quantity: 5, image: "https://picsum.photos/seed/rice/800/600" },
-    ],
-    totalAmount: 2250,
-    status: "Shipped",
-    createdAt: "2025-12-01T14:30:00Z",
-    updatedAt: "2025-12-02T09:00:00Z",
-  },
-  {
-    id: "order-3",
-    userId: "demo-1",
-    items: [
-      { productId: "prod-5", productName: "Fresh Yam Tubers", pricePerUnit: 350, quantity: 10, image: "https://picsum.photos/seed/yam/800/600" },
-      { productId: "prod-6", productName: "Honey", pricePerUnit: 2500, quantity: 1, image: "https://picsum.photos/seed/honey/800/600" },
-    ],
-    totalAmount: 6000,
-    status: "Processing",
-    createdAt: "2025-12-10T11:00:00Z",
-    updatedAt: "2025-12-10T11:00:00Z",
-  },
-]
+
 
 
 // Initialize localStorage with sample data if not present
@@ -199,7 +153,6 @@ export function initializeSampleData() {
   const applicationsKey = "foodra_applications"
   const enrollmentsKey = "foodra_enrollments"
   const cartKey = "foodra_cart"
-  const ordersKey = "foodra_orders"
 
   // Check and seed products
   if (!localStorage.getItem(productsKey)) {
@@ -209,11 +162,6 @@ export function initializeSampleData() {
   // Check and seed training
   if (!localStorage.getItem(trainingKey)) {
     localStorage.setItem(trainingKey, JSON.stringify(sampleTraining))
-  }
-
-  // Check and seed orders
-  if (!localStorage.getItem(ordersKey)) {
-    localStorage.setItem(ordersKey, JSON.stringify(sampleOrders))
   }
 
   // Initialize empty arrays for applications, enrollments, and cart if not present

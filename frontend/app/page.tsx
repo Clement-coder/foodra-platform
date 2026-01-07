@@ -6,14 +6,14 @@ import { motion } from "framer-motion"
 import { ShoppingBag, GraduationCap, DollarSign, Users, TrendingUp, Shield, ArrowRight, Target, Eye, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { initializeSampleData } from "@/lib/sampleData"
+
 import HeroSection from "@/components/HeroSection"
 import SignupButton from "@/components/SignupButton"
 import GetInTouch from "@/components/GetInTouch"
 
 export default function LandingPage() {
   useEffect(() => {
-    initializeSampleData()
+    
    }, [])
 
   // --- Features, stats, benefits ---

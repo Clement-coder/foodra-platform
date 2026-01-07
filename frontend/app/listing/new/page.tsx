@@ -16,10 +16,12 @@ import { NotificationDiv } from "@/components/NotificationDiv"
 import { productListingSchema, type ProductListingFormData } from "@/lib/schemas"
 import type { User, Product } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
+import { usePrivy } from "@privy-io/react-auth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 
 function NewListingPage() {
   const router = useRouter()
+  const { user: privyUser } = usePrivy();
   const [user, setUser] = useState<User | null>(null)
   const [imageBase64, setImageBase64] = useState("")
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
@@ -34,17 +36,28 @@ function NewListingPage() {
     resolver: zodResolver(productListingSchema),
   })
 
-useEffect(() => {
-  // Check if user is logged in
-  const storedUser = loadFromLocalStorage<User | null>("foodra_user", null)
+  useEffect(() => {
+    if (privyUser) {
+      const storedUser = loadFromLocalStorage<User | null>(`foodra_user_${privyUser.id}`, null);
+      if (storedUser) {
+        setUser(storedUser);
+      } else {
+        // If user is not in local storage, create a new user object
+        const newUser: User = {
+          id: privyUser.id,
+          name: privyUser.google?.name || privyUser.email?.address || "Unnamed User",
+          phone: privyUser.phone?.number,
+          location: "Nigeria", // Default location
+          avatar: privyUser.google?.picture,
+          role: "farmer", // Default role
+        };
+        saveToLocalStorage(`foodra_user_${privyUser.id}`, newUser);
+        setUser(newUser);
+      }
+    }
+  }, [privyUser]);
 
-  if (!storedUser) {
-    router.push("/")
-    return
-  }
 
-  setUser(storedUser)
-}, [router])
 
 
   const onSubmit = (data: ProductListingFormData) => {
