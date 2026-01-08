@@ -18,6 +18,7 @@ import type { User, Product } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
 import { usePrivy } from "@privy-io/react-auth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
+import { generateAvatarUrl } from "@/lib/avatarGenerator"
 
 function NewListingPage() {
   const router = useRouter()
@@ -42,13 +43,12 @@ function NewListingPage() {
       if (storedUser) {
         setUser(storedUser);
       } else {
-        // If user is not in local storage, create a new user object
         const newUser: User = {
           id: privyUser.id,
           name: privyUser.google?.name || privyUser.email?.address || "Unnamed User",
-          phone: privyUser.phone?.number,
+          phone: privyUser.phone?.number || "",
           location: "Nigeria", // Default location
-          avatar: privyUser.google?.picture,
+          avatar: generateAvatarUrl(privyUser.id),
           role: "farmer", // Default role
         };
         saveToLocalStorage(`foodra_user_${privyUser.id}`, newUser);
@@ -77,6 +77,7 @@ function NewListingPage() {
         location: user?.location || "Nigeria",
         farmerId: user?.id || "unknown",
         farmerName: user?.name || "Unknown Farmer",
+        farmerAvatar: user?.avatar || "",
         createdAt: new Date().toISOString(),
       }
 

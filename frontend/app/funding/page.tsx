@@ -10,29 +10,29 @@ import { FundingCard } from "@/components/FundingCard"
 import type { FundingApplication, User } from "@/lib/types"
 import withAuth from "../../components/withAuth";
 import { loadFromLocalStorage } from "@/lib/localStorage"
+import { useUser } from "@/lib/useUser"
 
 function FundingPage() {
+  const { currentUser: user, isLoading } = useUser()
   const [applications, setApplications] = useState<FundingApplication[]>([])
-  const [user, setUser] = useState<User | null>(null)
   const [filter, setFilter] = useState<"all" | "Pending" | "Approved" | "Rejected">("all")
 
   useEffect(() => {
-    loadData()
-  }, [])
+    if (!isLoading) {
+      loadData()
+    }
+  }, [isLoading, user])
 
   const loadData = () => {
-  const storedUser = loadFromLocalStorage<User | null>("foodra_user", null)
-    setUser(storedUser)
-
     const allApplications = loadFromLocalStorage<FundingApplication[]>("foodra_applications", [])
 
     // If user is logged in and not admin, show only their applications
-    if (storedUser && storedUser.role !== "admin") {
-      const userApplications = allApplications!.filter((app) => app.userId === storedUser.id)
+    if (user && user.role !== "admin") {
+      const userApplications = allApplications.filter((app) => app.userId === user.id)
       setApplications(userApplications)
     } else {
       // Show all applications for admin or non-logged users
-      setApplications(allApplications!)
+      setApplications(allApplications)
     }
   }
 
@@ -164,7 +164,12 @@ function FundingPage() {
       )}
 
       {/* Applications List */}
-      {!user ? (
+      {isLoading ? (
+        <div className="text-center py-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#118C4C] mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading user data...</p>
+        </div>
+      ) : !user ? (
         <Card className="p-8 text-center">
           <DollarSign className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">Access Funding Opportunities</h2>

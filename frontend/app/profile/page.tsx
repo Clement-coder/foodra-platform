@@ -18,10 +18,14 @@ import { usePrivy } from "@privy-io/react-auth"
 import withAuth from "@/components/withAuth"
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 import { SignOutModal } from "@/components/SignOutModal"
+import { ProfileCompletionModal } from "@/components/ProfileCompletionModal"
+import { calculateProfileCompletion } from "@/lib/profileUtils"
+import { useUser } from "@/lib/useUser"
 
 function ProfilePage() {
   const router = useRouter()
-  const { user, logout } = usePrivy()
+  const { currentUser: user, isLoading } = useUser()
+  const { logout } = usePrivy()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
@@ -43,119 +47,43 @@ function ProfilePage() {
   const getUserDisplayName = () => {
     if (!user) return "User"
     return (
-      user.google?.name ||
-      user.github?.name ||
-      user.twitter?.name ||
-      user.email?.address?.split("@")[0] ||
+      (user as any).google?.name ||
+      (user as any).github?.name ||
+      (user as any).twitter?.name ||
+      (user as any).email?.address?.split("@")[0] ||
       "User"
     )
   }
 
   // Helper function to get user email
-  const getUserEmail = () => {
-    if (!user) return "N/A"
-    return user.google?.email || user.email?.address || "N/A"
-  }
-
-  // Helper function to get user profile picture
-  const getUserProfilePicture = () => {
-    if (!user) return null
-    // Updated to use 'picture' instead of 'profilePictureUrl'
-    return  (user.github as any)?.picture || (user.twitter as any)?.picture || null
-  }
-
-  const calculateProfileCompletion = () => {
-    if (!user) return 0
-
-    let completedFields = 0
-    const totalFields = 5 // name, email, phone, location, accountType
-
-    console.log("Calculating profile completion...")
-
-    // Name field
-    if (getUserDisplayName() !== "User") {
-      completedFields++
-      console.log("Name field is complete.")
+    const getUserEmail = () => {
+      if (!user) return "N/A"
+      return (user as any).google?.email || (typeof user.email === "string" ? user.email : (user.email as any)?.address) || "N/A"
     }
 
-    // Email field
-    if (getUserEmail() !== "N/A") {
-      completedFields++
-      console.log("Email field is complete.")
-    }
-
-    // Phone field
-    if (phoneNumber) {
-      completedFields++
-      console.log("Phone field is complete.")
-    }
-
-    // Location field
-    if (location) {
-      completedFields++
-      console.log("Location field is complete.")
-    }
-
-    // Account type field
-    if (accountType) {
-      completedFields++
-      console.log("Account type field is complete.")
-    }
-
-    const percentage = Math.round((completedFields / totalFields) * 100)
-    console.log(`Profile completion: ${percentage}%`)
-    return percentage
-  }
-
-  const profileCompletion = user ? calculateProfileCompletion() : 0
+  const profileCompletion = user ? calculateProfileCompletion(user) : 0
   const isProfileComplete = profileCompletion === 100
 
   useEffect(() => {
     if (user) {
-      console.log("Privy user object:", JSON.stringify(user, null, 2))
+      // Set name from user object
+      setValue("name", user.name || "Unnamed User")
 
-      // Set name
-      setValue("name", getUserDisplayName())
+      // Set phone number from user object, fallback to local storage if user.phone is empty
+      const initialPhoneNumber = user.phone || loadFromLocalStorage<string>("user_phone_number", "")
+      setValue("phone", initialPhoneNumber)
+      setPhoneNumber(initialPhoneNumber)
 
-      // Load phone number
-      let savedPhoneNumber = loadFromLocalStorage<string>("user_phone_number", "")
-      // Normalize non-string values (in case something else was stored)
-      if (typeof savedPhoneNumber !== "string") {
-        try {
-          if (savedPhoneNumber && typeof savedPhoneNumber === "object" && "number" in savedPhoneNumber) {
-        savedPhoneNumber = (savedPhoneNumber as any).number
-          } else {
-        savedPhoneNumber = savedPhoneNumber ? String(savedPhoneNumber) : ""
-          }
-        } catch {
-          savedPhoneNumber = ""
-        }
-      }
-      if (typeof savedPhoneNumber === "string" && savedPhoneNumber) {
-        setValue("phone", savedPhoneNumber)
-        setPhoneNumber(savedPhoneNumber)
-      } else if (user.phone?.number) {
-        setValue("phone", user.phone.number)
-        setPhoneNumber(user.phone.number)
-      }
+      // Set location from user object, fallback to local storage if user.location is empty
+      const initialLocation = user.location || loadFromLocalStorage<string>("user_location", "")
+      setValue("location", initialLocation)
+      setLocation(initialLocation)
 
-      // Load location
-      const savedLocation = loadFromLocalStorage<string>("user_location", "")
-      if (typeof savedLocation === "string" && savedLocation) {
-        setValue("location", savedLocation)
-        setLocation(savedLocation)
-      }
-
-      // Load account type
+      // Set account type from user object, fallback to local storage if user.role is empty
       const savedAccountType = loadFromLocalStorage<string>("account_type", "")
-      const validAccountTypes = ["Farmer", "Buyer"]
-      if (typeof savedAccountType === "string" && validAccountTypes.includes(savedAccountType)) {
-        setValue("accountType", savedAccountType as "Farmer" | "Buyer")
-        setAccountType(savedAccountType)
-      } else {
-        setValue("accountType", "Farmer")
-        setAccountType("Farmer")
-      }
+      const initialAccountType = user.role === "farmer" || user.role === "admin" ? "Farmer" : savedAccountType || "Farmer"
+      setValue("accountType", initialAccountType as "Farmer" | "Buyer")
+      setAccountType(initialAccountType)
     }
   }, [user, setValue])
 
@@ -167,11 +95,10 @@ function ProfilePage() {
     if (!user) return
 
     // Pre-fill form with current user data
-    setValue("name", getUserDisplayName())
-
-   const savedPhoneNumber = loadFromLocalStorage("user_phone_number", "")
-const savedLocation = loadFromLocalStorage("user_location", "")
-const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
+    setValue("name", user.name || getUserDisplayName())
+    setValue("phone", phoneNumber || "")
+    setValue("location", location || "")
+    setValue("accountType", (accountType as "Farmer" | "Buyer") || "Farmer")
     setIsEditModalOpen(true)
   }
 
@@ -216,7 +143,7 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
     }
   }
 
-  if (!user) {
+  if (isLoading || !user) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
@@ -227,7 +154,6 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
     )
   }
 
-  const profilePicture = getUserProfilePicture()
   const displayName = getUserDisplayName()
   const userEmail = getUserEmail()
 
@@ -248,9 +174,9 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
           <CardHeader className="p-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               <div className="relative w-24 h-24 rounded-full overflow-hidden bg-muted flex-shrink-0 border-2 border-border">
-                {profilePicture ? (
+                {user.avatar ? (
                   <img
-                    src={profilePicture}
+                    src={user.avatar}
                     alt={displayName}
                     className="object-cover w-full h-full"
                     referrerPolicy="no-referrer"
@@ -340,7 +266,7 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
     role: "farmer",
     phone: phoneNumber || "",        // Added
     location: location || "",        // Added
-    avatar: profilePicture || undefined,  // Added
+    avatar: user.avatar,  // Added
   }}
 />
         </div>
@@ -356,13 +282,7 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
               </div>
               <div className="flex justify-between py-3 border-b border-border">
                 <span className="text-muted-foreground">Member Since</span>
-                <span className="font-medium text-foreground">
-                  {new Date(user.createdAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </span>
+                <span className="font-medium text-foreground">N/A</span>
               </div>
               <div className="flex justify-between py-3 border-b border-border">
                 <span className="text-muted-foreground">Authentication Provider</span>
@@ -370,7 +290,7 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
               </div>
 
               {/* Login Methods */}
-              {user.github && (
+              {(user as any).github && (
                 <div className="flex justify-between py-3 border-b border-border">
                   <span className="text-muted-foreground">Linked Account</span>
                   <span className="font-medium text-foreground flex items-center gap-2">
@@ -381,7 +301,7 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
                   </span>
                 </div>
               )}
-              {user.google && (
+              {(user as any).google && (
                 <div className="flex justify-between py-3 border-b border-border">
                   <span className="text-muted-foreground">Linked Account</span>
                   <span className="font-medium text-foreground flex items-center gap-2">
@@ -392,7 +312,7 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
                   </span>
                 </div>
               )}
-              {user.twitter && (
+              {(user as any).twitter && (
                 <div className="flex justify-between py-3 border-b border-border">
                   <span className="text-muted-foreground">Linked Account</span>
                   <span className="font-medium text-foreground flex items-center gap-2">
@@ -406,13 +326,13 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
               {user.phone && (
                 <div className="flex justify-between py-3 border-b border-border">
                   <span className="text-muted-foreground">Phone Verified</span>
-                  <span className="font-medium text-foreground">{user.phone.number}</span>
+                  <span className="font-medium text-foreground">{user.phone}</span>
                 </div>
               )}
               {user.email && (
                 <div className="flex justify-between py-3">
                   <span className="text-muted-foreground">Email</span>
-                  <span className="font-medium text-foreground">{user.email.address}</span>
+                  <span className="font-medium text-foreground">{typeof user.email === "string" ? user.email : (user.email as any).address}</span>
                 </div>
               )}
             </div>
@@ -429,10 +349,9 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
       </motion.div>
 
       {/* Edit Profile Modal */}
-      <Modal
+      <ProfileCompletionModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title={isProfileComplete ? "Edit Profile" : "Complete Profile Setup"}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FormInput
@@ -488,7 +407,7 @@ const savedAccountType = loadFromLocalStorage("account_type", "Farmer")
             </Button>
           </div>
         </form>
-      </Modal>
+      </ProfileCompletionModal>
 
       {/* Sign Out Confirmation Modal */}
       <SignOutModal

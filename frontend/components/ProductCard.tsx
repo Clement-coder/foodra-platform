@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/useCart";
+import { generateAvatarUrl } from "@/lib/avatarGenerator";
 
 interface ProductCardProps {
   product: Product;
@@ -48,6 +49,19 @@ export function ProductCard({ product }: ProductCardProps) {
           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
             {product.description}
           </p>
+
+          {/* Farmer Info */}
+          <div className="flex items-center gap-2 mb-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={generateAvatarUrl(product.farmerId)}
+              alt={product.farmerName}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+            <span className="text-sm font-medium text-foreground">
+              {product.farmerName}
+            </span>
+          </div>
 
           <div className="space-y-2">
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
