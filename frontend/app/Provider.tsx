@@ -12,29 +12,37 @@ import { privyConfig } from './PrivyConfig';
 import { wagmiConfig } from './WagmiConfig';
 import { initializeSampleData } from '../lib/sampleData';
 
+import { usePrivy } from '@privy-io/react-auth';
+
 const queryClient = new QueryClient();
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+function LoginHandler({ children }: { children: React.ReactNode }) {
+  const { authenticated } = usePrivy();
   const router = useRouter();
 
   useEffect(() => {
+    if (authenticated) {
+      router.push('/profile');
+    }
+  }, [authenticated, router]);
+
+  return <>{children}</>;
+}
+
+export default function Providers({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
     initializeSampleData();
   }, []);
-
-  const handleLogin = () => {
-    router.push('/profile');
-  };
 
   return (
     <PrivyProvider
       appId="cmj73kjr5029pjo0dwokzl29l"
       config={privyConfig}
-      onSuccess={handleLogin}
     >
       <QueryClientProvider client={queryClient}>
         <SmartWalletsProvider>
           <WagmiProvider config={wagmiConfig}>
-            {children}
+            <LoginHandler>{children}</LoginHandler>
           </WagmiProvider>
         </SmartWalletsProvider>
       </QueryClientProvider>
