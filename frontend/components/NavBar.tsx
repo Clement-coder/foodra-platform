@@ -8,10 +8,12 @@ import { ShoppingCart, Search, Wallet } from "lucide-react";
 import ProfileDropdown from "./ProfileDropdown";
 import SignupButton from "./SignupButton";
 import { useCart } from "@/lib/useCart";
+import { useUser } from "@/lib/useUser";
 
 export function NavBar() {
   const router = useRouter();
-  const { authenticated, user } = usePrivy();
+  const { authenticated } = usePrivy();
+  const { currentUser, isLoading } = useUser();
   const { cartCount } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -99,8 +101,8 @@ export function NavBar() {
             )}
 
             {/* Auth buttons */}
-            {authenticated && user ? (
-              <ProfileDropdown user={user} />
+            {authenticated && currentUser && !isLoading ? (
+              <ProfileDropdown user={currentUser} />
             ) : (
               <SignupButton />
             )}

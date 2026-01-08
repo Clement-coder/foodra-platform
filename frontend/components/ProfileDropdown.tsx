@@ -1,18 +1,18 @@
 "use client"
 
-import { User as PrivyUser } from "@privy-io/react-auth"
+import { User } from "@/lib/types"
 import { useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, ShoppingBag, GraduationCap, DollarSign, User, ChevronDown } from "lucide-react"
+import { Home, ShoppingBag, GraduationCap, DollarSign, User as UserIcon, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface ProfileDropdownProps {
-  user: PrivyUser
+  user: User
 }
 
 const dropdownLinks = [
-  { name: "Profile", href: "/profile", icon: User },
+  { name: "Profile", href: "/profile", icon: UserIcon },
   { name: "Home", href: "/", icon: Home },
   { name: "Market", href: "/marketplace", icon: ShoppingBag },
   { name: "Training", href: "/training", icon: GraduationCap },
@@ -34,7 +34,16 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
       onMouseLeave={() => setIsOpen(false)}
     >
       <Button variant="outline" size="sm" className="gap-2 bg-transparent hover:bg-accent transition-colors">
-        <User className="h-4 w-4" />
+        {user.avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={user.avatar}
+            alt="User Avatar"
+            className="h-6 w-6 rounded-full object-cover"
+          />
+        ) : (
+          <UserIcon className="h-4 w-4" />
+        )}
         <span className="hidden sm:inline">
           Profile
         </span>

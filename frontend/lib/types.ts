@@ -6,6 +6,7 @@ export interface User {
   phone: string
   location: string
   avatar: string
+  email?: string
   role?: "farmer" | "admin"
 }
 
@@ -20,6 +21,7 @@ export interface Product {
   location: string
   farmerId: string
   farmerName: string
+  farmerAvatar: string
   createdAt: string
 }
 
