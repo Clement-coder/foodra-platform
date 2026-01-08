@@ -21,11 +21,12 @@ import { SignOutModal } from "@/components/SignOutModal"
 import { ProfileCompletionModal } from "@/components/ProfileCompletionModal"
 import { calculateProfileCompletion } from "@/lib/profileUtils"
 import { format } from "date-fns"
+import { EmailCompletionModal } from "@/components/EmailCompletionModal"
 import { useUser } from "@/lib/useUser"
 
 function ProfilePage() {
   const router = useRouter()
-  const { currentUser: user, isLoading, updateUser } = useUser()
+  const { currentUser: user, isLoading, updateUser, isEmailMissing } = useUser()
   const { logout } = usePrivy()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
@@ -169,6 +170,7 @@ function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {isEmailMissing && <EmailCompletionModal />}
       {notification && (
         <NotificationDiv
           type={notification.type}
