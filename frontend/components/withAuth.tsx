@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import AuthModal from "./AuthModal";
 import { useUser } from "@/lib/useUser";
 import { calculateProfileCompletion } from "@/lib/profileUtils";
@@ -14,6 +14,7 @@ const withAuth = <P extends object>(
     const { ready, authenticated } = usePrivy();
     const { currentUser, isLoading } = useUser();
     const router = useRouter();
+    const pathname = usePathname();
     const [authModalOpen, setAuthModalOpen] = useState(false);
 
     useEffect(() => {
@@ -27,7 +28,7 @@ const withAuth = <P extends object>(
       // If authenticated, and currentUser is available (not isLoading from useUser)
       if (authenticated && currentUser && !isLoading) {
         const completion = calculateProfileCompletion(currentUser);
-        if (completion < 100 && router.pathname !== "/profile") {
+        if (completion < 100 && pathname !== "/profile") {
           router.push("/profile");
         }
       }
@@ -55,7 +56,7 @@ const withAuth = <P extends object>(
 
     if (authenticated && currentUser) {
       const completion = calculateProfileCompletion(currentUser);
-      if (completion < 100 && router.pathname !== "/profile") {
+      if (completion < 100 && pathname !== "/profile") {
         // This case is handled by the useEffect redirect, but we return null here to prevent rendering the wrapped component
         return null;
       }
