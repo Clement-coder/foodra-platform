@@ -27,14 +27,23 @@ export function useUser() {
       // For now, we'll mock a user with an avatar.
       const mockUser: User = {
         id: privyUser.id,
-        name: privyUser.github?.name || privyUser.google?.name || privyUser.email?.address || "User",
+        name:
+          privyUser.twitter?.name ||
+          privyUser.github?.name ||
+          privyUser.google?.name ||
+          privyUser.email?.address ||
+          "User",
         phone: privyUser.phone?.number || "",
         location: loadFromLocalStorage<string>("user_location", "Unknown"), // Use localStorage for location
         avatar: generateAvatarUrl(privyUser.id), // Generate avatar based on user ID
-        email: privyUser.github?.email || privyUser.google?.email || privyUser.email?.address || "",
+        email:
+          privyUser.github?.email ||
+          privyUser.google?.email ||
+          privyUser.email?.address ||
+          "",
         createdAt: privyUser.createdAt.toISOString(),
         linked_accounts: privyUser.linkedAccounts,
-        role: (loadFromLocalStorage<"farmer" | "buyer">("account_type", "farmer") === "farmer" ? "farmer" : "farmer"), // Use localStorage for role
+        role: loadFromLocalStorage<"farmer" | "buyer">("account_type", "farmer") === "farmer" ? "farmer" : "farmer", // Use localStorage for role
       }
       console.log("Created mock user:", mockUser)
       setCurrentUser(mockUser)

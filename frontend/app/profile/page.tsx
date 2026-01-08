@@ -339,6 +339,16 @@ function ProfilePage() {
             error={errors.name?.message}
             placeholder="Your full name"
             required
+            disabled
+          />
+
+          <FormInput
+            label="Email"
+            value={userEmail}
+            error={errors.name?.message}
+            placeholder="Your full name"
+            required
+            disabled
           />
 
           <FormInput
