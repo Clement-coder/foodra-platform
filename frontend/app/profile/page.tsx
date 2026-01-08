@@ -20,11 +20,12 @@ import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 import { SignOutModal } from "@/components/SignOutModal"
 import { ProfileCompletionModal } from "@/components/ProfileCompletionModal"
 import { calculateProfileCompletion } from "@/lib/profileUtils"
+import { format } from "date-fns"
 import { useUser } from "@/lib/useUser"
 
 function ProfilePage() {
   const router = useRouter()
-  const { currentUser: user, isLoading } = useUser()
+  const { currentUser: user, isLoading, updateUser } = useUser()
   const { logout } = usePrivy()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
@@ -47,6 +48,7 @@ function ProfilePage() {
   const getUserDisplayName = () => {
     if (!user) return "User"
     return (
+      user.name ||
       (user as any).google?.name ||
       (user as any).github?.name ||
       (user as any).twitter?.name ||
@@ -119,6 +121,14 @@ function ProfilePage() {
       // Save account type
       saveToLocalStorage("account_type", data.accountType)
       setAccountType(data.accountType)
+
+      // Update user state
+      updateUser({
+        name: data.name,
+        phone: data.phone,
+        location: data.location,
+        role: data.accountType === "Farmer" ? "farmer" : "buyer",
+      })
 
       console.log("Updating user profile:", data)
 
@@ -282,7 +292,9 @@ function ProfilePage() {
               </div>
               <div className="flex justify-between py-3 border-b border-border">
                 <span className="text-muted-foreground">Member Since</span>
-                <span className="font-medium text-foreground">N/A</span>
+                <span className="font-medium text-foreground">
+                  {user.createdAt ? format(new Date(user.createdAt), "MMMM d, yyyy") : "N/A"}
+                </span>
               </div>
               <div className="flex justify-between py-3 border-b border-border">
                 <span className="text-muted-foreground">Authentication Provider</span>
@@ -290,51 +302,18 @@ function ProfilePage() {
               </div>
 
               {/* Login Methods */}
-              {(user as any).github && (
-                <div className="flex justify-between py-3 border-b border-border">
+              {user.linked_accounts?.map((account: any) => (
+                <div className="flex justify-between py-3 border-b border-border" key={account.type}>
                   <span className="text-muted-foreground">Linked Account</span>
                   <span className="font-medium text-foreground flex items-center gap-2">
-                    GitHub
+                    {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
                     <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">
                       Connected
                     </span>
                   </span>
                 </div>
-              )}
-              {(user as any).google && (
-                <div className="flex justify-between py-3 border-b border-border">
-                  <span className="text-muted-foreground">Linked Account</span>
-                  <span className="font-medium text-foreground flex items-center gap-2">
-                    Google
-                    <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">
-                      Connected
-                    </span>
-                  </span>
-                </div>
-              )}
-              {(user as any).twitter && (
-                <div className="flex justify-between py-3 border-b border-border">
-                  <span className="text-muted-foreground">Linked Account</span>
-                  <span className="font-medium text-foreground flex items-center gap-2">
-                    Twitter
-                    <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">
-                      Connected
-                    </span>
-                  </span>
-                </div>
-              )}
-              {user.phone && (
-                <div className="flex justify-between py-3 border-b border-border">
-                  <span className="text-muted-foreground">Phone Verified</span>
-                  <span className="font-medium text-foreground">{user.phone}</span>
-                </div>
-              )}
-              {user.email && (
-                <div className="flex justify-between py-3">
-                  <span className="text-muted-foreground">Email</span>
-                  <span className="font-medium text-foreground">{typeof user.email === "string" ? user.email : (user.email as any).address}</span>
-                </div>
-              )}
+              ))}
+
             </div>
 
             <div className="mt-6 p-4 bg-muted/50 border border-border rounded-lg">
