@@ -29,7 +29,7 @@ export function EmailCompletionModal() {
   }
 
   return (
-    <Modal isOpen={true} onClose={() => {}}>
+    <Modal isOpen={true} onClose={() => {}} title="Complete Your Profile">
       <div className="p-4">
         <h2 className="text-xl font-semibold mb-4">Complete Your Profile</h2>
         <p className="text-muted-foreground mb-4">
