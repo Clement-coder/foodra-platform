@@ -21,11 +21,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     initializeSampleData();
   }, []);
 
-  const handleLogin = (user: any) => {
-    // Check if the user is new by comparing createdAt and lastLoginAt
-    if (user.createdAt && user.lastLoginAt && Math.abs(new Date(user.createdAt).getTime() - new Date(user.lastLoginAt).getTime()) < 2000) {
-      router.push('/profile');
-    }
+  const handleLogin = () => {
+    router.push('/profile');
   };
 
   return (
