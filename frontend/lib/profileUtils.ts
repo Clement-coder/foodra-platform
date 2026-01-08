@@ -26,7 +26,7 @@ export function calculateProfileCompletion(user: User): number {
   }
 
   // Account type field (assuming it's always set to 'farmer' by default, but can be changed)
-  if (user.role) { // Assuming role is equivalent to accountType for completion purposes
+  if (user.role && (user.role === "farmer" || user.role === "buyer")) { // Assuming role is equivalent to accountType for completion purposes
     completedFields++;
   }
 

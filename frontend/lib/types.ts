@@ -7,7 +7,9 @@ export interface User {
   location: string
   avatar: string
   email?: string
-  role?: "farmer" | "admin"
+  role?: "farmer" | "admin" | "buyer"
+  createdAt?: string
+  linked_accounts?: any[]
 }
 
 export interface Product {
