@@ -16,18 +16,6 @@ import { usePrivy } from '@privy-io/react-auth';
 
 const queryClient = new QueryClient();
 
-function LoginHandler({ children }: { children: React.ReactNode }) {
-  const { authenticated } = usePrivy();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (authenticated) {
-      router.push('/profile');
-    }
-  }, [authenticated, router]);
-
-  return <>{children}</>;
-}
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -42,7 +30,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <SmartWalletsProvider>
           <WagmiProvider config={wagmiConfig}>
-            <LoginHandler>{children}</LoginHandler>
+            {children}
           </WagmiProvider>
         </SmartWalletsProvider>
       </QueryClientProvider>
