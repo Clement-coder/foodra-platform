@@ -328,7 +328,6 @@ function ProfilePage() {
           <FormInput
             label="Email"
             value={userEmail}
-            error={errors.email?.message}
             placeholder="Your email address"
             required
             readOnly
