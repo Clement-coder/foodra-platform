@@ -442,6 +442,12 @@ function WalletPage() {
               required
             />
             {amountError && <p className="text-red-500 text-sm mt-1">{amountError}</p>}
+            {parseFloat(withdrawAmount) > 0 && ethToUsdcRate && ethToNgnRate && (
+              <div className="mt-2 text-sm text-muted-foreground">
+                <p>~${(parseFloat(withdrawAmount) * ethToUsdcRate).toFixed(2)} USDC</p>
+                <p>~₦{(parseFloat(withdrawAmount) * ethToNgnRate).toFixed(2)} NGN</p>
+              </div>
+            )}
           </div>
           <Button onClick={handleWithdraw} className="w-full bg-red-600 hover:bg-red-700 text-white" disabled={isWithdrawButtonDisabled}>
             Continue
@@ -464,9 +470,15 @@ function WalletPage() {
             <div>
               <p className="text-sm text-muted-foreground">Amount</p>
               <p className="font-bold text-lg">{withdrawAmount} ETH</p>
+              {ethToUsdcRate && ethToNgnRate && (
+                <div className="mt-1 text-sm text-muted-foreground">
+                  <p>~${(parseFloat(withdrawAmount) * ethToUsdcRate).toFixed(2)} USDC</p>
+                  <p>~₦{(parseFloat(withdrawAmount) * ethToNgnRate).toFixed(2)} NGN</p>
+                </div>
+              )}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button onClick={() => setIsConfirmWithdrawModalOpen(false)} variant="outline" className="flex-1">
               Cancel
             </Button>
