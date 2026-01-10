@@ -13,7 +13,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
 import { NotificationDiv } from "@/components/NotificationDiv"
 import { TransactionItem } from "@/components/TransactionItem"
-import withAuth from "../../components/withAuth"
 import { base, baseSepolia } from "viem/chains"
 import type { Chain } from "viem"
 
@@ -177,10 +176,7 @@ function WalletPage() {
       await sendTransaction({
         to: recipientAddress as `0x${string}`,
         value: valueInWei,
-        chainId: baseSepolia.id,
-      },
-      {
-        address: wallets[0].address
+        chainId: `0x${selectedChain.id.toString(16)}` as any,
       })
 
       setNotification({ type: "success", message: "Transaction submitted successfully!" })
@@ -497,4 +493,4 @@ function WalletPage() {
   )
 }
 
-export default withAuth(WalletPage)
+export default WalletPage
