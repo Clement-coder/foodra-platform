@@ -18,7 +18,7 @@ export function useUser() {
       // Only initialize currentUser if it's null or if the privyUser.id has changed
       if (!currentUser || currentUser.id !== privyUser.id) {
         const savedUser = loadFromLocalStorage<User | null>("foodra_user", null)
-        if (savedUser && savedUser.id === privyUser.id && savedUser.email) {
+        if (savedUser && savedUser.id === privyUser.id) {
           setCurrentUser(savedUser)
           setIsLoading(false)
           return
