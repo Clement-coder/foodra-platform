@@ -26,14 +26,11 @@ import { useUser } from "@/lib/useUser"
 
 function ProfilePage() {
   const router = useRouter()
-  const { currentUser: user, isLoading, updateUser, isEmailMissing } = useUser()
+  const { currentUser: user, isLoading, updateUser, isEmailMissing, dismissEmailMissing } = useUser()
   const { logout } = usePrivy()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
-  const [accountType, setAccountType] = useState<string | null>(null)
-  const [location, setLocation] = useState<string | null>(null)
-  const [phoneNumber, setPhoneNumber] = useState<string | null>(null)
 
   const {
     register,
@@ -72,21 +69,14 @@ function ProfilePage() {
       // Set name from user object
       setValue("name", user.name || "Unnamed User")
 
-      // Set phone number from user object, fallback to local storage if user.phone is empty
-      const initialPhoneNumber = user.phone || loadFromLocalStorage<string>("user_phone_number", "")
-      setValue("phone", initialPhoneNumber)
-      setPhoneNumber(initialPhoneNumber)
+      // Set phone number from user object
+      setValue("phone", user.phone || "")
 
-      // Set location from user object, fallback to local storage if user.location is empty
-      const initialLocation = user.location || loadFromLocalStorage<string>("user_location", "")
-      setValue("location", initialLocation)
-      setLocation(initialLocation)
+      // Set location from user object
+      setValue("location", user.location || "")
 
-      // Set account type from user object, fallback to local storage if user.role is empty
-      const savedAccountType = loadFromLocalStorage<string>("account_type", "")
-      const initialAccountType = user.role === "farmer" || user.role === "admin" ? "Farmer" : savedAccountType || "Farmer"
-      setValue("accountType", initialAccountType as "Farmer" | "Buyer")
-      setAccountType(initialAccountType)
+      // Set account type from user object
+      setValue("accountType", (user.role === "farmer" || user.role === "admin" ? "Farmer" : "Buyer"))
     }
   }, [user, setValue])
 
@@ -99,9 +89,9 @@ function ProfilePage() {
 
     // Pre-fill form with current user data
     setValue("name", user.name || getUserDisplayName())
-    setValue("phone", phoneNumber || "")
-    setValue("location", location || "")
-    setValue("accountType", (accountType as "Farmer" | "Buyer") || "Farmer")
+    setValue("phone", user.phone || "")
+    setValue("location", user.location || "")
+    setValue("accountType", (user.role === "farmer" || user.role === "admin" ? "Farmer" : "Buyer"))
     setIsEditModalOpen(true)
   }
 
@@ -109,20 +99,6 @@ function ProfilePage() {
     if (!user) return
 
     try {
-      // Save phone number
-      if (data.phone) {
-        saveToLocalStorage("user_phone_number", data.phone)
-        setPhoneNumber(data.phone)
-      }
-
-      // Save location
-      saveToLocalStorage("user_location", data.location)
-      setLocation(data.location)
-
-      // Save account type
-      saveToLocalStorage("account_type", data.accountType)
-      setAccountType(data.accountType)
-
       // Update user state
       updateUser({
         name: data.name,
@@ -167,10 +143,15 @@ function ProfilePage() {
 
   const displayName = getUserDisplayName()
   const userEmail = getUserEmail()
+  const userPhoneNumber = user.phone || ""
+  const userLocation = user.location || ""
+  const userAccountType = user.role === "farmer" || user.role === "admin" ? "Farmer" : "Buyer"
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {isEmailMissing && <EmailCompletionModal />}
+      <Modal isOpen={isEmailMissing} onClose={dismissEmailMissing} title="Complete Your Profile">
+        <EmailCompletionModal onClose={dismissEmailMissing} />
+      </Modal>
       {notification && (
         <NotificationDiv
           type={notification.type}
@@ -207,16 +188,16 @@ function ProfilePage() {
                     <span className="text-xs">📧</span>
                     {userEmail}
                   </p>
-                  {phoneNumber && (
+                  {userPhoneNumber && (
                     <p className="flex items-center justify-center sm:justify-start gap-2">
                       <span className="text-xs">📱</span>
-                      {phoneNumber}
+                      {userPhoneNumber}
                     </p>
                   )}
-                  {location && (
+                  {userLocation && (
                     <p className="flex items-center justify-center sm:justify-start gap-2">
                       <span className="text-xs">📍</span>
-                      {location}
+                      {userLocation}
                     </p>
                   )}
                 </div>
@@ -276,9 +257,9 @@ function ProfilePage() {
     id: user.id,
     name: displayName,
     role: "farmer",
-    phone: phoneNumber || "",        // Added
-    location: location || "",        // Added
-    avatar: user.avatar,  // Added
+    phone: userPhoneNumber,
+    location: userLocation,
+    avatar: user.avatar,
   }}
 />
         </div>
@@ -290,7 +271,7 @@ function ProfilePage() {
             <div className="space-y-2">
               <div className="flex justify-between py-3 border-b border-border">
                 <span className="text-muted-foreground">Account Type</span>
-                <span className="font-medium text-foreground">{accountType || "Not set"}</span>
+                <span className="font-medium text-foreground">{userAccountType || "Not set"}</span>
               </div>
               <div className="flex justify-between py-3 border-b border-border">
                 <span className="text-muted-foreground">Member Since</span>

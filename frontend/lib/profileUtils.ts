@@ -6,7 +6,7 @@ export function calculateProfileCompletion(user: User): number {
   const totalFields = 6; // name, email, phone, location, accountType, avatar
 
   // Name field
-  if (user.name && user.name !== "Unnamed User") { // Assuming "Unnamed User" is a placeholder
+  if (user.name && user.name.trim() !== "") {
     completedFields++;
   }
 
@@ -21,7 +21,7 @@ export function calculateProfileCompletion(user: User): number {
   }
 
   // Location field
-  if (user.location && user.location !== "Unknown") { // Assuming "Unknown" is a placeholder
+  if (user.location && user.location.trim() !== "") {
     completedFields++;
   }
 
