@@ -28,6 +28,7 @@ const ProfileIncompleteToast = ({ onClose }: { onClose: () => void }) => {
             <p className="text-xs text-white/90 leading-relaxed">
               Please complete your profile to unlock all features and have the best experience.
             </p>
+            
           </div>
           <button
             onClick={onClose}
