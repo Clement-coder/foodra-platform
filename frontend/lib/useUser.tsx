@@ -14,52 +14,68 @@ export function useUser() {
 
   useEffect(() => {
     console.log("useUser effect triggered. Authenticated:", authenticated)
+
+    // Guard clause to wait for a valid privyUser object
+    if (!privyUser || !privyUser.id) {
+      setIsLoading(true)
+      return
+    }
+
     if (authenticated && privyUser) {
       // Only initialize currentUser if it's null or if the privyUser.id has changed
       if (!currentUser || currentUser.id !== privyUser.id) {
+        // Load saved user data from local storage.
         const savedUser = loadFromLocalStorage<User | null>("foodra_user", null)
-        if (savedUser && savedUser.id === privyUser.id) {
-          setCurrentUser(savedUser)
-          setIsLoading(false)
-          return
-        }
 
-        console.log("Privy user object:", privyUser)
-        const mockUser: User = {
+        // Combine the saved user data with the latest from Privy in a non-destructive way.
+        // Data manually entered by the user (in savedUser) is preserved.
+        const combinedUser: User = {
+          // Start with defaults for a new user
+          id: privyUser.id,
+          name: "User",
+          phone: "",
+          location: "",
+          avatar: generateAvatarUrl(privyUser.id),
+          email: "",
+          createdAt: privyUser.createdAt.toISOString(),
+          linked_accounts: privyUser.linkedAccounts,
+          role: "farmer",
+
+          // Layer the saved user's data on top (if it exists and matches the ID)
+          ...(savedUser && savedUser.id === privyUser.id ? savedUser : {}),
+
+          // Finally, layer the latest privy data on top, as it's the ultimate source of truth for these fields.
           id: privyUser.id,
           name:
             privyUser.twitter?.name ||
             privyUser.github?.name ||
             privyUser.google?.name ||
             privyUser.email?.address ||
+            (savedUser?.name) || // Fallback to saved name
             "User",
-          phone: privyUser.phone?.number || "",
-          location: "",
-          avatar: generateAvatarUrl(privyUser.id),
+          phone: privyUser.phone?.number || (savedUser?.phone) || "", // Prioritize privy, then saved
           email:
             privyUser.github?.email ||
             privyUser.google?.email ||
             privyUser.email?.address ||
+            (savedUser?.email) || // Fallback to saved email
             "",
           createdAt: privyUser.createdAt.toISOString(),
           linked_accounts: privyUser.linkedAccounts,
-          role: "farmer", // Default to farmer, can be updated later
         }
 
-        if (!mockUser.email && (privyUser.github || privyUser.twitter)) {
+        if (!combinedUser.email && (privyUser.github || privyUser.twitter)) {
           setIsEmailMissing(true)
         }
 
-        console.log("Created mock user:", mockUser)
-        setCurrentUser(mockUser)
-        saveToLocalStorage("foodra_user", mockUser)
-        setIsLoading(false)
-      } else {
+        console.log("Created combined user:", combinedUser)
+        setCurrentUser(combinedUser)
+        saveToLocalStorage("foodra_user", combinedUser)
         setIsLoading(false)
       }
     } else if (!authenticated) {
       console.log("User not authenticated.")
-      setCurrentUser(null)
+      // setCurrentUser(null) // This line is causing a race condition on auth refresh
       setIsLoading(false)
     }
   }, [authenticated, privyUser]) // Removed currentUser from dependencies
