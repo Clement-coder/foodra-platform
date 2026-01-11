@@ -4,7 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import type React from "react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ShoppingCart, Search, Wallet } from "lucide-react";
+import { ShoppingCart, Search, Wallet, Users } from "lucide-react";
 import ProfileDropdown from "./ProfileDropdown";
 import SignupButton from "./SignupButton";
 import { useCart } from "@/lib/useCart";
@@ -99,6 +99,18 @@ export function NavBar() {
                 </span>
               </a>
             )}
+
+            {/* Users Link */}
+            <a
+              href="/users"
+              className="p-2 hover:bg-accent rounded-lg transition-colors md:flex items-center space-x-2"
+              aria-label="Explore users"
+            >
+              <Users className="h-6 w-6 text-foreground" />
+              <span className="hidden md:inline text-sm font-medium">
+                Users
+              </span>
+            </a>
 
             {/* Auth buttons */}
             {authenticated && currentUser && !isLoading ? (
