@@ -2,12 +2,6 @@ import { sampleUsers, sampleProducts } from "@/lib/sampleData"
 import { notFound } from "next/navigation"
 import UserProfileClient from "./UserProfileClient"
 
-export async function generateStaticParams() {
-  return sampleUsers.map((user) => ({
-    id: user.id,
-  }))
-}
-
 interface UserProfilePageProps {
   params: {
     id:string
