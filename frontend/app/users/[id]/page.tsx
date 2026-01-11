@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { sampleUsers, sampleProducts } from "@/lib/sampleData"
 import { User } from "@/lib/types"
-import { UserIcon, Mail, Phone, MapPin, Wallet, Copy, Check } from "lucide-react"
+import { UserIcon, Mail, Phone, MapPin, Wallet, Copy, Check, ShoppingBag, Activity } from "lucide-react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { ProductCard } from "@/components/ProductCard"
@@ -31,6 +31,12 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
+
+  const recentActivities = [
+    { id: 1, activity: "Joined Foodra", date: "2023-10-26" },
+    { id: 2, activity: "Listed Fresh Tomatoes", date: "2023-10-27" },
+    { id: 3, activity: "Updated profile", date: "2023-10-28" },
+  ]
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -67,10 +73,6 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
                     {user.email}
                   </p>
                   <p className="flex items-center justify-center sm:justify-start gap-2">
-                    <Phone className="h-4 w-4" />
-                    {user.phone}
-                  </p>
-                  <p className="flex items-center justify-center sm:justify-start gap-2">
                     <MapPin className="h-4 w-4" />
                     {user.location}
                   </p>
@@ -94,19 +96,45 @@ export default function UserProfilePage({ params }: UserProfilePageProps) {
           </CardHeader>
         </Card>
 
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground mb-4">
-            Listed Products
-          </h2>
-          {userProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {userProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">This user has not listed any products yet.</p>
-          )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <ShoppingBag className="h-6 w-6" />
+              Listed Products
+            </h2>
+            {userProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {userProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">This user has not listed any products yet.</p>
+            )}
+          </div>
+          <div>
+            <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Activity className="h-6 w-6" />
+              Recent Activities
+            </h2>
+            <Card>
+              <CardContent className="p-6">
+                <ul className="space-y-4">
+                  {recentActivities.map((activity) => (
+                    <li key={activity.id} className="flex items-start gap-4">
+                      <div className="bg-accent p-2 rounded-full">
+                        <Activity className="h-4 w-4 text-accent-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{activity.activity}</p>
+                        <p className="text-sm text-muted-foreground">{activity.date}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </motion.div>
     </div>
