@@ -10,6 +10,12 @@ import { ProductCard } from "@/components/ProductCard"
 import { notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 
+export async function generateStaticParams() {
+  return sampleUsers.map((user) => ({
+    id: user.id,
+  }))
+}
+
 interface UserProfilePageProps {
   params: {
     id: string
