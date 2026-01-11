@@ -11,15 +11,15 @@ const SLIDE_INTERVAL = 5000
 
 const slides = [
   {
-    image: "/WhatsApp Image 2025-12-14 at 07.27.36.jpeg",
+    image: "/foodra_1.jpeg",
     text: "Empowering African Farmers to Thrive",
   },
   {
-    image: "/WhatsApp Image 2025-12-14 at 07.27.37.jpeg",
+    image: "/foodra_2.jpeg",
     text: "Connect With Markets, Training & Funding",
   },
   {
-    image: "/WhatsApp Image 2025-12-14 at 07.27.37 (1).jpeg",
+    image: "/foodra_3.jpeg",
     text: "Build a Smarter, Profitable Farming Business",
   },
 ]
