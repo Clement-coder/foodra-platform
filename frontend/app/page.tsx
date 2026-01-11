@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 import HeroSection from "@/components/HeroSection"
+import Gallery from "@/components/Gallery"
 import SignupButton from "@/components/SignupButton"
 import GetInTouch from "@/components/GetInTouch"
 
@@ -43,6 +44,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       <HeroSection />
+
+      
 
       <section className="py-12 bg-card border-y border-border">
         <div className="container mx-auto px-4">
@@ -168,6 +171,17 @@ export default function LandingPage() {
       </section>
 
       <GetInTouch />
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Our Gallery</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              A glimpse into the world of modern farming
+            </p>
+          </div>
+          <Gallery />
+        </div>
+      </section>
 
       {/* CTA Section */}
       <section className="py-20 px-4">
