@@ -19,10 +19,7 @@ const slides = [
 
 export default function Gallery() {
   const autoplay = useRef(
-    Autoplay(
-      { delay: 3000, stopOnInteraction: false },
-      (emblaRoot) => emblaRoot.parentElement
-    )
+    Autoplay({ delay: 3000, stopOnInteraction: false })
   )
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -30,9 +27,9 @@ export default function Gallery() {
       loop: true,
       align: "start",
       breakpoints: {
-        "(min-width: 1024px)": { slidesToScroll: 3, slidesPerView: 3 }, // Large screens: 3 images
-        "(min-width: 768px)": { slidesToScroll: 2, slidesPerView: 2 }, // Medium screens: 2 images
-        "(max-width: 767px)": { slidesToScroll: 1, slidesPerView: 1 }, // Small screens: 1 image
+        "(min-width: 1024px)": { slidesToScroll: 3 }, // Large screens: 3 images
+        "(min-width: 768px)": { slidesToScroll: 2 }, // Medium screens: 2 images
+        "(max-width: 767px)": { slidesToScroll: 1 }, // Small screens: 1 image
       },
     },
     [autoplay.current]
