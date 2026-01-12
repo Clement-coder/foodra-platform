@@ -26,12 +26,12 @@ function FundingPage() {
   const loadData = () => {
     const allApplications = loadFromLocalStorage<FundingApplication[]>("foodra_applications", [])
 
-    // If user is logged in and not admin, show only their applications
-    if (user && user.role !== "admin") {
+    // If user is logged in, show only their applications
+    if (user) {
       const userApplications = allApplications.filter((app) => app.userId === user.id)
       setApplications(userApplications)
     } else {
-      // Show all applications for admin or non-logged users
+      // Show all applications for non-logged users
       setApplications(allApplications)
     }
   }
