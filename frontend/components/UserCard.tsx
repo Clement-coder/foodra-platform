@@ -1,57 +1,71 @@
 "use client"
 
-import { User } from "@/lib/types"
 import { motion } from "framer-motion"
-import { Copy, Check } from "lucide-react"
-import { useState } from "react"
-import Link from "next/link"
+import { Copy, User as UserIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { User } from "@/lib/types"
 
 interface UserCardProps {
   user: User
 }
 
 export function UserCard({ user }: UserCardProps) {
-  const [copied, setCopied] = useState(false)
+  const router = useRouter()
 
-  const handleCopy = (e: React.MouseEvent) => {
-    e.preventDefault()
+  const shortWallet =
+    user.wallet && user.wallet.length > 10
+      ? `${user.wallet.slice(0, 6)}...${user.wallet.slice(-4)}`
+      : user.wallet
+
+  const copyWallet = (e: React.MouseEvent) => {
     e.stopPropagation()
-    navigator.clipboard.writeText(user.id)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    navigator.clipboard.writeText(user.wallet)
   }
 
   return (
-    <Link href={`/users/${user.id}`}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col items-center text-center h-full cursor-pointer hover:shadow-lg transition-shadow"
-      >
-        <img
-          src={user.avatar}
-          alt={user.name}
-          className="w-24 h-24 rounded-full mb-4 border-2 border-gray-200 dark:border-gray-700"
-        />
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{user.name}</h3>
-        <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
-        <div className="mt-4 flex items-center space-x-2">
-          <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-            {user.id}
-          </p>
-          <button
-            onClick={handleCopy}
-            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            {copied ? (
-              <Check className="w-4 h-4 text-green-500" />
-            ) : (
-              <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-            )}
-          </button>
+    <motion.div
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.97 }}
+      onClick={() => router.push(`/users/${user.id}`)}
+      className="cursor-pointer bg-white/5 backdrop-blur border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-all"
+    >
+      {/* Avatar */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="w-12 h-12 rounded-full overflow-hidden border bg-muted flex items-center justify-center">
+          {user.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <UserIcon className="h-6 w-6 text-muted-foreground" />
+          )}
         </div>
-      </motion.div>
-    </Link>
+
+        <div className="flex-1">
+          <h3 className="font-semibold text-foreground truncate">
+            {user.name}
+          </h3>
+          <p className="text-xs text-muted-foreground truncate">
+            {user.email}
+          </p>
+        </div>
+      </div>
+
+      {/* Wallet */}
+      <div className="flex items-center justify-between bg-muted/40 px-3 py-2 rounded-lg">
+        <span className="text-xs font-mono text-muted-foreground">
+          {shortWallet || "No wallet"}
+        </span>
+        {user.wallet && (
+          <Copy
+            onClick={copyWallet}
+            className="h-4 w-4 text-[#118C4C] hover:scale-110 transition cursor-pointer"
+          />
+        )}
+      </div>
+    </motion.div>
   )
 }

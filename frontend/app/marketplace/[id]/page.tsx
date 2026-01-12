@@ -23,12 +23,28 @@ function ProductDetailPage() {
   const [showNotification, setShowNotification] = useState(false)
 
   useEffect(() => {
-    // Load product from localStorage
-    const products = loadFromLocalStorage<Product[]>("foodra_products", [])
-    const found = products.find((p) => p.id === id) // Use id here
-    setProduct(found || null)
-    setLoading(false)
-  }, [id]) // Use id here
+    if (!id) return
+
+    const fetchProduct = async () => {
+      setLoading(true)
+      try {
+        const res = await fetch(`/api/products/${id}`)
+        if (!res.ok) {
+          setProduct(null)
+        } else {
+          const data = await res.json()
+          setProduct(data)
+        }
+      } catch (error) {
+        console.error("Failed to fetch product:", error)
+        setProduct(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProduct()
+  }, [id])
 
   const handleAddToCart = () => {
     if (!product) return
