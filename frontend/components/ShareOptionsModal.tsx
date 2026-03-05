@@ -60,7 +60,7 @@ export function ShareOptionsModal({ isOpen, onClose, title, url, text }: ShareOp
         <div className="space-y-3">
           <Button
             onClick={handleNativeShare}
-            className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white justify-start gap-2 text-sm"
+            className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white justify-start gap-2"
           >
             <Share2 className="h-4 w-4 flex-shrink-0" />
             <span className="truncate">Share with device</span>
@@ -69,7 +69,7 @@ export function ShareOptionsModal({ isOpen, onClose, title, url, text }: ShareOp
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
-              className="justify-start gap-2 bg-transparent text-xs sm:text-sm p-2 sm:p-3"
+              className="justify-start gap-2 bg-transparent p-2 sm:p-3"
               onClick={() => openInNewTab(`https://wa.me/?text=${encodedText}%20${encodedUrl}`)}
             >
               <MessageCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
@@ -78,7 +78,7 @@ export function ShareOptionsModal({ isOpen, onClose, title, url, text }: ShareOp
 
             <Button
               variant="outline"
-              className="justify-start gap-2 bg-transparent text-xs sm:text-sm p-2 sm:p-3"
+              className="justify-start gap-2 bg-transparent p-2 sm:p-3"
               onClick={() => openInNewTab(`https://x.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`)}
             >
               <Send className="h-4 w-4 text-black dark:text-white flex-shrink-0" />
@@ -87,7 +87,7 @@ export function ShareOptionsModal({ isOpen, onClose, title, url, text }: ShareOp
 
             <Button
               variant="outline"
-              className="justify-start gap-2 bg-transparent text-xs sm:text-sm p-2 sm:p-3"
+              className="justify-start gap-2 bg-transparent p-2 sm:p-3"
               onClick={() => openInNewTab(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`)}
             >
               <Facebook className="h-4 w-4 text-blue-600 flex-shrink-0" />
@@ -96,7 +96,7 @@ export function ShareOptionsModal({ isOpen, onClose, title, url, text }: ShareOp
 
             <Button
               variant="outline"
-              className="justify-start gap-2 bg-transparent text-xs sm:text-sm p-2 sm:p-3"
+              className="justify-start gap-2 bg-transparent p-2 sm:p-3"
               onClick={() => openInNewTab(`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`)}
             >
               <Send className="h-4 w-4 text-sky-500 flex-shrink-0" />
@@ -106,14 +106,14 @@ export function ShareOptionsModal({ isOpen, onClose, title, url, text }: ShareOp
 
           <Button
             variant="outline"
-            className="w-full justify-start gap-2 bg-transparent text-sm"
+            className="w-full justify-start gap-2 bg-transparent"
             onClick={handleCopyLink}
           >
             <Copy className="h-4 w-4 flex-shrink-0" />
             <span className="truncate">Copy Link</span>
           </Button>
 
-          <Button variant="ghost" className="w-full text-sm" onClick={onClose}>
+          <Button variant="ghost" className="w-full" onClick={onClose}>
             Close
           </Button>
         </div>

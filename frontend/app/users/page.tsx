@@ -51,13 +51,6 @@ export default function UsersPage() {
               Discover buyers and farmers, open profiles, and explore their listed products.
             </p>
           </div>
-          <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-            <Users className="h-5 w-5 text-[#118C4C]" />
-            <div>
-              <p className="text-xs text-slate-500">Users Found</p>
-              <p className="font-bold text-slate-900">{filteredUsers.length}</p>
-            </div>
-          </div>
         </div>
         <div className="relative w-full md:max-w-md mt-6">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
