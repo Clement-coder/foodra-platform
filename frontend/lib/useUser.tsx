@@ -2,136 +2,133 @@
 
 import { useState, useEffect } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { User } from "./types" // Our custom User type
+import type { User } from "./types"
 import { generateAvatarUrl } from "./avatarGenerator"
-import { loadFromLocalStorage, saveToLocalStorage } from "./localStorage"
 
 export function useUser() {
   const { user: privyUser, authenticated, ready } = usePrivy()
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isEmailMissing, setIsEmailMissing] = useState(false)
+  const privyUserAny = privyUser as any
+
+  const getPrivyName = () =>
+    privyUserAny?.google?.name ||
+    privyUserAny?.github?.name ||
+    privyUserAny?.twitter?.name ||
+    privyUserAny?.discord?.username ||
+    privyUserAny?.farcaster?.username ||
+    privyUser?.email?.address?.split("@")[0] ||
+    "User"
+  const getPrivyEmail = () =>
+    privyUserAny?.google?.email ||
+    privyUserAny?.github?.email ||
+    privyUser?.email?.address ||
+    ""
+  const getPrivyWallet = () => privyUser?.wallet?.address || ""
+
+  const buildFallbackUser = (): User | null => {
+    if (!privyUser) return null
+    return {
+      id: privyUser.id,
+      name: getPrivyName(),
+      email: getPrivyEmail(),
+      avatar: generateAvatarUrl(privyUser.id),
+      wallet: getPrivyWallet(),
+      createdAt: new Date().toISOString(),
+      phone: "",
+      role: "buyer",
+      location: undefined,
+      linked_accounts: privyUserAny?.linkedAccounts || [],
+    }
+  }
 
   useEffect(() => {
-    console.log("useUser effect triggered. Ready:", ready, "Authenticated:", authenticated)
+    if (!ready) return
+    setIsLoading(true)
 
-    // Wait for Privy to be ready before doing anything
-    if (!ready) {
-      setIsLoading(true)
-      return
-    }
+    const syncUser = async () => {
+      if (authenticated && privyUser) {
+        try {
+          const response = await fetch("/api/users/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              privyId: privyUser.id,
+              name: getPrivyName(),
+              email: getPrivyEmail(),
+              wallet: getPrivyWallet(),
+              avatar: generateAvatarUrl(privyUser.id),
+            }),
+          })
 
-    // If not authenticated, clear user and stop loading
-    if (!authenticated) {
-      console.log("User not authenticated.")
-      setCurrentUser(null)
-      setIsLoading(false)
-      return
-    }
+          if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}))
+            throw new Error(errorBody?.error || "Failed to sync user in Supabase")
+          }
 
-    // Guard clause to wait for a valid privyUser object
-    if (!privyUser || !privyUser.id) {
-      console.log("Waiting for privyUser data...")
-      setIsLoading(true)
-      return
-    }
-
-    // User is authenticated and privyUser is available
-    if (authenticated && privyUser) {
-      // Only initialize currentUser if it's null or if the privyUser.id has changed
-      if (!currentUser || currentUser.id !== privyUser.id) {
-        console.log("Initializing user data for:", privyUser.id)
-        
-        // Load saved user data from local storage
-        const savedUser = loadFromLocalStorage<User | null>("foodra_user", null)
-
-        // Combine the saved user data with the latest from Privy in a non-destructive way
-        // Data manually entered by the user (in savedUser) is preserved
-        const combinedUser: User = {
-          // Start with defaults for a new user
-          id: privyUser.id,
-          location: "",
-          avatar: generateAvatarUrl(privyUser.id),
-          role: "farmer",
-
-          // Layer the saved user's data on top (if it exists and matches the ID)
-          ...(savedUser && savedUser.id === privyUser.id ? savedUser : {}),
-
-          // Finally, layer the latest privy data on top, as it's the ultimate source of truth for these fields
-          name:
-            privyUser.twitter?.name ||
-            privyUser.github?.name ||
-            privyUser.google?.name ||
-            privyUser.email?.address?.split("@")[0] ||
-            savedUser?.name || // Fallback to saved name
-            "User",
-          phone: privyUser.phone?.number || savedUser?.phone || "", // Prioritize privy, then saved
-          email:
-            privyUser.github?.email ||
-            privyUser.google?.email ||
-            privyUser.email?.address ||
-            savedUser?.email || // Fallback to saved email
-            "",
-          createdAt: privyUser.createdAt ? privyUser.createdAt.toISOString() : new Date().toISOString(),
-          linked_accounts: privyUser.linkedAccounts || [],
+          const syncedUser = await response.json()
+          setCurrentUser({
+            ...syncedUser,
+            name: getPrivyName(),
+            email: getPrivyEmail(),
+            wallet: getPrivyWallet(),
+            linked_accounts: privyUserAny?.linkedAccounts || [],
+          })
+        } catch (err) {
+          console.error('Error syncing user:', err)
+          setCurrentUser(buildFallbackUser())
         }
-
-        // Check if email is missing for GitHub/Twitter logins
-        if (!combinedUser.email && (privyUser.github || privyUser.twitter)) {
-          console.log("Email is missing for social login")
-          setIsEmailMissing(true)
-        } else {
-          setIsEmailMissing(false)
-        }
-
-        console.log("Created combined user:", combinedUser)
-        setCurrentUser(combinedUser)
-        saveToLocalStorage("foodra_user", combinedUser)
-        setIsLoading(false)
       } else {
-        // User already loaded, just ensure loading is false
-        setIsLoading(false)
+        setCurrentUser(null)
       }
-    }
-  }, [ready, authenticated, privyUser]) // Removed currentUser from dependencies to prevent loops
 
-  const updateUser = (newUserData: Partial<User>) => {
-    if (currentUser) {
-      const updatedUser = { ...currentUser, ...newUserData }
-      setCurrentUser(updatedUser)
-      saveToLocalStorage("foodra_user", updatedUser)
-      
-      // Clear email missing flag if email is now provided
-      if (updatedUser.email && isEmailMissing) {
-        setIsEmailMissing(false)
+      setIsLoading(false)
+    }
+
+    syncUser()
+  }, [privyUser, authenticated, ready])
+
+  const updateUser = async (updates: Partial<User>) => {
+    if (!currentUser || !privyUser?.id) return false
+
+    try {
+      const payload: Record<string, string> = { privyId: privyUser.id }
+      if ("phone" in updates && updates.phone !== undefined) payload.phone = updates.phone
+      if (updates.location !== undefined) payload.location = updates.location
+      if (updates.role !== undefined) payload.role = updates.role
+
+      if (Object.keys(payload).length === 1) return true
+
+      const response = await fetch("/api/users/sync", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}))
+        throw new Error(errorBody?.error || "Failed to update user profile in Supabase")
       }
-      
-      console.log("Updated user data:", updatedUser)
+
+      const updatedUser = await response.json()
+      setCurrentUser({
+        ...updatedUser,
+        name: getPrivyName(),
+        email: getPrivyEmail(),
+        wallet: getPrivyWallet(),
+        linked_accounts: privyUserAny?.linkedAccounts || [],
+      })
+      return true
+    } catch (err) {
+      console.error('Error updating user:', err)
+      return false
     }
-  }
-
-  const dismissEmailMissing = () => {
-    setIsEmailMissing(false)
-  }
-
-  // Helper function to check if profile is complete
-  const isProfileComplete = () => {
-    if (!currentUser) return false
-    return !!(
-      currentUser.name &&
-      currentUser.email &&
-      currentUser.phone &&
-      currentUser.location &&
-      currentUser.role
-    )
   }
 
   return {
     currentUser,
-    isLoading,
+    isLoading: isLoading || !ready,
     updateUser,
-    isEmailMissing,
-    dismissEmailMissing,
-    isProfileComplete: isProfileComplete(),
+    isEmailMissing: false,
+    dismissEmailMissing: () => {},
   }
 }

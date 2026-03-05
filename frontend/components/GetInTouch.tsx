@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { Mail, Send, CheckCircle, AlertTriangle } from "lucide-react"
+import { Mail, Send } from "lucide-react"
 import emailjs from "@emailjs/browser"
+import { NotificationDiv } from "./NotificationDiv"
 
 // 🔐 EmailJS config (hard-coded)
 const SERVICE_ID = "service_thsbt3g"
@@ -116,26 +117,15 @@ const GetInTouch = () => {
               </div>
             </form>
 
-            {message && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-4"
-              >
-                {status === "success" && (
-                  <div className="flex items-center justify-center gap-2 text-green-600">
-                    <CheckCircle className="h-5 w-5" />
-                    <p>{message}</p>
-                  </div>
-                )}
-
-                {status === "error" && (
-                  <div className="flex items-center justify-center gap-2 text-red-600">
-                    <AlertTriangle className="h-5 w-5" />
-                    <p>{message}</p>
-                  </div>
-                )}
-              </motion.div>
+            {message && status !== "loading" && (
+              <NotificationDiv
+                type={status === "success" ? "success" : "error"}
+                message={message}
+                onClose={() => {
+                  setStatus("idle")
+                  setMessage("")
+                }}
+              />
             )}
           </motion.div>
         </div>

@@ -17,9 +17,19 @@ function TrainingPage() {
   const [filter, setFilter] = useState<"all" | "online" | "offline">("all")
 
   useEffect(() => {
-    const storedTrainings = loadFromLocalStorage<Training[]>("foodra_training", [])
-    setTrainings(storedTrainings)
-    setLoading(false)
+    const fetchTrainings = async () => {
+      try {
+        const res = await fetch('/api/trainings');
+        const data = await res.json();
+        setTrainings(data);
+      } catch (error) {
+        console.error('Error fetching trainings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrainings();
   }, [])
 
   const filteredTrainings = trainings.filter((training) => {

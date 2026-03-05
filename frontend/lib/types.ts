@@ -1,6 +1,15 @@
-// Core TypeScript interfaces and types for the Foodra app
-
-
+export interface User {
+  id: string
+  name: string
+  email: string
+  avatar: string
+  wallet: string
+  createdAt: string
+  phone?: string
+  location?: string
+  role?: "farmer" | "buyer" | "admin"
+  linked_accounts?: Array<{ type: string }>
+}
 
 export interface Product {
   id: string
@@ -64,14 +73,6 @@ export interface CartItem {
   image: string
 }
 
-export interface OrderItem {
-  productId: string
-  productName: string
-  pricePerUnit: number
-  quantity: number
-  image: string
-}
-
 export interface Order {
   id: string
   userId: string
@@ -82,14 +83,10 @@ export interface Order {
   updatedAt: string
 }
 
-export interface User {
-  id: string
-  name: string
-  email: string
-  avatar: string
-  wallet: string
-  createdAt: string
-  location?: string
+export interface OrderItem {
+  productId: string
+  productName: string
+  pricePerUnit: number
+  quantity: number
+  image: string
 }
-
-

@@ -8,61 +8,7 @@ import { useUser } from "@/lib/useUser";
 import { calculateProfileCompletion } from "@/lib/profileUtils";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Loader2 } from "lucide-react";
-
-// Toast Notification Component
-const ProfileIncompleteToast = ({ onClose }: { onClose: () => void }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 50, scale: 0.3 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
-      className="fixed bottom-6 right-6 z-50 max-w-md"
-    >
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-4 rounded-lg shadow-2xl border border-orange-400/50 backdrop-blur-sm">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-0.5">
-            <AlertCircle className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-sm mb-1">Complete Your Profile</h3>
-            <p className="text-xs text-white/90 leading-relaxed">
-              Please complete your profile to unlock all features and have the best experience.
-            </p>
-            
-          </div>
-          <button
-            onClick={onClose}
-            className="flex-shrink-0 text-white/80 hover:text-white transition-colors"
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-        <div className="mt-3">
-          <button
-            onClick={() => {
-              window.location.href = "/profile";
-            }}
-            className="w-full bg-white text-orange-600 hover:bg-orange-50 font-medium text-xs py-2 px-4 rounded-md transition-colors"
-          >
-            Complete Profile Now
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
+import { NotificationDiv } from "./NotificationDiv";
 
 // Beautiful Loading Component
 const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => {
@@ -196,7 +142,17 @@ const withAuth = <P extends object>(
           <WrappedComponent {...props} />
           <AnimatePresence>
             {showProfileToast && (
-              <ProfileIncompleteToast onClose={() => setShowProfileToast(false)} />
+              <NotificationDiv
+                type="warning"
+                title="Complete Your Profile"
+                message="Please complete your profile to unlock all features and have the best experience."
+                actionLabel="Complete Profile Now"
+                onAction={() => {
+                  window.location.href = "/profile";
+                }}
+                onClose={() => setShowProfileToast(false)}
+                duration={10000}
+              />
             )}
           </AnimatePresence>
         </>

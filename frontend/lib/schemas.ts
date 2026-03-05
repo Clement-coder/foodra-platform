@@ -46,7 +46,7 @@ export type TrainingRegistrationFormData = z.infer<typeof trainingRegistrationSc
 
 // Profile update schema
 export const profileUpdateSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
+  name: z.string().optional(),
   phone: z
     .string()
     .regex(/^\+?[0-9]{10,13}$/, "Phone number must be 10-13 digits, optionally starting with +")

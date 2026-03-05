@@ -6,6 +6,7 @@ import { useState, useRef } from "react"
 import { Upload, X } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { NotificationDiv } from "@/components/NotificationDiv"
 
 interface ImageMockUploaderProps {
   onImageSelect: (base64: string) => void
@@ -21,6 +22,7 @@ export function ImageMockUploader({
   error,
 }: ImageMockUploaderProps) {
   const [preview, setPreview] = useState<string | null>(currentImage || null)
+  const [notification, setNotification] = useState<{ type: "error" | "success" | "info" | "warning"; message: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,7 +31,10 @@ export function ImageMockUploader({
 
     // Check file type
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file")
+      setNotification({
+        type: "error",
+        message: "Please select a valid image file.",
+      })
       return
     }
 
@@ -53,6 +58,13 @@ export function ImageMockUploader({
 
   return (
     <div className="space-y-2">
+      {notification && (
+        <NotificationDiv
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       <label className="block text-sm font-medium text-foreground">
         {label}
         <span className="text-red-500 ml-1">*</span>

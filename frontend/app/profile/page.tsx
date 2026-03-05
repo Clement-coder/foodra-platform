@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Edit, LogOut, UserIcon } from "lucide-react"
+import { BadgeCheck, Edit, LogOut, Share2, UserIcon } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -16,7 +15,6 @@ import { FarmerProfileSummary } from "@/components/FarmerProfileSummary"
 import { profileUpdateSchema, type ProfileUpdateFormData } from "@/lib/schemas"
 import { usePrivy } from "@privy-io/react-auth"
 import withAuth from "@/components/withAuth"
-import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 import { SignOutModal } from "@/components/SignOutModal"
 import { ProfileCompletionModal } from "@/components/ProfileCompletionModal"
 import { calculateProfileCompletion } from "@/lib/profileUtils"
@@ -25,9 +23,9 @@ import { EmailCompletionModal } from "@/components/EmailCompletionModal"
 import { useUser } from "@/lib/useUser"
 
 function ProfilePage() {
-  const router = useRouter()
   const { currentUser: user, isLoading, updateUser, isEmailMissing, dismissEmailMissing } = useUser()
-  const { logout } = usePrivy()
+  const { logout, user: privyUser } = usePrivy()
+  const privyUserAny = privyUser as any
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
@@ -44,22 +42,28 @@ function ProfilePage() {
 
   // Helper function to get user display name
   const getUserDisplayName = () => {
-    if (!user) return "User"
+    if (!privyUser && !user) return "User"
     return (
-      user.name ||
-      (user as any).google?.name ||
-      (user as any).github?.name ||
-      (user as any).twitter?.name ||
-      (user as any).email?.address?.split("@")[0] ||
+      privyUserAny?.google?.name ||
+      privyUserAny?.github?.name ||
+      privyUserAny?.twitter?.name ||
+      privyUserAny?.discord?.username ||
+      privyUserAny?.farcaster?.username ||
+      user?.name ||
       "User"
     )
   }
 
   // Helper function to get user email
-    const getUserEmail = () => {
-      if (!user) return "N/A"
-      return (user as any).google?.email || (typeof user.email === "string" ? user.email : (user.email as any)?.address) || "N/A"
-    }
+  const getUserEmail = () => {
+    return (
+      privyUserAny?.google?.email ||
+      privyUserAny?.github?.email ||
+      privyUser?.email?.address ||
+      user?.email ||
+      "N/A"
+    )
+  }
 
   const profileCompletion = user ? calculateProfileCompletion(user) : 0
   const isProfileComplete = profileCompletion === 100
@@ -95,19 +99,39 @@ function ProfilePage() {
     setIsEditModalOpen(true)
   }
 
-  const onSubmit = (data: ProfileUpdateFormData) => {
+  const handleShareProfile = async () => {
+    try {
+      const profileUrl = `${window.location.origin}/users/${user.id}`
+      const shareData = {
+        title: `${displayName} on Foodra`,
+        text: `Check out ${displayName}'s Foodra profile.`,
+        url: profileUrl,
+      }
+
+      if (navigator.share) {
+        await navigator.share(shareData)
+        setNotification({ type: "success", message: "Profile shared successfully!" })
+        return
+      }
+
+      await navigator.clipboard.writeText(profileUrl)
+      setNotification({ type: "success", message: "Profile link copied to clipboard!" })
+    } catch (error) {
+      setNotification({ type: "error", message: "Unable to share profile right now." })
+    }
+  }
+
+  const onSubmit = async (data: ProfileUpdateFormData) => {
     if (!user) return
 
     try {
-      // Update user state
-      updateUser({
-        name: data.name,
+      const ok = await updateUser({
         phone: data.phone,
         location: data.location,
         role: data.accountType === "Farmer" ? "farmer" : "buyer",
       })
 
-      console.log("Updating user profile:", data)
+      if (!ok) throw new Error("Update failed")
 
       setIsEditModalOpen(false)
       reset()
@@ -182,7 +206,13 @@ function ProfilePage() {
               </div>
 
               <div className="flex-1 text-center sm:text-left">
-                <h1 className="text-3xl font-bold text-foreground mb-2">{displayName}</h1>
+                <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center justify-center sm:justify-start gap-2">
+                  <span>{displayName}</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#118C4C]/10 text-[#118C4C] text-xs px-2.5 py-1 font-semibold">
+                    <BadgeCheck className="h-4 w-4" />
+                    Verified
+                  </span>
+                </h1>
                 <div className="space-y-1 text-muted-foreground">
                   <p className="flex items-center justify-center sm:justify-start gap-2">
                     <span className="text-xs">📧</span>
@@ -204,6 +234,14 @@ function ProfilePage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-4 sm:mt-0">
+                <Button
+                  onClick={handleShareProfile}
+                  variant="outline"
+                  className="gap-2 bg-transparent hover:bg-accent transition-colors w-full sm:w-auto"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share Profile
+                </Button>
                 <Button
                   onClick={handleEditProfile}
                   variant="outline"
@@ -279,32 +317,7 @@ function ProfilePage() {
                   {user.createdAt ? format(new Date(user.createdAt), "MMMM d, yyyy") : "N/A"}
                 </span>
               </div>
-              <div className="flex justify-between py-3 border-b border-border">
-                <span className="text-muted-foreground">Authentication Provider</span>
-                <span className="font-medium text-foreground">Privy</span>
-              </div>
 
-              {/* Login Methods */}
-              {user.linked_accounts?.map((account: any) => (
-                <div className="flex justify-between py-3 border-b border-border" key={account.type}>
-                  <span className="text-muted-foreground">Linked Account</span>
-                  <span className="font-medium text-foreground flex items-center gap-2">
-                    {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                    <span className="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">
-                      Connected
-                    </span>
-                  </span>
-                </div>
-              ))}
-
-            </div>
-
-            <div className="mt-6 p-4 bg-muted/50 border border-border rounded-lg">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                <strong className="text-foreground">Note:</strong> Your authentication is securely managed by Privy.
-                Profile data is stored locally for this demo. In production, this would be synced with a backend
-                database.
-              </p>
             </div>
           </CardContent>
         </Card>
