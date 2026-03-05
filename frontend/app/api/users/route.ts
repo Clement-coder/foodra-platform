@@ -10,7 +10,20 @@ export async function GET() {
 
     if (error) throw error
 
-    return NextResponse.json(users || [])
+    // Map database fields to frontend User type
+    const formatted = users?.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      location: u.location,
+      avatar: u.avatar_url,
+      wallet: u.wallet_address,
+      role: u.role,
+      createdAt: u.created_at,
+    })) || []
+
+    return NextResponse.json(formatted)
   } catch (error) {
     console.error('Error fetching users:', error)
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
