@@ -13,32 +13,19 @@ export function useUser() {
 
   const getPrivyName = () =>
     privyUserAny?.google?.name ||
-    privyUserAny?.github?.name ||
-    privyUserAny?.twitter?.name ||
-    privyUserAny?.discord?.username ||
-    privyUserAny?.farcaster?.username ||
     privyUser?.email?.address?.split("@")[0] ||
     "User"
   const getPrivyEmail = () =>
     privyUserAny?.google?.email ||
-    privyUserAny?.github?.email ||
     privyUser?.email?.address ||
     ""
   const getPrivyWallet = () => privyUser?.wallet?.address || ""
   const getPrivyAvatar = () => {
-    // Check linkedAccounts for Google account
-    const linkedAccounts = privyUserAny?.linkedAccounts || []
-    const googleAccount = linkedAccounts.find((account: any) => account.type === 'google_oauth')
-    
-    if (googleAccount?.picture) {
-      return googleAccount.picture
+    // Use exact method from Privy documentation
+    if (privyUser && (privyUser as any).google) {
+      const googleProfilePic = (privyUser as any).google.photoUrl
+      if (googleProfilePic) return googleProfilePic
     }
-    
-    // Fallback to direct google property if it exists
-    if (privyUser && privyUserAny?.google?.photoUrl) {
-      return privyUserAny.google.photoUrl
-    }
-    
     return generateAvatarUrl(privyUser?.id || "")
   }
 

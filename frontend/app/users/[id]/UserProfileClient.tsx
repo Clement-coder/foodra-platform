@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { User, Product } from "@/lib/types"
 import {
   UserIcon,
@@ -14,6 +15,7 @@ import {
   BadgeCheck,
   Package,
   TrendingUp,
+  ArrowLeft,
 } from "lucide-react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -27,6 +29,7 @@ interface UserProfileClientProps {
 }
 
 export default function UserProfileClient({ user, userProducts }: UserProfileClientProps) {
+  const router = useRouter()
   const [showWallet, setShowWallet] = useState(false)
   const [copied, setCopied] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
@@ -66,6 +69,14 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <Button 
+        onClick={() => router.back()} 
+        variant="ghost" 
+        className="mb-4 gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Button>
       <ShareOptionsModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
@@ -88,14 +99,14 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
               </div>
 
               <div className="flex-1">
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <span>{user.name}</span>
+                <div className="flex items-center gap-2 mb-3">
+                  <h1 className="text-2xl font-bold">{user.name}</h1>
                   <span className="inline-flex items-center gap-1 rounded-full bg-[#118C4C]/10 text-[#118C4C] text-xs px-2.5 py-1 font-semibold">
                     <BadgeCheck className="h-4 w-4" />
                     Verified
                   </span>
-                </h1>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="rounded-xl border border-sky-200 bg-gradient-to-br from-sky-50 to-cyan-50 px-4 py-3">
                     <p className="text-xs font-semibold text-sky-700 mb-1">Email</p>
                     <p className="text-sm font-medium text-slate-800 break-all">{user.email || "N/A"}</p>
@@ -134,21 +145,8 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
-                <Button onClick={() => setShowWallet(!showWallet)} variant="outline" disabled={!user.wallet}>
-                  <Wallet className="h-4 w-4 mr-2" />
-                  {showWallet ? "Hide Wallet" : "Show Wallet"}
-                </Button>
               </div>
             </div>
-
-            {showWallet && user.wallet && (
-              <div className="mt-4 p-4 bg-muted rounded-lg flex justify-between">
-                <p className="break-all">{user.wallet}</p>
-                <Button onClick={handleCopy} size="icon">
-                  {copied ? <Check /> : <Copy />}
-                </Button>
-              </div>
-            )}
           </CardHeader>
         </Card>
 

@@ -253,21 +253,26 @@ function WalletPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#118C4C] mb-2">{balance} ETH</div>
+            <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#118C4C] mb-2 flex items-center gap-2">
+              <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="ETH" className="w-8 h-8 sm:w-10 sm:h-10" />
+              {balance} ETH
+            </div>
             <div className="space-y-1 text-muted-foreground">
               {ethToUsdcRate && (
-                <div className="text-lg sm:text-xl font-semibold">
+                <div className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                  <img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png" alt="USDC" className="w-5 h-5" />
                   ~${(parseFloat(balance) * ethToUsdcRate).toFixed(2)} USDC
                 </div>
               )}
               {ethToNgnRate && (
-                <div className="text-lg sm:text-xl font-semibold">
+                <div className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                  <span className="text-green-600 font-bold text-xl">₦</span>
                   ~₦{(parseFloat(balance) * ethToNgnRate).toFixed(2)} NGN
                 </div>
               )}
             </div>
             {ethToUsdRate && (
-              <p className="mt-4 text-sm text-muted-foreground">
+              <p className="mt-4 text-sm text-muted-foreground flex items-center gap-1">
                 Current rate: 1 ETH = ${ethToUsdRate.toFixed(2)} USD
               </p>
             )}

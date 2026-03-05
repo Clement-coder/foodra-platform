@@ -9,7 +9,7 @@ export const privyConfig: PrivyClientConfig = {
   },
 
 
-  loginMethods: ['github', 'google', 'twitter'],
+  loginMethods: ['email', 'google'],
 
 
   appearance: {

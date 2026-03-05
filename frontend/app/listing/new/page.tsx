@@ -43,10 +43,11 @@ function NewListingPage() {
       if (storedUser) {
         setUser(storedUser);
       } else {
-        // Check linkedAccounts for Google profile picture
-        const linkedAccounts = (privyUser as any)?.linkedAccounts || []
-        const googleAccount = linkedAccounts.find((account: any) => account.type === 'google_oauth')
-        const googleProfilePic = googleAccount?.picture || (privyUser as any).google?.photoUrl || null
+        // Use exact method from Privy documentation
+        let googleProfilePic = null
+        if (privyUser && (privyUser as any).google) {
+          googleProfilePic = (privyUser as any).google.photoUrl
+        }
         
         const newUser: User = {
           id: privyUser.id,

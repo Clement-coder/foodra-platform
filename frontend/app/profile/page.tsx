@@ -35,6 +35,7 @@ import { useUser } from "@/lib/useUser"
 import { supabase } from "@/lib/supabase"
 import { ProductCard } from "@/components/ProductCard"
 import type { Product } from "@/lib/types"
+import { calculateProfileCompletion } from "@/lib/profileUtils"
 
 function ProfilePage() {
   const { currentUser: user, isLoading, updateUser } = useUser()
@@ -63,10 +64,7 @@ function ProfilePage() {
     if (!privyUser && !user) return "User"
     return (
       privyUserAny?.google?.name ||
-      privyUserAny?.github?.name ||
-      privyUserAny?.twitter?.name ||
-      privyUserAny?.discord?.username ||
-      privyUserAny?.farcaster?.username ||
+      privyUser?.email?.address?.split("@")[0] ||
       user?.name ||
       "User"
     )
@@ -75,11 +73,16 @@ function ProfilePage() {
   const getUserEmail = () => {
     return (
       privyUserAny?.google?.email ||
-      privyUserAny?.github?.email ||
       privyUser?.email?.address ||
       user?.email ||
       "N/A"
     )
+  }
+
+  const getSignUpMethod = () => {
+    if (privyUserAny?.google) return "Google"
+    if (privyUser?.email) return "Email"
+    return "Unknown"
   }
 
   useEffect(() => {
@@ -157,6 +160,7 @@ function ProfilePage() {
 
       if (!ok) throw new Error("Update failed")
 
+      // Auto-close modal on successful save
       setIsEditModalOpen(false)
       reset()
 
@@ -195,6 +199,8 @@ function ProfilePage() {
       ? userProducts.reduce((sum, p) => sum + Number(p.pricePerUnit || 0), 0) / totalProducts
       : 0
   const categories = Array.from(new Set(userProducts.map((p) => p.category).filter(Boolean)))
+  const profileCompletion = calculateProfileCompletion(user)
+  const isProfileComplete = profileCompletion === 100
 
   const recentActivities = [
     {
@@ -247,14 +253,14 @@ function ProfilePage() {
               </div>
 
               <div className="flex-1">
-                <h1 className="text-2xl font-bold flex items-center gap-2">
-                  <span>{displayName}</span>
+                <div className="flex items-center gap-2 mb-3">
+                  <h1 className="text-2xl font-bold">{displayName}</h1>
                   <span className="inline-flex items-center gap-1 rounded-full bg-[#118C4C]/10 text-[#118C4C] text-xs px-2.5 py-1 font-semibold">
                     <BadgeCheck className="h-4 w-4" />
                     Verified
                   </span>
-                </h1>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="rounded-xl border border-sky-200 bg-gradient-to-br from-sky-50 to-cyan-50 px-4 py-3">
                     <p className="text-xs font-semibold text-sky-700 mb-1">Email</p>
                     <p className="text-sm font-medium text-slate-800 break-all">{userEmail}</p>
@@ -270,6 +276,15 @@ function ProfilePage() {
                     </p>
                     <p className="text-sm font-medium text-slate-800">
                       {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 px-4 py-3">
+                    <p className="text-xs font-semibold text-rose-700 mb-1">Sign Up Method</p>
+                    <p className="text-sm font-medium text-slate-800 flex items-center gap-2">
+                      {getSignUpMethod() === "Google" && (
+                        <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                      )}
+                      {getSignUpMethod()}
                     </p>
                   </div>
                   <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 px-4 py-3">
@@ -288,20 +303,20 @@ function ProfilePage() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <Button onClick={handleEditProfile} variant="outline">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <Button onClick={handleEditProfile} className="w-full sm:w-auto bg-[#118C4C] hover:bg-[#0d6b3a] text-white">
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit Profile
+                  {isProfileComplete ? "Edit Profile" : `Complete Profile (${profileCompletion}%)`}
                 </Button>
-                <Button onClick={handleShareProfile} variant="outline">
+                <Button onClick={handleShareProfile} variant="outline" className="w-full sm:w-auto">
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
-                <Button onClick={() => setShowWallet(!showWallet)} variant="outline" disabled={!user.wallet}>
+                <Button onClick={() => setShowWallet(!showWallet)} variant="outline" className="w-full sm:w-auto" disabled={!user.wallet}>
                   <Wallet className="h-4 w-4 mr-2" />
-                  {showWallet ? "Hide Wallet" : "Show Wallet"}
+                  {showWallet ? "Hide" : "Show"} Wallet
                 </Button>
-                <Button onClick={handleSignOut} variant="outline" className="text-red-600 hover:text-red-700">
+                <Button onClick={handleSignOut} variant="outline" className="w-full sm:w-auto text-red-600 hover:text-red-700 hover:bg-red-50">
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign Out
                 </Button>
