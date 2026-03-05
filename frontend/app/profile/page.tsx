@@ -36,6 +36,7 @@ import { supabase } from "@/lib/supabase"
 import { ProductCard } from "@/components/ProductCard"
 import type { Product } from "@/lib/types"
 import { calculateProfileCompletion } from "@/lib/profileUtils"
+import { africanCountries } from "@/lib/countries"
 
 function ProfilePage() {
   const { currentUser: user, isLoading, updateUser } = useUser()
@@ -49,6 +50,7 @@ function ProfilePage() {
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
   const [userProducts, setUserProducts] = useState<Product[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
+  const [selectedCountry, setSelectedCountry] = useState("")
 
   const {
     register,
@@ -56,9 +58,26 @@ function ProfilePage() {
     formState: { errors },
     setValue,
     reset,
+    watch,
   } = useForm<ProfileUpdateFormData>({
     resolver: zodResolver(profileUpdateSchema),
   })
+
+  const locationValue = watch("location")
+
+  useEffect(() => {
+    if (locationValue && locationValue !== selectedCountry) {
+      setSelectedCountry(locationValue)
+      const country = africanCountries.find(c => c.name === locationValue)
+      if (country) {
+        const currentPhone = watch("phone") || ""
+        // Only set dial code if phone is empty or doesn't start with +
+        if (!currentPhone || !currentPhone.startsWith("+")) {
+          setValue("phone", country.dialCode)
+        }
+      }
+    }
+  }, [locationValue, selectedCountry, setValue, watch])
 
   const getUserDisplayName = () => {
     if (!privyUser && !user) return "User"
@@ -440,11 +459,14 @@ function ProfilePage() {
             required
           />
 
-          <FormInput
-            label="Location"
+          <FormSelect
+            label="Country"
             {...register("location")}
             error={errors.location?.message}
-            placeholder="Your location"
+            options={africanCountries.map(country => ({
+              value: country.name,
+              label: country.name
+            }))}
             required
           />
 
