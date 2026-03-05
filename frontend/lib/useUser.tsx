@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { usePrivy } from "@privy-io/react-auth"
 import type { User } from "./types"
 import { generateAvatarUrl } from "./avatarGenerator"
+import { getGoogleLinkedAccount, getPrivyProfilePicture } from "./privyUser"
 
 export function useUser() {
   const { user: privyUser, authenticated, ready } = usePrivy()
@@ -12,20 +13,19 @@ export function useUser() {
   const privyUserAny = privyUser as any
 
   const getPrivyName = () =>
+    getGoogleLinkedAccount(privyUser as any)?.name ||
     privyUserAny?.google?.name ||
     privyUser?.email?.address?.split("@")[0] ||
     "User"
   const getPrivyEmail = () =>
+    getGoogleLinkedAccount(privyUser as any)?.email ||
     privyUserAny?.google?.email ||
     privyUser?.email?.address ||
     ""
   const getPrivyWallet = () => privyUser?.wallet?.address || ""
   const getPrivyAvatar = () => {
-    // Use exact method from Privy documentation
-    if (privyUser && (privyUser as any).google) {
-      const googleProfilePic = (privyUser as any).google.photoUrl
-      if (googleProfilePic) return googleProfilePic
-    }
+    const profilePicture = getPrivyProfilePicture(privyUser as any)
+    if (profilePicture) return profilePicture
     return generateAvatarUrl(privyUser?.id || "")
   }
 
