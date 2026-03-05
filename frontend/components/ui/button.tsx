@@ -13,7 +13,7 @@ const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    "flex items-center justify-center rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#118C4C]/50 disabled:opacity-50 disabled:pointer-events-none"
+    "flex items-center justify-center rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#118C4C]/50 disabled:opacity-50 disabled:pointer-events-none text-xs sm:text-sm"
 
 const variantStyles = {
   default: "bg-[#118C4C] text-white hover:bg-[#0E7A40]",
@@ -29,9 +29,9 @@ const variantStyles = {
 
 
   const sizeStyles: Record<NonNullable<ButtonProps["size"]>, string> = {
-    sm: "px-4 h-8 text-sm",
+    sm: "px-4 h-8",
     default: "px-6 h-10",
-    lg: "px-8 h-12 text-lg",
+    lg: "px-8 h-12 sm:text-base md:text-lg",
     icon: "h-9 w-9 p-0",
   }
 
