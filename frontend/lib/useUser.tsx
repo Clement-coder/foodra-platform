@@ -25,6 +25,9 @@ export function useUser() {
     privyUser?.email?.address ||
     ""
   const getPrivyWallet = () => privyUser?.wallet?.address || ""
+  const getPrivyAvatar = () => 
+    privyUserAny?.google?.photoUrl || 
+    generateAvatarUrl(privyUser?.id || "")
 
   const buildFallbackUser = (): User | null => {
     if (!privyUser) return null
@@ -32,7 +35,7 @@ export function useUser() {
       id: privyUser.id,
       name: getPrivyName(),
       email: getPrivyEmail(),
-      avatar: generateAvatarUrl(privyUser.id),
+      avatar: getPrivyAvatar(),
       wallet: getPrivyWallet(),
       createdAt: new Date().toISOString(),
       phone: "",
@@ -57,7 +60,7 @@ export function useUser() {
               name: getPrivyName(),
               email: getPrivyEmail(),
               wallet: getPrivyWallet(),
-              avatar: generateAvatarUrl(privyUser.id),
+              avatar: getPrivyAvatar(),
             }),
           })
 
