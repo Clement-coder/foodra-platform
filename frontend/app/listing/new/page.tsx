@@ -19,6 +19,7 @@ import withAuth from "../../../components/withAuth";
 import { usePrivy } from "@privy-io/react-auth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 import { generateAvatarUrl } from "@/lib/avatarGenerator"
+import { getGoogleLinkedAccount, getPrivyProfilePicture } from "@/lib/privyUser"
 
 function NewListingPage() {
   const router = useRouter()
@@ -43,19 +44,16 @@ function NewListingPage() {
       if (storedUser) {
         setUser(storedUser);
       } else {
-        // Use exact method from Privy documentation
-        let googleProfilePic = null
-        if (privyUser && (privyUser as any).google) {
-          googleProfilePic = (privyUser as any).google.photoUrl
-        }
+        const googleAccount = getGoogleLinkedAccount(privyUser as any)
+        const profilePicture = getPrivyProfilePicture(privyUser as any)
         
         const newUser: User = {
           id: privyUser.id,
-          name: privyUser.google?.name || privyUser.email?.address || "Unnamed User",
+          name: googleAccount?.name || privyUser.google?.name || privyUser.email?.address || "Unnamed User",
           email: privyUser.email?.address || "",
           phone: privyUser.phone?.number || "",
           location: "Nigeria",
-          avatar: googleProfilePic || generateAvatarUrl(privyUser.id),
+          avatar: profilePicture || generateAvatarUrl(privyUser.id),
           wallet: privyUser.wallet?.address || "",
           role: "farmer",
           createdAt: new Date().toISOString(),
@@ -69,31 +67,30 @@ function NewListingPage() {
 
 
 
-  const onSubmit = (data: ProductListingFormData) => {
+  const onSubmit = async (data: ProductListingFormData) => {
     setIsSubmitting(true)
     setNotification(null)
 
     try {
-      // Create new product
-      const newProduct: Product = {
-        id: `prod-${Date.now()}`,
-        productName: data.productName,
-        category: data.category,
-        quantity: data.quantity,
-        pricePerUnit: data.pricePerUnit,
-        description: data.description,
-        image: data.image,
-        location: user?.location || "Nigeria",
-        farmerId: user?.id || "unknown",
-        farmerName: user?.name || "Unknown Farmer",
-        farmerAvatar: user?.avatar || "",
-        createdAt: new Date().toISOString(),
-      }
+      // Create product in Supabase
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          farmerId: user?.id,
+          productName: data.productName,
+          category: data.category,
+          quantity: data.quantity,
+          pricePerUnit: data.pricePerUnit,
+          description: data.description,
+          image: imageBase64 || data.image,
+          location: user?.location || "Nigeria",
+        }),
+      })
 
-      // Load existing products and add new one
-const products = loadFromLocalStorage<Product[]>("foodra_products", [])
-      products.unshift(newProduct)
-      saveToLocalStorage("foodra_products", products)
+      if (!response.ok) {
+        throw new Error('Failed to create product')
+      }
 
       setNotification({
         type: "success",
@@ -105,9 +102,10 @@ const products = loadFromLocalStorage<Product[]>("foodra_products", [])
         router.push("/marketplace")
       }, 2000)
     } catch (error) {
+      console.error('Error creating product:', error)
       setNotification({
         type: "error",
-        message: "An unexpected error occurred. Please try again.",
+        message: "Failed to list product. Please try again.",
       })
       setIsSubmitting(false)
     }

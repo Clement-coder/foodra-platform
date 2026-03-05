@@ -302,22 +302,22 @@ function ProfilePage() {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <Button onClick={handleEditProfile} className="w-full sm:w-auto bg-[#118C4C] hover:bg-[#0d6b3a] text-white">
-                  <Edit className="h-4 w-4 mr-2" />
-                  {isProfileComplete ? "Edit Profile" : `Complete Profile (${profileCompletion}%)`}
+              <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
+                <Button onClick={handleEditProfile} size="sm" className="flex-1 sm:flex-initial bg-[#118C4C] hover:bg-[#0d6b3a] text-white px-3">
+                  <Edit className="h-3.5 w-3.5 sm:mr-1.5" />
+                  <span className="hidden sm:inline">{isProfileComplete ? "Edit" : `Complete (${profileCompletion}%)`}</span>
                 </Button>
-                <Button onClick={handleShareProfile} variant="outline" className="w-full sm:w-auto">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
+                <Button onClick={handleShareProfile} variant="outline" size="sm" className="flex-1 sm:flex-initial px-3">
+                  <Share2 className="h-3.5 w-3.5 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Share</span>
                 </Button>
-                <Button onClick={() => setShowWallet(!showWallet)} variant="outline" className="w-full sm:w-auto" disabled={!user.wallet}>
-                  <Wallet className="h-4 w-4 mr-2" />
-                  {showWallet ? "Hide" : "Show"} Wallet
+                <Button onClick={() => setShowWallet(!showWallet)} variant="outline" size="sm" className="flex-1 sm:flex-initial px-3" disabled={!user.wallet}>
+                  <Wallet className="h-3.5 w-3.5 sm:mr-1.5" />
+                  <span className="hidden sm:inline">{showWallet ? "Hide" : "Show"}</span>
                 </Button>
-                <Button onClick={handleSignOut} variant="outline" className="w-full sm:w-auto text-red-600 hover:text-red-700 hover:bg-red-50">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                <Button onClick={handleSignOut} variant="outline" size="sm" className="flex-1 sm:flex-initial text-red-600 hover:text-red-700 hover:bg-red-50 px-3">
+                  <LogOut className="h-3.5 w-3.5 sm:mr-1.5" />
+                  <span className="hidden sm:inline">Sign Out</span>
                 </Button>
               </div>
             </div>
