@@ -26,9 +26,19 @@ export function useUser() {
     ""
   const getPrivyWallet = () => privyUser?.wallet?.address || ""
   const getPrivyAvatar = () => {
-    if (privyUser && (privyUser as any).google) {
-      return (privyUser as any).google.photoUrl
+    // Check linkedAccounts for Google account
+    const linkedAccounts = privyUserAny?.linkedAccounts || []
+    const googleAccount = linkedAccounts.find((account: any) => account.type === 'google_oauth')
+    
+    if (googleAccount?.picture) {
+      return googleAccount.picture
     }
+    
+    // Fallback to direct google property if it exists
+    if (privyUser && privyUserAny?.google?.photoUrl) {
+      return privyUserAny.google.photoUrl
+    }
+    
     return generateAvatarUrl(privyUser?.id || "")
   }
 

@@ -43,7 +43,11 @@ function NewListingPage() {
       if (storedUser) {
         setUser(storedUser);
       } else {
-        const googleProfilePic = privyUser && (privyUser as any).google ? (privyUser as any).google.photoUrl : null;
+        // Check linkedAccounts for Google profile picture
+        const linkedAccounts = (privyUser as any)?.linkedAccounts || []
+        const googleAccount = linkedAccounts.find((account: any) => account.type === 'google_oauth')
+        const googleProfilePic = googleAccount?.picture || (privyUser as any).google?.photoUrl || null
+        
         const newUser: User = {
           id: privyUser.id,
           name: privyUser.google?.name || privyUser.email?.address || "Unnamed User",
