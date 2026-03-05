@@ -25,9 +25,12 @@ export function useUser() {
     privyUser?.email?.address ||
     ""
   const getPrivyWallet = () => privyUser?.wallet?.address || ""
-  const getPrivyAvatar = () => 
-    privyUserAny?.google?.photoUrl || 
-    generateAvatarUrl(privyUser?.id || "")
+  const getPrivyAvatar = () => {
+    if (privyUser && (privyUser as any).google) {
+      return (privyUser as any).google.photoUrl
+    }
+    return generateAvatarUrl(privyUser?.id || "")
+  }
 
   const buildFallbackUser = (): User | null => {
     if (!privyUser) return null

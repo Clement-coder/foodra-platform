@@ -43,13 +43,14 @@ function NewListingPage() {
       if (storedUser) {
         setUser(storedUser);
       } else {
+        const googleProfilePic = privyUser && (privyUser as any).google ? (privyUser as any).google.photoUrl : null;
         const newUser: User = {
           id: privyUser.id,
           name: privyUser.google?.name || privyUser.email?.address || "Unnamed User",
           email: privyUser.email?.address || "",
           phone: privyUser.phone?.number || "",
           location: "Nigeria",
-          avatar: privyUser.google?.photoUrl || generateAvatarUrl(privyUser.id),
+          avatar: googleProfilePic || generateAvatarUrl(privyUser.id),
           wallet: privyUser.wallet?.address || "",
           role: "farmer",
           createdAt: new Date().toISOString(),
