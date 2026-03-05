@@ -11,6 +11,7 @@ import { Modal } from "@/components/Modal"
 import { FormInput } from "@/components/FormInput"
 import { FormSelect } from "@/components/FormSelector"
 import { NotificationDiv } from "@/components/NotificationDiv"
+import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import { FarmerProfileSummary } from "@/components/FarmerProfileSummary"
 import { profileUpdateSchema, type ProfileUpdateFormData } from "@/lib/schemas"
 import { usePrivy } from "@privy-io/react-auth"
@@ -28,6 +29,7 @@ function ProfilePage() {
   const privyUserAny = privyUser as any
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
 
   const {
@@ -99,27 +101,7 @@ function ProfilePage() {
     setIsEditModalOpen(true)
   }
 
-  const handleShareProfile = async () => {
-    try {
-      const profileUrl = `${window.location.origin}/users/${user.id}`
-      const shareData = {
-        title: `${displayName} on Foodra`,
-        text: `Check out ${displayName}'s Foodra profile.`,
-        url: profileUrl,
-      }
-
-      if (navigator.share) {
-        await navigator.share(shareData)
-        setNotification({ type: "success", message: "Profile shared successfully!" })
-        return
-      }
-
-      await navigator.clipboard.writeText(profileUrl)
-      setNotification({ type: "success", message: "Profile link copied to clipboard!" })
-    } catch (error) {
-      setNotification({ type: "error", message: "Unable to share profile right now." })
-    }
-  }
+  const handleShareProfile = () => setIsShareModalOpen(true)
 
   const onSubmit = async (data: ProfileUpdateFormData) => {
     if (!user) return
@@ -176,6 +158,13 @@ function ProfilePage() {
       <Modal isOpen={isEmailMissing} onClose={dismissEmailMissing} title="Complete Your Profile">
         <EmailCompletionModal onClose={dismissEmailMissing} />
       </Modal>
+      <ShareOptionsModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={`${displayName} on Foodra`}
+        text={`Check out ${displayName}'s Foodra profile.`}
+        url={typeof window !== "undefined" ? `${window.location.origin}/users/${user.id}` : ""}
+      />
       {notification && (
         <NotificationDiv
           type={notification.type}
@@ -294,10 +283,13 @@ function ProfilePage() {
   user={{
     id: user.id,
     name: displayName,
+    email: user.email,
     role: "farmer",
     phone: userPhoneNumber,
     location: userLocation,
     avatar: user.avatar,
+    wallet: user.wallet,
+    createdAt: user.createdAt,
   }}
 />
         </div>

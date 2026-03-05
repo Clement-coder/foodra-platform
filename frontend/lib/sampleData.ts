@@ -9,7 +9,9 @@ export const sampleUsers: User[] = [
     location: "Lagos",
     avatar: generateAvatarUrl("user_1"),
     email: "john.okafor@example.com",
+    wallet: "",
     role: "farmer",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "user_2",
@@ -18,7 +20,9 @@ export const sampleUsers: User[] = [
     location: "Kano",
     avatar: generateAvatarUrl("user_2"),
     email: "aisha.mohammed@example.com",
+    wallet: "",
     role: "buyer",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "user_3",
@@ -27,7 +31,9 @@ export const sampleUsers: User[] = [
     location: "Ogun",
     avatar: generateAvatarUrl("user_3"),
     email: "chioma.nwankwo@example.com",
+    wallet: "",
     role: "farmer",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "user_4",
@@ -36,7 +42,9 @@ export const sampleUsers: User[] = [
     location: "Plateau",
     avatar: generateAvatarUrl("user_4"),
     email: "ibrahim.yusuf@example.com",
+    wallet: "",
     role: "buyer",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "user_5",
@@ -45,7 +53,9 @@ export const sampleUsers: User[] = [
     location: "Benue",
     avatar: generateAvatarUrl("user_5"),
     email: "grace.adeyemi@example.com",
+    wallet: "",
     role: "farmer",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "user_6",
@@ -54,7 +64,9 @@ export const sampleUsers: User[] = [
     location: "Ekiti",
     avatar: generateAvatarUrl("user_6"),
     email: "samuel.ojo@example.com",
+    wallet: "",
     role: "buyer",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "user_7",
@@ -63,7 +75,9 @@ export const sampleUsers: User[] = [
     location: "Enugu",
     avatar: generateAvatarUrl("user_7"),
     email: "ngozi.eze@example.com",
+    wallet: "",
     role: "farmer",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "user_8",
@@ -72,7 +86,9 @@ export const sampleUsers: User[] = [
     location: "Oyo",
     avatar: generateAvatarUrl("user_8"),
     email: "tunde.bakare@example.com",
+    wallet: "",
     role: "buyer",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "user_9",
@@ -81,7 +97,9 @@ export const sampleUsers: User[] = [
     location: "Kaduna",
     avatar: generateAvatarUrl("user_9"),
     email: "fatima.bello@example.com",
+    wallet: "",
     role: "farmer",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "user_10",
@@ -90,7 +108,9 @@ export const sampleUsers: User[] = [
     location: "Imo",
     avatar: generateAvatarUrl("user_10"),
     email: "emeka.okoro@example.com",
+    wallet: "",
     role: "buyer",
+    createdAt: new Date().toISOString(),
   },
 ]
 

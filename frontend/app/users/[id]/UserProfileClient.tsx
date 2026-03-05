@@ -19,7 +19,7 @@ import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { ProductCard } from "@/components/ProductCard"
 import { Button } from "@/components/ui/button"
-import { NotificationDiv } from "@/components/NotificationDiv"
+import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 
 interface UserProfileClientProps {
   user: User
@@ -29,7 +29,7 @@ interface UserProfileClientProps {
 export default function UserProfileClient({ user, userProducts }: UserProfileClientProps) {
   const [showWallet, setShowWallet] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const totalProducts = userProducts.length
   const totalUnits = userProducts.reduce((sum, p) => sum + (p.quantity || 0), 0)
   const avgPrice =
@@ -45,27 +45,7 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleShareProfile = async () => {
-    try {
-      const profileUrl = typeof window !== "undefined" ? window.location.href : ""
-      const shareData = {
-        title: `${user.name} on Foodra`,
-        text: `Check out ${user.name}'s Foodra profile.`,
-        url: profileUrl,
-      }
-
-      if (navigator.share) {
-        await navigator.share(shareData)
-        setNotification({ type: "success", message: "Profile shared successfully!" })
-        return
-      }
-
-      await navigator.clipboard.writeText(profileUrl)
-      setNotification({ type: "success", message: "Profile link copied to clipboard!" })
-    } catch {
-      setNotification({ type: "error", message: "Unable to share profile right now." })
-    }
-  }
+  const handleShareProfile = () => setIsShareModalOpen(true)
 
   const recentActivities = [
     {
@@ -86,13 +66,13 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {notification && (
-        <NotificationDiv
-          type={notification.type}
-          message={notification.message}
-          onClose={() => setNotification(null)}
-        />
-      )}
+      <ShareOptionsModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={`${user.name} on Foodra`}
+        text={`Check out ${user.name}'s Foodra profile.`}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+      />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="mb-8">
           <CardHeader className="p-6">

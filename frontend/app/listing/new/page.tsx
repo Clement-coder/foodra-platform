@@ -46,10 +46,13 @@ function NewListingPage() {
         const newUser: User = {
           id: privyUser.id,
           name: privyUser.google?.name || privyUser.email?.address || "Unnamed User",
+          email: privyUser.email?.address || "",
           phone: privyUser.phone?.number || "",
-          location: "Nigeria", // Default location
+          location: "Nigeria",
           avatar: generateAvatarUrl(privyUser.id),
-          role: "farmer", // Default role
+          wallet: privyUser.wallet?.address || "",
+          role: "farmer",
+          createdAt: new Date().toISOString(),
         };
         saveToLocalStorage(`foodra_user_${privyUser.id}`, newUser);
         setUser(newUser);
