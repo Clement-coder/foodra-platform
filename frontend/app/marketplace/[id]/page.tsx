@@ -4,12 +4,13 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, MapPin, ShoppingCart, UserIcon } from "lucide-react"
+import { ArrowLeft, MapPin, Share2, ShoppingCart, UserIcon } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/Skeleton"
 import { NotificationDiv } from "@/components/NotificationDiv"
+import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import type { Product, CartItem } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
@@ -21,6 +22,7 @@ function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [showNotification, setShowNotification] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -109,6 +111,13 @@ function ProductDetailPage() {
       )}
 
       {/* Product Details */}
+      <ShareOptionsModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={`${product.productName} on Foodra`}
+        text={`Check out this product: ${product.productName}`}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+      />
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Image */}
@@ -159,11 +168,22 @@ function ProductDetailPage() {
               Add to Cart
             </Button>
 
-            <Link href="/shop" className="block">
-              <Button variant="outline" size="lg" className="w-full bg-transparent">
-                View Cart
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Link href="/shop" className="block">
+                <Button variant="outline" size="lg" className="w-full bg-transparent">
+                  View Cart
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full bg-transparent gap-2"
+                onClick={() => setIsShareModalOpen(true)}
+              >
+                <Share2 className="h-4 w-4" />
+                Share Product
               </Button>
-            </Link>
+            </div>
           </div>
         </div>
 

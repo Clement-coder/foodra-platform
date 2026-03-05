@@ -3,13 +3,14 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, ShoppingCart } from "lucide-react";
+import { MapPin, Share2, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/useCart";
 import { generateAvatarUrl } from "@/lib/avatarGenerator";
+import { ShareOptionsModal } from "@/components/ShareOptionsModal";
 
 interface ProductCardProps {
   product: Product;
@@ -18,6 +19,7 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const [isAdding, setIsAdding] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const handleAddToCart = () => {
     setIsAdding(true);
@@ -27,6 +29,13 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+      <ShareOptionsModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        title={`${product.productName} on Foodra`}
+        text={`Check out this product: ${product.productName}`}
+        url={typeof window !== "undefined" ? `${window.location.origin}/marketplace/${product.id}` : ""}
+      />
       <Card className="overflow-hidden h-full flex flex-col">
         <div className="relative h-48 w-full bg-muted">
           <Image
@@ -93,6 +102,16 @@ export function ProductCard({ product }: ProductCardProps) {
           >
             <ShoppingCart className="h-4 w-4" />
             {isAdding ? "Added!" : "Add"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="shrink-0"
+            onClick={() => setIsShareModalOpen(true)}
+            aria-label={`Share ${product.productName}`}
+          >
+            <Share2 className="h-4 w-4" />
           </Button>
         </CardFooter>
       </Card>

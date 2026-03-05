@@ -64,7 +64,7 @@ function OrdersPage() {
                           Ordered on
                         </p>
                         <p className="font-semibold">
-                          {new Date(order.date).toLocaleDateString("en-US", {
+                          {new Date(order.createdAt).toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "long",
                             day: "numeric",
@@ -79,7 +79,7 @@ function OrdersPage() {
                           Order Total
                         </p>
                         <p className="font-bold text-lg text-green-600">
-                          N{order.total.toLocaleString()}
+                          N{order.totalAmount.toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -88,7 +88,7 @@ function OrdersPage() {
                   <div className="space-y-6">
                     {order.items.map((item) => (
                       <div
-                        key={item.id}
+                        key={item.productId}
                         className="flex items-start gap-6"
                       >
                         <Image
