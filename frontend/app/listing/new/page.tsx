@@ -49,7 +49,7 @@ function NewListingPage() {
           email: privyUser.email?.address || "",
           phone: privyUser.phone?.number || "",
           location: "Nigeria",
-          avatar: generateAvatarUrl(privyUser.id),
+          avatar: privyUser.google?.photoUrl || generateAvatarUrl(privyUser.id),
           wallet: privyUser.wallet?.address || "",
           role: "farmer",
           createdAt: new Date().toISOString(),
