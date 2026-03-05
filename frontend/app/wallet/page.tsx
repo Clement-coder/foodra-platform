@@ -254,13 +254,13 @@ function WalletPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#118C4C] mb-2 flex items-center gap-2">
-              <span className="text-2xl sm:text-3xl">Ξ</span>
+              <img src="/logos/eth.png" alt="ETH" className="w-8 h-8 sm:w-10 sm:h-10" />
               {balance} ETH
             </div>
             <div className="space-y-1 text-muted-foreground">
               {ethToUsdcRate && (
                 <div className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                  <span className="text-blue-500 font-bold">$</span>
+                  <img src="/logos/usdc.png" alt="USDC" className="w-5 h-5" />
                   ~${(parseFloat(balance) * ethToUsdcRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
                 </div>
               )}
