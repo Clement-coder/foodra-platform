@@ -1,30 +1,30 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function GET() {
+export async function POST(request: Request) {
   try {
-    const { data: users, error } = await supabase
+    const body = await request.json()
+    
+    const { data, error } = await supabase
       .from('users')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .upsert({
+        id: body.id,
+        name: body.name,
+        email: body.email,
+        phone: body.phone,
+        location: body.location,
+        avatar_url: body.avatar,
+        wallet_address: body.wallet,
+        role: body.role,
+      }, { onConflict: 'id' })
+      .select()
+      .single()
 
     if (error) throw error
 
-    const formatted = users?.map((u) => ({
-      id: u.id,
-      name: u.name || '',
-      email: u.email || '',
-      avatar: u.avatar_url || '',
-      wallet: u.wallet_address || '',
-      createdAt: u.created_at,
-      phone: u.phone || "",
-      location: u.location || undefined,
-      role: u.role || "buyer",
-    })) || []
-
-    return NextResponse.json(formatted)
+    return NextResponse.json(data)
   } catch (error) {
-    console.error('Error fetching users:', error)
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
+    console.error('Error syncing user:', error)
+    return NextResponse.json({ error: 'Failed to sync user' }, { status: 500 })
   }
 }

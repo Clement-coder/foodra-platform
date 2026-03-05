@@ -65,7 +65,7 @@ export function TransactionItem({ txn, userAddress, ethToUsdcRate, ethToNgnRate,
             }`}
           >
             {isReceiver ? "+" : "-"}
-            {ethValue.toFixed(6)} ETH
+            {ethValue.toFixed(8)} ETH
           </p>
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
@@ -110,13 +110,13 @@ export function TransactionItem({ txn, userAddress, ethToUsdcRate, ethToNgnRate,
               {ethToUsdcRate && (
                 <div className="flex justify-between">
                   <p className="font-medium text-muted-foreground">Value (USDC):</p>
-                  <p className="font-mono">~${(ethValue * ethToUsdcRate).toFixed(2)}</p>
+                  <p className="font-mono">~${(ethValue * ethToUsdcRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
               )}
               {ethToNgnRate && (
                 <div className="flex justify-between">
                   <p className="font-medium text-muted-foreground">Value (NGN):</p>
-                  <p className="font-mono">~₦{(ethValue * ethToNgnRate).toFixed(2)}</p>
+                  <p className="font-mono">~₦{(ethValue * ethToNgnRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                 </div>
               )}
             </div>

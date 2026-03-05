@@ -72,6 +72,13 @@ function NewListingPage() {
     setNotification(null)
 
     try {
+      // Sync user to Supabase first
+      await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user),
+      })
+
       // Create product in Supabase
       const response = await fetch('/api/products', {
         method: 'POST',
