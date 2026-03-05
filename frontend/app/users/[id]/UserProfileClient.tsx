@@ -100,10 +100,9 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
 
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-3">
-                  <h1 className="text-2xl font-bold">{user.name}</h1>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#118C4C]/10 text-[#118C4C] text-xs px-2.5 py-1 font-semibold">
+                  <h1 className="text-lg sm:text-xl font-bold truncate">{user.name}</h1>
+                  <span className="inline-flex items-center rounded-full bg-[#118C4C]/10 text-[#118C4C] p-1 flex-shrink-0" title="Verified">
                     <BadgeCheck className="h-4 w-4" />
-                    Verified
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

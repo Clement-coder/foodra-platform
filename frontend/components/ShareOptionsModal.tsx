@@ -60,60 +60,60 @@ export function ShareOptionsModal({ isOpen, onClose, title, url, text }: ShareOp
         <div className="space-y-3">
           <Button
             onClick={handleNativeShare}
-            className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white justify-start gap-2"
+            className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white justify-start gap-2 text-sm"
           >
-            <Share2 className="h-4 w-4" />
-            Share with device options
+            <Share2 className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">Share with device</span>
           </Button>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
-              className="justify-start gap-2 bg-transparent"
+              className="justify-start gap-2 bg-transparent text-xs sm:text-sm p-2 sm:p-3"
               onClick={() => openInNewTab(`https://wa.me/?text=${encodedText}%20${encodedUrl}`)}
             >
-              <MessageCircle className="h-4 w-4 text-green-600" />
-              WhatsApp
+              <MessageCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+              <span className="truncate">WhatsApp</span>
             </Button>
 
             <Button
               variant="outline"
-              className="justify-start gap-2 bg-transparent"
+              className="justify-start gap-2 bg-transparent text-xs sm:text-sm p-2 sm:p-3"
               onClick={() => openInNewTab(`https://x.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`)}
             >
-              <Send className="h-4 w-4 text-black dark:text-white" />
-              X / Twitter
+              <Send className="h-4 w-4 text-black dark:text-white flex-shrink-0" />
+              <span className="truncate">X / Twitter</span>
             </Button>
 
             <Button
               variant="outline"
-              className="justify-start gap-2 bg-transparent"
+              className="justify-start gap-2 bg-transparent text-xs sm:text-sm p-2 sm:p-3"
               onClick={() => openInNewTab(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`)}
             >
-              <Facebook className="h-4 w-4 text-blue-600" />
-              Facebook
+              <Facebook className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <span className="truncate">Facebook</span>
             </Button>
 
             <Button
               variant="outline"
-              className="justify-start gap-2 bg-transparent"
+              className="justify-start gap-2 bg-transparent text-xs sm:text-sm p-2 sm:p-3"
               onClick={() => openInNewTab(`https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`)}
             >
-              <Send className="h-4 w-4 text-sky-500" />
-              Telegram
+              <Send className="h-4 w-4 text-sky-500 flex-shrink-0" />
+              <span className="truncate">Telegram</span>
             </Button>
           </div>
 
           <Button
             variant="outline"
-            className="w-full justify-start gap-2 bg-transparent"
+            className="w-full justify-start gap-2 bg-transparent text-sm"
             onClick={handleCopyLink}
           >
-            <Copy className="h-4 w-4" />
-            Copy Link
+            <Copy className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">Copy Link</span>
           </Button>
 
-          <Button variant="ghost" className="w-full" onClick={onClose}>
+          <Button variant="ghost" className="w-full text-sm" onClick={onClose}>
             Close
           </Button>
         </div>
