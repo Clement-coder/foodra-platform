@@ -7,32 +7,33 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { FundingCard } from "@/components/FundingCard"
-import type { FundingApplication, User } from "@/lib/types"
+import type { FundingApplication } from "@/lib/types"
 import withAuth from "../../components/withAuth";
-import { loadFromLocalStorage } from "@/lib/localStorage"
 import { useUser } from "@/lib/useUser"
 
 function FundingPage() {
   const { currentUser: user, isLoading } = useUser()
   const [applications, setApplications] = useState<FundingApplication[]>([])
   const [filter, setFilter] = useState<"all" | "Pending" | "Approved" | "Rejected">("all")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && user) {
       loadData()
+    } else if (!isLoading) {
+      setLoading(false)
     }
   }, [isLoading, user])
 
-  const loadData = () => {
-    const allApplications = loadFromLocalStorage<FundingApplication[]>("foodra_applications", [])
-
-    // If user is logged in, show only their applications
-    if (user) {
-      const userApplications = allApplications.filter((app) => app.userId === user.id)
-      setApplications(userApplications)
-    } else {
-      // Show all applications for non-logged users
-      setApplications(allApplications)
+  const loadData = async () => {
+    try {
+      const res = await fetch(`/api/funding?userId=${user?.id}`);
+      const data = await res.json();
+      setApplications(data);
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+    } finally {
+      setLoading(false);
     }
   }
 

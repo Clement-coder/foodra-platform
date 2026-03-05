@@ -11,7 +11,6 @@ import { GridLayout } from "@/components/GridLayout";
 import { Skeleton } from "@/components/Skeleton";
 import type { Product } from "@/lib/types";
 import withAuth from "../../components/withAuth";
-import { loadFromLocalStorage } from "@/lib/localStorage";
 import { usePrivy } from "@privy-io/react-auth";
 
 function MarketplacePage() {
@@ -24,19 +23,26 @@ function MarketplacePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
   useEffect(() => {
-    // Load products from localStorage
-    const storedProducts = loadFromLocalStorage<Product[]>("foodra_products", []);
-    setProducts(storedProducts);
-    setLoading(false);
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
-  // Get unique categories
   const categories = useMemo(() => {
     const cats = ["All", ...new Set(products.map((p) => p.category))];
     return cats;
   }, [products]);
 
-  // Filter products
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesCategory =

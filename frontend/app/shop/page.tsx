@@ -8,49 +8,47 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Modal } from "@/components/Modal";
+import { NotificationDiv } from "@/components/NotificationDiv";
 import withAuth from "../../components/withAuth";
-import { useCart } from "@/lib/useCart";
+import { useCart, useOrders } from "@/lib/useCart";
 import { usePrivy } from "@privy-io/react-auth";
 
 function ShopPage() {
-  const {
-    cartItems,
-    removeFromCart,
-    incrementQuantity,
-    decrementQuantity,
-    checkout,
-  } = useCart();
+  const { cart, removeFromCart, updateQuantity, clearCart, totalAmount } = useCart();
+  const { createOrder } = useOrders();
   const { authenticated } = usePrivy();
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
 
   const handleProceedToCheckout = () => {
     setIsCheckoutModalOpen(true);
   };
 
-  const handleConfirmPayment = () => {
+  const handleConfirmPayment = async () => {
     setIsProcessingPayment(true);
-    // Simulate payment processing
-    setTimeout(() => {
+    
+    setTimeout(async () => {
+      const order = await createOrder(cart, totalAmount);
       setIsProcessingPayment(false);
-      setPaymentSuccess(true);
-      checkout();
-      setTimeout(() => {
-        setPaymentSuccess(false);
+      
+      if (order) {
+        setPaymentSuccess(true);
+        setNotification({ type: "success", message: "Order placed successfully!" });
+        clearCart();
+        setTimeout(() => {
+          setPaymentSuccess(false);
+          setIsCheckoutModalOpen(false);
+        }, 3000);
+      } else {
+        setNotification({ type: "error", message: "Failed to place order. Please try again." });
         setIsCheckoutModalOpen(false);
-      }, 3000); // Close success message after 3 seconds
-    }, 2000); // Simulate 2 seconds payment processing
+      }
+    }, 2000);
   };
 
-  const calculateTotal = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.pricePerUnit * item.quantity,
-      0
-    );
-  };
-
-  if (cartItems.length === 0) {
+  if (cart.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto text-center">
@@ -76,6 +74,13 @@ function ShopPage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
+      {notification && (
+        <NotificationDiv
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-foreground">
           Shopping Cart
@@ -92,9 +97,9 @@ function ShopPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="lg:col-span-2 space-y-4">
-          {cartItems.map((item) => (
+          {cart.map((item) => (
             <motion.div
-              key={item.id}
+              key={item.productId}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -20 }}
@@ -123,7 +128,7 @@ function ShopPage() {
                         <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
                           <Button
                             variant="ghost"
-                            onClick={() => decrementQuantity(item.id)}
+                            onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1))}
                             className="h-8 w-8"
                             aria-label="Decrease quantity"
                           >
@@ -134,7 +139,7 @@ function ShopPage() {
                           </span>
                           <Button
                             variant="ghost"
-                            onClick={() => incrementQuantity(item.id)}
+                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                             className="h-8 w-8"
                             aria-label="Increase quantity"
                           >
@@ -145,7 +150,7 @@ function ShopPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.productId)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -170,8 +175,8 @@ function ShopPage() {
 
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Items ({cartItems.length})</span>
-                  <span>₦{calculateTotal().toLocaleString()}</span>
+                  <span>Items ({cart.length})</span>
+                  <span>₦{totalAmount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Delivery</span>
@@ -184,7 +189,7 @@ function ShopPage() {
                     Total
                   </span>
                   <span className="font-bold text-[#118C4C] text-2xl">
-                    ₦{calculateTotal().toLocaleString()}
+                    ₦{totalAmount.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -249,9 +254,9 @@ function ShopPage() {
         ) : (
           <>
             <div className="space-y-3 mb-6">
-              {cartItems.map((item) => (
+              {cart.map((item) => (
                 <div
-                  key={item.id}
+                  key={item.productId}
                   className="flex justify-between items-center border-b border-border pb-2 last:border-b-0"
                 >
                   <span className="text-foreground">
@@ -267,7 +272,7 @@ function ShopPage() {
                   Total
                 </span>
                 <span className="font-bold text-[#118C4C] text-2xl">
-                  ₦{calculateTotal().toLocaleString()}
+                  ₦{totalAmount.toLocaleString()}
                 </span>
               </div>
             </div>
