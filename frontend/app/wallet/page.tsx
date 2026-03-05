@@ -294,32 +294,31 @@ function WalletPage() {
           </Button>
         </div>
 
-  <div className="flex justify-end mb-4">
-  <div className="flex items-center gap-1 rounded-full bg-gray-100 p-1">
-    <Button
-      onClick={() => handleChainSwitch(base.id)}
-      className={`rounded-full px-4 py-1 text-sm font-medium transition-all ${
-        selectedChain.id === base.id
-          ? "bg-[#118C4C] text-white shadow"
-          : "bg-transparent  border border-green-700 hover:bg-[#118C4C]/10"
-      }`}
-    >
-      Mainnet
-    </Button>
+        <div className="flex justify-end mb-6">
+          <div className="inline-flex items-center gap-2 rounded-xl bg-slate-100 p-1.5 shadow-sm">
+            <button
+              onClick={() => handleChainSwitch(base.id)}
+              className={`rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                selectedChain.id === base.id
+                  ? "bg-[#118C4C] text-white shadow-md"
+                  : "text-slate-700 hover:bg-white hover:shadow-sm"
+              }`}
+            >
+              Mainnet
+            </button>
 
-    <Button
-      onClick={() => handleChainSwitch(baseSepolia.id)}
-      className={`rounded-full px-4 py-1 text-sm font-medium transition-all ${
-        selectedChain.id === baseSepolia.id
-          ? "bg-[#118C4C] text-white shadow"
-          : "bg-transparent border border-green-700 hover:bg-[#118C4C]/10"
-      }`}
-    >
-      Testnet
-    </Button>
-  </div>
-</div>
-
+            <button
+              onClick={() => handleChainSwitch(baseSepolia.id)}
+              className={`rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
+                selectedChain.id === baseSepolia.id
+                  ? "bg-[#118C4C] text-white shadow-md"
+                  : "text-slate-700 hover:bg-white hover:shadow-sm"
+              }`}
+            >
+              Testnet
+            </button>
+          </div>
+        </div>
 
         <Card>
           <CardHeader className="pb-4 bg-gradient-to-br from-green-100 via-blue-100 to-green-50">
