@@ -11,6 +11,7 @@ import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/useCart";
 import { generateAvatarUrl } from "@/lib/avatarGenerator";
 import { ShareOptionsModal } from "@/components/ShareOptionsModal";
+import { formatTimeAgo } from "@/lib/timeUtils";
 
 interface ProductCardProps {
   product: Product;
@@ -28,7 +29,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+    <>
       <ShareOptionsModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
@@ -36,85 +37,92 @@ export function ProductCard({ product }: ProductCardProps) {
         text={`Check out this product: ${product.productName}`}
         url={typeof window !== "undefined" ? `${window.location.origin}/marketplace/${product.id}` : ""}
       />
-      <Card className="overflow-hidden h-full flex flex-col">
-        <div className="relative h-48 w-full bg-muted">
-          <Image
-            src={product.image || "/placeholder.svg"}
-            alt={product.productName}
-            fill
-            className="object-cover"
-          />
-          <div className="absolute top-2 right-2">
-            <span className="bg-white/90 dark:bg-black/90 text-xs font-semibold px-2 py-1 rounded-full">
-              {product.category}
-            </span>
-          </div>
-        </div>
-
-        <CardContent className="flex-1 p-4">
-          <h3 className="font-semibold text-lg mb-2 line-clamp-1">
-            {product.productName}
-          </h3>
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-            {product.description}
-          </p>
-
-          {/* Farmer Info */}
-          <div className="flex items-center gap-2 mb-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={generateAvatarUrl(product.farmerId)}
-              alt={product.farmerName}
-              className="h-8 w-8 rounded-full object-cover"
+      <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+        <Card className="overflow-hidden h-full flex flex-col">
+          <div className="relative h-48 w-full bg-muted">
+            <Image
+              src={product.image || "/placeholder.svg"}
+              alt={product.productName}
+              fill
+              className="object-cover"
             />
-            <span className="text-sm font-medium text-foreground">
-              {product.farmerName}
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span>{product.location}</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-[#118C4C]">
-                ₦{product.pricePerUnit.toLocaleString()}
+            <div className="absolute top-2 right-2">
+              <span className="bg-white/90 dark:bg-black/90 text-xs font-semibold px-2 py-1 rounded-full">
+                {product.category}
               </span>
-              <span className="text-sm text-muted-foreground">per unit</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {product.quantity} units available
-            </p>
+            <div className="absolute top-2 left-2">
+              <span className="bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                {formatTimeAgo(product.createdAt)}
+              </span>
+            </div>
           </div>
-        </CardContent>
 
-        <CardFooter className="p-4 pt-0 flex gap-2">
-          <Link href={`/marketplace/${product.id}`} className="flex-1">
-            <button className="w-full border border-green-700 flex items-center gap-1 justify-center hover:bg-green-100 duration-300 ease-in-out rounded-xl text-green-600 text-center py-2 px-4  bg-transparent">
-              <span>View</span> <span>Details</span>
-            </button>
-          </Link>
-          <Button
-            onClick={handleAddToCart}
-            disabled={isAdding}
-            className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            {isAdding ? "Added!" : "Add"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="shrink-0"
-            onClick={() => setIsShareModalOpen(true)}
-            aria-label={`Share ${product.productName}`}
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
-        </CardFooter>
-      </Card>
-    </motion.div>
+          <CardContent className="flex-1 p-4">
+            <h3 className="font-semibold text-lg mb-2 line-clamp-1">
+              {product.productName}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+              {product.description}
+            </p>
+
+            {/* Farmer Info */}
+            <div className="flex items-center gap-2 mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={generateAvatarUrl(product.farmerId)}
+                alt={product.farmerName}
+                className="h-8 w-8 rounded-full object-cover"
+              />
+              <span className="text-sm font-medium text-foreground">
+                {product.farmerName}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>{product.location}</span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-[#118C4C]">
+                  ₦{product.pricePerUnit.toLocaleString()}
+                </span>
+                <span className="text-sm text-muted-foreground">per unit</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {product.quantity} units available
+              </p>
+            </div>
+          </CardContent>
+
+          <CardFooter className="p-4 pt-0 flex gap-2">
+            <Link href={`/marketplace/${product.id}`} className="flex-1">
+              <button className="w-full border border-green-700 flex items-center gap-1 justify-center hover:bg-green-100 duration-300 ease-in-out rounded-xl text-green-600 text-center py-2 px-4  bg-transparent">
+                <span>View</span> <span>Details</span>
+              </button>
+            </Link>
+            <Button
+              onClick={handleAddToCart}
+              disabled={isAdding}
+              className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              {isAdding ? "Added!" : "Add"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="shrink-0"
+              onClick={() => setIsShareModalOpen(true)}
+              aria-label={`Share ${product.productName}`}
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+          </CardFooter>
+        </Card>
+      </motion.div>
+    </>
   );
 }

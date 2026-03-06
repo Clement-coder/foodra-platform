@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 
 export async function GET(request: Request) {
   try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY is not configured' }, { status: 500 })
+    }
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Failed to initialize Supabase admin client' }, { status: 500 })
+    }
+
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('funding_applications')
       .select('*')
       .order('created_at', { ascending: false })
@@ -43,9 +51,17 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY is not configured' }, { status: 500 })
+    }
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Failed to initialize Supabase admin client' }, { status: 500 })
+    }
+
     const body = await request.json()
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('funding_applications')
       .insert({
         user_id: body.userId,
@@ -64,8 +80,60 @@ export async function POST(request: Request) {
     if (error) throw error
 
     return NextResponse.json(data)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating application:', error)
-    return NextResponse.json({ error: 'Failed to create application' }, { status: 500 })
+    return NextResponse.json(
+      { error: error?.message || 'Failed to create application', code: error?.code },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY is not configured' }, { status: 500 })
+    }
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Failed to initialize Supabase admin client' }, { status: 500 })
+    }
+
+    const body = await request.json()
+    const { applicationId, status, actorPrivyId } = body as {
+      applicationId?: string
+      status?: "Approved" | "Rejected"
+      actorPrivyId?: string
+    }
+
+    if (!applicationId || !status || !actorPrivyId) {
+      return NextResponse.json({ error: 'applicationId, status and actorPrivyId are required' }, { status: 400 })
+    }
+
+    const { data: actor, error: actorError } = await supabaseAdmin
+      .from('users')
+      .select('role')
+      .eq('privy_id', actorPrivyId)
+      .single()
+    if (actorError || !actor || actor.role !== 'admin') {
+      return NextResponse.json({ error: 'Only admins can update funding status' }, { status: 403 })
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('funding_applications')
+      .update({ status })
+      .eq('id', applicationId)
+      .select('*')
+      .single()
+
+    if (error) throw error
+
+    return NextResponse.json(data)
+  } catch (error: any) {
+    console.error('Error updating application status:', error)
+    return NextResponse.json(
+      { error: error?.message || 'Failed to update application status', code: error?.code },
+      { status: 500 }
+    )
   }
 }

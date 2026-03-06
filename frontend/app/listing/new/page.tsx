@@ -96,6 +96,24 @@ function NewListingPage() {
       const syncedUser = await syncResponse.json()
       const farmerId = syncedUser?.id || user?.id
 
+      let imageUrl = imageBase64 || data.image
+      if (imageBase64?.startsWith("data:image/")) {
+        const uploadResponse = await fetch('/api/storage/product-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            base64: imageBase64,
+            fileName: data.productName,
+          }),
+        })
+        if (!uploadResponse.ok) {
+          const errorBody = await uploadResponse.json().catch(() => ({}))
+          throw new Error(errorBody?.error || 'Failed to upload product image')
+        }
+        const uploadData = await uploadResponse.json()
+        imageUrl = uploadData?.imageUrl || imageUrl
+      }
+
       // Create product in Supabase
       const response = await fetch('/api/products', {
         method: 'POST',
@@ -107,7 +125,7 @@ function NewListingPage() {
           quantity: data.quantity,
           pricePerUnit: data.pricePerUnit,
           description: data.description,
-          image: imageBase64 || data.image,
+          image: imageUrl,
           location: user?.location || "Nigeria",
         }),
       })

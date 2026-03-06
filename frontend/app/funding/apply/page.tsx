@@ -13,14 +13,14 @@ import { FormNumber } from "@/components/FormNumber"
 import { FormSelect } from "@/components/FormSelector"
 import { NotificationDiv } from "@/components/NotificationDiv"
 import { fundingApplicationSchema, type FundingApplicationFormData } from "@/lib/schemas"
-import type { User, FundingApplication } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 import { usePrivy } from "@privy-io/react-auth"
+import { useUser } from "@/lib/useUser"
 
 function ApplyFundingPage() {
   const router = useRouter()
-  const { user: privyUser } = usePrivy() // Get user from Privy
+  const { user: privyUser } = usePrivy()
+  const { currentUser } = useUser()
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -53,22 +53,11 @@ function ApplyFundingPage() {
     }
     setValue("fullName", getUserDisplayName())
 
-    // Phone Number from localStorage
-    const savedPhoneNumber = loadFromLocalStorage<string>("user_phone_number", "")
-    if (savedPhoneNumber) {
-      setValue("phoneNumber", savedPhoneNumber)
-    } else if (privyUser.phone?.number) {
-      setValue("phoneNumber", privyUser.phone.number)
-    }
+    setValue("phoneNumber", currentUser?.phone || privyUser.phone?.number || "")
+    setValue("location", currentUser?.location || "")
+  }, [router, setValue, privyUser, currentUser])
 
-    // Location from localStorage
-    const savedLocation = loadFromLocalStorage<string>("user_location", "")
-    if (savedLocation) {
-      setValue("location", savedLocation)
-    }
-  }, [router, setValue, privyUser])
-
-  const onSubmit = (data: FundingApplicationFormData) => {
+  const onSubmit = async (data: FundingApplicationFormData) => {
     setIsSubmitting(true)
     setNotification(null)
 
@@ -92,26 +81,48 @@ function ApplyFundingPage() {
     }
 
     try {
-      // Create new funding application
-      const newApplication: FundingApplication = {
-        id: `fund-${Date.now()}`,
-        userId: privyUser.id,
-        fullName: data.fullName,
-        phoneNumber: data.phoneNumber,
-        location: data.location,
-        farmSize: data.farmSize,
-        farmType: data.farmType,
-        yearsOfExperience: data.yearsOfExperience,
-        amountRequested: data.amountRequested,
-        expectedOutcome: data.expectedOutcome,
-        status: "Pending",
-        submittedAt: new Date().toISOString(),
+      const syncResponse = await fetch('/api/users/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          privyId: privyUser.id,
+          name: currentUser?.name || data.fullName,
+          email: currentUser?.email || privyUser.email?.address || "",
+          wallet: currentUser?.wallet || privyUser.wallet?.address || "",
+          avatar: currentUser?.avatar || "",
+        }),
+      })
+      if (!syncResponse.ok) {
+        const errorBody = await syncResponse.json().catch(() => ({}))
+        throw new Error(errorBody?.error || 'Failed to sync user')
       }
 
-      // Load existing applications and add new one
-      const applications = loadFromLocalStorage<FundingApplication[]>("foodra_applications", [])
-      applications!.unshift(newApplication)
-      saveToLocalStorage("foodra_applications", applications)
+      const syncedUser = await syncResponse.json()
+      const userId = syncedUser?.id || currentUser?.id
+      if (!userId) {
+        throw new Error("Unable to resolve user account for funding application.")
+      }
+
+      const response = await fetch('/api/funding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          fullName: data.fullName,
+          phoneNumber: data.phoneNumber,
+          location: data.location,
+          farmSize: data.farmSize,
+          farmType: data.farmType,
+          yearsOfExperience: data.yearsOfExperience,
+          amountRequested: data.amountRequested,
+          expectedOutcome: data.expectedOutcome,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}))
+        throw new Error(errorBody?.error || 'Failed to submit application')
+      }
 
       setNotification({
         type: "success",
@@ -125,7 +136,7 @@ function ApplyFundingPage() {
     } catch (error) {
       setNotification({
         type: "error",
-        message: "An unexpected error occurred. Please try again.",
+        message: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
       })
       setIsSubmitting(false)
     }
@@ -170,7 +181,6 @@ function ApplyFundingPage() {
                     error={errors.fullName?.message}
                     placeholder="Your full name"
                     required
-                    readOnly
                   />
 
                   <FormInput
@@ -180,7 +190,6 @@ function ApplyFundingPage() {
                     placeholder="+234XXXXXXXXX"
                     helperText="Include country code (e.g., +234)"
                     required
-                    readOnly
                   />
 
                   <FormInput
@@ -189,7 +198,6 @@ function ApplyFundingPage() {
                     error={errors.location?.message}
                     placeholder="City, State"
                     required
-                    readOnly
                   />
                 </div>
               </div>

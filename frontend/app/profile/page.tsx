@@ -37,6 +37,7 @@ import { ProductCard } from "@/components/ProductCard"
 import type { Product } from "@/lib/types"
 import { calculateProfileCompletion } from "@/lib/profileUtils"
 import { africanCountries } from "@/lib/countries"
+import { formatTimeAgo } from "@/lib/timeUtils"
 
 function ProfilePage() {
   const { currentUser: user, isLoading, updateUser } = useUser()
@@ -117,32 +118,38 @@ function ProfilePage() {
     const fetchProducts = async () => {
       if (!user?.id) return
       setLoadingProducts(true)
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("farmer_id", user.id)
-        .eq("is_available", true)
-        .order("created_at", { ascending: false })
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("farmer_id", user.id)
+          .order("created_at", { ascending: false })
 
-      if (!error && data) {
-        setUserProducts(
-          data.map((p) => ({
-            id: p.id,
-            productName: p.name,
-            category: p.category,
-            quantity: p.quantity,
-            pricePerUnit: p.price,
-            description: p.description || "",
-            image: p.image_url || "",
-            location: p.location || "",
-            farmerId: p.farmer_id,
-            farmerName: user.name,
-            farmerAvatar: user.avatar,
-            createdAt: p.created_at,
-          }))
-        )
+        console.log('Profile products fetch:', { userId: user.id, data, error });
+
+        if (!error && data) {
+          setUserProducts(
+            data.map((p) => ({
+              id: p.id,
+              productName: p.name,
+              category: p.category,
+              quantity: p.quantity,
+              pricePerUnit: p.price,
+              description: p.description || "",
+              image: p.image_url || "",
+              location: p.location || "",
+              farmerId: p.farmer_id,
+              farmerName: user.name,
+              farmerAvatar: user.avatar,
+              createdAt: p.created_at,
+            }))
+          )
+        }
+      } catch (error) {
+        console.error('Error fetching user products:', error);
+      } finally {
+        setLoadingProducts(false)
       }
-      setLoadingProducts(false)
     }
     fetchProducts()
   }, [user])

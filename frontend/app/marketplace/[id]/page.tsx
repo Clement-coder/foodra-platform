@@ -191,9 +191,60 @@ function ProductDetailPage() {
         <Card>
           <CardContent className="p-6">
             <h2 className="text-xl font-semibold text-foreground mb-3">Product Description</h2>
-            <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{product.description}</p>
           </CardContent>
         </Card>
+
+        {/* Additional Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="font-semibold mb-2">Product Information</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Category:</span>
+                  <span className="font-medium">{product.category}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Available Stock:</span>
+                  <span className="font-medium">{product.quantity} units</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Price per Unit:</span>
+                  <span className="font-medium">₦{product.pricePerUnit.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Location:</span>
+                  <span className="font-medium">{product.location}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="font-semibold mb-2">Seller Information</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <img
+                    src={product.farmerAvatar || "/placeholder.svg"}
+                    alt={product.farmerName}
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="font-medium">{product.farmerName}</p>
+                    <p className="text-muted-foreground text-xs">Verified Farmer</p>
+                  </div>
+                </div>
+                <Link href={`/users/${product.farmerId}`}>
+                  <Button variant="outline" size="sm" className="w-full mt-2">
+                    View Seller Profile
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </motion.div>
     </div>
   )
