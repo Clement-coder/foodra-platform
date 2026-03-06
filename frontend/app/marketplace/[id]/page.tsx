@@ -121,7 +121,7 @@ function ProductDetailPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Image */}
-          <div className="relative h-96 lg:h-[500px] rounded-lg overflow-hidden bg-muted">
+          <div className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden bg-muted border-2 border-[#118C4C]/20">
             {product.image ? (
               <Image 
                 src={product.image} 
@@ -140,7 +140,7 @@ function ProductDetailPage() {
           {/* Info */}
           <div>
             <div className="mb-4">
-              <span className="inline-block bg-[#118C4C]/10 text-[#118C4C] text-sm font-semibold px-3 py-1 rounded-full">
+              <span className="inline-block bg-[#118C4C]/10 text-[#118C4C] text-sm font-semibold px-4 py-2 rounded-full border border-[#118C4C]/20">
                 {product.category}
               </span>
             </div>
@@ -152,20 +152,24 @@ function ProductDetailPage() {
               <span className="text-muted-foreground">per unit</span>
             </div>
 
-            <Card className="mb-6">
+            <Card className="mb-6 border-[#118C4C]/20">
               <CardContent className="p-4">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <div className="p-2 bg-[#118C4C]/10 rounded-lg">
+                      <MapPin className="h-4 w-4 text-[#118C4C]" />
+                    </div>
                     <span className="text-foreground">{product.location}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <UserIcon className="h-4 w-4 text-muted-foreground" />
+                    <div className="p-2 bg-[#118C4C]/10 rounded-lg">
+                      <UserIcon className="h-4 w-4 text-[#118C4C]" />
+                    </div>
                     <span className="text-foreground">Sold by {product.farmerName}</span>
                   </div>
-                  <div className="pt-2 border-t border-border">
+                  <div className="pt-2 border-t border-[#118C4C]/20">
                     <p className="text-sm text-muted-foreground">Available Stock</p>
-                    <p className="text-lg font-semibold text-foreground">{product.quantity} units</p>
+                    <p className="text-lg font-semibold text-[#118C4C]">{product.quantity} units</p>
                   </div>
                 </div>
               </CardContent>
@@ -174,7 +178,7 @@ function ProductDetailPage() {
             <Button
               onClick={handleAddToCart}
               size="lg"
-              className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 mb-4"
+              className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 mb-4 shadow-lg shadow-[#118C4C]/20"
             >
               <ShoppingCart className="h-5 w-5" />
               Add to Cart
@@ -182,14 +186,14 @@ function ProductDetailPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link href="/shop" className="block">
-                <Button variant="outline" size="lg" className="w-full bg-transparent">
+                <Button variant="outline" size="lg" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C]/5">
                   View Cart
                 </Button>
               </Link>
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full bg-transparent gap-2"
+                className="w-full gap-2 border-[#118C4C]/30 hover:bg-[#118C4C]/5"
                 onClick={() => setIsShareModalOpen(true)}
               >
                 <Share2 className="h-4 w-4" />
@@ -200,32 +204,38 @@ function ProductDetailPage() {
         </div>
 
         {/* Description */}
-        <Card>
+        <Card className="mb-4 border-[#118C4C]/20">
           <CardContent className="p-6">
-            <h2 className="text-xl font-semibold text-foreground mb-3">Product Description</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-3 flex items-center gap-2">
+              <div className="h-1 w-8 bg-[#118C4C] rounded"></div>
+              Product Description
+            </h2>
             <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{product.description}</p>
           </CardContent>
         </Card>
 
         {/* Additional Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="font-semibold mb-2">Product Information</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="border-[#118C4C]/20">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <div className="h-1 w-6 bg-[#118C4C] rounded"></div>
+                Product Information
+              </h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between p-2 rounded-lg bg-muted/50">
                   <span className="text-muted-foreground">Category:</span>
-                  <span className="font-medium">{product.category}</span>
+                  <span className="font-medium text-[#118C4C]">{product.category}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between p-2 rounded-lg bg-muted/50">
                   <span className="text-muted-foreground">Available Stock:</span>
-                  <span className="font-medium">{product.quantity} units</span>
+                  <span className="font-medium text-[#118C4C]">{product.quantity} units</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between p-2 rounded-lg bg-muted/50">
                   <span className="text-muted-foreground">Price per Unit:</span>
-                  <span className="font-medium">₦{product.pricePerUnit.toLocaleString()}</span>
+                  <span className="font-medium text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between p-2 rounded-lg bg-muted/50">
                   <span className="text-muted-foreground">Location:</span>
                   <span className="font-medium">{product.location}</span>
                 </div>
@@ -233,25 +243,28 @@ function ProductDetailPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="font-semibold mb-2">Seller Information</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
+          <Card className="border-[#118C4C]/20">
+            <CardContent className="p-6">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <div className="h-1 w-6 bg-[#118C4C] rounded"></div>
+                Seller Information
+              </h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={product.farmerAvatar || `https://api.dicebear.com/8.x/bottts/svg?seed=${product.farmerId}`}
                     alt={product.farmerName}
-                    className="h-10 w-10 rounded-full object-cover"
+                    className="h-12 w-12 rounded-full object-cover border-2 border-[#118C4C]"
                     referrerPolicy="no-referrer"
                   />
                   <div>
-                    <p className="font-medium">{product.farmerName}</p>
-                    <p className="text-muted-foreground text-xs">Verified Farmer</p>
+                    <p className="font-medium text-foreground">{product.farmerName}</p>
+                    <p className="text-[#118C4C] text-xs font-medium">✓ Verified Farmer</p>
                   </div>
                 </div>
                 <Link href={`/users/${product.farmerId}`}>
-                  <Button variant="outline" size="sm" className="w-full mt-2">
+                  <Button variant="outline" size="sm" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C] hover:text-white transition-colors">
                     View Seller Profile
                   </Button>
                 </Link>

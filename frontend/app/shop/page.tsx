@@ -104,10 +104,10 @@ function ShopPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -20 }}
             >
-              <Card>
+              <Card className="border-[#118C4C]/20 hover:border-[#118C4C]/40 transition-colors">
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                    <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-muted flex-shrink-0 border-2 border-[#118C4C]/20">
                       {item.image ? (
                         <Image
                           src={item.image}
@@ -132,25 +132,25 @@ function ShopPage() {
                       </p>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+                        <div className="flex items-center gap-2 bg-[#118C4C]/10 rounded-xl p-1 border border-[#118C4C]/20">
                           <Button
                             variant="ghost"
                             onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1))}
-                            className="h-8 w-8"
+                            className="h-8 w-8 hover:bg-[#118C4C]/20"
                             aria-label="Decrease quantity"
                           >
-                            <Minus className="h-4 w-4 text-foreground" />
+                            <Minus className="h-4 w-4 text-[#118C4C]" />
                           </Button>
-                          <span className="w-8 text-center font-medium">
+                          <span className="w-8 text-center font-medium text-[#118C4C]">
                             {item.quantity}
                           </span>
                           <Button
                             variant="ghost"
                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                            className="h-8 w-8"
+                            className="h-8 w-8 hover:bg-[#118C4C]/20"
                             aria-label="Increase quantity"
                           >
-                            <Plus className="h-4 w-4 text-foreground" />
+                            <Plus className="h-4 w-4 text-[#118C4C]" />
                           </Button>
                         </div>
 
@@ -174,24 +174,25 @@ function ShopPage() {
 
         {/* Order Summary */}
         <div className="lg:col-span-1">
-          <Card className="sticky top-24">
+          <Card className="sticky top-24 border-[#118C4C]/30 shadow-lg shadow-[#118C4C]/10">
             <CardContent className="p-6">
-              <h2 className="text-xl font-semibold text-foreground mb-4">
+              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <div className="h-1 w-8 bg-[#118C4C] rounded"></div>
                 Order Summary
               </h2>
 
               <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Items ({cart.length})</span>
-                  <span>₦{totalAmount.toLocaleString()}</span>
+                <div className="flex justify-between p-3 rounded-lg bg-muted/50">
+                  <span className="text-muted-foreground">Items ({cart.length})</span>
+                  <span className="font-medium">₦{totalAmount.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Delivery</span>
-                  <span className="text-green-600 dark:text-green-400">
+                <div className="flex justify-between p-3 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
+                  <span className="text-muted-foreground">Delivery</span>
+                  <span className="text-[#118C4C] font-semibold">
                     Free
                   </span>
                 </div>
-                <div className="border-t border-border pt-3 flex justify-between">
+                <div className="border-t-2 border-[#118C4C]/20 pt-3 flex justify-between p-3 rounded-lg bg-[#118C4C]/10">
                   <span className="font-semibold text-foreground text-lg">
                     Total
                   </span>
@@ -203,7 +204,7 @@ function ShopPage() {
 
               <Button
                 onClick={handleProceedToCheckout}
-                className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white mb-3"
+                className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white mb-3 shadow-lg shadow-[#118C4C]/20"
                 size="lg"
               >
                 Proceed to Checkout
