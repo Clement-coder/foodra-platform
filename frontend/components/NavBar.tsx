@@ -37,6 +37,7 @@ export function NavBar() {
   const [users, setUsers] = useState<User[]>([]);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [hasLoadedSuggestions, setHasLoadedSuggestions] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
 
   useEffect(() => {
     try {
@@ -173,6 +174,22 @@ export function NavBar() {
     };
   }, [isSearchOpen]);
 
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      setIsScrolling(true);
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => setIsScrolling(false), 150);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(scrollTimeout);
+    };
+  }, []);
+
   return (
     <>
       <nav className="sticky top-0 z-50 w-full p-3 bg-background backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -267,21 +284,27 @@ export function NavBar() {
         </div>
 
           <form onSubmit={handleSearch} className="md:hidden pb-2 pt-1">
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Search className="h-5 w-5 text-muted-foreground" />
+            <motion.div
+              animate={{ height: isScrolling ? 0 : "auto", opacity: isScrolling ? 0 : 1 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="relative w-full">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <input
+                  type="search"
+                  placeholder="Search anything"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchOpen(true)}
+                  onClick={() => setIsSearchOpen(true)}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
+                  aria-label="Search anything"
+                />
               </div>
-              <input
-                type="search"
-                placeholder="Search anything"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchOpen(true)}
-                onClick={() => setIsSearchOpen(true)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
-                aria-label="Search anything"
-              />
-            </div>
+            </motion.div>
           </form>
         </div>
       </nav>
