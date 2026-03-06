@@ -72,19 +72,36 @@ function NewListingPage() {
     setNotification(null)
 
     try {
-      // Sync user to Supabase first
-      await fetch('/api/users', {
+      if (!privyUser?.id) {
+        throw new Error("User session not found. Please sign in again.")
+      }
+
+      // Sync user to Supabase first and use returned DB user id for products.farmer_id
+      const syncResponse = await fetch('/api/users/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user),
+        body: JSON.stringify({
+          privyId: privyUser?.id,
+          name: user?.name || "",
+          email: user?.email || "",
+          wallet: user?.wallet || "",
+          avatar: user?.avatar || "",
+        }),
       })
+      if (!syncResponse.ok) {
+        const errorBody = await syncResponse.json().catch(() => ({}))
+        throw new Error(errorBody?.error || 'Failed to sync user')
+      }
+
+      const syncedUser = await syncResponse.json()
+      const farmerId = syncedUser?.id || user?.id
 
       // Create product in Supabase
       const response = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          farmerId: user?.id,
+          farmerId,
           productName: data.productName,
           category: data.category,
           quantity: data.quantity,
@@ -96,7 +113,8 @@ function NewListingPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create product')
+        const errorBody = await response.json().catch(() => ({}))
+        throw new Error(errorBody?.error || 'Failed to create product')
       }
 
       setNotification({
@@ -112,7 +130,7 @@ function NewListingPage() {
       console.error('Error creating product:', error)
       setNotification({
         type: "error",
-        message: "Failed to list product. Please try again.",
+        message: error instanceof Error ? error.message : "Failed to list product. Please try again.",
       })
       setIsSubmitting(false)
     }

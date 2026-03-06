@@ -15,6 +15,7 @@ const dropdownLinks = [
   { name: "Profile", href: "/profile", icon: UserIcon },
   { name: "Home", href: "/", icon: Home },
   { name: "Market", href: "/marketplace", icon: ShoppingBag },
+  { name: "List Products", href: "/listing/new", icon: ShoppingBag },
   { name: "Training", href: "/training", icon: GraduationCap },
   { name: "Funding", href: "/funding", icon: DollarSign },
 ]

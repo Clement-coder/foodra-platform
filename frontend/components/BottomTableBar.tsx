@@ -2,12 +2,13 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Home, ShoppingBag, GraduationCap, DollarSign, User } from "lucide-react"
+import { Home, ShoppingBag, GraduationCap, DollarSign, User, PlusCircle } from "lucide-react"
 import { motion } from "framer-motion"
 
 const tabs = [
   { name: "Home", href: "/", icon: Home },
   { name: "Market", href: "/marketplace", icon: ShoppingBag },
+  { name: "List", href: "/listing/new", icon: PlusCircle },
   { name: "Training", href: "/training", icon: GraduationCap },
   { name: "Funding", href: "/funding", icon: DollarSign },
   { name: "Profile", href: "/profile", icon: User },
