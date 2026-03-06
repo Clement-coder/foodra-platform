@@ -119,27 +119,28 @@ export function ProductCard({ product }: ProductCardProps) {
 
           <CardFooter className="p-4 pt-0 flex gap-2">
             <Link href={`/marketplace/${product.id}`} className="flex-1">
-              <button className="w-full border-2 border-[#118C4C] hover:bg-[#118C4C] hover:text-white duration-300 ease-in-out rounded-xl text-[#118C4C] text-center py-2 px-2 sm:px-4 bg-transparent font-medium text-sm">
-                View Details
+              <button className="w-full border-2 border-[#118C4C] hover:bg-[#118C4C] hover:text-white duration-300 ease-in-out rounded-xl text-[#118C4C] text-center py-2 px-2 bg-transparent font-medium text-xs sm:text-sm whitespace-nowrap">
+                View
               </button>
             </Link>
             <Button
               onClick={handleAddToCart}
               disabled={isAdding || availableQuantity <= 0 || isOwnProduct}
-              className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1 shadow-md shadow-[#118C4C]/20 text-sm disabled:opacity-50"
+              className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1 shadow-md shadow-[#118C4C]/20 text-xs sm:text-sm disabled:opacity-50 whitespace-nowrap"
             >
-              <ShoppingCart className="h-4 w-4" />
-              {isOwnProduct ? "Your Product" : availableQuantity <= 0 ? "Out of Stock" : isAdding ? "Added!" : "Add"}
+              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">{isOwnProduct ? "Your Product" : availableQuantity <= 0 ? "Out of Stock" : isAdding ? "Added!" : "Add"}</span>
+              <span className="xs:hidden">{isOwnProduct ? "Yours" : availableQuantity <= 0 ? "Out" : isAdding ? "✓" : "Add"}</span>
             </Button>
             <Button
               type="button"
               variant="outline"
               size="icon"
-              className="shrink-0 border-[#118C4C]/30 hover:bg-[#118C4C]/10"
+              className="shrink-0 border-[#118C4C]/30 hover:bg-[#118C4C]/10 h-9 w-9"
               onClick={() => setIsShareModalOpen(true)}
               aria-label={`Share ${product.productName}`}
             >
-              <Share2 className="h-4 w-4 text-[#118C4C]" />
+              <Share2 className="h-3 w-3 sm:h-4 sm:w-4 text-[#118C4C]" />
             </Button>
           </CardFooter>
         </Card>
