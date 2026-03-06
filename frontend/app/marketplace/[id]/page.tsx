@@ -122,7 +122,19 @@ function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Image */}
           <div className="relative h-96 lg:h-[500px] rounded-lg overflow-hidden bg-muted">
-            <Image src={product.image || "/placeholder.svg"} alt={product.productName} fill className="object-cover" />
+            {product.image ? (
+              <Image 
+                src={product.image} 
+                alt={product.productName} 
+                fill 
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-muted-foreground">No image available</span>
+              </div>
+            )}
           </div>
 
           {/* Info */}
@@ -226,10 +238,12 @@ function ProductDetailPage() {
               <h3 className="font-semibold mb-2">Seller Information</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={product.farmerAvatar || "/placeholder.svg"}
+                    src={product.farmerAvatar || `https://api.dicebear.com/8.x/bottts/svg?seed=${product.farmerId}`}
                     alt={product.farmerName}
                     className="h-10 w-10 rounded-full object-cover"
+                    referrerPolicy="no-referrer"
                   />
                   <div>
                     <p className="font-medium">{product.farmerName}</p>

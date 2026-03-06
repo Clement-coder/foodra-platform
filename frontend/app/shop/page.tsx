@@ -107,13 +107,20 @@ function ShopPage() {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-muted  flex-shrink-0">
-                      <Image
-                        src={item.image || "/placeholder.svg"}
-                        alt={item.productName}
-                        fill
-                        className="object-cover relative top-4"
-                      />
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={item.productName}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">No image</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">
