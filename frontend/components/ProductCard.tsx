@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Share2, ShoppingCart } from "lucide-react";
@@ -18,11 +18,20 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { addToCart } = useCart();
+  const { addToCart, cart } = useCart();
   const [isAdding, setIsAdding] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [availableQuantity, setAvailableQuantity] = useState(product.quantity);
+
+  useEffect(() => {
+    // Calculate available quantity based on cart
+    const cartItem = cart.find(item => item.productId === product.id);
+    const inCart = cartItem?.quantity || 0;
+    setAvailableQuantity(product.quantity - inCart);
+  }, [cart, product.id, product.quantity]);
 
   const handleAddToCart = () => {
+    if (availableQuantity <= 0) return;
     setIsAdding(true);
     addToCart(product);
     setTimeout(() => setIsAdding(false), 1000);
@@ -99,24 +108,24 @@ export function ProductCard({ product }: ProductCardProps) {
                 <span className="text-sm text-muted-foreground">per unit</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                {product.quantity} units available
+                {availableQuantity} units available
               </p>
             </div>
           </CardContent>
 
           <CardFooter className="p-4 pt-0 flex gap-2">
             <Link href={`/marketplace/${product.id}`} className="flex-1">
-              <button className="w-full border-2 border-[#118C4C] flex items-center gap-1 justify-center hover:bg-[#118C4C] hover:text-white duration-300 ease-in-out rounded-xl text-[#118C4C] text-center py-2 px-4 bg-transparent font-medium">
-                <span>View Details</span>
+              <button className="w-full border-2 border-[#118C4C] hover:bg-[#118C4C] hover:text-white duration-300 ease-in-out rounded-xl text-[#118C4C] text-center py-2 px-2 sm:px-4 bg-transparent font-medium text-sm">
+                View Details
               </button>
             </Link>
             <Button
               onClick={handleAddToCart}
-              disabled={isAdding}
-              className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-md shadow-[#118C4C]/20"
+              disabled={isAdding || availableQuantity <= 0}
+              className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1 shadow-md shadow-[#118C4C]/20 text-sm disabled:opacity-50"
             >
               <ShoppingCart className="h-4 w-4" />
-              {isAdding ? "Added!" : "Add"}
+              {availableQuantity <= 0 ? "Out of Stock" : isAdding ? "Added!" : "Add"}
             </Button>
             <Button
               type="button"

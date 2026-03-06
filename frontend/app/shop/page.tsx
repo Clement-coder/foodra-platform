@@ -132,22 +132,24 @@ function ShopPage() {
                       </p>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 bg-[#118C4C]/10 rounded-xl p-1 border border-[#118C4C]/20">
+                        <div className="flex items-center gap-1 bg-[#118C4C]/10 rounded-xl p-1 border border-[#118C4C]/20">
                           <Button
                             variant="ghost"
+                            size="sm"
                             onClick={() => updateQuantity(item.productId, Math.max(1, item.quantity - 1))}
-                            className="h-8 w-8 hover:bg-[#118C4C]/20"
+                            className="h-9 w-9 p-0 hover:bg-[#118C4C]/20 flex items-center justify-center"
                             aria-label="Decrease quantity"
                           >
                             <Minus className="h-4 w-4 text-[#118C4C]" />
                           </Button>
-                          <span className="w-8 text-center font-medium text-[#118C4C]">
+                          <span className="w-10 text-center font-medium text-[#118C4C]">
                             {item.quantity}
                           </span>
                           <Button
                             variant="ghost"
+                            size="sm"
                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                            className="h-8 w-8 hover:bg-[#118C4C]/20"
+                            className="h-9 w-9 p-0 hover:bg-[#118C4C]/20 flex items-center justify-center"
                             aria-label="Increase quantity"
                           >
                             <Plus className="h-4 w-4 text-[#118C4C]" />
