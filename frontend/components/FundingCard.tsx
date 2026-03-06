@@ -4,10 +4,11 @@ import { Calendar, MapPin, User } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import type { FundingApplication, User as UserType } from "@/lib/types"
+import type { FundingApplication } from "@/lib/types"
 import { format } from "date-fns"
-import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 import { useState } from "react"
+import { useUser } from "@/lib/useUser"
+import { usePrivy } from "@privy-io/react-auth"
 
 interface FundingCardProps {
   application: FundingApplication
@@ -15,19 +16,35 @@ interface FundingCardProps {
 }
 
 export function FundingCard({ application, onStatusChange }: FundingCardProps) {
-const [user] = useState<UserType | null>(
-  loadFromLocalStorage<UserType | null>("foodra_user", null)
-)
-    // const storedUser = loadFromLocalStorage<User | null>("foodra_user", null)
+  const { currentUser } = useUser()
+  const { user: privyUser } = usePrivy()
+  const [isUpdating, setIsUpdating] = useState(false)
+  const isAdmin = currentUser?.role === "admin"
 
-  const isAdmin = user?.role === "admin"
-  
+  const handleStatusChange = async (newStatus: "Approved" | "Rejected") => {
+    if (!privyUser?.id) return
 
-  const handleStatusChange = (newStatus: "Approved" | "Rejected") => {
-    const applications = loadFromLocalStorage<FundingApplication[]>("foodra_applications", [])
-    const updated = applications.map((app) => (app.id === application.id ? { ...app, status: newStatus } : app))
-    saveToLocalStorage("foodra_applications", updated)
-    onStatusChange?.()
+    setIsUpdating(true)
+    try {
+      const response = await fetch("/api/funding", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          applicationId: application.id,
+          status: newStatus,
+          actorPrivyId: privyUser.id,
+        }),
+      })
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}))
+        throw new Error(errorBody?.error || "Failed to update status")
+      }
+      onStatusChange?.()
+    } catch (error) {
+      console.error("Error updating funding status:", error)
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   const statusColors = {
@@ -82,11 +99,12 @@ const [user] = useState<UserType | null>(
           <CardFooter className="p-4 pt-0 flex gap-2">
             <Button
               onClick={() => handleStatusChange("Approved")}
+              disabled={isUpdating}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white"
             >
               Approve
             </Button>
-            <Button onClick={() => handleStatusChange("Rejected")}className="flex-1">
+            <Button onClick={() => handleStatusChange("Rejected")} disabled={isUpdating} className="flex-1">
               Reject
             </Button>
           </CardFooter>

@@ -27,7 +27,9 @@ function FundingPage() {
 
   const loadData = async () => {
     try {
-      const res = await fetch(`/api/funding?userId=${user?.id}`);
+      const endpoint =
+        user?.role === "admin" ? "/api/funding" : `/api/funding?userId=${user?.id}`;
+      const res = await fetch(endpoint);
       const data = await res.json();
       setApplications(data);
     } catch (error) {

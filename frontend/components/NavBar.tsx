@@ -179,24 +179,39 @@ export function NavBar() {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <span className="flex items-center gap-4">
-            
+          <span className="flex items-center gap-2">
             <a
               href="/"
-              className="flex items-center space-x-2 text-2xl font-bold text-[#118C4C] hover:opacity-80  mb-3 transition-opacity"
+              className="flex items-center space-x-2 text-2xl font-bold text-[#118C4C] hover:opacity-80 transition-opacity"
             >
-
               <img
                 src="/foodra_logo.jpeg"
                 alt="Foodra Logo"
-                className="h-16 rounded-bl-2xl rounded-tr-3xl"
+                className="h-10 rounded-bl-xl rounded-tr-2xl"
               />
             </a>
-
-          <span className="font-bold lg:flex hidden text-green-800 text-2xl">
+            <span className="font-bold lg:flex hidden text-green-800 text-xl">
               FOODRA
             </span>
           </span>
+
+          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Search className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <input
+                type="search"
+                placeholder="Search anything"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchOpen(true)}
+                onClick={() => setIsSearchOpen(true)}
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
+                aria-label="Search anything"
+              />
+            </div>
+          </form>
 
           {/* Right side actions */}
           <div className="flex items-center space-x-4">
@@ -251,7 +266,7 @@ export function NavBar() {
           </div>
         </div>
 
-          <form onSubmit={handleSearch} className="pb-2 pt-1">
+          <form onSubmit={handleSearch} className="md:hidden pb-2 pt-1">
             <div className="relative w-full">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Search className="h-5 w-5 text-muted-foreground" />

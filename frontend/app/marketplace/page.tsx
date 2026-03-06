@@ -26,8 +26,13 @@ function MarketplacePage() {
     const fetchProducts = async () => {
       try {
         const res = await fetch('/api/products');
+        if (!res.ok) {
+          console.error('Failed to fetch products:', res.status);
+          return;
+        }
         const data = await res.json();
-        setProducts(data);
+        console.log('Fetched products:', data);
+        setProducts(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 
 export async function GET() {
   try {
@@ -42,9 +43,24 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json(
+        { error: 'SUPABASE_SERVICE_ROLE_KEY is not configured' },
+        { status: 500 }
+      )
+    }
+
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: 'Failed to initialize Supabase admin client' },
+        { status: 500 }
+      )
+    }
+
     const body = await request.json()
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('products')
       .insert({
         farmer_id: body.farmerId,
@@ -62,8 +78,15 @@ export async function POST(request: Request) {
     if (error) throw error
 
     return NextResponse.json(data)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating product:', error)
-    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
+    const hint =
+      error?.code === '42501'
+        ? 'Permission denied. Ensure SUPABASE_SERVICE_ROLE_KEY is set and server restarted.'
+        : undefined
+    return NextResponse.json(
+      { error: error?.message || 'Failed to create product', code: error?.code, hint },
+      { status: 500 }
+    )
   }
 }

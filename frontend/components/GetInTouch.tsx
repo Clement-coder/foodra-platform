@@ -6,10 +6,9 @@ import { Mail, Send } from "lucide-react"
 import emailjs from "@emailjs/browser"
 import { NotificationDiv } from "./NotificationDiv"
 
-// 🔐 EmailJS config (hard-coded)
-const SERVICE_ID = "service_thsbt3g"
-const TEMPLATE_ID = "template_pna36ma"
-const PUBLIC_KEY = "3WpO2k5WQiS682bMR"
+const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || ""
+const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || ""
+const PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || ""
 
 const GetInTouch = () => {
   const [email, setEmail] = useState("")
@@ -18,6 +17,7 @@ const GetInTouch = () => {
 
   // ✅ REQUIRED: Initialize EmailJS
   useEffect(() => {
+    if (!PUBLIC_KEY) return
     emailjs.init(PUBLIC_KEY)
   }, [])
 
@@ -32,6 +32,12 @@ const GetInTouch = () => {
     if (!validateEmail(email)) {
       setStatus("error")
       setMessage("Please enter a valid email address.")
+      return
+    }
+
+    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+      setStatus("error")
+      setMessage("Email service is not configured yet. Please try again later.")
       return
     }
 

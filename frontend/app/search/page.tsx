@@ -1,16 +1,14 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { motion } from "framer-motion"
 import { SearchX, ArrowLeft } from "lucide-react"
 import { ProductCard } from "@/components/ProductCard"
 import { TrainingCard } from "@/components/TrainingCard"
-import { FundingCard } from "@/components/FundingCard"
+import { UserCard } from "@/components/UserCard"
 import { GridLayout } from "@/components/GridLayout"
 import { Button } from "@/components/ui/button"
-import { loadFromLocalStorage } from "@/lib/localStorage"
-import type { Product, Training, FundingApplication } from "@/lib/types"
+import type { Product, Training, User } from "@/lib/types"
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
@@ -19,53 +17,69 @@ export default function SearchPage() {
 
   const [products, setProducts] = useState<Product[]>([])
   const [trainings, setTrainings] = useState<Training[]>([])
-  const [fundings, setFundings] = useState<FundingApplication[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const storedProducts = loadFromLocalStorage<Product[]>("foodra_products", [])
-    const storedTrainings = loadFromLocalStorage<Training[]>("foodra_training", [])
-    const storedFundings = loadFromLocalStorage<FundingApplication[]>("foodra_applications", [])
-    setProducts(storedProducts)
-    setTrainings(storedTrainings)
-    setFundings(storedFundings)
-    setLoading(false)
+    const fetchData = async () => {
+      try {
+        const [productsRes, trainingsRes, usersRes] = await Promise.all([
+          fetch("/api/products"),
+          fetch("/api/trainings"),
+          fetch("/api/users"),
+        ])
+
+        const productsData = productsRes.ok ? await productsRes.json() : []
+        const trainingsData = trainingsRes.ok ? await trainingsRes.json() : []
+        const usersData = usersRes.ok ? await usersRes.json() : []
+
+        setProducts(Array.isArray(productsData) ? productsData : [])
+        setTrainings(Array.isArray(trainingsData) ? trainingsData : [])
+        setUsers(Array.isArray(usersData) ? usersData : [])
+      } catch (error) {
+        console.error("Error fetching search data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
   }, [])
 
+  const normalizedQuery = query.trim().toLowerCase()
+
   const filteredProducts = useMemo(() => {
-    if (!query) return []
+    if (!normalizedQuery) return []
     return products.filter(
       (p) =>
-        p.productName.toLowerCase().includes(query.toLowerCase()) ||
-        p.description.toLowerCase().includes(query.toLowerCase()) ||
-        p.category.toLowerCase().includes(query.toLowerCase())
+        p.productName.toLowerCase().includes(normalizedQuery) ||
+        p.description.toLowerCase().includes(normalizedQuery) ||
+        p.category.toLowerCase().includes(normalizedQuery) ||
+        p.farmerName.toLowerCase().includes(normalizedQuery)
     )
-  }, [products, query])
+  }, [products, normalizedQuery])
 
   const filteredTrainings = useMemo(() => {
-    if (!query) return []
+    if (!normalizedQuery) return []
     return trainings.filter(
       (t) =>
-        t.title.toLowerCase().includes(query.toLowerCase()) ||
-        t.summary.toLowerCase().includes(query.toLowerCase()) ||
-        t.description.toLowerCase().includes(query.toLowerCase())
+        t.title.toLowerCase().includes(normalizedQuery) ||
+        t.summary.toLowerCase().includes(normalizedQuery) ||
+        t.description.toLowerCase().includes(normalizedQuery)
     )
-  }, [trainings, query])
+  }, [trainings, normalizedQuery])
 
-  const filteredFundings = useMemo(() => {
-    if (!query) return []
-    return fundings.filter(
-      (f) =>
-        f.farmType.toLowerCase().includes(query.toLowerCase()) ||
-        f.expectedOutcome.toLowerCase().includes(query.toLowerCase())
+  const filteredUsers = useMemo(() => {
+    if (!normalizedQuery) return []
+    return users.filter(
+      (u) =>
+        (u.name || "").toLowerCase().includes(normalizedQuery) ||
+        (u.email || "").toLowerCase().includes(normalizedQuery) ||
+        (u.location || "").toLowerCase().includes(normalizedQuery)
     )
-  }, [fundings, query])
+  }, [users, normalizedQuery])
 
-  const totalResults = filteredProducts.length + filteredTrainings.length + filteredFundings.length
-
-  const handleResetSearch = () => {
-    router.back()
-  }
+  const totalResults = filteredProducts.length + filteredTrainings.length + filteredUsers.length
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -76,11 +90,7 @@ export default function SearchPage() {
           Go Back
         </Button>
       </div>
-      {query && (
-        <p className="text-muted-foreground mb-8">
-          Showing {totalResults} results for "{query}"
-        </p>
-      )}
+      {query && <p className="text-muted-foreground mb-8">Showing {totalResults} results for "{query}"</p>}
 
       {loading ? (
         <p>Loading...</p>
@@ -88,7 +98,6 @@ export default function SearchPage() {
         <div className="space-y-12">
           {totalResults > 0 ? (
             <>
-              {/* Products */}
               {filteredProducts.length > 0 && (
                 <section>
                   <h2 className="text-2xl font-bold mb-4">Products ({filteredProducts.length})</h2>
@@ -100,7 +109,6 @@ export default function SearchPage() {
                 </section>
               )}
 
-              {/* Trainings */}
               {filteredTrainings.length > 0 && (
                 <section>
                   <h2 className="text-2xl font-bold mb-4">Training ({filteredTrainings.length})</h2>
@@ -112,13 +120,12 @@ export default function SearchPage() {
                 </section>
               )}
 
-              {/* Funding */}
-              {filteredFundings.length > 0 && (
+              {filteredUsers.length > 0 && (
                 <section>
-                  <h2 className="text-2xl font-bold mb-4">Funding Applications ({filteredFundings.length})</h2>
-                  <div className="space-y-4">
-                    {filteredFundings.map((funding) => (
-                      <FundingCard key={funding.id} application={funding} />
+                  <h2 className="text-2xl font-bold mb-4">Users ({filteredUsers.length})</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {filteredUsers.map((user) => (
+                      <UserCard key={user.id} user={user} />
                     ))}
                   </div>
                 </section>
@@ -133,7 +140,7 @@ export default function SearchPage() {
               <p className="text-muted-foreground max-w-md mx-auto mb-6">
                 We couldn't find any results for "{query}". Please try a different search term.
               </p>
-              <Button onClick={handleResetSearch}>Reset Search</Button>
+              <Button onClick={() => router.back()}>Reset Search</Button>
             </div>
           )}
         </div>
