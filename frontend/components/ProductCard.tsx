@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import type { Product } from "@/lib/types";
 import { useCart } from "@/lib/useCart";
+import { useUser } from "@/lib/useUser";
 import { generateAvatarUrl } from "@/lib/avatarGenerator";
 import { ShareOptionsModal } from "@/components/ShareOptionsModal";
 import { formatTimeAgo } from "@/lib/timeUtils";
@@ -19,9 +20,12 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart, cart } = useCart();
+  const { currentUser } = useUser();
   const [isAdding, setIsAdding] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [availableQuantity, setAvailableQuantity] = useState(product.quantity);
+
+  const isOwnProduct = currentUser?.id === product.farmerId;
 
   useEffect(() => {
     // Calculate available quantity based on cart
@@ -31,7 +35,7 @@ export function ProductCard({ product }: ProductCardProps) {
   }, [cart, product.id, product.quantity]);
 
   const handleAddToCart = () => {
-    if (availableQuantity <= 0) return;
+    if (availableQuantity <= 0 || isOwnProduct) return;
     setIsAdding(true);
     addToCart(product);
     setTimeout(() => setIsAdding(false), 1000);
@@ -121,11 +125,11 @@ export function ProductCard({ product }: ProductCardProps) {
             </Link>
             <Button
               onClick={handleAddToCart}
-              disabled={isAdding || availableQuantity <= 0}
+              disabled={isAdding || availableQuantity <= 0 || isOwnProduct}
               className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1 shadow-md shadow-[#118C4C]/20 text-sm disabled:opacity-50"
             >
               <ShoppingCart className="h-4 w-4" />
-              {availableQuantity <= 0 ? "Out of Stock" : isAdding ? "Added!" : "Add"}
+              {isOwnProduct ? "Your Product" : availableQuantity <= 0 ? "Out of Stock" : isAdding ? "Added!" : "Add"}
             </Button>
             <Button
               type="button"

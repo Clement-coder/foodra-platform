@@ -24,20 +24,35 @@ function TrainingDetailPage() {
   const [isEnrolled, setIsEnrolled] = useState(false)
 
   useEffect(() => {
-    // Load training
-    const trainings = loadFromLocalStorage<Training[]>("foodra_training", [])
-    const found = trainings.find((t) => t.id === id)
-    setTraining(found || null)
-    setLoading(false)
+    const fetchTraining = async () => {
+      if (!id) return
+      setLoading(true)
+      try {
+        const res = await fetch(`/api/trainings/${id}`)
+        if (!res.ok) {
+          setTraining(null)
+        } else {
+          const data = await res.json()
+          setTraining(data)
+        }
+      } catch (error) {
+        console.error("Failed to fetch training:", error)
+        setTraining(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTraining()
 
     // Load user
-  const storedUser = loadFromLocalStorage<User | null>("foodra_user", null)
+    const storedUser = loadFromLocalStorage<User | null>("foodra_user", null)
     setUser(storedUser)
 
     // Check if already enrolled
-    if (storedUser && found) {
+    if (storedUser && id) {
       const enrollments = loadFromLocalStorage<Enrollment[]>("foodra_enrollments", [])
-      const enrolled = enrollments.some((e) => e.userId === storedUser.id && e.trainingId === found.id)
+      const enrolled = enrollments.some((e) => e.userId === storedUser.id && e.trainingId === id)
       setIsEnrolled(enrolled)
     }
   }, [id])
