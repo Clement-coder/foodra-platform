@@ -65,7 +65,8 @@ function MarketplacePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
+            <div className="h-2 w-12 bg-[#118C4C] rounded"></div>
             Marketplace
           </h1>
           <p className="text-muted-foreground">
@@ -77,7 +78,7 @@ function MarketplacePage() {
         <div className="flex items-center gap-2">
           {authenticated && (
             <Link href="/orders">
-              <Button variant="outline" className="gap-2 flex items-center ">
+              <Button variant="outline" className="gap-2 flex items-center border-[#118C4C]/30 hover:bg-[#118C4C]/5">
                 <PackageOpen  />
                 View My Orders
               </Button>
@@ -85,7 +86,7 @@ function MarketplacePage() {
           )}
           {authenticated && (
             <Link href="/listing/new">
-              <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
+              <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20">
                 <Plus className="h-4 w-4" />
                 List Product
               </Button>
@@ -97,7 +98,7 @@ function MarketplacePage() {
       {/* Category Filter */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-3">
-          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Filter className="h-4 w-4 text-[#118C4C]" />
           <span className="text-sm font-medium text-muted-foreground">
             Filter by category:
           </span>
@@ -111,8 +112,8 @@ function MarketplacePage() {
               onClick={() => setSelectedCategory(category)}
               className={
                 selectedCategory === category
-                  ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white"
-                  : "bg-transparent hover:bg-accent"
+                  ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-md shadow-[#118C4C]/20"
+                  : "bg-transparent hover:bg-[#118C4C]/10 border-[#118C4C]/30"
               }
             >
               {category}
