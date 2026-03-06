@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, MapPin, Share2, ShoppingCart, UserIcon } from "lucide-react"
+import { ArrowLeft, MapPin, Share2, ShoppingCart, UserIcon, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,15 +14,18 @@ import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import type { Product, CartItem } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
+import { useUser } from "@/lib/useUser"
 
 function ProductDetailPage() {
   const router = useRouter()
   const params = useParams();
-  const id = params.id as string; // Cast id to string
+  const id = params.id as string;
+  const { currentUser } = useUser()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [showNotification, setShowNotification] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [isImageFullScreen, setIsImageFullScreen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -71,6 +74,8 @@ function ProductDetailPage() {
     setShowNotification(true)
   }
 
+  const isOwnProduct = currentUser?.id === product?.farmerId
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -94,13 +99,11 @@ function ProductDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Back button */}
       <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2">
         <ArrowLeft className="h-4 w-4" />
         Back
       </Button>
 
-      {/* Notification */}
       {showNotification && (
         <NotificationDiv
           type="success"
@@ -110,7 +113,6 @@ function ProductDetailPage() {
         />
       )}
 
-      {/* Product Details */}
       <ShareOptionsModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
@@ -118,10 +120,39 @@ function ProductDetailPage() {
         text={`Check out this product: ${product.productName}`}
         url={typeof window !== "undefined" ? window.location.href : ""}
       />
+
+      {/* Full Screen Image Modal */}
+      {isImageFullScreen && product.image && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setIsImageFullScreen(false)}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 text-white hover:bg-white/20"
+            onClick={() => setIsImageFullScreen(false)}
+          >
+            <X className="h-6 w-6" />
+          </Button>
+          <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
+            <Image
+              src={product.image}
+              alt={product.productName}
+              fill
+              className="object-contain"
+              unoptimized
+            />
+          </div>
+        </div>
+      )}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Image */}
-          <div className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden bg-muted border-2 border-[#118C4C]/20">
+          <div 
+            className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden bg-muted border-2 border-[#118C4C]/20 cursor-pointer hover:border-[#118C4C]/40 transition-colors"
+            onClick={() => product.image && setIsImageFullScreen(true)}
+          >
             {product.image ? (
               <Image 
                 src={product.image} 
@@ -133,6 +164,11 @@ function ProductDetailPage() {
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <span className="text-muted-foreground">No image available</span>
+              </div>
+            )}
+            {product.image && (
+              <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+                <span className="text-white text-sm bg-black/50 px-4 py-2 rounded-full">Click to view full size</span>
               </div>
             )}
           </div>
@@ -175,14 +211,24 @@ function ProductDetailPage() {
               </CardContent>
             </Card>
 
-            <Button
-              onClick={handleAddToCart}
-              size="lg"
-              className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 mb-4 shadow-lg shadow-[#118C4C]/20"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              Add to Cart
-            </Button>
+            {!isOwnProduct && (
+              <Button
+                onClick={handleAddToCart}
+                size="lg"
+                className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 mb-4 shadow-lg shadow-[#118C4C]/20"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Add to Cart
+              </Button>
+            )}
+
+            {isOwnProduct && (
+              <div className="w-full p-4 mb-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <p className="text-sm text-amber-800 dark:text-amber-200 text-center">
+                  This is your product. You cannot add it to cart.
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link href="/shop" className="block">
