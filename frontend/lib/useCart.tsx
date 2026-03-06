@@ -34,7 +34,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           productId: item.id,
           productName: item.productName,
           pricePerUnit: item.pricePerUnit,
-          quantity: item.quantity,
+          quantity: item.quantity || 1,
           image: item.image,
         }
 
@@ -43,27 +43,46 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const updated = existing
         ? prev.map((i) =>
             i.productId === normalizedItem.productId
-              ? { ...i, quantity: i.quantity + normalizedItem.quantity }
+              ? { ...i, quantity: i.quantity + 1 }
               : i
           )
-        : [...prev, normalizedItem]
+        : [...prev, { ...normalizedItem, quantity: 1 }]
       localStorage.setItem("foodra_cart", JSON.stringify(updated))
+      
+      // Trigger event for product availability update
+      window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId: normalizedItem.productId, change: 1 } }))
+      
       return updated
     })
   }
 
   const removeFromCart = (productId: string) => {
     setCart((prev) => {
+      const item = prev.find((i) => i.productId === productId)
       const updated = prev.filter((i) => i.productId !== productId)
       localStorage.setItem("foodra_cart", JSON.stringify(updated))
+      
+      // Trigger event to restore availability
+      if (item) {
+        window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId, change: -item.quantity } }))
+      }
+      
       return updated
     })
   }
 
   const updateQuantity = (productId: string, quantity: number) => {
     setCart((prev) => {
+      const item = prev.find((i) => i.productId === productId)
+      const oldQuantity = item?.quantity || 0
+      const change = quantity - oldQuantity
+      
       const updated = prev.map((i) => (i.productId === productId ? { ...i, quantity } : i))
       localStorage.setItem("foodra_cart", JSON.stringify(updated))
+      
+      // Trigger event for availability change
+      window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId, change } }))
+      
       return updated
     })
   }
