@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS cart_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL,
   product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -106,16 +106,16 @@ ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 
 -- Users can only see their own cart items
 CREATE POLICY "Users can view own cart items" ON cart_items
-  FOR SELECT USING (user_id = current_setting('request.jwt.claims', true)::json->>'sub');
+  FOR SELECT USING (auth.uid()::text = user_id);
 
 -- Users can insert their own cart items
 CREATE POLICY "Users can insert own cart items" ON cart_items
-  FOR INSERT WITH CHECK (user_id = current_setting('request.jwt.claims', true)::json->>'sub');
+  FOR INSERT WITH CHECK (auth.uid()::text = user_id);
 
 -- Users can update their own cart items
 CREATE POLICY "Users can update own cart items" ON cart_items
-  FOR UPDATE USING (user_id = current_setting('request.jwt.claims', true)::json->>'sub');
+  FOR UPDATE USING (auth.uid()::text = user_id);
 
 -- Users can delete their own cart items
 CREATE POLICY "Users can delete own cart items" ON cart_items
-  FOR DELETE USING (user_id = current_setting('request.jwt.claims', true)::json->>'sub');
+  FOR DELETE USING (auth.uid()::text = user_id);
