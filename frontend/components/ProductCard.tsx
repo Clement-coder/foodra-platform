@@ -40,12 +40,19 @@ export function ProductCard({ product }: ProductCardProps) {
       <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
         <Card className="overflow-hidden h-full flex flex-col">
           <div className="relative h-48 w-full bg-muted">
-            <Image
-              src={product.image || "/placeholder.svg"}
-              alt={product.productName}
-              fill
-              className="object-cover"
-            />
+            {product.image ? (
+              <Image
+                src={product.image}
+                alt={product.productName}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-muted">
+                <span className="text-muted-foreground">No image</span>
+              </div>
+            )}
             <div className="absolute top-2 right-2">
               <span className="bg-white/90 dark:bg-black/90 text-xs font-semibold px-2 py-1 rounded-full">
                 {product.category}
@@ -70,9 +77,10 @@ export function ProductCard({ product }: ProductCardProps) {
             <div className="flex items-center gap-2 mb-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={generateAvatarUrl(product.farmerId)}
+                src={product.farmerAvatar || generateAvatarUrl(product.farmerId)}
                 alt={product.farmerName}
                 className="h-8 w-8 rounded-full object-cover"
+                referrerPolicy="no-referrer"
               />
               <span className="text-sm font-medium text-foreground">
                 {product.farmerName}
