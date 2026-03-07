@@ -283,12 +283,13 @@ export function NavBar() {
           </div>
         </div>
 
-          <form onSubmit={handleSearch} className="md:hidden pb-2 pt-1">
-            <motion.div
-              animate={{ height: isScrolling ? 0 : "auto", opacity: isScrolling ? 0 : 1 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
+          <motion.form
+            onSubmit={handleSearch}
+            animate={{ height: isScrolling ? 0 : "auto", paddingBottom: isScrolling ? 0 : 8, paddingTop: isScrolling ? 0 : 4 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden overflow-hidden"
+          >
+            <div>
               <div className="relative w-full">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <Search className="h-5 w-5 text-muted-foreground" />
@@ -304,8 +305,8 @@ export function NavBar() {
                   aria-label="Search anything"
                 />
               </div>
-            </motion.div>
-          </form>
+            </div>
+          </motion.form>
         </div>
       </nav>
 
