@@ -3,8 +3,9 @@ import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const supabase = getSupabaseAdminClient();
     if (!supabase) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
@@ -22,7 +23,7 @@ export async function PATCH(
       const { error } = await supabase
         .from("orders")
         .update(orderUpdate)
-        .eq("id", params.id);
+        .eq("id", id);
       if (error) throw error;
     }
 
@@ -32,7 +33,7 @@ export async function PATCH(
         await supabase
           .from("order_items")
           .update({ escrow_order_id: item.escrowOrderId, escrow_status: escrowStatus || "locked" })
-          .eq("order_id", params.id)
+          .eq("order_id", id)
           .eq("product_id", item.productId);
       }
     }
