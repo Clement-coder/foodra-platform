@@ -20,6 +20,8 @@ export function useEscrow() {
   const getSignerAndContracts = async () => {
     const wallet = wallets[0];
     if (!wallet) throw new Error("No wallet connected");
+    if (!ESCROW_ADDRESS) throw new Error("Escrow contract address not configured");
+    if (!USDC_ADDRESS) throw new Error("USDC contract address not configured");
     const provider = new ethers.BrowserProvider(await wallet.getEthereumProvider());
     const signer = await provider.getSigner();
     const escrow = new ethers.Contract(ESCROW_ADDRESS, ESCROW_ABI, signer);

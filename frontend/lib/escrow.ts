@@ -40,9 +40,11 @@ export async function ngnToUsdc(ngnAmount: number): Promise<{ usdcAmount: bigint
 }
 
 export function getEscrowContract(provider: ethers.BrowserProvider) {
+  if (!ESCROW_ADDRESS) throw new Error("Escrow contract address not configured");
   return new ethers.Contract(ESCROW_ADDRESS, ESCROW_ABI, provider);
 }
 
 export function getUsdcContract(provider: ethers.BrowserProvider) {
+  if (!USDC_ADDRESS) throw new Error("USDC contract address not configured");
   return new ethers.Contract(USDC_ADDRESS, USDC_ABI, provider);
 }
