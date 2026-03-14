@@ -45,7 +45,7 @@ export function EscrowPaymentModal({ isOpen, onClose, cart, totalNgn, supabaseOr
     setStep("signing");
     const results = await createEscrows(
       supabaseOrderId,
-      cart.map((i) => ({ ...i, farmerWallet: i.farmerWallet || "" })),
+      cart.map((i) => ({ ...i, farmerWallet: i.farmerWallet ?? "" })),
       totalNgn
     );
     if (results) {
