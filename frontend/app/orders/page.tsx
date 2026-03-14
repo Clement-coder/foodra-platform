@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowLeft, PackageOpen, Calendar, DollarSign, CheckCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, PackageOpen, Calendar, DollarSign, CheckCircle, AlertTriangle, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,21 @@ import { NotificationDiv } from "@/components/NotificationDiv";
 import withAuth from "../../components/withAuth";
 import { useOrders } from "@/lib/useCart";
 import { useEscrow } from "@/lib/useEscrow";
+import { useUser } from "@/lib/useUser";
 
 function OrdersPage() {
   const { orders, refreshOrders } = useOrders();
   const { confirmDelivery, raiseDispute, loading } = useEscrow();
+  const { currentUser } = useUser();
   const router = useRouter();
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!currentUser) return;
+    await fetch(`/api/orders?orderId=${orderId}&userId=${currentUser.id}`, { method: "DELETE" });
+    refreshOrders();
+  };
 
   const handleConfirmDelivery = async (orderId: string, escrowOrderId: string) => {
     setActiveOrderId(orderId);
@@ -178,6 +186,21 @@ function OrdersPage() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Delete failed/no-escrow orders */}
+                    {escrowStatus === "none" && (
+                      <div className="pt-4 border-t border-[#118C4C]/10">
+                        <Button
+                          onClick={() => handleDeleteOrder(order.id)}
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 border-red-500/30 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remove Order
+                        </Button>
+                      </div>
+                    )}
 
                     {/* Escrow Actions */}
                     {canAct && (

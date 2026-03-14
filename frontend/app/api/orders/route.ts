@@ -97,6 +97,23 @@ export async function POST(request: Request) {
 
     if (itemsError) throw itemsError
 
+    // Decrement product quantity and mark unavailable if stock hits 0
+    for (const item of body.items) {
+      const { data: product } = await supabaseAdmin
+        .from('products')
+        .select('quantity')
+        .eq('id', item.productId)
+        .single()
+
+      if (product) {
+        const newQty = Math.max(0, product.quantity - item.quantity)
+        await supabaseAdmin
+          .from('products')
+          .update({ quantity: newQty, is_available: newQty > 0 })
+          .eq('id', item.productId)
+      }
+    }
+
     return NextResponse.json(order)
   } catch (error: any) {
     console.error('Error creating order:', error)
@@ -104,5 +121,37 @@ export async function POST(request: Request) {
       { error: error?.message || 'Failed to create order', code: error?.code },
       { status: 500 }
     )
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) return NextResponse.json({ error: 'DB unavailable' }, { status: 500 })
+
+    const { searchParams } = new URL(request.url)
+    const orderId = searchParams.get('orderId')
+    const userId = searchParams.get('userId')
+
+    if (!orderId || !userId) return NextResponse.json({ error: 'orderId and userId required' }, { status: 400 })
+
+    // Only allow deleting own pending orders with no escrow
+    const { data: order } = await supabaseAdmin
+      .from('orders')
+      .select('id, buyer_id, status, escrow_status')
+      .eq('id', orderId)
+      .eq('buyer_id', userId)
+      .single()
+
+    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    if (order.escrow_status === 'locked') return NextResponse.json({ error: 'Cannot delete locked escrow order' }, { status: 403 })
+
+    await supabaseAdmin.from('order_items').delete().eq('order_id', orderId)
+    await supabaseAdmin.from('orders').delete().eq('id', orderId)
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting order:', error)
+    return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 })
   }
 }
