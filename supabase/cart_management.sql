@@ -113,7 +113,7 @@ CREATE POLICY "Users can insert own cart items" ON cart_items
   FOR INSERT WITH CHECK (auth.uid()::text = user_id);
 
 -- Users can update their own cart items
-CREATE POLICY "Users can update own cart items" ON cart_items
+CREATE POLICY "Users can update own cart ittems" ON cart_items
   FOR UPDATE USING (auth.uid()::text = user_id);
 
 -- Users can delete their own cart items
