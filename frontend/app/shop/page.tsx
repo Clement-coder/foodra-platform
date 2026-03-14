@@ -13,17 +13,24 @@ import { EscrowPaymentModal, type EscrowResult } from "@/components/EscrowPaymen
 import withAuth from "../../components/withAuth";
 import { useCart, useOrders } from "@/lib/useCart";
 import { usePrivy } from "@privy-io/react-auth";
+import { useUser } from "@/lib/useUser";
 import type { CartItem } from "@/lib/types";
 
 function ShopPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, totalAmount } = useCart();
   const { createOrder } = useOrders();
   const { authenticated } = usePrivy();
+  const { currentUser } = useUser();
   const router = useRouter();
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [enrichedCartItems, setEnrichedCartItems] = useState<(CartItem & { farmerWallet: string })[]>([]);
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
+
+  const deletePendingOrder = async (orderId: string) => {
+    if (!currentUser) return;
+    await fetch(`/api/orders?orderId=${orderId}&userId=${currentUser.id}`, { method: "DELETE" });
+  };
 
   const handleProceedToCheckout = async () => {
     // Fetch farmer wallet addresses for all cart items
@@ -259,7 +266,11 @@ function ShopPage() {
       {pendingOrderId && (
         <EscrowPaymentModal
           isOpen={isCheckoutModalOpen}
-          onClose={() => { setIsCheckoutModalOpen(false); setPendingOrderId(null); }}
+          onClose={async () => {
+            if (pendingOrderId) await deletePendingOrder(pendingOrderId);
+            setIsCheckoutModalOpen(false);
+            setPendingOrderId(null);
+          }}
           cart={enrichedCartItems}
           totalNgn={totalAmount}
           supabaseOrderId={pendingOrderId}

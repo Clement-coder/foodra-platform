@@ -105,6 +105,14 @@ export function useEscrow() {
     setError(null);
     try {
       const { escrow } = await getSignerAndContracts();
+      // Verify escrow exists and is locked before sending tx
+      const escrowData = await escrow.getEscrow(escrowOrderId);
+      if (!escrowData || escrowData.buyer === "0x0000000000000000000000000000000000000000") {
+        throw new Error("Escrow not found on-chain. The order ID may be incorrect.");
+      }
+      if (escrowData.status !== BigInt(0)) { // 0 = LOCKED
+        throw new Error(`Escrow is not in LOCKED state (current status: ${["LOCKED","RELEASED","REFUNDED","DISPUTED"][Number(escrowData.status)] ?? escrowData.status})`);
+      }
       const tx = await escrow.confirmDelivery(escrowOrderId);
       await tx.wait();
       return true;
