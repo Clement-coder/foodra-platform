@@ -41,8 +41,16 @@ export function useEscrow() {
     setLoading(true);
     setError(null);
     try {
-      const { escrow, usdc } = await getSignerAndContracts();
+      const { escrow, usdc, signer } = await getSignerAndContracts();
+      const signerAddress = await signer.getAddress();
       const { usdcAmount, rate } = await ngnToUsdc(totalNgn);
+
+      // Auto-mint MockUSDC if balance is insufficient (testnet only)
+      const balance: bigint = await usdc.balanceOf(signerAddress);
+      if (balance < usdcAmount) {
+        const mintTx = await usdc.mint(signerAddress, usdcAmount * BigInt(10)); // mint 10x for buffer
+        await mintTx.wait();
+      }
 
       // Approve total USDC for escrow contract
       const approveTx = await usdc.approve(ESCROW_ADDRESS, usdcAmount);
