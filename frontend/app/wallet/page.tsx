@@ -67,23 +67,14 @@ function WalletPage() {
         const balance = await provider.getBalance(user.wallet.address)
         setBalance(parseFloat(ethers.formatEther(balance)).toFixed(6))
 
-        const apiUrl =
-          selectedChain.id === base.id
-            ? `https://api.routescan.io/v2/network/mainnet/evm/8453/etherscan/api?module=account&action=txlist&address=${user.wallet.address}&startblock=0&endblock=99999999&sort=desc&apikey=${process.env.NEXT_PUBLIC_BASESCAN_API_KEY}`
-            : `https://api.routescan.io/v2/network/testnet/evm/84532/etherscan/api?module=account&action=txlist&address=${user.wallet.address}&startblock=0&endblock=99999999&sort=desc&apikey=${process.env.NEXT_PUBLIC_BASESCAN_API_KEY}`
-
-        const response = await fetch(apiUrl)
-
+        const network = selectedChain.id === base.id ? "mainnet" : "testnet"
+        const response = await fetch(`/api/wallet/transactions?address=${user.wallet.address}&network=${network}`)
         const data = await response.json()
+
         if (data.status === "1" && Array.isArray(data.result)) {
           setTransactions(data.result)
-        } else if (data.message === "No transactions found") {
-          setTransactions([])
         } else {
-          console.error("Error fetching transactions:", data.message)
-          if (data.message !== "No transactions found") {
-            setNotification({ type: "error", message: "Error fetching transactions." })
-          }
+          setTransactions([])
         }
       } catch (error) {
         console.error("Error fetching wallet data:", error)

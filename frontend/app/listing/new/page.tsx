@@ -13,7 +13,7 @@ import { FormNumber } from "@/components/FormNumber"
 import { FormSelect } from "@/components/FormSelector"
 import { ImageMockUploader } from "@/components/ImageMockUploader"
 import { NotificationDiv } from "@/components/NotificationDiv"
-import { productListingSchema, type ProductListingFormData } from "@/lib/schemas"
+import { productListingSchema, type ProductListingFormData, CATEGORY_PRODUCTS } from "@/lib/schemas"
 import type { User, Product } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
 import { usePrivy } from "@privy-io/react-auth";
@@ -195,13 +195,7 @@ function NewListingPage() {
                 error={errors.category?.message}
                 options={[
                   { value: "", label: "Select a category" },
-                  { value: "Vegetables", label: "Vegetables" },
-                  { value: "Fruits", label: "Fruits" },
-                  { value: "Grains", label: "Grains" },
-                  { value: "Tubers", label: "Tubers" },
-                  { value: "Poultry", label: "Poultry" },
-                  { value: "Livestock", label: "Livestock" },
-                  { value: "Others", label: "Others" },
+                  ...Object.keys(CATEGORY_PRODUCTS).map((cat) => ({ value: cat, label: cat })),
                 ]}
                 required
               />
