@@ -19,15 +19,27 @@ const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([])
+  const { currentUser, isLoading: userLoading } = useUser()
 
+  const cartKey = currentUser ? `foodra_cart_${currentUser.id}` : null
+
+  // Load cart when user resolves — don't clear while auth is still loading
   useEffect(() => {
-    const stored = localStorage.getItem("foodra_cart")
-    if (stored) {
-      setCart(JSON.parse(stored))
+    if (userLoading) return
+    if (cartKey) {
+      const stored = localStorage.getItem(cartKey)
+      setCart(stored ? JSON.parse(stored) : [])
+    } else {
+      setCart([])
     }
-  }, [])
+  }, [cartKey, userLoading])
+
+  const persist = (updated: CartItem[]) => {
+    if (cartKey) localStorage.setItem(cartKey, JSON.stringify(updated))
+  }
 
   const addToCart: CartContextValue["addToCart"] = (item) => {
+    if (!cartKey) return
     const normalizedItem: CartItem = "productId" in item
       ? item
       : {
@@ -47,11 +59,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
               : i
           )
         : [...prev, { ...normalizedItem, quantity: 1 }]
-      localStorage.setItem("foodra_cart", JSON.stringify(updated))
-      
-      // Trigger event for product availability update
+      persist(updated)
       window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId: normalizedItem.productId, change: 1 } }))
-      
       return updated
     })
   }
@@ -60,13 +69,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart((prev) => {
       const item = prev.find((i) => i.productId === productId)
       const updated = prev.filter((i) => i.productId !== productId)
-      localStorage.setItem("foodra_cart", JSON.stringify(updated))
-      
-      // Trigger event to restore availability
+      persist(updated)
       if (item) {
         window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId, change: -item.quantity } }))
       }
-      
       return updated
     })
   }
@@ -76,20 +82,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const item = prev.find((i) => i.productId === productId)
       const oldQuantity = item?.quantity || 0
       const change = quantity - oldQuantity
-      
       const updated = prev.map((i) => (i.productId === productId ? { ...i, quantity } : i))
-      localStorage.setItem("foodra_cart", JSON.stringify(updated))
-      
-      // Trigger event for availability change
+      persist(updated)
       window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId, change } }))
-      
       return updated
     })
   }
 
   const clearCart = () => {
     setCart([])
-    localStorage.removeItem("foodra_cart")
+    if (cartKey) localStorage.removeItem(cartKey)
   }
 
   const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart])
