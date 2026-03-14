@@ -23,12 +23,20 @@ export type EscrowStatusType = typeof ESCROW_STATUS[number];
 
 /** Convert NGN amount to USDC (6 decimals) using CoinGecko rate */
 export async function getNgnToUsdcRate(): Promise<number> {
-  const res = await fetch(
-    "https://api.coingecko.com/api/v3/simple/price?ids=usd-coin&vs_currencies=ngn"
-  );
-  const data = await res.json();
-  // data["usd-coin"].ngn = how many NGN per 1 USDC
-  return data["usd-coin"]?.ngn ?? 1600;
+  try {
+    const res = await fetch(
+      "https://api.coingecko.com/api/v3/simple/price?ids=usd-coin&vs_currencies=ngn",
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!res.ok) throw new Error("rate fetch failed");
+    const data = await res.json();
+    const rate = data["usd-coin"]?.ngn;
+    if (!rate || typeof rate !== "number" || rate <= 0) throw new Error("invalid rate");
+    return rate;
+  } catch {
+    // Fallback: ~1 USD = 1600 NGN, 1 USDC ≈ 1 USD
+    return 1600;
+  }
 }
 
 /** Convert NGN amount to USDC in 6-decimal bigint */

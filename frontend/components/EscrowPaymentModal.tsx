@@ -35,9 +35,13 @@ export function EscrowPaymentModal({ isOpen, onClose, cart, totalNgn, supabaseOr
 
   useEffect(() => {
     if (!isOpen) { setStep("preview"); return; }
+    setUsdcPreview("...");
     ngnToUsdc(totalNgn).then(({ usdcAmount, rate }) => {
-      setUsdcPreview((Number(usdcAmount) / 1_000_000).toFixed(2));
+      const usdc = Number(usdcAmount) / 1_000_000;
+      setUsdcPreview(usdc > 0 ? usdc.toFixed(4) : "< 0.0001");
       setRate(rate);
+    }).catch(() => {
+      setUsdcPreview("error");
     });
   }, [isOpen, totalNgn]);
 
