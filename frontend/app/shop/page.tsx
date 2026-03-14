@@ -13,6 +13,7 @@ import { EscrowPaymentModal, type EscrowResult } from "@/components/EscrowPaymen
 import withAuth from "../../components/withAuth";
 import { useCart, useOrders } from "@/lib/useCart";
 import { usePrivy } from "@privy-io/react-auth";
+import type { CartItem } from "@/lib/types";
 
 function ShopPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, totalAmount } = useCart();
@@ -21,15 +22,38 @@ function ShopPage() {
   const router = useRouter();
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [enrichedCartItems, setEnrichedCartItems] = useState<(CartItem & { farmerWallet: string })[]>([]);
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
 
   const handleProceedToCheckout = async () => {
-    // Create the Supabase order first to get an ID, then open escrow modal
-    const order = await createOrder(cart, totalAmount);
+    // Fetch farmer wallet addresses for all cart items
+    const enrichedCart = await Promise.all(
+      cart.map(async (item) => {
+        try {
+          const res = await fetch(`/api/products/${item.productId}`);
+          const product = await res.json();
+          // Get farmer wallet from user API
+          const userRes = await fetch(`/api/users/${product.farmerId}`);
+          const farmer = await userRes.json();
+          return { ...item, farmerWallet: farmer.wallet || "" };
+        } catch {
+          return { ...item, farmerWallet: "" };
+        }
+      })
+    );
+
+    const missingWallet = enrichedCart.find((i) => !i.farmerWallet);
+    if (missingWallet) {
+      setNotification({ type: "error", message: `Farmer wallet address not found for "${missingWallet.productName}". Cannot process escrow payment.` });
+      return;
+    }
+
+    const order = await createOrder(enrichedCart, totalAmount);
     if (!order) {
       setNotification({ type: "error", message: "Failed to create order. Please try again." });
       return;
     }
+    setEnrichedCartItems(enrichedCart);
     setPendingOrderId(order.id);
     setIsCheckoutModalOpen(true);
   };
@@ -236,7 +260,7 @@ function ShopPage() {
         <EscrowPaymentModal
           isOpen={isCheckoutModalOpen}
           onClose={() => { setIsCheckoutModalOpen(false); setPendingOrderId(null); }}
-          cart={cart}
+          cart={enrichedCartItems}
           totalNgn={totalAmount}
           supabaseOrderId={pendingOrderId}
           onSuccess={handleEscrowSuccess}
