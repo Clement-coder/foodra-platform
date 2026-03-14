@@ -13,7 +13,7 @@ import { NotificationDiv } from "@/components/NotificationDiv"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import type { Product, CartItem } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
+import { useCart } from "@/lib/useCart"
 import { useUser } from "@/lib/useUser"
 
 function ProductDetailPage() {
@@ -21,6 +21,7 @@ function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const { currentUser } = useUser()
+  const { addToCart } = useCart()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [showNotification, setShowNotification] = useState(false)
@@ -53,24 +54,13 @@ function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!product) return
-
-    const cart = loadFromLocalStorage<CartItem[]>("foodra_cart", [])
-    const existingItem = cart.find((item) => item.productId === product.id)
-
-    if (existingItem) {
-      existingItem.quantity += 1
-    } else {
-      cart.push({
-        productId: product.id,
-        productName: product.productName,
-        pricePerUnit: product.pricePerUnit,
-        quantity: 1,
-        image: product.image,
-      })
-    }
-
-    saveToLocalStorage("foodra_cart", cart)
-    window.dispatchEvent(new Event("cartUpdated"))
+    addToCart({
+      productId: product.id,
+      productName: product.productName,
+      pricePerUnit: product.pricePerUnit,
+      quantity: 1,
+      image: product.image,
+    })
     setShowNotification(true)
   }
 
