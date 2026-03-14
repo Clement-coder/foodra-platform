@@ -20,9 +20,19 @@ async function main() {
   await escrow.waitForDeployment();
   console.log("FoodraEscrow deployed to:", await escrow.getAddress());
 
+  const escrowAddress = await escrow.getAddress();
+  const usdcAddress = await usdc.getAddress();
+
   console.log("\nAdd these to your frontend .env.local:");
-  console.log(`NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS=${await escrow.getAddress()}`);
-  console.log(`NEXT_PUBLIC_USDC_CONTRACT_ADDRESS=${await usdc.getAddress()}`);
+  console.log(`NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS=${escrowAddress}`);
+  console.log(`NEXT_PUBLIC_USDC_CONTRACT_ADDRESS=${usdcAddress}`);
+
+  // Save to file for reference
+  const fs = await import("fs");
+  fs.writeFileSync(
+    "deployed-addresses.json",
+    JSON.stringify({ escrow: escrowAddress, usdc: usdcAddress, network: "base-sepolia", deployedAt: new Date().toISOString() }, null, 2)
+  );
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
