@@ -59,7 +59,8 @@ export function useEscrow() {
 
       for (const [farmerWallet, farmerItems] of Object.entries(farmerGroups)) {
         const farmerNgn = farmerItems.reduce((s, i) => s + i.pricePerUnit * i.quantity, 0);
-        const { usdcAmount: farmerUsdc } = await ngnToUsdc(farmerNgn);
+        // Use same rate to avoid approval mismatch
+        const farmerUsdc = BigInt(Math.round((farmerNgn / rate) * 1_000_000));
         const productId = farmerItems[0].productId;
 
         const orderIdBytes = await escrow.computeOrderId(supabaseOrderId, productId);
