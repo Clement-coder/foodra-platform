@@ -3,12 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Modal } from "@/components/Modal";
 import { NotificationDiv } from "@/components/NotificationDiv";
+import { EscrowPaymentModal, type EscrowResult } from "@/components/EscrowPaymentModal";
 import withAuth from "../../components/withAuth";
 import { useCart, useOrders } from "@/lib/useCart";
 import { usePrivy } from "@privy-io/react-auth";
@@ -17,35 +18,39 @@ function ShopPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, totalAmount } = useCart();
   const { createOrder } = useOrders();
   const { authenticated } = usePrivy();
+  const router = useRouter();
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
 
-  const handleProceedToCheckout = () => {
+  const handleProceedToCheckout = async () => {
+    // Create the Supabase order first to get an ID, then open escrow modal
+    const order = await createOrder(cart, totalAmount);
+    if (!order) {
+      setNotification({ type: "error", message: "Failed to create order. Please try again." });
+      return;
+    }
+    setPendingOrderId(order.id);
     setIsCheckoutModalOpen(true);
   };
 
-  const handleConfirmPayment = async () => {
-    setIsProcessingPayment(true);
-    
-    setTimeout(async () => {
-      const order = await createOrder(cart, totalAmount);
-      setIsProcessingPayment(false);
-      
-      if (order) {
-        setPaymentSuccess(true);
-        setNotification({ type: "success", message: "Order placed successfully!" });
-        clearCart();
-        setTimeout(() => {
-          setPaymentSuccess(false);
-          setIsCheckoutModalOpen(false);
-        }, 3000);
-      } else {
-        setNotification({ type: "error", message: "Failed to place order. Please try again." });
-        setIsCheckoutModalOpen(false);
-      }
-    }, 2000);
+  const handleEscrowSuccess = async (results: EscrowResult[]) => {
+    if (!pendingOrderId) return;
+    // Update order with escrow details
+    await fetch(`/api/orders/${pendingOrderId}/escrow`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        escrowTxHash: results[0]?.txHash,
+        escrowStatus: "locked",
+        usdcAmount: Number(results[0]?.usdcAmount) / 1_000_000,
+        items: results.map((r) => ({ productId: r.productId, escrowOrderId: r.orderId })),
+      }),
+    });
+    clearCart();
+    setIsCheckoutModalOpen(false);
+    setNotification({ type: "success", message: "Order placed and payment secured in escrow!" });
+    setTimeout(() => router.push("/orders"), 2000);
   };
 
   if (cart.length === 0) {
@@ -226,80 +231,17 @@ function ShopPage() {
         </div>
       </div>
 
-      {/* Checkout Modal */}
-      <Modal
-        isOpen={isCheckoutModalOpen}
-        onClose={() => setIsCheckoutModalOpen(false)}
-        title={
-          paymentSuccess ? "Payment Successful!" : "Confirm Your Order"
-        }
-      >
-        {isProcessingPayment ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#118C4C] mb-4"></div>
-            <p className="text-lg font-medium text-foreground">
-              Processing Payment...
-            </p>
-            <p className="text-muted-foreground text-sm">
-              Please do not close this window.
-            </p>
-          </div>
-        ) : paymentSuccess ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <ShoppingBag className="h-16 w-16 text-[#118C4C] mb-4" />
-            <h3 className="text-2xl font-bold text-foreground mb-2">
-              Order Placed!
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              Your order has been successfully placed and will be processed
-              shortly.
-            </p>
-            <Button
-              onClick={() => setIsCheckoutModalOpen(false)}
-              className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white"
-            >
-              Continue Shopping
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-3 mb-6">
-              {cart.map((item) => (
-                <div
-                  key={item.productId}
-                  className="flex justify-between items-center border-b border-border pb-2 last:border-b-0"
-                >
-                  <span className="text-foreground">
-                    {item.productName} (x{item.quantity})
-                  </span>
-                  <span className="font-medium text-foreground">
-                    ₦{(item.pricePerUnit * item.quantity).toLocaleString()}
-                  </span>
-                </div>
-              ))}
-              <div className="flex justify-between pt-2">
-                <span className="font-semibold text-foreground text-lg">
-                  Total
-                </span>
-                <span className="font-bold text-[#118C4C] text-2xl">
-                  ₦{totalAmount.toLocaleString()}
-                </span>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mb-6">
-              By confirming, you agree to purchase these items. Payment will be
-              processed securely.
-            </p>
-            <Button
-              onClick={handleConfirmPayment}
-              className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white"
-              size="lg"
-            >
-              Confirm Payment
-            </Button>
-          </>
-        )}
-      </Modal>
+      {/* Escrow Payment Modal */}
+      {pendingOrderId && (
+        <EscrowPaymentModal
+          isOpen={isCheckoutModalOpen}
+          onClose={() => { setIsCheckoutModalOpen(false); setPendingOrderId(null); }}
+          cart={cart}
+          totalNgn={totalAmount}
+          supabaseOrderId={pendingOrderId}
+          onSuccess={handleEscrowSuccess}
+        />
+      )}
     </div>
   );
 }
