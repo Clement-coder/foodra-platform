@@ -38,11 +38,17 @@ export async function GET(request: Request) {
         pricePerUnit: item.price,
         quantity: item.quantity,
         image: item.image_url || '',
+        escrowOrderId: item.escrow_order_id || null,
+        farmerWallet: item.farmer_wallet || null,
+        escrowStatus: item.escrow_status || 'none',
       })) || [],
       totalAmount: o.total_amount,
       status: o.status,
       createdAt: o.created_at,
       updatedAt: o.updated_at,
+      escrowTxHash: o.escrow_tx_hash || null,
+      escrowStatus: o.escrow_status || 'none',
+      usdcAmount: o.usdc_amount || null,
     })) || []
 
     return NextResponse.json(formatted)

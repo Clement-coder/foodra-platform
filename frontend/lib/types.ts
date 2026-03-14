@@ -71,6 +71,7 @@ export interface CartItem {
   pricePerUnit: number
   quantity: number
   image: string
+  farmerWallet?: string
 }
 
 export interface Order {
@@ -81,6 +82,9 @@ export interface Order {
   status: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled"
   createdAt: string
   updatedAt: string
+  escrowTxHash?: string
+  escrowStatus?: "none" | "locked" | "released" | "refunded" | "disputed"
+  usdcAmount?: number
 }
 
 export interface OrderItem {
@@ -89,4 +93,7 @@ export interface OrderItem {
   pricePerUnit: number
   quantity: number
   image: string
+  escrowOrderId?: string
+  farmerWallet?: string
+  escrowStatus?: "none" | "locked" | "released" | "refunded" | "disputed"
 }
