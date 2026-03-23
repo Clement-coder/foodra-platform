@@ -11,6 +11,7 @@ import type { CartItem } from "@/lib/types";
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  onSuccessClose: () => void;
   cart: (CartItem & { farmerWallet?: string })[];
   totalNgn: number;
   supabaseOrderId: string;
@@ -27,7 +28,7 @@ export interface EscrowResult {
 
 type Step = "preview" | "signing" | "success" | "error";
 
-export function EscrowPaymentModal({ isOpen, onClose, cart, totalNgn, supabaseOrderId, onSuccess }: Props) {
+export function EscrowPaymentModal({ isOpen, onClose, onSuccessClose, cart, totalNgn, supabaseOrderId, onSuccess }: Props) {
   const { createEscrows, loading, error } = useEscrow();
   const [step, setStep] = useState<Step>("preview");
   const [usdcPreview, setUsdcPreview] = useState<string>("...");
@@ -130,7 +131,7 @@ export function EscrowPaymentModal({ isOpen, onClose, cart, totalNgn, supabaseOr
           <p className="text-sm text-muted-foreground max-w-xs">
             Your USDC is locked in escrow. Once you receive your items, confirm delivery to release payment to the farmer.
           </p>
-          <Button onClick={onClose} className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white mt-2">
+          <Button onClick={onSuccessClose} className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white mt-2">
             View My Orders
           </Button>
         </div>
