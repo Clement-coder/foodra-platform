@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +26,7 @@ function ShopPage() {
   const router = useRouter();
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const [preparingCheckout, setPreparingCheckout] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [enrichedCartItems, setEnrichedCartItems] = useState<(CartItem & { farmerWallet: string })[]>([]);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryAddress | null>(null);
@@ -49,8 +50,8 @@ function ShopPage() {
   const handleDeliveryConfirmed = async (address: DeliveryAddress) => {
     setSelectedDelivery(address);
     setIsDeliveryModalOpen(false);
+    setPreparingCheckout(true);
 
-    // Step 2: enrich cart with farmer wallets
     const enrichedCart = await Promise.all(
       cart.map(async (item) => {
         try {
@@ -67,11 +68,13 @@ function ShopPage() {
 
     const missingWallet = enrichedCart.find((i) => !i.farmerWallet);
     if (missingWallet) {
+      setPreparingCheckout(false);
       setNotification({ type: "error", message: `Farmer wallet not found for "${missingWallet.productName}".` });
       return;
     }
 
     const order = await createOrder(enrichedCart, totalAmount);
+    setPreparingCheckout(false);
     if (!order) {
       setNotification({ type: "error", message: "Failed to create order. Please try again." });
       return;
@@ -265,8 +268,11 @@ function ShopPage() {
                 onClick={handleProceedToCheckout}
                 className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white mb-3 shadow-lg shadow-[#118C4C]/20"
                 size="lg"
+                disabled={preparingCheckout}
               >
-                Proceed to Checkout
+                {preparingCheckout ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-2" />Preparing checkout...</>
+                ) : "Proceed to Checkout"}
               </Button>
 
               <Link href="/marketplace">
