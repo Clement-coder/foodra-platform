@@ -28,6 +28,14 @@ interface SaleOrder {
   items: { productId: string; productName: string; quantity: number; pricePerUnit: number; image: string; escrowStatus: string }[];
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  locked: "Secured in Escrow ✅",
+  released: "Payment Released to Farmer ✅",
+  disputed: "Under Dispute ⚠️",
+  refunded: "Refunded",
+  none: "No Escrow (Direct Order)",
+};
+
 function buildShareText(sale: SaleOrder): string {
   const d = sale.delivery;
   const b = sale.buyer;
@@ -46,7 +54,7 @@ ITEMS
 ${items}
 
 ORDER VALUE: ₦${sale.totalAmount.toLocaleString()}${sale.usdcAmount ? ` (${sale.usdcAmount.toFixed(2)} USDC)` : ""}
-PAYMENT STATUS: ${sale.escrowStatus === "locked" ? "Secured in Escrow ✅" : sale.escrowStatus}
+PAYMENT STATUS: ${STATUS_LABELS[sale.escrowStatus] ?? sale.escrowStatus}
 
 Powered by Foodra — foodra.app`;
 }
