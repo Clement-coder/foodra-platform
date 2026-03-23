@@ -55,14 +55,14 @@ export function useEscrow() {
       const signerAddress = await signer.getAddress();
       const { usdcAmount, rate } = await ngnToUsdc(totalNgn);
 
-      // Auto-mint MockUSDC if balance is insufficient (testnet only)
+      // Auto-mint MockUSDC if balance insufficient (Base Sepolia testnet only)
       const balance: bigint = await usdc.balanceOf(signerAddress);
       if (balance < usdcAmount) {
-        const mintTx = await usdc.mint(signerAddress, usdcAmount * BigInt(10)); // mint 10x for buffer
+        const mintTx = await usdc.mint(signerAddress, usdcAmount * BigInt(10));
         await mintTx.wait();
       }
 
-      // Skip approve if allowance is already sufficient
+      // Approve if needed
       const existing: bigint = await usdc.allowance(signerAddress, ESCROW_ADDRESS);
       if (existing < usdcAmount) {
         const approveTx = await usdc.approve(ESCROW_ADDRESS, usdcAmount);
@@ -93,10 +93,11 @@ export function useEscrow() {
           BigInt(Math.round(farmerNgn))
         );
         const receipt = await tx.wait();
+        if (!receipt || receipt.status === 0) throw new Error("createEscrow transaction reverted");
 
         results.push({
           productId,
-          orderId: orderIdBytes,
+          orderId: orderIdBytes,  // bytes32 hex string e.g. "0xabc..."
           txHash: receipt.hash,
           usdcAmount: farmerUsdc,
           rate,
@@ -118,15 +119,20 @@ export function useEscrow() {
     setError(null);
     try {
       const { escrow } = await getSignerAndContracts();
-      // Verify escrow exists and is locked before sending tx
-      const escrowData = await escrow.getEscrow(escrowOrderId);
+
+      // Ensure bytes32 format
+      const orderId = escrowOrderId.startsWith("0x") ? escrowOrderId : `0x${escrowOrderId}`;
+
+      const escrowData = await escrow.getEscrow(orderId);
       if (!escrowData || escrowData.buyer === "0x0000000000000000000000000000000000000000") {
-        throw new Error("Escrow not found on-chain. The order ID may be incorrect.");
+        throw new Error("Escrow not found on-chain. Payment may not have been locked yet.");
       }
-      if (escrowData.status !== BigInt(0)) { // 0 = LOCKED
-        throw new Error(`Escrow is not in LOCKED state (current status: ${["LOCKED","RELEASED","REFUNDED","DISPUTED"][Number(escrowData.status)] ?? escrowData.status})`);
+      const statusNum = Number(escrowData.status);
+      if (statusNum !== 0) {
+        const labels = ["LOCKED", "RELEASED", "REFUNDED", "DISPUTED"];
+        throw new Error(`Cannot confirm — escrow is already ${labels[statusNum] ?? statusNum}.`);
       }
-      const tx = await escrow.confirmDelivery(escrowOrderId);
+      const tx = await escrow.confirmDelivery(orderId);
       await tx.wait();
       return true;
     } catch (err: any) {
@@ -142,7 +148,8 @@ export function useEscrow() {
     setError(null);
     try {
       const { escrow } = await getSignerAndContracts();
-      const tx = await escrow.raiseDispute(escrowOrderId);
+      const orderId = escrowOrderId.startsWith("0x") ? escrowOrderId : `0x${escrowOrderId}`;
+      const tx = await escrow.raiseDispute(orderId);
       await tx.wait();
       return true;
     } catch (err: any) {
