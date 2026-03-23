@@ -52,9 +52,12 @@ export function useEscrow() {
         await mintTx.wait();
       }
 
-      // Approve total USDC for escrow contract
-      const approveTx = await usdc.approve(ESCROW_ADDRESS, usdcAmount);
-      await approveTx.wait();
+      // Skip approve if allowance is already sufficient
+      const existing: bigint = await usdc.allowance(signerAddress, ESCROW_ADDRESS);
+      if (existing < usdcAmount) {
+        const approveTx = await usdc.approve(ESCROW_ADDRESS, usdcAmount);
+        await approveTx.wait();
+      }
 
       const results: { productId: string; orderId: string; txHash: string; usdcAmount: bigint; rate: number }[] = [];
 

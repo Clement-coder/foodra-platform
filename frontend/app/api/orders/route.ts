@@ -101,6 +101,8 @@ export async function POST(request: Request) {
       quantity: item.quantity,
       price: item.pricePerUnit,
       image_url: item.image,
+      farmer_wallet: item.farmerWallet || null,
+      escrow_status: 'none',
     }))
 
     const { error: itemsError } = await supabaseAdmin
