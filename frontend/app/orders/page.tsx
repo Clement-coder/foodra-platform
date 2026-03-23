@@ -116,7 +116,7 @@ function OrdersPage() {
             const escrowOrderId = order.items.find((i) => i.escrowOrderId)?.escrowOrderId;
             const escrowStatus = order.escrowStatus;
             const isActive = activeOrderId === order.id;
-            const canAct = (escrowStatus === "locked") && !!escrowOrderId;
+            const canAct = (escrowStatus === "locked" || (!!order.escrowTxHash && escrowStatus === "none")) && !!escrowOrderId;
 
             return (
               <motion.div

@@ -6,13 +6,16 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, MapPin, Phone, User, Mail, Package,
-  Calendar, DollarSign, ExternalLink, Loader2,
+  Calendar, DollarSign, ExternalLink, Loader2, CheckCircle, AlertTriangle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
+import { DisputeModal } from "@/components/DisputeModal";
+import { NotificationDiv } from "@/components/NotificationDiv";
 import withAuth from "@/components/withAuth";
+import { useEscrow } from "@/lib/useEscrow";
 import type { Order } from "@/lib/types";
 
 function OrderDetailPage() {
@@ -20,13 +23,51 @@ function OrderDetailPage() {
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const { confirmDelivery, raiseDispute, loading: escrowLoading } = useEscrow();
 
-  useEffect(() => {
-    fetch(`/api/orders/${id}`)
-      .then((r) => r.json())
-      .then(setOrder)
-      .finally(() => setLoading(false));
-  }, [id]);
+  const fetchOrder = () =>
+    fetch(`/api/orders/${id}`).then((r) => r.json()).then(setOrder).finally(() => setLoading(false));
+
+  useEffect(() => { fetchOrder(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const escrowOrderId = order?.items.find((i) => i.escrowOrderId)?.escrowOrderId;
+  // Show actions if locked OR if tx hash exists but status wasn't saved (broken save scenario)
+  const canAct = order && (order.escrowStatus === "locked" || (!!order.escrowTxHash && order.escrowStatus === "none")) && !!escrowOrderId;
+
+  const handleConfirm = async () => {
+    if (!order || !escrowOrderId) return;
+    const ok = await confirmDelivery(escrowOrderId);
+    if (ok) {
+      await fetch(`/api/orders/${order.id}/escrow`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ escrowStatus: "released" }),
+      });
+      setNotification({ type: "success", message: "Delivery confirmed! Payment released to farmer." });
+      fetchOrder();
+    } else {
+      setNotification({ type: "error", message: "Failed to confirm delivery. Please try again." });
+    }
+  };
+
+  const handleDispute = async (reason: string, details: string) => {
+    if (!order || !escrowOrderId) return;
+    const ok = await raiseDispute(escrowOrderId);
+    if (ok) {
+      await fetch(`/api/orders/${order.id}/escrow`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ escrowStatus: "disputed" }),
+      });
+      setNotification({ type: "success", message: "Dispute raised. Our team will review within 3–5 business days." });
+      setDisputeOpen(false);
+      fetchOrder();
+    } else {
+      setNotification({ type: "error", message: "Failed to raise dispute. Please try again." });
+    }
+  };
 
   if (loading) {
     return (
@@ -57,6 +98,8 @@ function OrderDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
+      {notification && <NotificationDiv type={notification.type} message={notification.message} onClose={() => setNotification(null)} />}
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
@@ -106,6 +149,26 @@ function OrderDetailPage() {
           </Card>
         </motion.div>
 
+        {/* Action buttons */}
+        {canAct && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
+            <Card className="border-[#118C4C]/30 bg-[#118C4C]/5">
+              <CardContent className="p-4">
+                <p className="text-sm font-medium mb-3">Your payment is secured in escrow. Have you received your items?</p>
+                <div className="flex gap-3">
+                  <Button onClick={handleConfirm} disabled={escrowLoading} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
+                    {escrowLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                    {escrowLoading ? "Processing..." : "Confirm Delivery"}
+                  </Button>
+                  <Button onClick={() => setDisputeOpen(true)} disabled={escrowLoading} variant="outline" className="flex-1 border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2">
+                    <AlertTriangle className="h-4 w-4" /> Raise Dispute
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         {/* Items */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <Card className="border-[#118C4C]/20">
@@ -117,7 +180,7 @@ function OrderDetailPage() {
             <CardContent className="p-5 space-y-3">
               {order.items.map((item) => (
                 <div key={item.productId} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 border border-[#118C4C]/10">
-                  <Image src={item.image} alt={item.productName} width={64} height={64} className="rounded-lg object-cover border-2 border-[#118C4C]/20" />
+                  <Image src={item.image} alt={item.productName} width={64} height={64} className="rounded-lg object-cover border-2 border-[#118C4C]/20" unoptimized />
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{item.productName}</p>
                     <p className="text-sm text-muted-foreground">{item.quantity} × ₦{item.pricePerUnit.toLocaleString()}</p>
@@ -144,46 +207,12 @@ function OrderDetailPage() {
                   <span className="font-semibold">{order.deliveryFullName}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-4 w-4" />
-                  {order.deliveryPhone}
+                  <Phone className="h-4 w-4" />{order.deliveryPhone}
                 </div>
                 <div className="flex items-start gap-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <span>{order.deliveryAddress}, {order.deliveryCity}, {order.deliveryState}</span>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Buyer info */}
-        {(order.buyerName || order.buyerPhone || order.buyerEmail) && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-            <Card className="border-[#118C4C]/20">
-              <CardHeader className="pb-3 border-b border-[#118C4C]/10">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <User className="h-4 w-4 text-[#118C4C]" /> Buyer Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-5 space-y-2">
-                {order.buyerName && (
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-semibold">{order.buyerName}</span>
-                  </div>
-                )}
-                {order.buyerPhone && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Phone className="h-4 w-4" />
-                    {order.buyerPhone}
-                  </div>
-                )}
-                {order.buyerEmail && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4" />
-                    {order.buyerEmail}
-                  </div>
-                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -195,12 +224,7 @@ function OrderDetailPage() {
             <Card className="border-[#118C4C]/20">
               <CardContent className="p-5">
                 <p className="text-sm text-muted-foreground mb-1">Escrow Transaction</p>
-                <a
-                  href={`https://sepolia.basescan.org/tx/${order.escrowTxHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-[#118C4C] text-sm font-mono hover:underline"
-                >
+                <a href={`https://sepolia.basescan.org/tx/${order.escrowTxHash}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#118C4C] text-sm font-mono hover:underline">
                   {order.escrowTxHash.slice(0, 14)}...{order.escrowTxHash.slice(-8)}
                   <ExternalLink className="h-3.5 w-3.5" />
                 </a>
@@ -209,6 +233,14 @@ function OrderDetailPage() {
           </motion.div>
         )}
       </div>
+
+      <DisputeModal
+        isOpen={disputeOpen}
+        onClose={() => setDisputeOpen(false)}
+        orderId={order.id}
+        loading={escrowLoading}
+        onConfirm={handleDispute}
+      />
     </div>
   );
 }
