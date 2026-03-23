@@ -4,7 +4,6 @@ import { useState } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 
 const DISPUTE_REASONS = [
   "Item not received",
@@ -59,7 +58,7 @@ export function DisputeModal({ isOpen, onClose, orderId, onConfirm, loading }: D
 
         {/* Reason */}
         <div className="space-y-2">
-          <Label htmlFor="dispute-reason">Reason for dispute <span className="text-red-500">*</span></Label>
+          <label htmlFor="dispute-reason" className="text-sm font-medium block">Reason for dispute <span className="text-red-500">*</span></label>
           <select
             id="dispute-reason"
             value={reason}
@@ -76,10 +75,10 @@ export function DisputeModal({ isOpen, onClose, orderId, onConfirm, loading }: D
 
         {/* Details */}
         <div className="space-y-2">
-          <Label htmlFor="dispute-details">
+          <label htmlFor="dispute-details" className="text-sm font-medium block">
             Additional details <span className="text-red-500">*</span>
             <span className="text-muted-foreground font-normal ml-1">(min. 20 characters)</span>
-          </Label>
+          </label>
           <textarea
             id="dispute-details"
             value={details}
