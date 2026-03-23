@@ -15,7 +15,7 @@ interface Props {
   cart: (CartItem & { farmerWallet?: string })[];
   totalNgn: number;
   supabaseOrderId: string;
-  onSuccess: (escrowResults: EscrowResult[]) => void;
+  onSuccess: (escrowResults: EscrowResult[]) => Promise<void>;
 }
 
 export interface EscrowResult {
@@ -54,8 +54,8 @@ export function EscrowPaymentModal({ isOpen, onClose, onSuccessClose, cart, tota
       totalNgn
     );
     if (results) {
+      await onSuccess(results as EscrowResult[]);
       setStep("success");
-      onSuccess(results as EscrowResult[]);
     } else {
       setStep("error");
     }

@@ -20,7 +20,7 @@ interface SaleOrder {
   usdcAmount: number | null;
   totalAmount: number;
   createdAt: string;
-  buyer: { id: string; name: string; email: string; phone: string; avatar: string } | null;
+  buyer: { id: string; name: string; email: string; phone: string; avatar: string; location: string } | null;
   delivery: { fullName: string | null; phone: string | null; address: string | null; street2: string | null; landmark: string | null; city: string | null; state: string | null; country: string | null };
   items: { productId: string; productName: string; quantity: number; pricePerUnit: number; image: string; escrowStatus: string }[];
 }
@@ -137,6 +137,11 @@ function SalesPage() {
                       {sale.buyer.email && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Mail className="h-3.5 w-3.5" />{sale.buyer.email}
+                        </div>
+                      )}
+                      {sale.buyer.location && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5" />{sale.buyer.location}
                         </div>
                       )}
                     </div>
