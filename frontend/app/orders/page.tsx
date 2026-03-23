@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowLeft, PackageOpen, Calendar, DollarSign, CheckCircle, AlertTriangle, Trash2, MapPin, Phone, ExternalLink } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
@@ -111,7 +111,7 @@ function OrdersPage() {
           </Button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {orders.map((order, index) => {
             const escrowOrderId = order.items.find((i) => i.escrowOrderId)?.escrowOrderId;
             const escrowStatus = order.escrowStatus;
@@ -121,146 +121,87 @@ function OrdersPage() {
             return (
               <motion.div
                 key={order.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                transition={{ duration: 0.4, delay: index * 0.07 }}
               >
-                <Card className="overflow-hidden shadow-lg border-[#118C4C]/20 hover:border-[#118C4C]/50 transition-colors cursor-pointer" onClick={() => router.push(`/orders/${order.id}`)}>
-                  <CardHeader className="bg-[#118C4C]/5 flex flex-row items-center justify-between p-4 border-b-2 border-[#118C4C]/20 flex-wrap gap-2">
-                    <CardTitle className="text-xl font-bold flex items-center gap-2">
-                      Order #{order.id.slice(-6)}
-                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                    </CardTitle>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge className="bg-[#118C4C] text-white hover:bg-[#0d6d3a]">{order.status}</Badge>
+                <Card className="overflow-hidden border-[#118C4C]/20 hover:border-[#118C4C]/50 transition-colors cursor-pointer" onClick={() => router.push(`/orders/${order.id}`)}>
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-3 bg-[#118C4C]/5 border-b border-[#118C4C]/15">
+                    <span className="font-semibold text-sm flex items-center gap-1.5">
+                      Order #{order.id.slice(-6).toUpperCase()}
+                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-[#118C4C] text-white hover:bg-[#0d6d3a] text-xs">{order.status}</Badge>
                       <EscrowStatusBadge status={escrowStatus} />
                     </div>
-                  </CardHeader>
+                  </div>
 
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b-2 border-[#118C4C]/10">
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                        <div className="p-2 bg-[#118C4C]/10 rounded-lg">
-                          <Calendar className="h-5 w-5 text-[#118C4C]" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Ordered on</p>
-                          <p className="font-semibold">
-                            {new Date(order.createdAt).toLocaleDateString("en-US", {
-                              year: "numeric", month: "long", day: "numeric",
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
-                        <div className="p-2 bg-[#118C4C]/10 rounded-lg">
-                          <DollarSign className="h-5 w-5 text-[#118C4C]" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Order Total</p>
-                          <p className="font-bold text-lg text-[#118C4C]">
-                            ₦{order.totalAmount.toLocaleString()}
-                            {order.usdcAmount ? (
-                              <span className="text-xs text-muted-foreground ml-1">
-                                ({order.usdcAmount.toFixed(2)} USDC)
-                              </span>
-                            ) : null}
-                          </p>
-                        </div>
-                      </div>
+                  <CardContent className="p-4 space-y-4">
+                    {/* Meta row */}
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {new Date(order.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                      </span>
+                      <span className="font-bold text-[#118C4C] text-base">
+                        ₦{order.totalAmount.toLocaleString()}
+                        {order.usdcAmount ? <span className="text-xs text-muted-foreground font-normal ml-1">({order.usdcAmount.toFixed(2)} USDC)</span> : null}
+                      </span>
                     </div>
 
                     {/* Items */}
-                    <div className="space-y-4 mb-6">
+                    <div className="space-y-2">
                       {order.items.map((item) => (
-                        <div
-                          key={item.productId}
-                          className="flex items-start gap-4 p-3 rounded-lg bg-muted/30 border border-[#118C4C]/10"
-                        >
-                          <Image
-                            src={item.image}
-                            alt={item.productName}
-                            width={80}
-                            height={80}
-                            className="rounded-lg object-cover border-2 border-[#118C4C]/20"
-                          />
-                          <div className="flex-grow">
-                            <p className="font-semibold text-lg mb-1">{item.productName}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {item.quantity} × ₦{item.pricePerUnit.toLocaleString()}
-                            </p>
+                        <div key={item.productId} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 border border-[#118C4C]/10">
+                          <Image src={item.image} alt={item.productName} width={52} height={52} className="rounded-md object-cover flex-shrink-0 border border-[#118C4C]/20" unoptimized />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{item.productName}</p>
+                            <p className="text-xs text-muted-foreground">{item.quantity} × ₦{item.pricePerUnit.toLocaleString()}</p>
                           </div>
-                          <p className="font-semibold text-lg">
-                            ₦{(item.quantity * item.pricePerUnit).toLocaleString()}
-                          </p>
+                          <p className="font-semibold text-sm flex-shrink-0">₦{(item.quantity * item.pricePerUnit).toLocaleString()}</p>
                         </div>
                       ))}
                     </div>
 
-                    {/* Delivery address snippet */}
+                    {/* Delivery snippet */}
                     {order.deliveryAddress && (
-                      <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 border border-[#118C4C]/10 text-sm" onClick={(e) => e.stopPropagation()}>
-                        <MapPin className="h-4 w-4 text-[#118C4C] flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-medium">{order.deliveryFullName}</p>
-                          <p className="text-muted-foreground">{order.deliveryAddress}, {order.deliveryCity}, {order.deliveryState}</p>
-                          {order.deliveryPhone && (
-                            <p className="text-muted-foreground flex items-center gap-1 mt-0.5">
-                              <Phone className="h-3 w-3" /> {order.deliveryPhone}
-                            </p>
-                          )}
-                        </div>
+                      <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/30 border border-[#118C4C]/10 text-xs" onClick={(e) => e.stopPropagation()}>
+                        <MapPin className="h-3.5 w-3.5 text-[#118C4C] flex-shrink-0 mt-0.5" />
+                        <span className="text-muted-foreground">
+                          <span className="font-medium text-foreground">{order.deliveryFullName}</span>
+                          {" · "}{order.deliveryAddress}, {order.deliveryCity}, {order.deliveryState}
+                          {order.deliveryPhone && <span> · <Phone className="h-3 w-3 inline" /> {order.deliveryPhone}</span>}
+                        </span>
                       </div>
                     )}
 
-                    {/* Delete failed/no-escrow orders */}
+                    {/* Actions */}
                     {escrowStatus === "none" && (
-                      <div className="pt-4 border-t border-[#118C4C]/10" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          onClick={() => handleDeleteOrder(order.id)}
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 border-red-500/30 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Remove Order
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Button onClick={() => handleDeleteOrder(order.id)} variant="outline" size="sm" className="text-red-600 border-red-500/30 hover:bg-red-50 dark:hover:bg-red-950/20 gap-1.5 text-xs">
+                          <Trash2 className="h-3.5 w-3.5" /> Remove Order
                         </Button>
                       </div>
                     )}
 
-                    {/* Escrow Actions */}
                     {canAct && (
-                      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#118C4C]/10" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          onClick={() => handleConfirmDelivery(order.id, escrowOrderId!)}
-                          disabled={isActive && loading}
-                          className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2"
-                        >
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        <Button onClick={() => handleConfirmDelivery(order.id, escrowOrderId!)} disabled={isActive && loading} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1.5 text-sm h-9">
                           <CheckCircle className="h-4 w-4" />
                           {isActive && loading ? "Processing..." : "Confirm Delivery"}
                         </Button>
-                        <Button
-                          onClick={() => setDisputeOrder({ orderId: order.id, escrowOrderId: escrowOrderId! })}
-                          disabled={isActive && loading}
-                          variant="outline"
-                          className="flex-1 border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2"
-                        >
-                          <AlertTriangle className="h-4 w-4" />
-                          Raise Dispute
+                        <Button onClick={() => setDisputeOrder({ orderId: order.id, escrowOrderId: escrowOrderId! })} disabled={isActive && loading} variant="outline" className="flex-1 border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 gap-1.5 text-sm h-9">
+                          <AlertTriangle className="h-4 w-4" /> Raise Dispute
                         </Button>
                       </div>
                     )}
 
-                    {/* Tx hash link */}
                     {order.escrowTxHash && (
-                      <p className="text-xs text-muted-foreground mt-3">
-                        Escrow tx:{" "}
-                        <a
-                          href={`https://sepolia.basescan.org/tx/${order.escrowTxHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#118C4C] underline underline-offset-2"
-                        >
+                      <p className="text-xs text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+                        Tx:{" "}
+                        <a href={`https://sepolia.basescan.org/tx/${order.escrowTxHash}`} target="_blank" rel="noopener noreferrer" className="text-[#118C4C] underline underline-offset-2">
                           {order.escrowTxHash.slice(0, 10)}...{order.escrowTxHash.slice(-6)}
                         </a>
                       </p>
