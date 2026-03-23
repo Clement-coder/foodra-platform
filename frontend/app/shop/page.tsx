@@ -102,9 +102,7 @@ function ShopPage() {
       }),
     });
     clearCart();
-    setIsCheckoutModalOpen(false);
-    setNotification({ type: "success", message: "Order placed and payment secured in escrow!" });
-    setTimeout(() => router.push("/orders"), 2000);
+    // Don't close modal here — let the success screen's button handle navigation
   };
 
   if (cart.length === 0) {
@@ -304,6 +302,11 @@ function ShopPage() {
             if (pendingOrderId) await deletePendingOrder(pendingOrderId);
             setIsCheckoutModalOpen(false);
             setPendingOrderId(null);
+          }}
+          onSuccessClose={() => {
+            setIsCheckoutModalOpen(false);
+            setPendingOrderId(null);
+            router.push("/orders");
           }}
           cart={enrichedCartItems}
           totalNgn={totalAmount}
