@@ -80,8 +80,12 @@ export interface DeliveryAddress {
   fullName: string
   phone: string
   addressLine: string
+  streetLine2?: string
+  landmark?: string
   city: string
   state: string
+  country: string
+  countryCode: string
   isDefault: boolean
   createdAt: string
 }
@@ -105,8 +109,11 @@ export interface Order {
   deliveryFullName?: string
   deliveryPhone?: string
   deliveryAddress?: string
+  deliveryStreet2?: string
+  deliveryLandmark?: string
   deliveryCity?: string
   deliveryState?: string
+  deliveryCountry?: string
 }
 
 export interface OrderItem {

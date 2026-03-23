@@ -11,9 +11,8 @@ export async function PATCH(
     if (!supabase) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
     const body = await request.json();
-    const { escrowTxHash, escrowStatus, usdcAmount, items, deliveryFullName, deliveryPhone, deliveryAddress, deliveryCity, deliveryState } = body;
+    const { escrowTxHash, escrowStatus, usdcAmount, items, deliveryFullName, deliveryPhone, deliveryAddress, deliveryStreet2, deliveryLandmark, deliveryCity, deliveryState, deliveryCountry } = body;
 
-    // Update order-level escrow fields
     const orderUpdate: Record<string, unknown> = {};
     if (escrowTxHash) orderUpdate.escrow_tx_hash = escrowTxHash;
     if (escrowStatus) orderUpdate.escrow_status = escrowStatus;
@@ -21,8 +20,11 @@ export async function PATCH(
     if (deliveryFullName) orderUpdate.delivery_full_name = deliveryFullName;
     if (deliveryPhone) orderUpdate.delivery_phone = deliveryPhone;
     if (deliveryAddress) orderUpdate.delivery_address = deliveryAddress;
+    if (deliveryStreet2) orderUpdate.delivery_street2 = deliveryStreet2;
+    if (deliveryLandmark) orderUpdate.delivery_landmark = deliveryLandmark;
     if (deliveryCity) orderUpdate.delivery_city = deliveryCity;
     if (deliveryState) orderUpdate.delivery_state = deliveryState;
+    if (deliveryCountry) orderUpdate.delivery_country = deliveryCountry;
 
     if (Object.keys(orderUpdate).length > 0) {
       const { error } = await supabase

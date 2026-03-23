@@ -40,7 +40,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     deliveryFullName: o.delivery_full_name || null,
     deliveryPhone: o.delivery_phone || null,
     deliveryAddress: o.delivery_address || null,
+    deliveryStreet2: o.delivery_street2 || null,
+    deliveryLandmark: o.delivery_landmark || null,
     deliveryCity: o.delivery_city || null,
     deliveryState: o.delivery_state || null,
+    deliveryCountry: o.delivery_country || null,
   });
 }

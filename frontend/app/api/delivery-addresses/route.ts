@@ -7,8 +7,12 @@ const fmt = (a: any) => ({
   fullName: a.full_name,
   phone: a.phone,
   addressLine: a.address_line,
+  streetLine2: a.street_line2 || null,
+  landmark: a.landmark || null,
   city: a.city,
   state: a.state,
+  country: a.country,
+  countryCode: a.country_code,
   isDefault: a.is_default,
   createdAt: a.created_at,
 });
@@ -37,16 +41,27 @@ export async function POST(request: Request) {
   if (!supabase) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
   const body = await request.json();
-  const { userId, fullName, phone, addressLine, city, state, isDefault } = body;
+  const { userId, fullName, phone, addressLine, streetLine2, landmark, city, state, country, countryCode, isDefault } = body;
 
-  // If setting as default, unset others first
   if (isDefault) {
     await supabase.from("delivery_addresses").update({ is_default: false }).eq("user_id", userId);
   }
 
   const { data, error } = await supabase
     .from("delivery_addresses")
-    .insert({ user_id: userId, full_name: fullName, phone, address_line: addressLine, city, state, is_default: isDefault ?? false })
+    .insert({
+      user_id: userId,
+      full_name: fullName,
+      phone,
+      address_line: addressLine,
+      street_line2: streetLine2 || null,
+      landmark: landmark || null,
+      city,
+      state,
+      country: country || "Nigeria",
+      country_code: countryCode || "NG",
+      is_default: isDefault ?? false,
+    })
     .select()
     .single();
 
