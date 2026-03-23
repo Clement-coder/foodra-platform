@@ -13,7 +13,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   userId: string;
-  prefill?: { fullName?: string; phone?: string; email?: string };
+  prefill?: { fullName?: string; phone?: string; country?: string };
   onConfirm: (address: DeliveryAddress) => void;
 }
 
@@ -76,11 +76,11 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
         if (def) { setSelected(def.id); setShowForm(false); }
         else {
           setShowForm(true);
-          // Pre-fill from profile
           setForm((f) => ({
             ...f,
             fullName: prefill?.fullName || f.fullName,
             phone: prefill?.phone || f.phone,
+            country: prefill?.country || f.country,
           }));
         }
       })
@@ -191,7 +191,7 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
                     </motion.button>
                   ))}
                 </AnimatePresence>
-                <button onClick={() => { setShowForm(true); setForm({ ...EMPTY_FORM, fullName: prefill?.fullName || "", phone: prefill?.phone || "" }); }} className="flex items-center gap-2 text-sm text-[#118C4C] hover:underline mt-1">
+                <button onClick={() => { setShowForm(true); setForm({ ...EMPTY_FORM, fullName: prefill?.fullName || "", phone: prefill?.phone || "", country: prefill?.country || "Nigeria" }); }} className="flex items-center gap-2 text-sm text-[#118C4C] hover:underline mt-1">
                   <Plus className="h-4 w-4" /> Add new address
                 </button>
               </div>
