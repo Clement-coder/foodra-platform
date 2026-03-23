@@ -101,7 +101,8 @@ export interface Order {
   escrowTxHash?: string
   escrowStatus?: "none" | "locked" | "released" | "refunded" | "disputed"
   usdcAmount?: number
-  // Buyer info (visible to farmer)
+  // Seller info (visible to buyer)
+  farmers?: Array<{ id: string; name: string; email: string; phone: string; avatar: string; location: string }>
   buyerName?: string
   buyerPhone?: string
   buyerEmail?: string

@@ -8,11 +8,32 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   const { data: o, error } = await supabase
     .from("orders")
-    .select(`*, order_items(*), users!orders_buyer_id_fkey(id, name, email, phone, avatar_url, wallet_address)`)
+    .select(`
+      *, 
+      users!orders_buyer_id_fkey(id, name, email, phone, avatar_url, wallet_address),
+      order_items(*, products(farmer_id, users!products_farmer_id_fkey(id, name, email, phone, avatar_url, location)))
+    `)
     .eq("id", id)
     .single();
 
   if (error || !o) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+
+  // Collect unique farmers from items
+  const farmersMap = new Map<string, any>();
+  for (const item of o.order_items ?? []) {
+    const farmer = item.products?.users;
+    const farmerId = item.products?.farmer_id;
+    if (farmer && farmerId && !farmersMap.has(farmerId)) {
+      farmersMap.set(farmerId, {
+        id: farmer.id,
+        name: farmer.name || "",
+        email: farmer.email || "",
+        phone: farmer.phone || "",
+        avatar: farmer.avatar_url || "",
+        location: farmer.location || "",
+      });
+    }
+  }
 
   return NextResponse.json({
     id: o.id,
@@ -26,7 +47,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       escrowOrderId: item.escrow_order_id || null,
       farmerWallet: item.farmer_wallet || null,
       escrowStatus: item.escrow_status || "none",
+      farmerId: item.products?.farmer_id || null,
     })) ?? [],
+    farmers: Array.from(farmersMap.values()),
     totalAmount: o.total_amount,
     status: o.status,
     createdAt: o.created_at,
