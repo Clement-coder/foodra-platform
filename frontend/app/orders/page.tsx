@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowLeft, PackageOpen, Calendar, DollarSign, CheckCircle, AlertTriangle, Trash2 } from "lucide-react";
+import { ArrowLeft, PackageOpen, Calendar, DollarSign, CheckCircle, AlertTriangle, Trash2, MapPin, Phone, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -125,10 +125,11 @@ function OrdersPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <Card className="overflow-hidden shadow-lg border-[#118C4C]/20">
+                <Card className="overflow-hidden shadow-lg border-[#118C4C]/20 hover:border-[#118C4C]/50 transition-colors cursor-pointer" onClick={() => router.push(`/orders/${order.id}`)}>
                   <CardHeader className="bg-[#118C4C]/5 flex flex-row items-center justify-between p-4 border-b-2 border-[#118C4C]/20 flex-wrap gap-2">
-                    <CardTitle className="text-xl font-bold">
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
                       Order #{order.id.slice(-6)}
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
                     </CardTitle>
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge className="bg-[#118C4C] text-white hover:bg-[#0d6d3a]">{order.status}</Badge>
@@ -196,9 +197,25 @@ function OrdersPage() {
                       ))}
                     </div>
 
+                    {/* Delivery address snippet */}
+                    {order.deliveryAddress && (
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 border border-[#118C4C]/10 text-sm" onClick={(e) => e.stopPropagation()}>
+                        <MapPin className="h-4 w-4 text-[#118C4C] flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-medium">{order.deliveryFullName}</p>
+                          <p className="text-muted-foreground">{order.deliveryAddress}, {order.deliveryCity}, {order.deliveryState}</p>
+                          {order.deliveryPhone && (
+                            <p className="text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <Phone className="h-3 w-3" /> {order.deliveryPhone}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Delete failed/no-escrow orders */}
                     {escrowStatus === "none" && (
-                      <div className="pt-4 border-t border-[#118C4C]/10">
+                      <div className="pt-4 border-t border-[#118C4C]/10" onClick={(e) => e.stopPropagation()}>
                         <Button
                           onClick={() => handleDeleteOrder(order.id)}
                           variant="outline"
@@ -213,7 +230,7 @@ function OrdersPage() {
 
                     {/* Escrow Actions */}
                     {canAct && (
-                      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#118C4C]/10">
+                      <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#118C4C]/10" onClick={(e) => e.stopPropagation()}>
                         <Button
                           onClick={() => handleConfirmDelivery(order.id, escrowOrderId!)}
                           disabled={isActive && loading}

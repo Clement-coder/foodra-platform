@@ -22,7 +22,8 @@ export async function GET(request: Request) {
       .from('orders')
       .select(`
         *,
-        order_items(*)
+        order_items(*),
+        users!orders_buyer_id_fkey(id, name, email, phone, avatar_url, wallet_address)
       `)
       .eq('buyer_id', userId)
       .order('created_at', { ascending: false })
@@ -49,6 +50,14 @@ export async function GET(request: Request) {
       escrowTxHash: o.escrow_tx_hash || null,
       escrowStatus: o.escrow_status || 'none',
       usdcAmount: o.usdc_amount || null,
+      buyerName: o.users?.name || null,
+      buyerPhone: o.users?.phone || null,
+      buyerEmail: o.users?.email || null,
+      deliveryFullName: o.delivery_full_name || null,
+      deliveryPhone: o.delivery_phone || null,
+      deliveryAddress: o.delivery_address || null,
+      deliveryCity: o.delivery_city || null,
+      deliveryState: o.delivery_state || null,
     })) || []
 
     return NextResponse.json(formatted)
