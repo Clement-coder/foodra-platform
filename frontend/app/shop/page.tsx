@@ -291,7 +291,7 @@ function ShopPage() {
           isOpen={isDeliveryModalOpen}
           onClose={() => setIsDeliveryModalOpen(false)}
           userId={currentUser.id}
-          prefill={{ fullName: currentUser.name, phone: currentUser.phone }}
+          prefill={{ fullName: currentUser.name, phone: currentUser.phone, country: currentUser.location }}
           onConfirm={handleDeliveryConfirmed}
         />
       )}
