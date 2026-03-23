@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
 import { NotificationDiv } from "@/components/NotificationDiv";
+import { DisputeModal } from "@/components/DisputeModal";
 import withAuth from "../../components/withAuth";
 import { useOrders } from "@/lib/useCart";
 import { useEscrow } from "@/lib/useEscrow";
@@ -22,6 +23,7 @@ function OrdersPage() {
   const router = useRouter();
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
+  const [disputeOrder, setDisputeOrder] = useState<{ orderId: string; escrowOrderId: string } | null>(null);
 
   const handleDeleteOrder = async (orderId: string) => {
     if (!currentUser) return;
@@ -46,7 +48,7 @@ function OrdersPage() {
     setActiveOrderId(null);
   };
 
-  const handleRaiseDispute = async (orderId: string, escrowOrderId: string) => {
+  const handleRaiseDispute = async (orderId: string, escrowOrderId: string, reason: string, details: string) => {
     setActiveOrderId(orderId);
     const ok = await raiseDispute(escrowOrderId);
     if (ok) {
@@ -55,12 +57,19 @@ function OrdersPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ escrowStatus: "disputed" }),
       });
-      setNotification({ type: "success", message: "Dispute raised. Our team will review and resolve it." });
+      // Save dispute details
+      await fetch(`/api/orders/${orderId}/dispute`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason, details }),
+      }).catch(() => {}); // non-blocking — dispute is already on-chain
+      setNotification({ type: "success", message: "Dispute raised. Our team will review and resolve it within 3–5 business days." });
       refreshOrders();
     } else {
       setNotification({ type: "error", message: "Failed to raise dispute. Please try again." });
     }
     setActiveOrderId(null);
+    setDisputeOrder(null);
   };
 
   return (
@@ -104,10 +113,10 @@ function OrdersPage() {
       ) : (
         <div className="space-y-6">
           {orders.map((order, index) => {
-            const escrowOrderId = order.items[0]?.escrowOrderId;
+            const escrowOrderId = order.items.find((i) => i.escrowOrderId)?.escrowOrderId;
             const escrowStatus = order.escrowStatus;
             const isActive = activeOrderId === order.id;
-            const canAct = escrowStatus === "locked" && escrowOrderId;
+            const canAct = (escrowStatus === "locked") && !!escrowOrderId;
 
             return (
               <motion.div
@@ -214,7 +223,7 @@ function OrdersPage() {
                           {isActive && loading ? "Processing..." : "Confirm Delivery"}
                         </Button>
                         <Button
-                          onClick={() => handleRaiseDispute(order.id, escrowOrderId!)}
+                          onClick={() => setDisputeOrder({ orderId: order.id, escrowOrderId: escrowOrderId! })}
                           disabled={isActive && loading}
                           variant="outline"
                           className="flex-1 border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2"
@@ -245,6 +254,18 @@ function OrdersPage() {
             );
           })}
         </div>
+      )}
+
+      {disputeOrder && (
+        <DisputeModal
+          isOpen={!!disputeOrder}
+          onClose={() => setDisputeOrder(null)}
+          orderId={disputeOrder.orderId}
+          loading={activeOrderId === disputeOrder.orderId && loading}
+          onConfirm={(reason, details) =>
+            handleRaiseDispute(disputeOrder.orderId, disputeOrder.escrowOrderId, reason, details)
+          }
+        />
       )}
     </div>
   );
