@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { LogOut, Loader2, CheckCircle } from "lucide-react"
+import { Loader2, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/Modal"
 
@@ -56,13 +56,23 @@ export function SignOutModal({ isOpen, onClose, logout }: SignOutModalProps) {
                   <CheckCircle className="h-16 w-16 text-green-500" />
                 </motion.div>
               ) : (
-                <motion.div
-                  key="logging-out"
-                  initial={{ rotate: 0 }}
-                  animate={{ rotate: 360, transition: { duration: 1, repeat: Infinity, ease: "linear" } }}
-                >
-                  <LogOut className="h-16 w-16 text-[#118C4C]" />
-                </motion.div>
+                <div key="logging-out" className="relative w-16 h-16 mx-auto">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="w-full h-full"
+                  >
+                    <div className="w-full h-full rounded-full border-4 border-transparent border-t-[#118C4C] border-r-[#118C4C]" />
+                  </motion.div>
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-[#118C4C] rounded-full opacity-20"
+                  />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <Loader2 className="h-5 w-5 text-[#118C4C] animate-spin" />
+                  </div>
+                </div>
               )}
               <p className="text-lg font-medium text-muted-foreground">
                 {isSignedOut ? "Signed Out Successfully" : "Signing you out..."}

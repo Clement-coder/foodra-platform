@@ -4,7 +4,7 @@ import { User } from "@/lib/types"
 import { useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, ShoppingBag, GraduationCap, DollarSign, User as UserIcon, ChevronDown } from "lucide-react"
+import { Home, ShoppingBag, GraduationCap, DollarSign, User as UserIcon, ChevronDown, PackagePlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface ProfileDropdownProps {
@@ -15,7 +15,7 @@ const dropdownLinks = [
   { name: "Profile", href: "/profile", icon: UserIcon },
   { name: "Home", href: "/", icon: Home },
   { name: "Market", href: "/marketplace", icon: ShoppingBag },
-  { name: "List Products", href: "/listing/new", icon: ShoppingBag },
+  { name: "List Products", href: "/listing/new", icon: PackagePlus },
   { name: "Training", href: "/training", icon: GraduationCap },
   { name: "Funding", href: "/funding", icon: DollarSign },
 ]
