@@ -15,6 +15,7 @@ import withAuth from "../../components/withAuth";
 import { useCart, useOrders } from "@/lib/useCart";
 import { usePrivy } from "@privy-io/react-auth";
 import { useUser } from "@/lib/useUser";
+import { calculateProfileCompletion } from "@/lib/profileUtils";
 import type { CartItem, DeliveryAddress } from "@/lib/types";
 
 function ShopPage() {
@@ -36,7 +37,12 @@ function ShopPage() {
   };
 
   const handleProceedToCheckout = async () => {
-    // Step 1: open delivery address modal first
+    // Block if profile incomplete
+    if (currentUser && calculateProfileCompletion(currentUser) < 100) {
+      setNotification({ type: "error", message: "Please complete your profile before making a purchase." });
+      setTimeout(() => router.push("/profile"), 2000);
+      return;
+    }
     setIsDeliveryModalOpen(true);
   };
 
@@ -85,12 +91,14 @@ function ShopPage() {
         escrowStatus: "locked",
         usdcAmount: Number(results[0]?.usdcAmount) / 1_000_000,
         items: results.map((r) => ({ productId: r.productId, escrowOrderId: r.orderId })),
-        // Save delivery address snapshot
         deliveryFullName: selectedDelivery?.fullName,
         deliveryPhone: selectedDelivery?.phone,
         deliveryAddress: selectedDelivery?.addressLine,
+        deliveryStreet2: selectedDelivery?.streetLine2,
+        deliveryLandmark: selectedDelivery?.landmark,
         deliveryCity: selectedDelivery?.city,
         deliveryState: selectedDelivery?.state,
+        deliveryCountry: selectedDelivery?.country,
       }),
     });
     clearCart();
@@ -283,6 +291,7 @@ function ShopPage() {
           isOpen={isDeliveryModalOpen}
           onClose={() => setIsDeliveryModalOpen(false)}
           userId={currentUser.id}
+          prefill={{ fullName: currentUser.name, phone: currentUser.phone }}
           onConfirm={handleDeliveryConfirmed}
         />
       )}
