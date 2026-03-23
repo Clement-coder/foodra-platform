@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Phone, User, ChevronDown, Plus, CheckCircle2, Loader2, Globe } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import type { DeliveryAddress } from "@/lib/types";
 
 interface Country { name: string; code: string; }
@@ -127,10 +126,10 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
 
   const Field = ({ id, label, placeholder, type = "text", optional = false }: { id: keyof typeof form; label: string; placeholder: string; type?: string; optional?: boolean }) => (
     <div className="space-y-1">
-      <Label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-sm font-medium block">
         {label} {optional && <span className="text-muted-foreground font-normal">(optional)</span>}
         {!optional && <span className="text-red-500 ml-0.5">*</span>}
-      </Label>
+      </label>
       <input id={id} type={type} value={form[id] as string} onChange={(e) => set(id, e.target.value)} placeholder={placeholder} disabled={saving} className={inputCls} />
       {errors[id] && <p className="text-xs text-red-500">{errors[id]}</p>}
     </div>
@@ -209,7 +208,7 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
 
                 {/* Country */}
                 <div className="space-y-1">
-                  <Label htmlFor="country" className="text-sm font-medium">Country <span className="text-red-500">*</span></Label>
+                  <label htmlFor="country" className="text-sm font-medium block">Country <span className="text-red-500">*</span></label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                     <select
@@ -238,7 +237,7 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
                   <Field id="city" label="City / Town" placeholder="Lagos" />
                   {/* State */}
                   <div className="space-y-1">
-                    <Label htmlFor="state" className="text-sm font-medium">State / Region <span className="text-red-500">*</span></Label>
+                    <label htmlFor="state" className="text-sm font-medium block">State / Region <span className="text-red-500">*</span></label>
                     <div className="relative">
                       {loadingStates ? (
                         <div className="flex items-center gap-2 px-3 py-2 border border-input rounded-md text-sm text-muted-foreground">
