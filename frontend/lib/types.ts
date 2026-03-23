@@ -74,6 +74,18 @@ export interface CartItem {
   farmerWallet?: string
 }
 
+export interface DeliveryAddress {
+  id: string
+  userId: string
+  fullName: string
+  phone: string
+  addressLine: string
+  city: string
+  state: string
+  isDefault: boolean
+  createdAt: string
+}
+
 export interface Order {
   id: string
   userId: string
@@ -85,6 +97,16 @@ export interface Order {
   escrowTxHash?: string
   escrowStatus?: "none" | "locked" | "released" | "refunded" | "disputed"
   usdcAmount?: number
+  // Buyer info (visible to farmer)
+  buyerName?: string
+  buyerPhone?: string
+  buyerEmail?: string
+  // Delivery address snapshot
+  deliveryFullName?: string
+  deliveryPhone?: string
+  deliveryAddress?: string
+  deliveryCity?: string
+  deliveryState?: string
 }
 
 export interface OrderItem {

@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { NotificationDiv } from "@/components/NotificationDiv";
 import { EscrowPaymentModal, type EscrowResult } from "@/components/EscrowPaymentModal";
+import { DeliveryAddressModal } from "@/components/DeliveryAddressModal";
 import withAuth from "../../components/withAuth";
 import { useCart, useOrders } from "@/lib/useCart";
 import { usePrivy } from "@privy-io/react-auth";
 import { useUser } from "@/lib/useUser";
-import type { CartItem } from "@/lib/types";
+import type { CartItem, DeliveryAddress } from "@/lib/types";
 
 function ShopPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, totalAmount } = useCart();
@@ -23,8 +24,10 @@ function ShopPage() {
   const { currentUser } = useUser();
   const router = useRouter();
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [enrichedCartItems, setEnrichedCartItems] = useState<(CartItem & { farmerWallet: string })[]>([]);
+  const [selectedDelivery, setSelectedDelivery] = useState<DeliveryAddress | null>(null);
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
 
   const deletePendingOrder = async (orderId: string) => {
@@ -33,13 +36,20 @@ function ShopPage() {
   };
 
   const handleProceedToCheckout = async () => {
-    // Fetch farmer wallet addresses for all cart items
+    // Step 1: open delivery address modal first
+    setIsDeliveryModalOpen(true);
+  };
+
+  const handleDeliveryConfirmed = async (address: DeliveryAddress) => {
+    setSelectedDelivery(address);
+    setIsDeliveryModalOpen(false);
+
+    // Step 2: enrich cart with farmer wallets
     const enrichedCart = await Promise.all(
       cart.map(async (item) => {
         try {
           const res = await fetch(`/api/products/${item.productId}`);
           const product = await res.json();
-          // Get farmer wallet from user API
           const userRes = await fetch(`/api/users/${product.farmerId}`);
           const farmer = await userRes.json();
           return { ...item, farmerWallet: farmer.wallet || "" };
@@ -51,7 +61,7 @@ function ShopPage() {
 
     const missingWallet = enrichedCart.find((i) => !i.farmerWallet);
     if (missingWallet) {
-      setNotification({ type: "error", message: `Farmer wallet address not found for "${missingWallet.productName}". Cannot process escrow payment.` });
+      setNotification({ type: "error", message: `Farmer wallet not found for "${missingWallet.productName}".` });
       return;
     }
 
@@ -67,7 +77,6 @@ function ShopPage() {
 
   const handleEscrowSuccess = async (results: EscrowResult[]) => {
     if (!pendingOrderId) return;
-    // Update order with escrow details
     await fetch(`/api/orders/${pendingOrderId}/escrow`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -76,6 +85,12 @@ function ShopPage() {
         escrowStatus: "locked",
         usdcAmount: Number(results[0]?.usdcAmount) / 1_000_000,
         items: results.map((r) => ({ productId: r.productId, escrowOrderId: r.orderId })),
+        // Save delivery address snapshot
+        deliveryFullName: selectedDelivery?.fullName,
+        deliveryPhone: selectedDelivery?.phone,
+        deliveryAddress: selectedDelivery?.addressLine,
+        deliveryCity: selectedDelivery?.city,
+        deliveryState: selectedDelivery?.state,
       }),
     });
     clearCart();
@@ -261,6 +276,16 @@ function ShopPage() {
           </Card>
         </div>
       </div>
+
+      {/* Delivery Address Modal */}
+      {currentUser && (
+        <DeliveryAddressModal
+          isOpen={isDeliveryModalOpen}
+          onClose={() => setIsDeliveryModalOpen(false)}
+          userId={currentUser.id}
+          onConfirm={handleDeliveryConfirmed}
+        />
+      )}
 
       {/* Escrow Payment Modal */}
       {pendingOrderId && (
