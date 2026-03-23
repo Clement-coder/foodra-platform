@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { usePrivy, useWallets, useSendTransaction } from "@privy-io/react-auth"
-import { useAccount, useSwitchChain } from "wagmi"
+import { useAccount } from "wagmi"
 import { ethers } from "ethers"
 import { QRCodeSVG } from "qrcode.react"
 import { FormInput } from "@/components/FormInput"
@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
 import { NotificationDiv } from "@/components/NotificationDiv"
 import { TransactionItem } from "@/components/TransactionItem"
-import { base, baseSepolia } from "viem/chains"
+import { baseSepolia } from "viem/chains"
 import type { Chain } from "viem"
 
 
@@ -30,7 +30,6 @@ function WalletPage() {
   const { wallets } = useWallets()
   const { chainId } = useAccount()
   const { sendTransaction } = useSendTransaction()
-  const { switchChain } = useSwitchChain()
   const [balance, setBalance] = useState<string>("0")
   const [ethToUsdRate, setEthToUsdRate] = useState<number | null>(null)
   const [ethToUsdcRate, setEthToUsdcRate] = useState<number | null>(null)
@@ -48,27 +47,20 @@ function WalletPage() {
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false)
   const [recipientError, setRecipientError] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
-  // const [selectedChain, setSelectedChain] = useState(baseSepolia)
-  const [selectedChain, setSelectedChain] = useState<Chain>(baseSepolia)
+  const [selectedChain] = useState<Chain>(baseSepolia)
 
-
-  const handleChainSwitch = (chainId: number) => {
-    switchChain({ chainId })
-    setSelectedChain(chainId === base.id ? base : baseSepolia)
-  }
+  const handleChainSwitch = (_chainId: number) => { /* locked to Base Sepolia */ }
 
   const fetchWalletData = async () => {
     if (user?.wallet?.address) {
       try {
-        // Add a small delay to avoid rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000))
 
-        const provider = new ethers.JsonRpcProvider(selectedChain.id === base.id ? "https://mainnet.base.org" : "https://sepolia.base.org")
+        const provider = new ethers.JsonRpcProvider("https://sepolia.base.org")
         const balance = await provider.getBalance(user.wallet.address)
         setBalance(parseFloat(ethers.formatEther(balance)).toFixed(6))
 
-        const network = selectedChain.id === base.id ? "mainnet" : "testnet"
-        const response = await fetch(`/api/wallet/transactions?address=${user.wallet.address}&network=${network}`)
+        const response = await fetch(`/api/wallet/transactions?address=${user.wallet.address}`)
         const data = await response.json()
 
         if (data.status === "1" && Array.isArray(data.result)) {
@@ -287,27 +279,9 @@ function WalletPage() {
 
         <div className="flex justify-end mb-6">
           <div className="inline-flex items-center gap-2 rounded-xl bg-slate-100 p-1.5 shadow-sm">
-            <button
-              onClick={() => handleChainSwitch(base.id)}
-              className={`rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                selectedChain.id === base.id
-                  ? "bg-[#118C4C] text-white shadow-md"
-                  : "text-slate-700 hover:bg-white hover:shadow-sm"
-              }`}
-            >
-              Mainnet
-            </button>
-
-            <button
-              onClick={() => handleChainSwitch(baseSepolia.id)}
-              className={`rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                selectedChain.id === baseSepolia.id
-                  ? "bg-[#118C4C] text-white shadow-md"
-                  : "text-slate-700 hover:bg-white hover:shadow-sm"
-              }`}
-            >
-              Testnet
-            </button>
+            <span className="rounded-lg px-5 py-2.5 text-sm font-semibold bg-[#118C4C] text-white shadow-md">
+              Base Sepolia (Testnet)
+            </span>
           </div>
         </div>
 
@@ -317,7 +291,7 @@ function WalletPage() {
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Transaction History</h2>
                 <p className="text-sm text-muted-foreground">
-                  Recent transactions on the {selectedChain.id === base.id ? "Base" : "Base Sepolia"} network.
+                  Recent transactions on the Base Sepolia network.
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">

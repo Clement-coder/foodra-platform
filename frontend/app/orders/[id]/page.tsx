@@ -25,7 +25,7 @@ function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [disputeOpen, setDisputeOpen] = useState(false);
-  const { confirmDelivery, raiseDispute, loading: escrowLoading } = useEscrow();
+  const { confirmDelivery, raiseDispute, loading: escrowLoading, error: escrowError } = useEscrow();
 
   const fetchOrder = () =>
     fetch(`/api/orders/${id}`).then((r) => r.json()).then(setOrder).finally(() => setLoading(false));
@@ -48,7 +48,7 @@ function OrderDetailPage() {
       setNotification({ type: "success", message: "Delivery confirmed! Payment released to farmer." });
       fetchOrder();
     } else {
-      setNotification({ type: "error", message: "Failed to confirm delivery. Please try again." });
+      setNotification({ type: "error", message: escrowError || "Failed to confirm delivery. Please try again." });
     }
   };
 
@@ -65,7 +65,7 @@ function OrderDetailPage() {
       setDisputeOpen(false);
       fetchOrder();
     } else {
-      setNotification({ type: "error", message: "Failed to raise dispute. Please try again." });
+      setNotification({ type: "error", message: escrowError || "Failed to raise dispute. Please try again." });
     }
   };
 
