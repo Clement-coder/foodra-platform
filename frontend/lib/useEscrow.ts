@@ -22,7 +22,17 @@ export function useEscrow() {
     if (!wallet) throw new Error("No wallet connected");
     if (!ESCROW_ADDRESS) throw new Error("Escrow contract address not configured");
     if (!USDC_ADDRESS) throw new Error("USDC contract address not configured");
+
+    // Force switch to the correct chain (Base Sepolia = 84532)
+    const requiredChainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 84532);
+    await wallet.switchChain(requiredChainId);
+
     const provider = new ethers.BrowserProvider(await wallet.getEthereumProvider());
+    const network = await provider.getNetwork();
+    if (Number(network.chainId) !== requiredChainId) {
+      throw new Error(`Wrong network. Please switch to Base Sepolia (chain ${requiredChainId}).`);
+    }
+
     const signer = await provider.getSigner();
     const escrow = new ethers.Contract(ESCROW_ADDRESS, ESCROW_ABI, signer);
     const usdc = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);

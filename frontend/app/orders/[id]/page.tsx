@@ -218,6 +218,46 @@ function OrderDetailPage() {
           </motion.div>
         )}
 
+        {/* Seller info */}
+        {order.farmers && order.farmers.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+            <Card className="border-[#118C4C]/20">
+              <CardHeader className="pb-3 border-b border-[#118C4C]/10">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <User className="h-4 w-4 text-[#118C4C]" /> Seller Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                {order.farmers.map((farmer) => (
+                  <a key={farmer.id} href={`/users/${farmer.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    {farmer.avatar ? (
+                      <Image src={farmer.avatar} alt={farmer.name} width={44} height={44} className="rounded-full object-cover border-2 border-[#118C4C]/20 flex-shrink-0" unoptimized />
+                    ) : (
+                      <div className="w-11 h-11 rounded-full bg-[#118C4C]/10 border-2 border-[#118C4C]/20 flex items-center justify-center flex-shrink-0">
+                        <User className="h-5 w-5 text-[#118C4C]" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm hover:underline underline-offset-2">{farmer.name || "—"}</p>
+                      {farmer.location && <p className="text-xs text-muted-foreground">{farmer.location}</p>}
+                      {farmer.phone && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Phone className="h-3 w-3" />{farmer.phone}
+                        </p>
+                      )}
+                      {farmer.email && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Mail className="h-3 w-3" />{farmer.email}
+                        </p>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
         {/* Escrow tx */}
         {order.escrowTxHash && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>

@@ -119,7 +119,7 @@ export function EscrowPaymentModal({ isOpen, onClose, onSuccessClose, cart, tota
           <Loader2 className="h-14 w-14 text-[#118C4C] animate-spin" />
           <p className="font-semibold text-foreground text-lg">Waiting for wallet signature...</p>
           <p className="text-sm text-muted-foreground text-center">
-            Please approve the transactions in your wallet. Do not close this window.
+            Please approve the transactions in your wallet. Make sure you are on <span className="font-medium text-foreground">Base Sepolia</span> network.
           </p>
         </div>
       )}
