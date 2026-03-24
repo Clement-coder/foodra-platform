@@ -45,6 +45,7 @@ function WalletPage() {
   const [transactionFilter, setTransactionFilter] = useState<"all" | "send" | "receive">("all")
   const [isRefreshingTransactions, setIsRefreshingTransactions] = useState(false)
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false)
+  const [usdcBalance, setUsdcBalance] = useState<string>("0")
   const [recipientError, setRecipientError] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
   const [selectedChain] = useState<Chain>(baseSepolia)
@@ -59,6 +60,18 @@ function WalletPage() {
         const provider = new ethers.JsonRpcProvider("https://sepolia.base.org")
         const balance = await provider.getBalance(user.wallet.address)
         setBalance(parseFloat(ethers.formatEther(balance)).toFixed(6))
+
+        // Fetch MockUSDC balance
+        const usdcAddress = process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS
+        if (usdcAddress) {
+          const usdcContract = new ethers.Contract(
+            usdcAddress,
+            ["function balanceOf(address) view returns (uint256)"],
+            provider
+          )
+          const raw: bigint = await usdcContract.balanceOf(user.wallet.address)
+          setUsdcBalance((Number(raw) / 1_000_000).toFixed(4))
+        }
 
         const response = await fetch(`/api/wallet/transactions?address=${user.wallet.address}`)
         const data = await response.json()
@@ -241,12 +254,10 @@ function WalletPage() {
               {balance} ETH
             </div>
             <div className="space-y-1 text-muted-foreground">
-              {ethToUsdcRate && (
-                <div className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                  <img src="/logos/usdc.png" alt="USDC" className="w-5 h-5" />
-                  ~${(parseFloat(balance) * ethToUsdcRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC
-                </div>
-              )}
+              <div className="text-lg sm:text-xl font-semibold flex items-center gap-2 text-blue-600">
+                <img src="/logos/usdc.png" alt="USDC" className="w-5 h-5" onError={(e) => (e.currentTarget.style.display = "none")} />
+                {usdcBalance} USDC <span className="text-xs font-normal text-muted-foreground">(MockUSDC — Testnet)</span>
+              </div>
               {ethToNgnRate && (
                 <div className="text-lg sm:text-xl font-semibold flex items-center gap-2">
                   <span className="text-green-600 font-bold text-xl">₦</span>
