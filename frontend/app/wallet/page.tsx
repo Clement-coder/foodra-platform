@@ -221,15 +221,16 @@ function WalletPage() {
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8">My Wallet</h1>
 
         {user?.wallet?.address && (
-          <Card className="mb-8 bg-gradient-to-br from-green-50 via-green-100 to-yellow-100">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 pb-2">
-              <h2 className="text-sm font-medium text-muted-foreground">Wallet Address</h2>
-              <Button variant="ghost" size="sm" onClick={copyToClipboard}>
-                <Copy className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <p className="text-base sm:text-lg font-mono break-all">{user.wallet.address}</p>
+          <Card className="mb-6 bg-gradient-to-br from-green-50 via-green-100 to-yellow-100">
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Wallet Address</p>
+              <div className="flex items-center gap-2">
+                <p className="font-mono text-sm flex-1 min-w-0 truncate">{user.wallet.address}</p>
+                <Button variant="ghost" size="sm" onClick={copyToClipboard} className="flex-shrink-0 h-8 w-8 p-0">
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="font-mono text-xs text-muted-foreground mt-1 sm:hidden break-all">{user.wallet.address}</p>
             </CardContent>
           </Card>
         )}
