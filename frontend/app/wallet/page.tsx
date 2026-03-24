@@ -7,7 +7,7 @@ import { useAccount } from "wagmi"
 import { ethers } from "ethers"
 import { QRCodeSVG } from "qrcode.react"
 import { FormInput } from "@/components/FormInput"
-import { DollarSign, History, PlusCircle, MinusCircle, ArrowUpCircle, ArrowDownCircle, Copy, RefreshCcw, Wallet, ChevronDown } from "lucide-react"
+import { DollarSign, History, PlusCircle, MinusCircle, ArrowUpCircle, ArrowDownCircle, Copy, RefreshCcw, Wallet, ChevronDown, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
@@ -48,6 +48,7 @@ function WalletPage() {
   const [isRefreshingTransactions, setIsRefreshingTransactions] = useState(false)
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false)
   const [usdcBalance, setUsdcBalance] = useState<string>("0")
+  const [balanceVisible, setBalanceVisible] = useState(true)
   const [recipientError, setRecipientError] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
   const [selectedChain] = useState<Chain>(baseSepolia)
@@ -237,32 +238,29 @@ function WalletPage() {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <h2 className="text-sm font-medium text-muted-foreground">Current Balance</h2>
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRefreshWalletData}
-                title="Refresh balance and rate"
-                disabled={isRefreshingBalance}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setBalanceVisible((v) => !v)} title="Toggle balance visibility">
+                {balanceVisible ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleRefreshWalletData} title="Refresh" disabled={isRefreshingBalance}>
                 <RefreshCcw className={`h-4 w-4 text-muted-foreground ${isRefreshingBalance ? "animate-spin" : ""}`} />
               </Button>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </div>
           </CardHeader>
           <CardContent>
-            {/* USDC — primary */}
             <div className="text-4xl sm:text-5xl font-bold text-[#118C4C] mb-1 flex items-center gap-3">
               <span className="text-2xl font-bold text-blue-600">USDC</span>
-              {usdcBalance}
+              {balanceVisible ? usdcBalance : "••••••"}
             </div>
             {usdNgnRate && (
               <p className="text-xl font-semibold text-muted-foreground mb-3">
-                ≈ ₦{(parseFloat(usdcBalance) * usdNgnRate).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} NGN
+                {balanceVisible
+                  ? `≈ ₦${(parseFloat(usdcBalance) * usdNgnRate).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} NGN`
+                  : "≈ ₦•••••• NGN"}
               </p>
             )}
-            {/* ETH — gas indicator only */}
             <p className="text-xs text-muted-foreground border-t border-border/50 pt-2 mt-2">
-              Gas balance: {balance} ETH (Base Sepolia)
+              Gas balance: {balanceVisible ? `${balance} ETH` : "•••••"} (Base Sepolia)
             </p>
             {usdNgnRate && (
               <p className="text-xs text-muted-foreground mt-1">
