@@ -22,20 +22,20 @@ export const USDC_ABI = [
 export const ESCROW_STATUS = ["LOCKED", "RELEASED", "REFUNDED", "DISPUTED"] as const;
 export type EscrowStatusType = typeof ESCROW_STATUS[number];
 
-/** Convert NGN amount to USDC (6 decimals) using CoinGecko rate */
+/** Get live USD/NGN rate — 1 USDC ≈ 1 USD */
 export async function getNgnToUsdcRate(): Promise<number> {
   try {
-    const res = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=usd-coin&vs_currencies=ngn",
-      { signal: AbortSignal.timeout(5000) }
-    );
+    // Use ExchangeRate API for accurate NGN rate
+    const res = await fetch("https://open.er-api.com/v6/latest/USD", {
+      signal: AbortSignal.timeout(5000),
+    });
     if (!res.ok) throw new Error("rate fetch failed");
     const data = await res.json();
-    const rate = data["usd-coin"]?.ngn;
+    const rate = data?.rates?.NGN;
     if (!rate || typeof rate !== "number" || rate <= 0) throw new Error("invalid rate");
-    return rate;
+    return rate; // NGN per 1 USDC
   } catch {
-    // Fallback: ~1 USD = 1600 NGN, 1 USDC ≈ 1 USD
+    // Fallback
     return 1600;
   }
 }
