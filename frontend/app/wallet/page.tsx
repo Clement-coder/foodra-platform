@@ -90,19 +90,23 @@ function WalletPage() {
 
   const fetchEthRate = async () => {
     try {
-      const rateResponse = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd,ngn")
-      const rateData = await rateResponse.json()
-      if (rateData.ethereum) {
-        if (rateData.ethereum.usd) {
-          setEthToUsdRate(rateData.ethereum.usd)
-          setEthToUsdcRate(rateData.ethereum.usd) // Assuming 1 USDC = 1 USD
-        }
-        if (rateData.ethereum.ngn) {
-          setEthToNgnRate(rateData.ethereum.ngn)
-        }
+      const [ethRes, fxRes] = await Promise.all([
+        fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"),
+        fetch("https://open.er-api.com/v6/latest/USD"),
+      ])
+      const ethData = await ethRes.json()
+      const fxData = await fxRes.json()
+
+      const ethUsd: number = ethData?.ethereum?.usd ?? 0
+      const usdNgn: number = fxData?.rates?.NGN ?? 1600
+
+      if (ethUsd) {
+        setEthToUsdRate(ethUsd)
+        setEthToUsdcRate(ethUsd)
+        setEthToNgnRate(ethUsd * usdNgn)
       }
     } catch (error) {
-      console.error("Error fetching ETH to USD rate:", error)
+      console.error("Error fetching rates:", error)
     }
   }
 
