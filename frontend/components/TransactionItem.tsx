@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ethers } from "ethers"
 import { ArrowDownCircle, ArrowUpCircle, ChevronDown, ExternalLink } from "lucide-react"
 
 interface Transaction {
@@ -11,114 +10,95 @@ interface Transaction {
   to: string;
   value: string;
   timeStamp: string;
+  type?: "eth" | "usdc";
+  tokenSymbol?: string;
+  tokenDecimals?: string;
 }
-
-import { base, baseSepolia } from "viem/chains";
-
-// ...
 
 interface TransactionItemProps {
   txn: Transaction;
   userAddress: string;
-  ethToUsdcRate: number | null;
-  ethToNgnRate: number | null;
-  selectedChain: any;
+  usdNgnRate: number | null;
 }
 
-export function TransactionItem({ txn, userAddress, ethToUsdcRate, ethToNgnRate, selectedChain }: TransactionItemProps) {
+export function TransactionItem({ txn, userAddress, usdNgnRate }: TransactionItemProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const isSender = txn.from.toLowerCase() === userAddress.toLowerCase()
-  const isReceiver = txn.to.toLowerCase() === userAddress.toLowerCase()
+  const isUsdc = txn.type === "usdc"
+  const decimals = Number(txn.tokenDecimals ?? 6)
 
-  const ethValue = parseFloat(ethers.formatEther(txn.value))
+  const displayValue = isUsdc
+    ? (Number(txn.value) / Math.pow(10, decimals)).toFixed(4)
+    : parseFloat((Number(txn.value) / 1e18).toFixed(8)).toString()
 
-  const toggleOpen = () => setIsOpen(!isOpen)
+  const ngnValue = isUsdc && usdNgnRate
+    ? (Number(txn.value) / Math.pow(10, decimals)) * usdNgnRate
+    : null
 
-  const basescanUrl = selectedChain.id === base.id ? "https://basescan.org" : "https://sepolia.basescan.org";
+  const label = isUsdc
+    ? `${isSender ? "Sent" : "Received"} USDC`
+    : `${isSender ? "Sent" : "Received"} ETH`
+
+  const symbol = isUsdc ? (txn.tokenSymbol || "USDC") : "ETH"
 
   return (
     <div className="border-b border-border last:border-b-0">
       <div
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 gap-2 cursor-pointer hover:bg-gray-50 transition-colors"
-        onClick={toggleOpen}
+        className="flex items-center justify-between p-3 sm:p-4 gap-2 cursor-pointer hover:bg-muted/30 transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
       >
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          {isReceiver ? (
-            <ArrowDownCircle className="h-5 w-5 text-[#118C4C] flex-shrink-0" />
-          ) : (
-            <ArrowUpCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground">
-              {isReceiver ? "Receive" : "Send"} ETH
-            </p>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate">
+        <div className="flex items-center gap-3">
+          {isSender
+            ? <ArrowUpCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+            : <ArrowDownCircle className="h-5 w-5 text-[#118C4C] flex-shrink-0" />
+          }
+          <div>
+            <p className="font-medium text-sm">{label}</p>
+            <p className="text-xs text-muted-foreground">
               {new Date(parseInt(txn.timeStamp) * 1000).toLocaleString()}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <p
-            className={`font-bold text-base sm:text-lg whitespace-nowrap ${
-              isReceiver ? "text-[#118C4C]" : "text-red-600"
-            }`}
-          >
-            {isReceiver ? "+" : "-"}
-            {ethValue.toFixed(8)} ETH
-          </p>
-          <motion.div
-            animate={{ rotate: isOpen ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className={`font-bold text-sm ${isSender ? "text-red-500" : "text-[#118C4C]"}`}>
+              {isSender ? "-" : "+"}{displayValue} {symbol}
+            </p>
+            {ngnValue !== null && (
+              <p className="text-xs text-muted-foreground">≈ ₦{ngnValue.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            )}
+          </div>
+          <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </motion.div>
         </div>
       </div>
+
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="bg-gray-50 px-4 pb-4 sm:px-8"
+            transition={{ duration: 0.2 }}
+            className="bg-muted/20 px-4 pb-4 sm:px-8 space-y-2 text-sm"
           >
-            <div className="pt-4 space-y-3 text-sm">
-              <div className="flex justify-between">
-                <p className="font-medium text-muted-foreground">
-                  {isReceiver ? "From:" : "To:"}
-                </p>
-                <p className="font-mono break-all">
-                  {isReceiver ? txn.from : txn.to}
-                </p>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className="font-medium text-muted-foreground">Transaction Hash:</p>
-                <a
-                  href={`${basescanUrl}/tx/${txn.hash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-blue-600 hover:underline"
-                >
-                  <p className="font-mono break-all truncate max-w-[150px] sm:max-w-xs">
-                    {txn.hash}
-                  </p>
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </div>
-              {ethToUsdcRate && (
-                <div className="flex justify-between">
-                  <p className="font-medium text-muted-foreground">Value (USDC):</p>
-                  <p className="font-mono">~${(ethValue * ethToUsdcRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                </div>
-              )}
-              {ethToNgnRate && (
-                <div className="flex justify-between">
-                  <p className="font-medium text-muted-foreground">Value (NGN):</p>
-                  <p className="font-mono">~₦{(ethValue * ethToNgnRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                </div>
-              )}
+            <div className="pt-3 flex justify-between gap-4">
+              <span className="text-muted-foreground">{isSender ? "To:" : "From:"}</span>
+              <span className="font-mono text-xs break-all">{isSender ? txn.to : txn.from}</span>
+            </div>
+            <div className="flex justify-between items-center gap-4">
+              <span className="text-muted-foreground">Tx Hash:</span>
+              <a
+                href={`https://sepolia.basescan.org/tx/${txn.hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-[#118C4C] hover:underline font-mono text-xs truncate max-w-[180px]"
+              >
+                {txn.hash.slice(0, 12)}...{txn.hash.slice(-8)}
+                <ExternalLink className="h-3 w-3 flex-shrink-0" />
+              </a>
             </div>
           </motion.div>
         )}
