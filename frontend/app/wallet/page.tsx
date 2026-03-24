@@ -23,6 +23,9 @@ interface Transaction {
   to: string;
   value: string;
   timeStamp: string;
+  type?: "eth" | "usdc";
+  tokenSymbol?: string;
+  tokenDecimals?: string;
 }
 
 function WalletPage() {
@@ -31,9 +34,8 @@ function WalletPage() {
   const { chainId } = useAccount()
   const { sendTransaction } = useSendTransaction()
   const [balance, setBalance] = useState<string>("0")
+  const [usdNgnRate, setUsdNgnRate] = useState<number | null>(null)
   const [ethToUsdRate, setEthToUsdRate] = useState<number | null>(null)
-  const [ethToUsdcRate, setEthToUsdcRate] = useState<number | null>(null)
-  const [ethToNgnRate, setEthToNgnRate] = useState<number | null>(null)
   const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false)
   const [isWithdrawFundsModalOpen, setIsWithdrawFundsModalOpen] = useState(false)
   const [isConfirmWithdrawModalOpen, setIsConfirmWithdrawModalOpen] = useState(false)
@@ -96,15 +98,10 @@ function WalletPage() {
       ])
       const ethData = await ethRes.json()
       const fxData = await fxRes.json()
-
       const ethUsd: number = ethData?.ethereum?.usd ?? 0
       const usdNgn: number = fxData?.rates?.NGN ?? 1600
-
-      if (ethUsd) {
-        setEthToUsdRate(ethUsd)
-        setEthToUsdcRate(ethUsd)
-        setEthToNgnRate(ethUsd * usdNgn)
-      }
+      if (ethUsd) setEthToUsdRate(ethUsd)
+      setUsdNgnRate(usdNgn)
     } catch (error) {
       console.error("Error fetching rates:", error)
     }
@@ -253,29 +250,23 @@ function WalletPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#118C4C] mb-2 flex items-center gap-2">
-              <img src="/logos/eth.png" alt="ETH" className="w-8 h-8 sm:w-10 sm:h-10" />
-              {balance} ETH
+            {/* USDC — primary */}
+            <div className="text-4xl sm:text-5xl font-bold text-[#118C4C] mb-1 flex items-center gap-3">
+              <span className="text-2xl font-bold text-blue-600">USDC</span>
+              {usdcBalance}
             </div>
-            <div className="space-y-1 text-muted-foreground">
-              <div className="text-lg sm:text-xl font-semibold flex items-center gap-2 text-blue-600">
-                <img src="/logos/usdc.png" alt="USDC" className="w-5 h-5" onError={(e) => (e.currentTarget.style.display = "none")} />
-                {usdcBalance} USDC
-                {ethToUsdRate && (
-                  <span className="text-sm font-normal text-muted-foreground">
-                    ≈ ₦{(parseFloat(usdcBalance) * (ethToNgnRate! / ethToUsdRate)).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                )}
-              </div>
-              {ethToNgnRate && ethToUsdRate && (
-                <div className="text-sm text-muted-foreground">
-                  ETH: {balance} ≈ ₦{(parseFloat(balance) * ethToNgnRate).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-              )}
-            </div>
-            {ethToUsdRate && ethToNgnRate && (
-              <p className="mt-4 text-xs text-muted-foreground">
-                1 USDC ≈ ₦{(ethToNgnRate / ethToUsdRate).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &nbsp;|&nbsp; 1 ETH = ${ethToUsdRate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {usdNgnRate && (
+              <p className="text-xl font-semibold text-muted-foreground mb-3">
+                ≈ ₦{(parseFloat(usdcBalance) * usdNgnRate).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} NGN
+              </p>
+            )}
+            {/* ETH — gas indicator only */}
+            <p className="text-xs text-muted-foreground border-t border-border/50 pt-2 mt-2">
+              Gas balance: {balance} ETH (Base Sepolia)
+            </p>
+            {usdNgnRate && (
+              <p className="text-xs text-muted-foreground mt-1">
+                1 USDC ≈ ₦{usdNgnRate.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             )}
           </CardContent>
@@ -367,12 +358,10 @@ function WalletPage() {
               <div className="divide-y divide-border">
                 {filteredTransactions.map((txn) => (
                   <TransactionItem
-                    key={txn.hash}
+                    key={txn.hash + txn.type}
                     txn={txn}
                     userAddress={user!.wallet!.address}
-                    ethToUsdcRate={ethToUsdcRate}
-                    ethToNgnRate={ethToNgnRate}
-                    selectedChain={selectedChain}
+                    usdNgnRate={usdNgnRate}
                   />
                 ))}
               </div>
@@ -430,10 +419,9 @@ function WalletPage() {
               required
             />
             {amountError && <p className="text-red-500 text-sm mt-1">{amountError}</p>}
-            {parseFloat(withdrawAmount) > 0 && ethToUsdcRate && ethToNgnRate && (
+            {parseFloat(withdrawAmount) > 0 && ethToUsdRate && usdNgnRate && (
               <div className="mt-2 text-sm text-muted-foreground">
-                <p>~${(parseFloat(withdrawAmount) * ethToUsdcRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDC</p>
-                <p>~₦{(parseFloat(withdrawAmount) * ethToNgnRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} NGN</p>
+                <p>~₦{(parseFloat(withdrawAmount) * ethToUsdRate * usdNgnRate).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} NGN</p>
               </div>
             )}
           </div>
@@ -458,10 +446,9 @@ function WalletPage() {
             <div>
               <p className="text-sm text-muted-foreground">Amount</p>
               <p className="font-bold text-lg">{withdrawAmount} ETH</p>
-              {ethToUsdcRate && ethToNgnRate && (
+              {ethToUsdRate && usdNgnRate && (
                 <div className="mt-1 text-sm text-muted-foreground">
-                  <p>~${(parseFloat(withdrawAmount) * ethToUsdcRate).toFixed(2)} USDC</p>
-                  <p>~₦{(parseFloat(withdrawAmount) * ethToNgnRate).toFixed(2)} NGN</p>
+                  <p>~₦{(parseFloat(withdrawAmount) * ethToUsdRate * usdNgnRate).toFixed(2)} NGN</p>
                 </div>
               )}
             </div>
