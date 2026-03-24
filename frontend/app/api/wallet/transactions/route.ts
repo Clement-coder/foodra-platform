@@ -8,14 +8,30 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Address is required" }, { status: 400 })
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_BASESCAN_API_KEY
-  const url = `https://api.etherscan.io/v2/api?chainid=84532&module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`
+  const url = `https://base-sepolia.blockscout.com/api/v2/addresses/${address}/transactions`
 
   try {
-    const res = await fetch(url, { next: { revalidate: 30 } })
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 30 },
+    })
+
     if (!res.ok) return NextResponse.json({ error: "Failed to fetch transactions" }, { status: res.status })
+
     const data = await res.json()
-    return NextResponse.json(data)
+
+    // Normalize to the format the wallet page expects
+    const items = (data.items ?? []).map((tx: any) => ({
+      hash: tx.hash,
+      from: tx.from?.hash || "",
+      to: tx.to?.hash || "",
+      value: tx.value || "0",
+      timeStamp: tx.timestamp ? String(Math.floor(new Date(tx.timestamp).getTime() / 1000)) : "0",
+      isError: tx.result === "success" ? "0" : "1",
+      methodId: tx.method || "",
+    }))
+
+    return NextResponse.json({ status: "1", message: "OK", result: items })
   } catch (error) {
     console.error("Transaction fetch error:", error)
     return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 500 })
