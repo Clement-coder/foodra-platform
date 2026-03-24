@@ -260,18 +260,22 @@ function WalletPage() {
             <div className="space-y-1 text-muted-foreground">
               <div className="text-lg sm:text-xl font-semibold flex items-center gap-2 text-blue-600">
                 <img src="/logos/usdc.png" alt="USDC" className="w-5 h-5" onError={(e) => (e.currentTarget.style.display = "none")} />
-                {usdcBalance} USDC <span className="text-xs font-normal text-muted-foreground">(MockUSDC — Testnet)</span>
+                {usdcBalance} USDC
+                {ethToUsdRate && (
+                  <span className="text-sm font-normal text-muted-foreground">
+                    ≈ ₦{(parseFloat(usdcBalance) * (ethToNgnRate! / ethToUsdRate)).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                )}
               </div>
-              {ethToNgnRate && (
-                <div className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                  <span className="text-green-600 font-bold text-xl">₦</span>
-                  ~₦{(parseFloat(balance) * ethToNgnRate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} NGN
+              {ethToNgnRate && ethToUsdRate && (
+                <div className="text-sm text-muted-foreground">
+                  ETH: {balance} ≈ ₦{(parseFloat(balance) * ethToNgnRate).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               )}
             </div>
-            {ethToUsdRate && (
-              <p className="mt-4 text-sm text-muted-foreground flex items-center gap-1">
-                Current rate: 1 ETH = ${ethToUsdRate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+            {ethToUsdRate && ethToNgnRate && (
+              <p className="mt-4 text-xs text-muted-foreground">
+                1 USDC ≈ ₦{(ethToNgnRate / ethToUsdRate).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} &nbsp;|&nbsp; 1 ETH = ${ethToUsdRate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             )}
           </CardContent>
