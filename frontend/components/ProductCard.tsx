@@ -126,11 +126,10 @@ export function ProductCard({ product }: ProductCardProps) {
             <Button
               onClick={handleAddToCart}
               disabled={isAdding || availableQuantity <= 0 || isOwnProduct}
-              className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1 shadow-md shadow-[#118C4C]/20 text-xs sm:text-sm disabled:opacity-50 whitespace-nowrap"
+              size="icon"
+              className="shrink-0 bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-md shadow-[#118C4C]/20 disabled:opacity-50 h-9 w-9"
             >
-              <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden xs:inline">{isOwnProduct ? "Your Product" : availableQuantity <= 0 ? "Out of Stock" : isAdding ? "Added!" : "Add"}</span>
-              <span className="xs:hidden">{isOwnProduct ? "Yours" : availableQuantity <= 0 ? "Out" : isAdding ? "✓" : "Add"}</span>
+              {isAdding ? <span className="text-xs">✓</span> : <ShoppingCart className="h-4 w-4" />}
             </Button>
             <Button
               type="button"
@@ -140,7 +139,7 @@ export function ProductCard({ product }: ProductCardProps) {
               onClick={() => setIsShareModalOpen(true)}
               aria-label={`Share ${product.productName}`}
             >
-              <Share2 className="h-3 w-3 sm:h-4 sm:w-4 text-[#118C4C]" />
+              <Share2 className="h-4 w-4 text-[#118C4C]" />
             </Button>
           </CardFooter>
         </Card>
