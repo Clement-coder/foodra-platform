@@ -58,22 +58,21 @@ function ProfilePage() {
     if (!file || !user?.id) return
     setAvatarUploading(true)
     try {
-      const ext = file.name.split(".").pop()
-      const path = `${user.id}/avatar.${ext}`
-      await supabase.storage.from("avatars").remove([path])
-      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true })
-      if (uploadError) throw uploadError
-      const { data } = supabase.storage.from("avatars").getPublicUrl(path)
-      // Update avatar_url in users table via sync PATCH
-      await fetch("/api/users/sync", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ privyId: privyUser?.id, avatar_url: data.publicUrl }),
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
       })
-      // Refresh user
+      const res = await fetch("/api/users/avatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base64, userId: user.id }),
+      })
+      if (!res.ok) throw new Error("Upload failed")
       window.location.reload()
     } catch {
-      setNotification({ type: "error", message: "Failed to upload avatar" })
+      setNotification({ type: "error", message: "Failed to upload avatar. Please try again." })
     } finally {
       setAvatarUploading(false)
       e.target.value = ""
@@ -492,6 +491,24 @@ function ProfilePage() {
 
       <ProfileCompletionModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Avatar upload inside edit modal */}
+          <div className="flex flex-col items-center gap-2 pb-2">
+            <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#118C4C]">
+                {user?.avatar ? (
+                  <img src={user.avatar} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[#118C4C] text-white text-2xl font-bold">
+                    {(user?.name || "U")[0].toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                {avatarUploading ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Camera className="w-6 h-6 text-white" />}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Click photo to change avatar</p>
+          </div>
           <FormInput
             label="Full Name"
             {...register("name")}
