@@ -26,13 +26,30 @@ export async function POST(request: Request) {
   if (!supabaseAdmin) return NextResponse.json({ error: "Server error" }, { status: 500 })
 
   const body = await request.json()
-  const { userId, message, imageUrl, isAdminReply } = body
+  const { userId, message, imageBase64, isAdminReply } = body
 
-  if (!userId || !message) return NextResponse.json({ error: "userId and message required" }, { status: 400 })
+  if (!userId || (!message && !imageBase64)) return NextResponse.json({ error: "userId and message or image required" }, { status: 400 })
+
+  let imageUrl: string | null = null
+
+  if (imageBase64) {
+    const match = imageBase64.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/)
+    if (match) {
+      const [, mimeType, base64Data] = match
+      const ext = mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg"
+      const buffer = Buffer.from(base64Data, "base64")
+      const path = `support/${userId}/${Date.now()}.${ext}`
+      const { error: uploadError } = await supabaseAdmin.storage.from("avatars").upload(path, buffer, { contentType: mimeType })
+      if (!uploadError) {
+        const { data } = supabaseAdmin.storage.from("avatars").getPublicUrl(path)
+        imageUrl = data.publicUrl
+      }
+    }
+  }
 
   const { data, error } = await supabaseAdmin
     .from("support_messages")
-    .insert({ user_id: userId, message, image_url: imageUrl || null, is_admin_reply: isAdminReply || false })
+    .insert({ user_id: userId, message: message || "📎 Image", image_url: imageUrl, is_admin_reply: isAdminReply || false })
     .select("*")
     .single()
 
