@@ -52,7 +52,7 @@ export function ProductCard({ product }: ProductCardProps) {
       />
       <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
         <Card className="overflow-hidden h-full flex flex-col border-[#118C4C]/20 hover:border-[#118C4C]/40 hover:shadow-lg hover:shadow-[#118C4C]/10 transition-all">
-          <div className="relative h-48 w-full bg-muted">
+          <div className="relative h-28 sm:h-48 w-full bg-muted">
             {product.image ? (
               <Image
                 src={product.image}
@@ -78,46 +78,46 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
           </div>
 
-          <CardContent className="flex-1 p-4">
-            <h3 className="font-semibold text-lg mb-2 line-clamp-1">
+          <CardContent className="flex-1 p-2 sm:p-4">
+            <h3 className="font-semibold text-sm sm:text-lg mb-1 sm:mb-2 line-clamp-1">
               {product.productName}
             </h3>
-            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+            <p className="text-xs text-muted-foreground mb-2 sm:mb-3 line-clamp-2 hidden sm:block">
               {product.description}
             </p>
 
             {/* Farmer Info */}
-            <div className="flex items-center gap-2 mb-4 p-2 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/10">
+            <div className="flex items-center gap-1.5 mb-2 sm:mb-4 p-1.5 sm:p-2 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={product.farmerAvatar || generateAvatarUrl(product.farmerId)}
                 alt={product.farmerName}
-                className="h-8 w-8 rounded-full object-cover border-2 border-[#118C4C]/30"
+                className="h-5 w-5 sm:h-8 sm:w-8 rounded-full object-cover border-2 border-[#118C4C]/30"
                 referrerPolicy="no-referrer"
               />
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-xs sm:text-sm font-medium text-foreground truncate">
                 {product.farmerName}
               </span>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 text-[#118C4C]" />
-                <span>{product.location}</span>
+            <div className="space-y-1 sm:space-y-2">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3 text-[#118C4C] flex-shrink-0" />
+                <span className="truncate">{product.location}</span>
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-[#118C4C]">
+              <div className="flex items-baseline gap-1">
+                <span className="text-base sm:text-2xl font-bold text-[#118C4C]">
                   ₦{product.pricePerUnit.toLocaleString()}
                 </span>
-                <span className="text-sm text-muted-foreground">per unit</span>
+                <span className="text-xs text-muted-foreground hidden sm:inline">per unit</span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {availableQuantity} units available
+              <p className="text-xs text-muted-foreground">
+                {availableQuantity} units
               </p>
             </div>
           </CardContent>
 
-          <CardFooter className="p-4 pt-0 flex gap-2">
+          <CardFooter className="p-2 sm:p-4 pt-0 flex gap-1.5 sm:gap-2">
             <Link href={`/marketplace/${product.id}`} className="flex-1">
               <button className="w-full border-2 border-[#118C4C] hover:bg-[#118C4C] hover:text-white duration-300 ease-in-out rounded-xl text-[#118C4C] text-center py-2 px-2 bg-transparent font-medium text-xs sm:text-sm whitespace-nowrap">
                 View
