@@ -8,6 +8,7 @@ import Footer from "@/components/Footer"
 import { CartProvider } from "@/lib/useCart"
 import "./globals.css"
 import Providers from "./Provider"
+import { SupportChat } from "@/components/SupportChat"
 
 // ---- LOCAL FONTS ----
 
@@ -126,6 +127,7 @@ export default function RootLayout({
               <Footer />
             </div>
             <BottomTabBar />
+            <SupportChat />
           </CartProvider>
           <Analytics />
         </Providers>

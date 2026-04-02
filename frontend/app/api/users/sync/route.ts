@@ -14,6 +14,7 @@ type UpdateBody = {
   phone?: string
   location?: string
   role?: "farmer" | "buyer" | "admin"
+  avatar_url?: string
 }
 
 const mapUser = (u: any) => ({
@@ -127,6 +128,7 @@ export async function PATCH(request: Request) {
 
     const updatePayload: Record<string, string | null> = {}
     if ("phone" in body) updatePayload.phone = body.phone || null
+    if ("avatar_url" in body) updatePayload.avatar_url = body.avatar_url || null
     if ("location" in body) updatePayload.location = body.location || null
     if ("role" in body && body.role) updatePayload.role = body.role
 

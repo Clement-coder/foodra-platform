@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {
@@ -17,6 +17,9 @@ import {
   CalendarDays,
   Package,
   TrendingUp,
+  ShieldCheck,
+  Camera,
+  Loader2,
 } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -47,6 +50,35 @@ function ProfilePage() {
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [showWallet, setShowWallet] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user?.id) return
+    setAvatarUploading(true)
+    try {
+      const ext = file.name.split(".").pop()
+      const path = `${user.id}/avatar.${ext}`
+      await supabase.storage.from("avatars").remove([path])
+      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true })
+      if (uploadError) throw uploadError
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path)
+      // Update avatar_url in users table via sync PATCH
+      await fetch("/api/users/sync", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ privyId: privyUser?.id, avatar_url: data.publicUrl }),
+      })
+      // Refresh user
+      window.location.reload()
+    } catch {
+      setNotification({ type: "error", message: "Failed to upload avatar" })
+    } finally {
+      setAvatarUploading(false)
+      e.target.value = ""
+    }
+  }
   const [copied, setCopied] = useState(false)
   const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
   const [userProducts, setUserProducts] = useState<Product[]>([])
@@ -268,14 +300,20 @@ function ProfilePage() {
         <Card className="mb-8">
           <CardHeader className="p-6">
             <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="w-16 h-16 rounded-full overflow-hidden border">
-                {user.avatar ? (
-                  <img src={user.avatar} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-[#118C4C] text-white">
-                    <UserIcon />
-                  </div>
-                )}
+              <div className="relative w-16 h-16 group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+                <div className="w-16 h-16 rounded-full overflow-hidden border">
+                  {user.avatar ? (
+                    <img src={user.avatar} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-[#118C4C] text-white">
+                      <UserIcon />
+                    </div>
+                  )}
+                </div>
+                <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {avatarUploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
+                </div>
+                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </div>
 
               <div className="flex-1">
@@ -345,6 +383,14 @@ function ProfilePage() {
                   <LogOut className="h-3.5 w-3.5 sm:mr-1.5" />
                   <span className="hidden sm:inline">Sign Out</span>
                 </Button>
+                {user.role === "admin" && (
+                  <a href="/admin" className="flex-1 sm:flex-initial">
+                    <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-white px-3">
+                      <ShieldCheck className="h-3.5 w-3.5 sm:mr-1.5" />
+                      <span className="hidden sm:inline">Admin Panel</span>
+                    </Button>
+                  </a>
+                )}
               </div>
             </div>
 
