@@ -37,7 +37,6 @@ export function NavBar() {
   const [users, setUsers] = useState<User[]>([]);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [hasLoadedSuggestions, setHasLoadedSuggestions] = useState(false);
-  const [isScrolling, setIsScrolling] = useState(false);
 
   useEffect(() => {
     try {
@@ -174,22 +173,6 @@ export function NavBar() {
     };
   }, [isSearchOpen]);
 
-  useEffect(() => {
-    let scrollTimeout: NodeJS.Timeout;
-
-    const handleScroll = () => {
-      setIsScrolling(true);
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => setIsScrolling(false), 150);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      clearTimeout(scrollTimeout);
-    };
-  }, []);
-
   return (
     <>
       <nav className="sticky top-0 z-50 w-full p-3 bg-background backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -303,11 +286,9 @@ export function NavBar() {
           </div>
         </div>
 
-          <motion.form
+          <form
             onSubmit={handleSearch}
-            animate={{ height: isScrolling ? 0 : "auto", paddingBottom: isScrolling ? 0 : 8, paddingTop: isScrolling ? 0 : 4 }}
-            transition={{ duration: 0.2 }}
-            className="md:hidden overflow-hidden"
+            className="md:hidden pb-2 pt-1"
           >
             <div>
               <div className="relative w-full">
@@ -326,7 +307,7 @@ export function NavBar() {
                 />
               </div>
             </div>
-          </motion.form>
+          </form>
         </div>
       </nav>
 
