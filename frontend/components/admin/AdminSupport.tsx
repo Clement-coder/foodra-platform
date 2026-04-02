@@ -1,0 +1,186 @@
+"use client"
+
+import { useState, useRef } from "react"
+import { ChevronDown, ChevronUp, Send, Paperclip, Loader2, Image as ImageIcon } from "lucide-react"
+import { supabase } from "@/lib/supabase"
+import type { AdminData } from "@/app/admin/page"
+
+export default function AdminSupport({
+  data, privyId, onRefresh
+}: { data: AdminData; privyId?: string; onRefresh: () => void }) {
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState<Record<string, string>>({})
+  const [sending, setSending] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const activeUserId = useRef<string | null>(null)
+
+  // Group messages by user, sorted oldest first per thread
+  const byUser: Record<string, any[]> = {}
+  for (const msg of [...data.supportMessages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())) {
+    if (!byUser[msg.user_id]) byUser[msg.user_id] = []
+    byUser[msg.user_id].push(msg)
+  }
+
+  // Sort user threads by most recent message (newest first)
+  const sortedUserIds = Object.keys(byUser).sort((a, b) => {
+    const lastA = byUser[a][byUser[a].length - 1]?.created_at || ""
+    const lastB = byUser[b][byUser[b].length - 1]?.created_at || ""
+    return new Date(lastB).getTime() - new Date(lastA).getTime()
+  })
+
+  const sendReply = async (userId: string, imageUrl?: string) => {
+    const text = replyText[userId]?.trim()
+    if (!text && !imageUrl) return
+    setSending(true)
+    await fetch("/api/support", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, message: text || "📎 Image", imageUrl: imageUrl || null, isAdminReply: true }),
+    })
+    setReplyText(prev => ({ ...prev, [userId]: "" }))
+    setSending(false)
+    onRefresh()
+  }
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    const userId = activeUserId.current
+    if (!file || !userId) return
+    setUploading(true)
+    const ext = file.name.split(".").pop()
+    const path = `support/admin/${Date.now()}.${ext}`
+    const { error } = await supabase.storage.from("product-images").upload(path, file)
+    if (!error) {
+      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path)
+      await sendReply(userId, urlData.publicUrl)
+    }
+    setUploading(false)
+    e.target.value = ""
+  }
+
+  if (sortedUserIds.length === 0) return (
+    <div className="p-12 text-center text-gray-400">
+      <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+        <ImageIcon className="w-6 h-6 opacity-40" />
+      </div>
+      <p className="font-medium">No support messages yet</p>
+    </div>
+  )
+
+  return (
+    <div>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      <div className="divide-y divide-gray-100 dark:divide-gray-800">
+        {sortedUserIds.map(userId => {
+          const messages = byUser[userId]
+          const user = data.users.find((u: any) => u.id === userId)
+          const isOpen = expanded === userId
+          const lastMsg = messages[messages.length - 1]
+          const unread = messages.filter((m: any) => !m.is_admin_reply).length
+
+          return (
+            <div key={userId}>
+              <button
+                onClick={() => setExpanded(isOpen ? null : userId)}
+                className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 text-left transition-colors"
+              >
+                {user?.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                    {(user?.name || "U")[0].toUpperCase()}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-gray-900 dark:text-white text-sm">{user?.name || "Unknown User"}</span>
+                    <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                      {new Date(lastMsg?.created_at).toLocaleDateString([], { month: "short", day: "numeric" })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <p className="text-xs text-gray-400 truncate max-w-[200px]">
+                      {lastMsg?.is_admin_reply ? "You: " : ""}{lastMsg?.message}
+                    </p>
+                    {unread > 0 && (
+                      <span className="ml-2 flex-shrink-0 w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                        {unread}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-shrink-0 ml-2 text-gray-400">
+                  {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
+              </button>
+
+              {isOpen && (
+                <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30">
+                  {/* Messages */}
+                  <div className="px-5 py-4 space-y-3 max-h-80 overflow-y-auto">
+                    {messages.map((msg: any) => (
+                      <div key={msg.id} className={`flex items-end gap-2 ${msg.is_admin_reply ? "flex-row-reverse" : "flex-row"}`}>
+                        {!msg.is_admin_reply && (
+                          user?.avatar_url ? (
+                            <img src={user.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0 mb-1" />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mb-1">
+                              {(user?.name || "U")[0].toUpperCase()}
+                            </div>
+                          )
+                        )}
+                        <div className={`max-w-[75%] ${msg.is_admin_reply ? "items-end" : "items-start"} flex flex-col`}>
+                          <div className={`rounded-2xl px-4 py-2.5 text-sm ${
+                            msg.is_admin_reply
+                              ? "bg-green-600 text-white rounded-br-sm"
+                              : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-bl-sm shadow-sm"
+                          }`}>
+                            {msg.image_url && (
+                              <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
+                                <img src={msg.image_url} alt="attachment" className="rounded-xl mb-2 max-w-full max-h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity" />
+                              </a>
+                            )}
+                            {msg.message !== "📎 Image" && <p className="leading-relaxed">{msg.message}</p>}
+                          </div>
+                          <span className={`text-[10px] mt-1 text-gray-400 ${msg.is_admin_reply ? "text-right" : "text-left"}`}>
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Reply input */}
+                  <div className="px-5 pb-4 flex items-center gap-2">
+                    <button
+                      onClick={() => { activeUserId.current = userId; fileRef.current?.click() }}
+                      disabled={uploading}
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-green-600 hover:border-green-500 transition-colors flex-shrink-0"
+                    >
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+                    </button>
+                    <input
+                      value={replyText[userId] || ""}
+                      onChange={e => setReplyText(prev => ({ ...prev, [userId]: e.target.value }))}
+                      onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendReply(userId)}
+                      placeholder="Reply to user…"
+                      className="flex-1 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white placeholder-gray-400"
+                    />
+                    <button
+                      onClick={() => sendReply(userId)}
+                      disabled={sending || !replyText[userId]?.trim()}
+                      className="w-9 h-9 bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
+                    >
+                      {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

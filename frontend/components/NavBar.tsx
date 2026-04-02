@@ -276,7 +276,27 @@ export function NavBar() {
 
             {/* Auth buttons */}
             {authenticated && currentUser && !isLoading ? (
-              <ProfileDropdown user={currentUser} />
+              <>
+                {/* Mobile: avatar link to profile */}
+                <a href="/profile" className="md:hidden flex-shrink-0">
+                  {currentUser.avatar ? (
+                    <img
+                      src={currentUser.avatar}
+                      alt={currentUser.name}
+                      referrerPolicy="no-referrer"
+                      className="w-9 h-9 rounded-full object-cover border-2 border-[#118C4C]"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-[#118C4C] flex items-center justify-center text-white text-sm font-bold border-2 border-[#118C4C]">
+                      {(currentUser.name || "U")[0].toUpperCase()}
+                    </div>
+                  )}
+                </a>
+                {/* Desktop: full dropdown */}
+                <div className="hidden md:block">
+                  <ProfileDropdown user={currentUser} />
+                </div>
+              </>
             ) : (
               <SignupButton />
             )}
