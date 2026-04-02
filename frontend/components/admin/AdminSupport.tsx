@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react"
 import { ChevronDown, ChevronUp, Send, Paperclip, Loader2, Image as ImageIcon } from "lucide-react"
-import { supabase } from "@/lib/supabase"
 import type { AdminData } from "@/app/admin/page"
 
 export default function AdminSupport({
@@ -29,14 +28,14 @@ export default function AdminSupport({
     return new Date(lastB).getTime() - new Date(lastA).getTime()
   })
 
-  const sendReply = async (userId: string, imageUrl?: string) => {
+  const sendReply = async (userId: string, imageBase64?: string) => {
     const text = replyText[userId]?.trim()
-    if (!text && !imageUrl) return
+    if (!text && !imageBase64) return
     setSending(true)
     await fetch("/api/support", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, message: text || "📎 Image", imageUrl: imageUrl || null, isAdminReply: true }),
+      body: JSON.stringify({ userId, message: text || "📎 Image", imageBase64: imageBase64 || null, isAdminReply: true }),
     })
     setReplyText(prev => ({ ...prev, [userId]: "" }))
     setSending(false)
@@ -48,13 +47,13 @@ export default function AdminSupport({
     const userId = activeUserId.current
     if (!file || !userId) return
     setUploading(true)
-    const ext = file.name.split(".").pop()
-    const path = `support/admin/${Date.now()}.${ext}`
-    const { error } = await supabase.storage.from("product-images").upload(path, file)
-    if (!error) {
-      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path)
-      await sendReply(userId, urlData.publicUrl)
-    }
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+    await sendReply(userId, base64)
     setUploading(false)
     e.target.value = ""
   }
