@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { MessageCircle, X, Send, Paperclip, Loader2 } from "lucide-react"
+import { MessageCircle, X, Send, Paperclip, Loader2, Bot } from "lucide-react"
 import { useUser } from "@/lib/useUser"
 
 interface SupportMessage {
@@ -13,6 +13,8 @@ interface SupportMessage {
   created_at: string
 }
 
+const BTN_SIZE = 56
+
 export function SupportChat() {
   const { currentUser } = useUser()
   const [open, setOpen] = useState(false)
@@ -23,6 +25,42 @@ export function SupportChat() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Draggable — stored as { right, bottom } to avoid overflow
+  const [side, setSide] = useState<"left" | "right">("right")
+  const [yPos, setYPos] = useState(24) // distance from bottom
+  const dragging = useRef(false)
+  const hasDragged = useRef(false)
+  const startPointer = useRef({ x: 0, y: 0 })
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    dragging.current = true
+    hasDragged.current = false
+    startPointer.current = { x: e.clientX, y: e.clientY }
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+  }
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return
+    const dx = Math.abs(e.clientX - startPointer.current.x)
+    const dy = Math.abs(e.clientY - startPointer.current.y)
+    if (dx > 4 || dy > 4) hasDragged.current = true
+    if (!hasDragged.current) return
+
+    // Clamp Y so button stays on screen
+    const newBottom = window.innerHeight - e.clientY - BTN_SIZE / 2
+    setYPos(Math.max(8, Math.min(newBottom, window.innerHeight - BTN_SIZE - 8)))
+  }
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    dragging.current = false
+    if (!hasDragged.current) {
+      setOpen(o => !o)
+    } else {
+      // Snap to left or right side
+      setSide(e.clientX < window.innerWidth / 2 ? "left" : "right")
+    }
+  }
 
   const fetchMessages = useCallback(async () => {
     if (!currentUser?.id) return
@@ -45,8 +83,6 @@ export function SupportChat() {
     if (!text.trim() && !imageBase64) return
     if (!currentUser?.id) return
     setSending(true)
-
-    // Optimistic update
     const optimistic: SupportMessage = {
       id: `tmp-${Date.now()}`,
       user_id: currentUser.id,
@@ -58,7 +94,6 @@ export function SupportChat() {
     setMessages(prev => [...prev, optimistic])
     const sentText = text
     setText("")
-
     const res = await fetch("/api/support", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,28 +123,48 @@ export function SupportChat() {
 
   if (!currentUser) return null
 
+  const btnStyle: React.CSSProperties = {
+    position: "fixed",
+    bottom: yPos,
+    [side]: 16,
+  }
+
+  const panelStyle: React.CSSProperties = {
+    position: "fixed",
+    bottom: yPos + BTN_SIZE + 8,
+    [side]: 16,
+  }
+
   return (
     <>
       <button
-        onClick={() => setOpen(o => !o)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        style={btnStyle}
+        className="z-50 w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none transition-colors"
         aria-label="Support chat"
       >
         {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[70vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+        <div style={panelStyle} className="z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[70vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+          {/* Header */}
           <div className="bg-green-600 px-4 py-3 flex items-center gap-3 flex-shrink-0">
             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
               <MessageCircle className="w-4 h-4 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-white font-semibold text-sm">Foodra Support</p>
               <p className="text-green-100 text-xs">We typically reply within a few hours</p>
             </div>
+            <button onClick={() => setOpen(false)} className="text-white/70 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
+          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
             {messages.length === 0 && (
               <div className="text-center text-gray-400 text-sm py-8">
@@ -118,8 +173,14 @@ export function SupportChat() {
               </div>
             )}
             {messages.map(msg => (
-              <div key={msg.id} className={`flex ${msg.is_admin_reply ? "justify-start" : "justify-end"}`}>
-                <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
+              <div key={msg.id} className={`flex items-end gap-2 ${msg.is_admin_reply ? "justify-start" : "justify-end"}`}>
+                {/* Support bot avatar */}
+                {msg.is_admin_reply && (
+                  <div className="w-7 h-7 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  </div>
+                )}
+                <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                   msg.is_admin_reply
                     ? "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm"
                     : "bg-green-600 text-white rounded-tr-sm"
@@ -134,11 +195,23 @@ export function SupportChat() {
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
+                {/* User avatar */}
+                {!msg.is_admin_reply && (
+                  <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 border border-green-300">
+                    {currentUser.avatar
+                      ? <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      : <div className="w-full h-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">
+                          {(currentUser.name || "U")[0].toUpperCase()}
+                        </div>
+                    }
+                  </div>
+                )}
               </div>
             ))}
             <div ref={bottomRef} />
           </div>
 
+          {/* Input */}
           <div className="border-t border-gray-100 dark:border-gray-800 p-3 flex items-center gap-2 flex-shrink-0">
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
             <button

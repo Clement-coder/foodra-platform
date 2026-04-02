@@ -298,93 +298,96 @@ function ProfilePage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="mb-8">
           <CardHeader className="p-6">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="relative w-16 h-16 group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-                <div className="w-16 h-16 rounded-full overflow-hidden border">
-                  {user.avatar ? (
-                    <img src={user.avatar} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-[#118C4C] text-white">
-                      <UserIcon />
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="relative w-16 h-16 group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+                  <div className="w-16 h-16 rounded-full overflow-hidden border">
+                    {user.avatar ? (
+                      <img src={user.avatar} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-[#118C4C] text-white">
+                        <UserIcon />
+                      </div>
+                    )}
+                  </div>
+                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    {avatarUploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
+                  </div>
+                  <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                </div>
+
+                <div className="flex-1 w-full">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h1 className="text-lg sm:text-xl font-bold truncate">{displayName}</h1>
+                    <span className="inline-flex items-center rounded-full bg-[#118C4C]/10 text-[#118C4C] p-1 flex-shrink-0" title="Verified">
+                      <BadgeCheck className="h-4 w-4" />
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-sky-200 bg-gradient-to-br from-sky-50 to-cyan-50 px-4 py-3">
+                      <p className="text-xs font-semibold text-sky-700 mb-1">Email</p>
+                      <p className="text-sm font-medium text-slate-800 break-all">{userEmail}</p>
                     </div>
-                  )}
-                </div>
-                <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  {avatarUploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white" />}
-                </div>
-                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-              </div>
-
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <h1 className="text-lg sm:text-xl font-bold truncate">{displayName}</h1>
-                  <span className="inline-flex items-center rounded-full bg-[#118C4C]/10 text-[#118C4C] p-1 flex-shrink-0" title="Verified">
-                    <BadgeCheck className="h-4 w-4" />
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-sky-200 bg-gradient-to-br from-sky-50 to-cyan-50 px-4 py-3">
-                    <p className="text-xs font-semibold text-sky-700 mb-1">Email</p>
-                    <p className="text-sm font-medium text-slate-800 break-all">{userEmail}</p>
-                  </div>
-                  <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-lime-50 px-4 py-3">
-                    <p className="text-xs font-semibold text-emerald-700 mb-1">Location</p>
-                    <p className="text-sm font-medium text-slate-800">{user.location || "—"}</p>
-                  </div>
-                  <div className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50 px-4 py-3">
-                    <p className="text-xs font-semibold text-violet-700 mb-1 flex items-center gap-1">
-                      <BadgeCheck className="h-3.5 w-3.5" />
-                      Account Type
-                    </p>
-                    <p className="text-sm font-medium text-slate-800">
-                      {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 px-4 py-3">
-                    <p className="text-xs font-semibold text-rose-700 mb-1">Sign Up Method</p>
-                    <p className="text-sm font-medium text-slate-800 flex items-center gap-2">
-                      {getSignUpMethod() === "Google" && (
-                        <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-                      )}
-                      {getSignUpMethod()}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 px-4 py-3">
-                    <p className="text-xs font-semibold text-amber-700 mb-1 flex items-center gap-1">
-                      <CalendarDays className="h-3.5 w-3.5" />
-                      Joined
-                    </p>
-                    <p className="text-sm font-medium text-slate-800">
-                      {new Date(user.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
+                    <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-lime-50 px-4 py-3">
+                      <p className="text-xs font-semibold text-emerald-700 mb-1">Location</p>
+                      <p className="text-sm font-medium text-slate-800">{user.location || "—"}</p>
+                    </div>
+                    <div className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50 px-4 py-3">
+                      <p className="text-xs font-semibold text-violet-700 mb-1 flex items-center gap-1">
+                        <BadgeCheck className="h-3.5 w-3.5" />
+                        Account Type
+                      </p>
+                      <p className="text-sm font-medium text-slate-800">
+                        {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 px-4 py-3">
+                      <p className="text-xs font-semibold text-rose-700 mb-1">Sign Up Method</p>
+                      <p className="text-sm font-medium text-slate-800 flex items-center gap-2">
+                        {getSignUpMethod() === "Google" && (
+                          <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
+                        )}
+                        {getSignUpMethod()}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 px-4 py-3">
+                      <p className="text-xs font-semibold text-amber-700 mb-1 flex items-center gap-1">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        Joined
+                      </p>
+                      <p className="text-sm font-medium text-slate-800">
+                        {new Date(user.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
-                <Button onClick={handleEditProfile} size="sm" className="flex-1 sm:flex-initial bg-[#118C4C] hover:bg-[#0d6b3a] text-white px-3">
+              {/* Action buttons — always in a row below the info cards */}
+              <div className="flex flex-row flex-wrap gap-2 pt-1 justify-start">
+                <Button onClick={handleEditProfile} size="sm" className="bg-[#118C4C] hover:bg-[#0d6b3a] text-white">
                   <Edit className="h-3.5 w-3.5 sm:mr-1.5" />
                   <span className="hidden sm:inline">{isProfileComplete ? "Edit" : `Complete (${profileCompletion}%)`}</span>
                 </Button>
-                <Button onClick={handleShareProfile} variant="outline" size="sm" className="flex-1 sm:flex-initial px-3">
+                <Button onClick={handleShareProfile} variant="outline" size="sm">
                   <Share2 className="h-3.5 w-3.5 sm:mr-1.5" />
                   <span className="hidden sm:inline">Share</span>
                 </Button>
-                <Button onClick={() => setShowWallet(!showWallet)} variant="outline" size="sm" className="flex-1 sm:flex-initial px-3" disabled={!user.wallet}>
+                <Button onClick={() => setShowWallet(!showWallet)} variant="outline" size="sm" disabled={!user.wallet}>
                   <Wallet className="h-3.5 w-3.5 sm:mr-1.5" />
                   <span className="hidden sm:inline">{showWallet ? "Hide" : "Show"}</span>
                 </Button>
-                <Button onClick={handleSignOut} variant="outline" size="sm" className="flex-1 sm:flex-initial text-red-600 hover:text-red-700 hover:bg-red-50 px-3">
+                <Button onClick={handleSignOut} variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
                   <LogOut className="h-3.5 w-3.5 sm:mr-1.5" />
                   <span className="hidden sm:inline">Sign Out</span>
                 </Button>
                 {user.role === "admin" && (
-                  <a href="/admin" className="flex-1 sm:flex-initial">
-                    <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-white px-3">
+                  <a href="/admin">
+                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
                       <ShieldCheck className="h-3.5 w-3.5 sm:mr-1.5" />
                       <span className="hidden sm:inline">Admin Panel</span>
                     </Button>
