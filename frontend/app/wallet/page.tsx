@@ -11,7 +11,7 @@ import { DollarSign, History, PlusCircle, MinusCircle, ArrowUpCircle, ArrowDownC
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
-import { NotificationDiv } from "@/components/NotificationDiv"
+import { useToast } from "@/lib/toast"
 import { TransactionItem } from "@/components/TransactionItem"
 import { baseSepolia } from "viem/chains"
 import type { Chain } from "viem"
@@ -33,6 +33,7 @@ function WalletPage() {
   const { wallets } = useWallets()
   const { chainId } = useAccount()
   const { sendTransaction } = useSendTransaction()
+  const { toast } = useToast()
   const [balance, setBalance] = useState<string>("0")
   const [usdNgnRate, setUsdNgnRate] = useState<number | null>(null)
   const [ethToUsdRate, setEthToUsdRate] = useState<number | null>(null)
@@ -42,7 +43,6 @@ function WalletPage() {
   const [isComingSoonModalOpen, setIsComingSoonModalOpen] = useState(false)
   const [recipientAddress, setRecipientAddress] = useState("")
   const [withdrawAmount, setWithdrawAmount] = useState("")
-  const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [transactionFilter, setTransactionFilter] = useState<"all" | "send" | "receive">("all")
   const [isRefreshingTransactions, setIsRefreshingTransactions] = useState(false)
@@ -86,7 +86,7 @@ function WalletPage() {
         }
       } catch (error) {
         console.error("Error fetching wallet data:", error)
-        setNotification({ type: "error", message: "Error fetching wallet data." })
+        toast.error("Error fetching wallet data.")
       }
     }
   }
@@ -142,20 +142,20 @@ function WalletPage() {
     await fetchWalletData()
     await fetchEthRate()
     setIsRefreshingBalance(false)
-    setNotification({ type: "success", message: "Wallet data refreshed!" })
+    toast.success("Wallet data refreshed!")
   }
 
   const handleRefreshTransactions = async () => {
     setIsRefreshingTransactions(true)
     await fetchWalletData()
     setIsRefreshingTransactions(false)
-    setNotification({ type: "success", message: "Transaction history refreshed!" })
+    toast.success("Transaction history refreshed!")
   }
 
   const copyToClipboard = () => {
     if (user?.wallet?.address) {
       navigator.clipboard.writeText(user.wallet.address)
-      setNotification({ type: "success", message: "Address copied to clipboard!" })
+      toast.success("Address copied to clipboard!")
     }
   }
 
@@ -177,7 +177,7 @@ function WalletPage() {
         chainId: `0x${selectedChain.id.toString(16)}` as any,
       })
 
-      setNotification({ type: "success", message: "Transaction submitted successfully!" })
+      toast.success("Transaction submitted successfully!")
       setIsConfirmWithdrawModalOpen(false)
       setRecipientAddress("")
       setWithdrawAmount("")
@@ -187,7 +187,7 @@ function WalletPage() {
       }, 3000)
     } catch (error) {
       console.error("Error sending transaction:", error)
-      setNotification({ type: "error", message: "Transaction failed. Please try again." })
+      toast.error("Transaction failed. Please try again.")
       setIsConfirmWithdrawModalOpen(false)
     }
   }
@@ -208,15 +208,6 @@ function WalletPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {notification && (
-        <NotificationDiv
-          type={notification.type}
-          message={notification.message}
-          duration={5000}
-          onClose={() => setNotification(null)}
-        />
-      )}
-
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8">My Wallet</h1>
 

@@ -3,37 +3,45 @@
 import { useState } from "react"
 import { X, MapPin, Phone, Calendar, ExternalLink, ShoppingBag } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
+import { useToast } from "@/lib/toast"
 
 const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"]
 
-function OrderModal({ order, buyer, privyId, onClose, onRefresh, onNotify }: {
+function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
   order: any; buyer: any; privyId?: string
-  onClose: () => void; onRefresh: () => void; onNotify: (m: string) => void
+  onClose: () => void; onRefresh: () => void
 }) {
+  const { toast, confirm } = useToast()
   const [status, setStatus] = useState(order.status)
   const [saving, setSaving] = useState(false)
 
   const saveStatus = async () => {
     if (status === order.status) return
+    const ok = await confirm({ message: `Change order status to "${status}"?`, confirmLabel: "Update Status" })
+    if (!ok) return
     setSaving(true)
-    await fetch(`/api/orders/${order.id}`, {
+    const res = await fetch(`/api/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ actorPrivyId: privyId, status }),
     })
-    onNotify(`Order status updated to ${status}`)
-    onRefresh(); onClose()
+    if (res.ok) { toast.success(`Order status updated to ${status}`); onRefresh(); onClose() }
+    else toast.error("Failed to update order status.")
+    setSaving(false)
   }
 
   const resolveEscrow = async (action: "release" | "refund") => {
+    const ok = await confirm({ title: "Resolve Escrow", message: action === "release" ? "Release payment to the farmer?" : "Refund payment to the buyer?", confirmLabel: action === "release" ? "Release to Farmer" : "Refund Buyer", danger: action === "refund" })
+    if (!ok) return
     setSaving(true)
-    await fetch(`/api/orders/${order.id}`, {
+    const res = await fetch(`/api/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ actorPrivyId: privyId, escrow_status: action === "release" ? "released" : "refunded" }),
     })
-    onNotify(`Escrow ${action === "release" ? "released to farmer" : "refunded to buyer"}`)
-    onRefresh(); onClose()
+    if (res.ok) { toast.success(action === "release" ? "Escrow released to farmer" : "Escrow refunded to buyer"); onRefresh(); onClose() }
+    else toast.error("Failed to resolve escrow.")
+    setSaving(false)
   }
 
   return (
@@ -163,7 +171,7 @@ export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
 
   return (
     <>
-      {selected && <OrderModal order={selected} buyer={getBuyer(selected.buyer_id)} privyId={privyId} onClose={() => setSelected(null)} onRefresh={onRefresh} onNotify={onNotify} />}
+      {selected && <OrderModal order={selected} buyer={getBuyer(selected.buyer_id)} privyId={privyId} onClose={() => setSelected(null)} onRefresh={onRefresh} />}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">

@@ -20,13 +20,14 @@ import { usePrivy } from "@privy-io/react-auth";
 import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
 import { generateAvatarUrl } from "@/lib/avatarGenerator"
 import { getGoogleLinkedAccount, getPrivyProfilePicture } from "@/lib/privyUser"
+import { useToast } from "@/lib/toast"
 
 function NewListingPage() {
   const router = useRouter()
   const { user: privyUser } = usePrivy();
+  const { toast } = useToast()
   const [user, setUser] = useState<User | null>(null)
   const [imageBase64, setImageBase64] = useState("")
-  const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const {
@@ -135,21 +136,11 @@ function NewListingPage() {
         throw new Error(errorBody?.error || 'Failed to create product')
       }
 
-      setNotification({
-        type: "success",
-        message: "Product listed successfully! Redirecting to marketplace...",
-      })
-
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        router.push("/marketplace")
-      }, 2000)
+      toast.success("Product listed successfully! Redirecting to marketplace...")
+      setTimeout(() => router.push("/marketplace"), 2000)
     } catch (error) {
       console.error('Error creating product:', error)
-      setNotification({
-        type: "error",
-        message: error instanceof Error ? error.message : "Failed to list product. Please try again.",
-      })
+      toast.error(error instanceof Error ? error.message : "Failed to list product. Please try again.")
       setIsSubmitting(false)
     }
   }
@@ -168,15 +159,6 @@ function NewListingPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">List New Product</h1>
         <p className="text-muted-foreground mb-8">Add your product to the marketplace and reach more customers</p>
-
-        {notification && (
-          <NotificationDiv
-            type={notification.type}
-            message={notification.message}
-            duration={notification.type === "success" ? 5000 : 6000}
-            onClose={() => setNotification(null)}
-          />
-        )}
 
         <Card>
           <CardContent className="p-6">

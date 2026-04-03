@@ -1,31 +1,34 @@
 import { useState } from "react"
 import type { AdminData } from "@/app/admin/page"
+import { useToast } from "@/lib/toast"
 
 export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
   data: AdminData; privyId?: string; onRefresh: () => void; onNotify: (m: string) => void
 }) {
+  const { toast, confirm } = useToast()
   const [rejectNote, setRejectNote] = useState<Record<string, string>>({})
   const [rejectOpen, setRejectOpen] = useState<string | null>(null)
 
   const approve = async (id: string) => {
-    await fetch("/api/funding", {
+    const ok = await confirm({ message: "Approve this funding application?", confirmLabel: "Approve" })
+    if (!ok) return
+    const res = await fetch("/api/funding", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ applicationId: id, status: "Approved", actorPrivyId: privyId }),
     })
-    onNotify("Application Approved")
-    onRefresh()
+    if (res.ok) { toast.success("Application approved"); onRefresh() }
+    else toast.error("Failed to approve application.")
   }
 
   const reject = async (id: string) => {
-    await fetch("/api/funding", {
+    const res = await fetch("/api/funding", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ applicationId: id, status: "Rejected", note: rejectNote[id] || "", actorPrivyId: privyId }),
     })
-    onNotify("Application Rejected")
-    setRejectOpen(null)
-    onRefresh()
+    if (res.ok) { toast.success("Application rejected"); setRejectOpen(null); onRefresh() }
+    else toast.error("Failed to reject application.")
   }
 
   return (

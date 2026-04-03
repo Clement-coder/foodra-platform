@@ -11,17 +11,17 @@ import { Card, CardContent } from "@/components/ui/card"
 import { FormInput } from "@/components/FormInput"
 import { FormNumber } from "@/components/FormNumber"
 import { FormSelect } from "@/components/FormSelector"
-import { NotificationDiv } from "@/components/NotificationDiv"
 import { fundingApplicationSchema, type FundingApplicationFormData } from "@/lib/schemas"
 import withAuth from "../../../components/withAuth";
 import { usePrivy } from "@privy-io/react-auth"
 import { useUser } from "@/lib/useUser"
+import { useToast } from "@/lib/toast"
 
 function ApplyFundingPage() {
   const router = useRouter()
   const { user: privyUser } = usePrivy()
   const { currentUser } = useUser()
-  const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
+  const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const {
@@ -62,20 +62,12 @@ function ApplyFundingPage() {
     setNotification(null)
 
     if (!privyUser) {
-      setNotification({
-        type: "error",
-        message: "User information is missing. Please sign in again.",
-      })
+      toast.error("User information is missing. Please sign in again.")
       setIsSubmitting(false)
       return
     }
-
-    // Show summary of errors if any
     if (Object.keys(errors).length > 0) {
-      setNotification({
-        type: "error",
-        message: "Please fix the errors in the form before submitting.",
-      })
+      toast.error("Please fix the errors in the form before submitting.")
       setIsSubmitting(false)
       return
     }
@@ -124,20 +116,10 @@ function ApplyFundingPage() {
         throw new Error(errorBody?.error || 'Failed to submit application')
       }
 
-      setNotification({
-        type: "success",
-        message: "Application submitted successfully! Redirecting to funding dashboard...",
-      })
-
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        router.push("/funding")
-      }, 2000)
+      toast.success("Application submitted! Redirecting to funding dashboard...")
+      setTimeout(() => router.push("/funding"), 2000)
     } catch (error) {
-      setNotification({
-        type: "error",
-        message: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
-      })
+      toast.error(error instanceof Error ? error.message : "An unexpected error occurred. Please try again.")
       setIsSubmitting(false)
     }
   }
@@ -155,18 +137,7 @@ function ApplyFundingPage() {
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Apply for Funding</h1>
-        <p className="text-muted-foreground mb-8">
-          Complete this application to access funding opportunities for your farm
-        </p>
-
-        {notification && (
-          <NotificationDiv
-            type={notification.type}
-            message={notification.message}
-            duration={notification.type === "success" ? 5000 : 6000}
-            onClose={() => setNotification(null)}
-          />
-        )}
+        <p className="text-muted-foreground mb-8">Complete this application to access funding opportunities for your farm</p>
 
         <Card>
           <CardContent className="p-6">
