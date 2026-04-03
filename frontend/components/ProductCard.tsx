@@ -126,20 +126,20 @@ export function ProductCard({ product }: ProductCardProps) {
             <Button
               onClick={handleAddToCart}
               disabled={isAdding || availableQuantity <= 0 || isOwnProduct}
-              size="icon"
-              className="shrink-0 bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-md shadow-[#118C4C]/20 disabled:opacity-50 h-9 w-9"
+              className="shrink-0 sm:flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-md shadow-[#118C4C]/20 disabled:opacity-50 h-9 w-9 sm:w-auto sm:px-3 gap-1"
             >
               {isAdding ? <span className="text-xs">✓</span> : <ShoppingCart className="h-4 w-4" />}
+              <span className="hidden sm:inline text-sm">{isOwnProduct ? "Your Product" : availableQuantity <= 0 ? "Out of Stock" : isAdding ? "Added!" : "Add"}</span>
             </Button>
             <Button
               type="button"
               variant="outline"
-              size="icon"
-              className="shrink-0 border-[#118C4C]/30 hover:bg-[#118C4C]/10 h-9 w-9"
+              className="shrink-0 sm:flex-1 border-[#118C4C]/30 hover:bg-[#118C4C]/10 h-9 w-9 sm:w-auto sm:px-3 gap-1"
               onClick={() => setIsShareModalOpen(true)}
               aria-label={`Share ${product.productName}`}
             >
               <Share2 className="h-4 w-4 text-[#118C4C]" />
+              <span className="hidden sm:inline text-sm text-[#118C4C]">Share</span>
             </Button>
           </CardFooter>
         </Card>
