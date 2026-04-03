@@ -13,17 +13,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
 import { DisputeModal } from "@/components/DisputeModal";
-import { NotificationDiv } from "@/components/NotificationDiv";
 import withAuth from "@/components/withAuth";
 import { useEscrow } from "@/lib/useEscrow";
+import { useToast } from "@/lib/toast";
 import type { Order } from "@/lib/types";
 
 function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { toast, confirm } = useToast();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const { confirmDelivery, raiseDispute, loading: escrowLoading, error: escrowError } = useEscrow();
 
@@ -38,34 +38,28 @@ function OrderDetailPage() {
 
   const handleConfirm = async () => {
     if (!order || !escrowOrderId) return;
-    const ok = await confirmDelivery(escrowOrderId);
-    if (ok) {
-      await fetch(`/api/orders/${order.id}/escrow`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ escrowStatus: "released" }),
-      });
-      setNotification({ type: "success", message: "Delivery confirmed! Payment released to farmer." });
+    const ok = await confirm({ title: "Confirm Delivery", message: "Confirm you received this order? This will release payment to the farmer.", confirmLabel: "Confirm Delivery" });
+    if (!ok) return;
+    const success = await confirmDelivery(escrowOrderId);
+    if (success) {
+      await fetch(`/api/orders/${order.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "released" }) });
+      toast.success("Delivery confirmed! Payment released to farmer.");
       fetchOrder();
     } else {
-      setNotification({ type: "error", message: escrowError || "Failed to confirm delivery. Please try again." });
+      toast.error(escrowError || "Failed to confirm delivery. Please try again.");
     }
   };
 
   const handleDispute = async (reason: string, details: string) => {
     if (!order || !escrowOrderId) return;
-    const ok = await raiseDispute(escrowOrderId);
-    if (ok) {
-      await fetch(`/api/orders/${order.id}/escrow`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ escrowStatus: "disputed" }),
-      });
-      setNotification({ type: "success", message: "Dispute raised. Our team will review within 3–5 business days." });
+    const success = await raiseDispute(escrowOrderId);
+    if (success) {
+      await fetch(`/api/orders/${order.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "disputed" }) });
+      toast.success("Dispute raised. Our team will review within 3–5 business days.");
       setDisputeOpen(false);
       fetchOrder();
     } else {
-      setNotification({ type: "error", message: escrowError || "Failed to raise dispute. Please try again." });
+      toast.error(escrowError || "Failed to raise dispute. Please try again.");
     }
   };
 
@@ -98,8 +92,6 @@ function OrderDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
-      {notification && <NotificationDiv type={notification.type} message={notification.message} onClose={() => setNotification(null)} />}
-
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">

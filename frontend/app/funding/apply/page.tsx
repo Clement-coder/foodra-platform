@@ -59,7 +59,6 @@ function ApplyFundingPage() {
 
   const onSubmit = async (data: FundingApplicationFormData) => {
     setIsSubmitting(true)
-    setNotification(null)
 
     if (!privyUser) {
       toast.error("User information is missing. Please sign in again.")
