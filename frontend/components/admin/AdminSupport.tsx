@@ -3,10 +3,12 @@
 import { useState, useRef } from "react"
 import { ChevronDown, ChevronUp, Send, Paperclip, Loader2, CheckCircle } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
+import { useToast } from "@/lib/toast"
 
 export default function AdminSupport({ data, privyId, onRefresh }: {
   data: AdminData; privyId?: string; onRefresh: () => void
 }) {
+  const { toast, confirm } = useToast()
   const [expanded, setExpanded] = useState<string | null>(null)
   const [replyText, setReplyText] = useState<Record<string, string>>({})
   const [sending, setSending] = useState(false)
@@ -41,14 +43,15 @@ export default function AdminSupport({ data, privyId, onRefresh }: {
   }
 
   const resolve = async (userId: string) => {
-    if (!confirm("Mark this conversation as resolved? This will clear all messages.")) return
-    await fetch("/api/support", {
+    const ok = await confirm({ title: "Resolve Conversation", message: "Mark as resolved and clear all messages for this user?", confirmLabel: "Resolve", danger: true })
+    if (!ok) return
+    const res = await fetch("/api/support", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, actorPrivyId: privyId }),
     })
-    setExpanded(null)
-    onRefresh()
+    if (res.ok) { toast.success("Conversation resolved."); setExpanded(null); onRefresh() }
+    else toast.error("Failed to resolve conversation.")
   }
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {

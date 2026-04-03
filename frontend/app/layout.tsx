@@ -9,6 +9,7 @@ import { CartProvider } from "@/lib/useCart"
 import "./globals.css"
 import Providers from "./Provider"
 import { SupportChat } from "@/components/SupportChat"
+import { ToastProvider } from "@/lib/toast"
 
 // ---- LOCAL FONTS ----
 
@@ -123,6 +124,7 @@ export default function RootLayout({
           `}
         </style>
         <Providers>
+          <ToastProvider>
           <CartProvider>
             <NavBar />
             <main className="min-h-screen pb-24 md:pb-8">{children}</main>
@@ -132,6 +134,7 @@ export default function RootLayout({
             <BottomTabBar />
             <SupportChat />
           </CartProvider>
+          </ToastProvider>
           <Analytics />
         </Providers>
       </body>

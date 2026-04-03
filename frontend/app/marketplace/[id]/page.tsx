@@ -9,7 +9,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/Skeleton"
-import { NotificationDiv } from "@/components/NotificationDiv"
+import { useToast } from "@/lib/toast"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import type { Product, CartItem } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
@@ -22,46 +22,32 @@ function ProductDetailPage() {
   const id = params.id as string;
   const { currentUser } = useUser()
   const { addToCart } = useCart()
+  const { toast } = useToast()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
-  const [showNotification, setShowNotification] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isImageFullScreen, setIsImageFullScreen] = useState(false)
 
   useEffect(() => {
     if (!id) return
-
     const fetchProduct = async () => {
       setLoading(true)
       try {
         const res = await fetch(`/api/products/${id}`)
-        if (!res.ok) {
-          setProduct(null)
-        } else {
-          const data = await res.json()
-          setProduct(data)
-        }
-      } catch (error) {
-        console.error("Failed to fetch product:", error)
+        setProduct(res.ok ? await res.json() : null)
+      } catch {
         setProduct(null)
       } finally {
         setLoading(false)
       }
     }
-
     fetchProduct()
   }, [id])
 
   const handleAddToCart = () => {
     if (!product) return
-    addToCart({
-      productId: product.id,
-      productName: product.productName,
-      pricePerUnit: product.pricePerUnit,
-      quantity: 1,
-      image: product.image,
-    })
-    setShowNotification(true)
+    addToCart({ productId: product.id, productName: product.productName, pricePerUnit: product.pricePerUnit, quantity: 1, image: product.image })
+    toast.success("Product added to cart!")
   }
 
   const isOwnProduct = currentUser?.id === product?.farmerId
@@ -93,15 +79,6 @@ function ProductDetailPage() {
         <ArrowLeft className="h-4 w-4" />
         Back
       </Button>
-
-      {showNotification && (
-        <NotificationDiv
-          type="success"
-          message="Product added to cart successfully!"
-          duration={5000}
-          onClose={() => setShowNotification(false)}
-        />
-      )}
 
       <ShareOptionsModal
         isOpen={isShareModalOpen}

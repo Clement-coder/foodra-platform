@@ -3,12 +3,14 @@
 import { useState } from "react"
 import { Plus, Pencil, Trash2, X, Users } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
+import { useToast } from "@/lib/toast"
 
 const EMPTY = { title: "", summary: "", description: "", date: "", mode: "online", location: "", instructor: "", capacity: 20 }
 
 function TrainingForm({ initial, privyId, onDone, onNotify }: {
   initial?: any; privyId?: string; onDone: () => void; onNotify: (m: string) => void
 }) {
+  const { toast } = useToast()
   const [form, setForm] = useState(initial ? {
     title: initial.title, summary: initial.summary || "", description: initial.description || "",
     date: initial.date?.slice(0, 16) || "", mode: initial.mode || "online",
@@ -22,13 +24,14 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
     if (!form.title || !form.date || !form.capacity) return
     setSaving(true)
     const method = initial ? "PATCH" : "POST"
-    await fetch("/api/trainings", {
+    const res = await fetch("/api/trainings", {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, actorPrivyId: privyId, ...(initial ? { id: initial.id } : {}) }),
     })
-    onNotify(initial ? "Training updated" : "Training created")
-    onDone()
+    if (res.ok) { toast.success(initial ? "Training updated" : "Training created"); onDone() }
+    else toast.error("Failed to save training.")
+    setSaving(false)
   }
 
   return (
@@ -80,14 +83,16 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
 export default function AdminTrainings({ data, privyId, onRefresh, onNotify }: {
   data: AdminData; privyId?: string; onRefresh: () => void; onNotify: (m: string) => void
 }) {
+  const { toast, confirm } = useToast()
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<any | null>(null)
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this training?")) return
-    await fetch(`/api/trainings?id=${id}&actorPrivyId=${privyId}`, { method: "DELETE" })
-    onNotify("Training deleted")
-    onRefresh()
+    const ok = await confirm({ title: "Delete Training", message: "Delete this training and all its enrollments?", confirmLabel: "Delete", danger: true })
+    if (!ok) return
+    const res = await fetch(`/api/trainings?id=${id}&actorPrivyId=${privyId}`, { method: "DELETE" })
+    if (res.ok) { toast.success("Training deleted"); onRefresh() }
+    else toast.error("Failed to delete training.")
   }
 
   const getEnrolled = (id: string) => data.enrollments.filter((e: any) => e.training_id === id).length

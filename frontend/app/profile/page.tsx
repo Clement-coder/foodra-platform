@@ -27,7 +27,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
 import { FormInput } from "@/components/FormInput"
 import { FormSelect } from "@/components/FormSelector"
-import { NotificationDiv } from "@/components/NotificationDiv"
+import { useToast } from "@/lib/toast"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import { profileUpdateSchema, type ProfileUpdateFormData } from "@/lib/schemas"
 import { usePrivy } from "@privy-io/react-auth"
@@ -45,6 +45,7 @@ import { formatTimeAgo } from "@/lib/timeUtils"
 function ProfilePage() {
   const { currentUser: user, isLoading, updateUser } = useUser()
   const { logout, user: privyUser } = usePrivy()
+  const { toast } = useToast()
   const privyUserAny = privyUser as any
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
@@ -72,14 +73,13 @@ function ProfilePage() {
       if (!res.ok) throw new Error("Upload failed")
       window.location.reload()
     } catch {
-      setNotification({ type: "error", message: "Failed to upload avatar. Please try again." })
+      toast.error("Failed to upload avatar. Please try again.")
     } finally {
       setAvatarUploading(false)
       e.target.value = ""
     }
   }
   const [copied, setCopied] = useState(false)
-  const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null)
   const [userProducts, setUserProducts] = useState<Product[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [selectedCountry, setSelectedCountry] = useState("")
@@ -216,23 +216,12 @@ function ProfilePage() {
       })
 
       if (!ok) throw new Error("Update failed")
-
-      // Auto-close modal on successful save
       setIsEditModalOpen(false)
       reset()
-
-      setNotification({
-        type: "success",
-        message: "Profile updated successfully!",
-      })
-
-      setTimeout(() => setNotification(null), 3000)
+      toast.success("Profile updated successfully!")
     } catch (error) {
       console.error("Error updating profile:", error)
-      setNotification({
-        type: "error",
-        message: "Failed to update profile. Please try again.",
-      })
+      toast.error("Failed to update profile. Please try again.")
     }
   }
 
@@ -286,14 +275,6 @@ function ProfilePage() {
         url={typeof window !== "undefined" ? `${window.location.origin}/users/${user.id}` : ""}
       />
       <SignOutModal isOpen={isSignOutModalOpen} onClose={() => setIsSignOutModalOpen(false)} logout={logout} />
-      {notification && (
-        <NotificationDiv
-          type={notification.type}
-          message={notification.message}
-          duration={5000}
-          onClose={() => setNotification(null)}
-        />
-      )}
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="mb-8">

@@ -8,7 +8,7 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Loader2 } from "lucide-re
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { NotificationDiv } from "@/components/NotificationDiv";
+import { useToast } from "@/lib/toast";
 import { EscrowPaymentModal, type EscrowResult } from "@/components/EscrowPaymentModal";
 import { DeliveryAddressModal } from "@/components/DeliveryAddressModal";
 import withAuth from "../../components/withAuth";
@@ -24,13 +24,13 @@ function ShopPage() {
   const { authenticated } = usePrivy();
   const { currentUser } = useUser();
   const router = useRouter();
+  const { toast, confirm } = useToast();
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
   const [preparingCheckout, setPreparingCheckout] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [enrichedCartItems, setEnrichedCartItems] = useState<(CartItem & { farmerWallet: string })[]>([]);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryAddress | null>(null);
-  const [notification, setNotification] = useState<{ type: "error" | "success"; message: string } | null>(null);
 
   const deletePendingOrder = async (orderId: string) => {
     if (!currentUser) return;
@@ -38,9 +38,8 @@ function ShopPage() {
   };
 
   const handleProceedToCheckout = async () => {
-    // Block if profile incomplete
     if (currentUser && calculateProfileCompletion(currentUser) < 100) {
-      setNotification({ type: "error", message: "Please complete your profile before making a purchase." });
+      toast.error("Please complete your profile before making a purchase.");
       setTimeout(() => router.push("/profile"), 2000);
       return;
     }
@@ -69,14 +68,14 @@ function ShopPage() {
     const missingWallet = enrichedCart.find((i) => !i.farmerWallet);
     if (missingWallet) {
       setPreparingCheckout(false);
-      setNotification({ type: "error", message: `Farmer wallet not found for "${missingWallet.productName}".` });
+      toast.error(`Farmer wallet not found for "${missingWallet.productName}".`);
       return;
     }
 
     const order = await createOrder(enrichedCart, totalAmount);
     setPreparingCheckout(false);
     if (!order) {
-      setNotification({ type: "error", message: "Failed to create order. Please try again." });
+      toast.error("Failed to create order. Please try again.");
       return;
     }
     setEnrichedCartItems(enrichedCart);
@@ -134,13 +133,6 @@ function ShopPage() {
 
   return (
     <div className="container mx-auto px-4 py-12">
-      {notification && (
-        <NotificationDiv
-          type={notification.type}
-          message={notification.message}
-          onClose={() => setNotification(null)}
-        />
-      )}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-foreground">
           Shopping Cart
@@ -219,7 +211,10 @@ function ShopPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeFromCart(item.productId)}
+                          onClick={async () => {
+                            const ok = await confirm({ message: `Remove "${item.productName}" from cart?`, confirmLabel: "Remove", danger: true });
+                            if (ok) removeFromCart(item.productId);
+                          }}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
