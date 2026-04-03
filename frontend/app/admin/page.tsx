@@ -12,6 +12,7 @@ import AdminOrders from "@/components/admin/AdminOrders"
 import AdminSupport from "@/components/admin/AdminSupport"
 import AdminTrainings from "@/components/admin/AdminTrainings"
 import AdminAnalytics from "@/components/admin/AdminAnalytics"
+import { useToast } from "@/lib/toast"
 
 export type AdminData = {
   users: any[]
@@ -28,10 +29,10 @@ type Tab = "users" | "products" | "funding" | "orders" | "support" | "trainings"
 function AdminPage() {
   const { user: privyUser } = usePrivy()
   const { currentUser } = useUser()
+  const { toast } = useToast()
   const [tab, setTab] = useState<Tab>("users")
   const [data, setData] = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [notification, setNotification] = useState("")
 
   const refresh = async () => {
     if (!privyUser?.id) return
@@ -45,10 +46,7 @@ function AdminPage() {
     refresh().finally(() => setLoading(false))
   }, [privyUser?.id])
 
-  const notify = (msg: string) => {
-    setNotification(msg)
-    setTimeout(() => setNotification(""), 2500)
-  }
+  const notify = (msg: string) => toast.success(msg)
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -72,12 +70,6 @@ function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
-      {notification && (
-        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg z-50 text-sm shadow-lg">
-          {notification}
-        </div>
-      )}
-
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Admin Panel</h1>
 
       <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-6">

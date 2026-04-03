@@ -70,7 +70,6 @@ function NewListingPage() {
 
   const onSubmit = async (data: ProductListingFormData) => {
     setIsSubmitting(true)
-    setNotification(null)
 
     try {
       if (!privyUser?.id) {
