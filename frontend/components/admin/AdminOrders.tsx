@@ -4,65 +4,100 @@ import { useState } from "react"
 import { X, MapPin, Phone, Calendar, ExternalLink, ShoppingBag } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 
-function OrderModal({ order, buyer, onClose }: { order: any; buyer: any; onClose: () => void }) {
-  const escrowColors: Record<string, string> = {
-    locked: "bg-blue-100 text-blue-700",
-    released: "bg-green-100 text-green-700",
-    disputed: "bg-red-100 text-red-700",
-    none: "bg-gray-100 text-gray-600",
+const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"]
+
+function OrderModal({ order, buyer, privyId, onClose, onRefresh, onNotify }: {
+  order: any; buyer: any; privyId?: string
+  onClose: () => void; onRefresh: () => void; onNotify: (m: string) => void
+}) {
+  const [status, setStatus] = useState(order.status)
+  const [saving, setSaving] = useState(false)
+
+  const saveStatus = async () => {
+    if (status === order.status) return
+    setSaving(true)
+    await fetch(`/api/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actorPrivyId: privyId, status }),
+    })
+    onNotify(`Order status updated to ${status}`)
+    onRefresh(); onClose()
+  }
+
+  const resolveEscrow = async (action: "release" | "refund") => {
+    setSaving(true)
+    await fetch(`/api/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actorPrivyId: privyId, escrow_status: action === "release" ? "released" : "refunded" }),
+    })
+    onNotify(`Escrow ${action === "release" ? "released to farmer" : "refunded to buyer"}`)
+    onRefresh(); onClose()
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Order Details</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-            <X className="w-5 h-5" />
-          </button>
+          <h2 className="text-lg font-bold">Order Details</h2>
+          <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
-
         <div className="p-6 space-y-5">
-          {/* IDs & status */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400">Order ID</span>
-              <span className="font-mono text-xs text-gray-700 dark:text-gray-300 select-all">{order.id}</span>
+          {/* IDs */}
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-gray-400">Order ID</span><span className="font-mono text-xs select-all">{order.id}</span></div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Total</span>
+              <span className="font-bold text-lg">₦{Number(order.total_amount).toLocaleString()}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400">Status</span>
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                order.status === "Delivered" ? "bg-green-100 text-green-700"
-                : order.status === "Cancelled" ? "bg-red-100 text-red-700"
-                : "bg-blue-100 text-blue-700"
-              }`}>{order.status}</span>
-            </div>
-            {order.escrow_status && order.escrow_status !== "none" && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400">Escrow</span>
-                <span className={`text-xs px-2 py-1 rounded-full font-medium ${escrowColors[order.escrow_status] || escrowColors.none}`}>
-                  {order.escrow_status}
-                </span>
-              </div>
-            )}
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400">Total</span>
-              <span className="text-sm font-bold text-gray-900 dark:text-white">₦{Number(order.total_amount).toLocaleString()}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400 flex items-center gap-1"><Calendar className="w-3 h-3" /> Date</span>
-              <span className="text-xs text-gray-600 dark:text-gray-400">{new Date(order.created_at).toLocaleString()}</span>
+            <div className="flex items-center gap-2 justify-between">
+              <span className="text-gray-400">Date</span>
+              <span className="flex items-center gap-1 text-xs text-gray-500"><Calendar className="w-3 h-3" />{new Date(order.created_at).toLocaleString()}</span>
             </div>
           </div>
+
+          {/* Status update */}
+          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-3">
+            <p className="text-xs font-semibold text-gray-500">Update Order Status</p>
+            <div className="flex flex-wrap gap-2">
+              {ORDER_STATUSES.map(s => (
+                <button key={s} onClick={() => setStatus(s)}
+                  className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${status === s ? "bg-green-600 text-white" : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:border-green-500"}`}>
+                  {s}
+                </button>
+              ))}
+            </div>
+            <button onClick={saveStatus} disabled={saving || status === order.status}
+              className="w-full py-2 bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white rounded-xl text-sm font-medium transition-colors">
+              Save Status
+            </button>
+          </div>
+
+          {/* Escrow dispute resolution */}
+          {order.escrow_status === "disputed" && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl space-y-3 border border-red-200 dark:border-red-800">
+              <p className="text-xs font-semibold text-red-600">⚠️ Disputed Escrow — Resolve</p>
+              <div className="flex gap-2">
+                <button onClick={() => resolveEscrow("release")} disabled={saving}
+                  className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium disabled:opacity-40">
+                  Release to Farmer
+                </button>
+                <button onClick={() => resolveEscrow("refund")} disabled={saving}
+                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium disabled:opacity-40">
+                  Refund Buyer
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Escrow tx */}
           {order.escrow_tx_hash && (
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <p className="text-xs text-gray-400 mb-1">Escrow Transaction</p>
+              <p className="text-xs text-gray-400 mb-1">Escrow Tx</p>
               <a href={`https://sepolia.basescan.org/tx/${order.escrow_tx_hash}`} target="_blank" rel="noopener noreferrer"
-                className="text-xs text-green-600 underline underline-offset-2 flex items-center gap-1 break-all">
-                {order.escrow_tx_hash.slice(0, 14)}…{order.escrow_tx_hash.slice(-8)}
-                <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                className="text-xs text-green-600 underline flex items-center gap-1 break-all">
+                {order.escrow_tx_hash.slice(0, 14)}…{order.escrow_tx_hash.slice(-8)}<ExternalLink className="w-3 h-3 flex-shrink-0" />
               </a>
             </div>
           )}
@@ -70,17 +105,14 @@ function OrderModal({ order, buyer, onClose }: { order: any; buyer: any; onClose
           {/* Buyer */}
           {buyer && (
             <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3">Buyer</p>
+              <p className="text-xs font-semibold text-gray-500 mb-3">Buyer</p>
               <div className="flex items-center gap-3">
-                {buyer.avatar_url ? (
-                  <img src={buyer.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-green-500" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 font-bold text-sm">
-                    {(buyer.name || "B")[0].toUpperCase()}
-                  </div>
-                )}
+                {buyer.avatar_url
+                  ? <img src={buyer.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-green-500" />
+                  : <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">{(buyer.name || "B")[0].toUpperCase()}</div>
+                }
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{buyer.name || "—"}</p>
+                  <p className="text-sm font-medium">{buyer.name || "—"}</p>
                   <p className="text-xs text-gray-400">{buyer.email || "—"}</p>
                   <p className="text-xs text-gray-400">{buyer.phone || "—"}</p>
                 </div>
@@ -88,41 +120,30 @@ function OrderModal({ order, buyer, onClose }: { order: any; buyer: any; onClose
             </div>
           )}
 
-          {/* Delivery address */}
+          {/* Delivery */}
           {order.delivery_address && (
             <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-1">
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-1 mb-2">
-                <MapPin className="w-3.5 h-3.5" /> Delivery Address
-              </p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{order.delivery_full_name}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{order.delivery_address}, {order.delivery_city}, {order.delivery_state}</p>
-              {order.delivery_phone && (
-                <p className="text-xs text-gray-400 flex items-center gap-1"><Phone className="w-3 h-3" />{order.delivery_phone}</p>
-              )}
+              <p className="text-xs font-semibold text-gray-500 flex items-center gap-1 mb-2"><MapPin className="w-3.5 h-3.5" />Delivery Address</p>
+              <p className="text-sm font-medium">{order.delivery_full_name}</p>
+              <p className="text-xs text-gray-500">{order.delivery_address}, {order.delivery_city}, {order.delivery_state}</p>
+              {order.delivery_phone && <p className="text-xs text-gray-400 flex items-center gap-1"><Phone className="w-3 h-3" />{order.delivery_phone}</p>}
             </div>
           )}
 
           {/* Items */}
           {order.order_items?.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1">
-                <ShoppingBag className="w-3.5 h-3.5" /> Items ({order.order_items.length})
-              </p>
+              <p className="text-xs font-semibold text-gray-500 mb-3 flex items-center gap-1"><ShoppingBag className="w-3.5 h-3.5" />Items ({order.order_items.length})</p>
               <div className="space-y-2">
                 {order.order_items.map((item: any) => (
                   <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl border border-gray-100 dark:border-gray-800">
-                    {item.image_url ? (
-                      <img src={item.image_url} alt={item.product_name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-800 flex-shrink-0" />
-                    )}
+                    {item.image_url ? <img src={item.image_url} alt={item.product_name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
+                      : <div className="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-800 flex-shrink-0" />}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{item.product_name}</p>
+                      <p className="text-sm font-medium truncate">{item.product_name}</p>
                       <p className="text-xs text-gray-400">{item.quantity} × ₦{Number(item.price).toLocaleString()}</p>
                     </div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white flex-shrink-0">
-                      ₦{(item.quantity * Number(item.price)).toLocaleString()}
-                    </p>
+                    <p className="text-sm font-semibold flex-shrink-0">₦{(item.quantity * Number(item.price)).toLocaleString()}</p>
                   </div>
                 ))}
               </div>
@@ -134,14 +155,15 @@ function OrderModal({ order, buyer, onClose }: { order: any; buyer: any; onClose
   )
 }
 
-export default function AdminOrders({ data }: { data: AdminData }) {
+export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
+  data: AdminData; privyId?: string; onRefresh: () => void; onNotify: (m: string) => void
+}) {
   const [selected, setSelected] = useState<any | null>(null)
-
-  const getBuyer = (buyerId: string) => data.users.find((u: any) => u.id === buyerId)
+  const getBuyer = (id: string) => data.users.find((u: any) => u.id === id)
 
   return (
     <>
-      {selected && <OrderModal order={selected} buyer={getBuyer(selected.buyer_id)} onClose={() => setSelected(null)} />}
+      {selected && <OrderModal order={selected} buyer={getBuyer(selected.buyer_id)} privyId={privyId} onClose={() => setSelected(null)} onRefresh={onRefresh} onNotify={onNotify} />}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
@@ -160,44 +182,29 @@ export default function AdminOrders({ data }: { data: AdminData }) {
               const buyer = getBuyer(o.buyer_id)
               return (
                 <tr key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">
-                    #{o.id.slice(-6).toUpperCase()}
-                  </td>
+                  <td className="px-4 py-3 font-mono text-xs text-gray-500">#{o.id.slice(-6).toUpperCase()}</td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <div className="flex items-center gap-2">
-                      {buyer?.avatar_url ? (
-                        <img src={buyer.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 text-xs font-bold flex-shrink-0">
-                          {(buyer?.name || "?")[0].toUpperCase()}
-                        </div>
-                      )}
-                      <span className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-[100px]">{buyer?.name || "—"}</span>
+                      {buyer?.avatar_url ? <img src={buyer.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                        : <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold flex-shrink-0">{(buyer?.name || "?")[0].toUpperCase()}</div>}
+                      <span className="text-xs truncate max-w-[100px]">{buyer?.name || "—"}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">₦{Number(o.total_amount).toLocaleString()}</td>
+                  <td className="px-4 py-3 font-medium">₦{Number(o.total_amount).toLocaleString()}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      o.status === "Delivered" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : o.status === "Cancelled" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                      : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                    }`}>{o.status}</span>
+                      o.status === "Delivered" ? "bg-green-100 text-green-700"
+                      : o.status === "Cancelled" ? "bg-red-100 text-red-700"
+                      : "bg-blue-100 text-blue-700"}`}>{o.status}</span>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    {o.escrow_status && o.escrow_status !== "none" ? (
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        o.escrow_status === "released" ? "bg-green-100 text-green-700"
-                        : o.escrow_status === "disputed" ? "bg-red-100 text-red-700"
-                        : "bg-blue-100 text-blue-700"
-                      }`}>{o.escrow_status}</span>
-                    ) : <span className="text-xs text-gray-400">—</span>}
+                    {o.escrow_status && o.escrow_status !== "none"
+                      ? <span className={`text-xs px-2 py-1 rounded-full font-medium ${o.escrow_status === "released" ? "bg-green-100 text-green-700" : o.escrow_status === "disputed" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>{o.escrow_status}</span>
+                      : <span className="text-xs text-gray-400">—</span>}
                   </td>
                   <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">{new Date(o.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
-                    <button onClick={() => setSelected(o)}
-                      className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
-                      View
-                    </button>
+                    <button onClick={() => setSelected(o)} className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 hover:text-green-700 px-3 py-1.5 rounded-lg transition-colors font-medium">View</button>
                   </td>
                 </tr>
               )

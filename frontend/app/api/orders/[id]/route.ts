@@ -70,3 +70,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     deliveryCountry: o.delivery_country || null,
   });
 }
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = getSupabaseAdminClient()
+  if (!supabase) return NextResponse.json({ error: "DB unavailable" }, { status: 500 })
+
+  const body = await request.json()
+  const { actorPrivyId, status } = body
+
+  if (actorPrivyId) {
+    const { data: actor } = await supabase.from("users").select("role").eq("privy_id", actorPrivyId).single()
+    if (!actor || actor.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  const { error } = await supabase.from("orders").update({ status, updated_at: new Date().toISOString() }).eq("id", id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}

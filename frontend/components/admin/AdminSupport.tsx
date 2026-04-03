@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { ChevronDown, ChevronUp, Send, Paperclip, Loader2, Image as ImageIcon } from "lucide-react"
+import { ChevronDown, ChevronUp, Send, Paperclip, Loader2, CheckCircle } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 
-export default function AdminSupport({
-  data, privyId, onRefresh
-}: { data: AdminData; privyId?: string; onRefresh: () => void }) {
+export default function AdminSupport({ data, privyId, onRefresh }: {
+  data: AdminData; privyId?: string; onRefresh: () => void
+}) {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [replyText, setReplyText] = useState<Record<string, string>>({})
   const [sending, setSending] = useState(false)
@@ -14,14 +14,12 @@ export default function AdminSupport({
   const fileRef = useRef<HTMLInputElement>(null)
   const activeUserId = useRef<string | null>(null)
 
-  // Group messages by user, sorted oldest first per thread
   const byUser: Record<string, any[]> = {}
   for (const msg of [...data.supportMessages].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())) {
     if (!byUser[msg.user_id]) byUser[msg.user_id] = []
     byUser[msg.user_id].push(msg)
   }
 
-  // Sort user threads by most recent message (newest first)
   const sortedUserIds = Object.keys(byUser).sort((a, b) => {
     const lastA = byUser[a][byUser[a].length - 1]?.created_at || ""
     const lastB = byUser[b][byUser[b].length - 1]?.created_at || ""
@@ -39,6 +37,17 @@ export default function AdminSupport({
     })
     setReplyText(prev => ({ ...prev, [userId]: "" }))
     setSending(false)
+    onRefresh()
+  }
+
+  const resolve = async (userId: string) => {
+    if (!confirm("Mark this conversation as resolved? This will clear all messages.")) return
+    await fetch("/api/support", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, actorPrivyId: privyId }),
+    })
+    setExpanded(null)
     onRefresh()
   }
 
@@ -60,9 +69,6 @@ export default function AdminSupport({
 
   if (sortedUserIds.length === 0) return (
     <div className="p-12 text-center text-gray-400">
-      <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
-        <ImageIcon className="w-6 h-6 opacity-40" />
-      </div>
       <p className="font-medium">No support messages yet</p>
     </div>
   )
@@ -76,102 +82,65 @@ export default function AdminSupport({
           const user = data.users.find((u: any) => u.id === userId)
           const isOpen = expanded === userId
           const lastMsg = messages[messages.length - 1]
-          const unread = messages.filter((m: any) => !m.is_admin_reply).length
+          const unanswered = !lastMsg?.is_admin_reply
 
           return (
             <div key={userId}>
-              <button
-                onClick={() => setExpanded(isOpen ? null : userId)}
-                className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 text-left transition-colors"
-              >
-                {user?.avatar_url ? (
-                  <img src={user.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-                    {(user?.name || "U")[0].toUpperCase()}
-                  </div>
-                )}
+              <button onClick={() => setExpanded(isOpen ? null : userId)}
+                className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 text-left transition-colors">
+                {user?.avatar_url
+                  ? <img src={user.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                  : <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold flex-shrink-0">{(user?.name || "U")[0].toUpperCase()}</div>
+                }
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-gray-900 dark:text-white text-sm">{user?.name || "Unknown User"}</span>
-                    <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
-                      {new Date(lastMsg?.created_at).toLocaleDateString([], { month: "short", day: "numeric" })}
-                    </span>
+                    <span className="font-semibold text-sm">{user?.name || "Unknown User"}</span>
+                    <span className="text-xs text-gray-400 ml-2">{new Date(lastMsg?.created_at).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
                   </div>
                   <div className="flex items-center justify-between mt-0.5">
-                    <p className="text-xs text-gray-400 truncate max-w-[200px]">
-                      {lastMsg?.is_admin_reply ? "You: " : ""}{lastMsg?.message}
-                    </p>
-                    {unread > 0 && (
-                      <span className="ml-2 flex-shrink-0 w-5 h-5 bg-green-600 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                        {unread}
-                      </span>
-                    )}
+                    <p className="text-xs text-gray-400 truncate max-w-[200px]">{lastMsg?.is_admin_reply ? "You: " : ""}{lastMsg?.message}</p>
+                    {unanswered && <span className="ml-2 flex-shrink-0 w-2 h-2 bg-green-500 rounded-full" />}
                   </div>
                 </div>
-                <div className="flex-shrink-0 ml-2 text-gray-400">
-                  {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </div>
+                {isOpen ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />}
               </button>
 
               {isOpen && (
                 <div className="border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30">
-                  {/* Messages */}
                   <div className="px-5 py-4 space-y-3 max-h-80 overflow-y-auto">
                     {messages.map((msg: any) => (
                       <div key={msg.id} className={`flex items-end gap-2 ${msg.is_admin_reply ? "flex-row-reverse" : "flex-row"}`}>
                         {!msg.is_admin_reply && (
-                          user?.avatar_url ? (
-                            <img src={user.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0 mb-1" />
-                          ) : (
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mb-1">
-                              {(user?.name || "U")[0].toUpperCase()}
-                            </div>
-                          )
+                          user?.avatar_url
+                            ? <img src={user.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover flex-shrink-0 mb-1" />
+                            : <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mb-1">{(user?.name || "U")[0].toUpperCase()}</div>
                         )}
-                        <div className={`max-w-[75%] ${msg.is_admin_reply ? "items-end" : "items-start"} flex flex-col`}>
-                          <div className={`rounded-2xl px-4 py-2.5 text-sm ${
-                            msg.is_admin_reply
-                              ? "bg-green-600 text-white rounded-br-sm"
-                              : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-bl-sm shadow-sm"
-                          }`}>
-                            {msg.image_url && (
-                              <a href={msg.image_url} target="_blank" rel="noopener noreferrer">
-                                <img src={msg.image_url} alt="attachment" className="rounded-xl mb-2 max-w-full max-h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity" />
-                              </a>
-                            )}
-                            {msg.message !== "📎 Image" && <p className="leading-relaxed">{msg.message}</p>}
+                        <div className={`max-w-[75%] flex flex-col ${msg.is_admin_reply ? "items-end" : "items-start"}`}>
+                          <div className={`rounded-2xl px-4 py-2.5 text-sm ${msg.is_admin_reply ? "bg-green-600 text-white rounded-br-sm" : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-bl-sm shadow-sm"}`}>
+                            {msg.image_url && <a href={msg.image_url} target="_blank" rel="noopener noreferrer"><img src={msg.image_url} alt="attachment" className="rounded-xl mb-2 max-w-full max-h-48 object-cover" /></a>}
+                            {msg.message !== "📎 Image" && <p>{msg.message}</p>}
                           </div>
-                          <span className={`text-[10px] mt-1 text-gray-400 ${msg.is_admin_reply ? "text-right" : "text-left"}`}>
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
+                          <span className="text-[10px] mt-1 text-gray-400">{new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
                       </div>
                     ))}
                   </div>
-
-                  {/* Reply input */}
-                  <div className="px-5 pb-4 flex items-center gap-2">
-                    <button
-                      onClick={() => { activeUserId.current = userId; fileRef.current?.click() }}
-                      disabled={uploading}
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-green-600 hover:border-green-500 transition-colors flex-shrink-0"
-                    >
+                  <div className="px-5 pb-3 flex items-center gap-2">
+                    <button onClick={() => { activeUserId.current = userId; fileRef.current?.click() }} disabled={uploading}
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-green-600 transition-colors flex-shrink-0">
                       {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
                     </button>
-                    <input
-                      value={replyText[userId] || ""}
-                      onChange={e => setReplyText(prev => ({ ...prev, [userId]: e.target.value }))}
+                    <input value={replyText[userId] || ""} onChange={e => setReplyText(prev => ({ ...prev, [userId]: e.target.value }))}
                       onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendReply(userId)}
                       placeholder="Reply to user…"
-                      className="flex-1 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white placeholder-gray-400"
-                    />
-                    <button
-                      onClick={() => sendReply(userId)}
-                      disabled={sending || !replyText[userId]?.trim()}
-                      className="w-9 h-9 bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
-                    >
+                      className="flex-1 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                    <button onClick={() => sendReply(userId)} disabled={sending || !replyText[userId]?.trim()}
+                      className="w-9 h-9 bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white rounded-xl flex items-center justify-center flex-shrink-0 transition-colors">
                       {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    </button>
+                    <button onClick={() => resolve(userId)} title="Mark as resolved"
+                      className="w-9 h-9 bg-gray-200 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-500 hover:text-green-600 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors">
+                      <CheckCircle className="w-4 h-4" />
                     </button>
                   </div>
                 </div>

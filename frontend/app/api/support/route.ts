@@ -56,3 +56,19 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }
+
+// PATCH /api/support - resolve a conversation (delete all messages for a user)
+export async function PATCH(request: Request) {
+  const supabaseAdmin = getSupabaseAdminClient()
+  if (!supabaseAdmin) return NextResponse.json({ error: "Server error" }, { status: 500 })
+
+  const body = await request.json()
+  const { userId, actorPrivyId } = body
+
+  const { data: actor } = await supabaseAdmin.from("users").select("role").eq("privy_id", actorPrivyId).single()
+  if (!actor || actor.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+
+  const { error } = await supabaseAdmin.from("support_messages").delete().eq("user_id", userId)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
