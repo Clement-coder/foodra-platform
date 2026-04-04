@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react"
 import type { ReactNode } from "react"
 import type { CartItem, Order } from "./types"
 import { useUser } from "./useUser"
+import { useToast } from "./toast"
 
 type CartContextValue = {
   cart: CartItem[]
@@ -20,6 +21,7 @@ const CartContext = createContext<CartContextValue | null>(null)
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([])
   const { currentUser, isLoading: userLoading } = useUser()
+  const { toast } = useToast()
 
   const cartKey = currentUser ? `foodra_cart_${currentUser.id}` : null
 
@@ -63,6 +65,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId: normalizedItem.productId, change: 1 } }))
       return updated
     })
+    toast.success(`"${normalizedItem.productName}" added to cart`)
   }
 
   const removeFromCart = (productId: string) => {
@@ -72,6 +75,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       persist(updated)
       if (item) {
         window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId, change: -item.quantity } }))
+        toast.info(`"${item.productName}" removed from cart`)
       }
       return updated
     })

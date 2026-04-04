@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useRouter, usePathname } from "next/navigation";
 import AuthModal from "./AuthModal";
@@ -9,6 +9,7 @@ import { calculateProfileCompletion } from "@/lib/profileUtils";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { NotificationDiv } from "./NotificationDiv";
+import { useToast } from "@/lib/toast";
 
 // Beautiful Loading Component
 const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => {
@@ -80,19 +81,26 @@ const withAuth = <P extends object>(
     const { currentUser, isLoading } = useUser();
     const router = useRouter();
     const pathname = usePathname();
+    const { toast } = useToast();
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [showProfileToast, setShowProfileToast] = useState(false);
+    const prevAuthRef = useRef<boolean | null>(null);
 
     useEffect(() => {
-      // Wait for both Privy and user data to be ready
       if (!ready || isLoading) return;
 
       if (!authenticated) {
         setAuthModalOpen(true);
+        prevAuthRef.current = false;
         return;
       }
 
-      // User is authenticated, close auth modal
+      // Fire login toast only on transition from unauthenticated → authenticated
+      if (prevAuthRef.current === false && authenticated && currentUser) {
+        toast.success(`Welcome back, ${currentUser.name || "Farmer"}! 👋`);
+      }
+      prevAuthRef.current = authenticated;
+
       setAuthModalOpen(false);
 
       // Check profile completion and show toast if incomplete
