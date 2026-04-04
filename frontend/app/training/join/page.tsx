@@ -13,9 +13,11 @@ import type { Training, User, Enrollment } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
 import { loadFromLocalStorage } from "@/lib/localStorage"
 import { format } from "date-fns"
+import { useToast } from "@/lib/toast"
 
 function TrainingDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const { toast } = useToast()
   const [training, setTraining] = useState<Training | null>(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
@@ -40,13 +42,34 @@ function TrainingDetailPage({ params }: { params: { id: string } }) {
     }
   }, [params.id])
 
-  const handleJoinTraining = () => {
+  const handleJoinTraining = async () => {
     if (!user || !training) {
       router.push("/")
       return
     }
 
-    router.push(`/training/join?id=${training.id}`)
+    if (isEnrolled) {
+      toast.info("You are already enrolled in this training.")
+      return
+    }
+
+    if (training.capacity - training.enrolled <= 0) {
+      toast.error("This training is full.")
+      return
+    }
+
+    try {
+      const res = await fetch("/api/trainings/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trainingId: training.id, userId: user.id }),
+      })
+      if (!res.ok) throw new Error("Enrollment failed")
+      setIsEnrolled(true)
+      toast.success(`You've enrolled in "${training.title}"!`)
+    } catch {
+      toast.error("Failed to enroll. Please try again.")
+    }
   }
 
   if (loading) {

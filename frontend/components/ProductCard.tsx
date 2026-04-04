@@ -13,6 +13,7 @@ import { useUser } from "@/lib/useUser";
 import { generateAvatarUrl } from "@/lib/avatarGenerator";
 import { ShareOptionsModal } from "@/components/ShareOptionsModal";
 import { formatTimeAgo } from "@/lib/timeUtils";
+import { useToast } from "@/lib/toast";
 
 interface ProductCardProps {
   product: Product;
@@ -21,6 +22,7 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart, cart } = useCart();
   const { currentUser } = useUser();
+  const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [availableQuantity, setAvailableQuantity] = useState(product.quantity);
@@ -35,7 +37,14 @@ export function ProductCard({ product }: ProductCardProps) {
   }, [cart, product.id, product.quantity]);
 
   const handleAddToCart = () => {
-    if (availableQuantity <= 0 || isOwnProduct) return;
+    if (isOwnProduct) {
+      toast.warning("You can't add your own product to cart.")
+      return
+    }
+    if (availableQuantity <= 0) {
+      toast.error("This product is out of stock.")
+      return
+    }
     setIsAdding(true);
     addToCart(product);
     setTimeout(() => setIsAdding(false), 1000);

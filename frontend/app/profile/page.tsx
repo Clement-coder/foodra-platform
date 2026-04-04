@@ -71,6 +71,7 @@ function ProfilePage() {
         body: JSON.stringify({ base64, userId: user.id }),
       })
       if (!res.ok) throw new Error("Upload failed")
+      toast.success("Avatar updated successfully!")
       window.location.reload()
     } catch {
       toast.error("Failed to upload avatar. Please try again.")

@@ -47,7 +47,6 @@ function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!product) return
     addToCart({ productId: product.id, productName: product.productName, pricePerUnit: product.pricePerUnit, quantity: 1, image: product.image })
-    toast.success("Product added to cart!")
   }
 
   const isOwnProduct = currentUser?.id === product?.farmerId
