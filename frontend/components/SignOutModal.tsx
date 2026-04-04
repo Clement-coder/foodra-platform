@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Loader2, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/Modal"
+import { useToast } from "@/lib/toast"
 
 interface SignOutModalProps {
   isOpen: boolean
@@ -15,6 +16,7 @@ interface SignOutModalProps {
 
 export function SignOutModal({ isOpen, onClose, logout }: SignOutModalProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [isSignedOut, setIsSignedOut] = useState(false)
 
@@ -30,7 +32,7 @@ export function SignOutModal({ isOpen, onClose, logout }: SignOutModalProps) {
       router.push("/")
     } catch (error) {
       console.error("Error signing out:", error)
-      // Optionally, show an error message in the modal
+      toast.error("Failed to sign out. Please try again.")
       setIsSigningOut(false)
     }
   }

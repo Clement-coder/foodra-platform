@@ -96,6 +96,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = () => {
     setCart([])
     if (cartKey) localStorage.removeItem(cartKey)
+    toast.info("Cart cleared.")
   }
 
   const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart])
