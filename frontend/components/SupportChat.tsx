@@ -25,6 +25,7 @@ export function SupportChat() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
+  const prevCountRef = useRef(0)
 
   // Draggable — stored as { right, bottom } to avoid overflow
   const [side, setSide] = useState<"left" | "right">("right")
@@ -123,6 +124,18 @@ export function SupportChat() {
 
   if (!currentUser) return null
 
+  const unreadSupport = messages.filter(m => m.is_admin_reply).length > prevCountRef.current
+    ? messages.filter(m => m.is_admin_reply && !open).length
+    : 0
+  // Count unread admin replies (messages user hasn't seen yet — proxy: admin replies when chat is closed)
+  const adminReplies = messages.filter(m => m.is_admin_reply).length
+  const unreadCount = open ? 0 : Math.max(0, adminReplies - prevCountRef.current)
+
+  // Track seen count when opened
+  if (open && adminReplies > prevCountRef.current) {
+    prevCountRef.current = adminReplies
+  }
+
   const btnStyle: React.CSSProperties = {
     position: "fixed",
     bottom: yPos,
@@ -142,10 +155,15 @@ export function SupportChat() {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         style={btnStyle}
-        className="z-50 w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none transition-colors"
+        className="relative z-50 w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none transition-colors"
         aria-label="Support chat"
       >
         {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
+        {!open && unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
       </button>
 
       {open && (

@@ -1,10 +1,42 @@
 import { useState } from "react"
+import { Megaphone, Loader2 } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
+import { useToast } from "@/lib/toast"
 
 const RANGES = [3, 6, 12] as const
 type Range = typeof RANGES[number]
 
-export default function AdminAnalytics({ data }: { data: AdminData }) {
+export default function AdminAnalytics({ data, privyId }: { data: AdminData; privyId?: string }) {
+  const { toast } = useToast()
+  const [broadcastTitle, setBroadcastTitle] = useState("")
+  const [broadcastMsg, setBroadcastMsg] = useState("")
+  const [broadcastLink, setBroadcastLink] = useState("")
+  const [sending, setSending] = useState(false)
+
+  const sendBroadcast = async () => {
+    if (!broadcastTitle.trim() || !broadcastMsg.trim()) return
+    setSending(true)
+    const res = await fetch("/api/notifications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        broadcast: true,
+        actorPrivyId: privyId,
+        type: "broadcast",
+        title: broadcastTitle.trim(),
+        message: broadcastMsg.trim(),
+        link: broadcastLink.trim() || null,
+      }),
+    })
+    if (res.ok) {
+      const { count } = await res.json()
+      toast.success(`Notification sent to ${count} users`)
+      setBroadcastTitle(""); setBroadcastMsg(""); setBroadcastLink("")
+    } else {
+      toast.error("Failed to send notification")
+    }
+    setSending(false)
+  }
   const [range, setRange] = useState<Range>(6)
 
   const totalRevenue = data.orders
@@ -77,6 +109,45 @@ export default function AdminAnalytics({ data }: { data: AdminData }) {
 
   return (
     <div className="p-6 space-y-8">
+      {/* Broadcast notification */}
+      <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Megaphone className="w-5 h-5 text-orange-600" />
+          <h3 className="text-sm font-semibold text-orange-700 dark:text-orange-400">Broadcast Notification to All Users</h3>
+        </div>
+        <div className="space-y-3">
+          <input
+            value={broadcastTitle}
+            onChange={e => setBroadcastTitle(e.target.value)}
+            placeholder="Notification title…"
+            className="w-full text-sm border border-orange-200 dark:border-orange-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400"
+          />
+          <textarea
+            value={broadcastMsg}
+            onChange={e => setBroadcastMsg(e.target.value)}
+            placeholder="Message body…"
+            rows={2}
+            className="w-full text-sm border border-orange-200 dark:border-orange-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+          />
+          <div className="flex gap-3">
+            <input
+              value={broadcastLink}
+              onChange={e => setBroadcastLink(e.target.value)}
+              placeholder="Optional link (e.g. /marketplace)"
+              className="flex-1 text-sm border border-orange-200 dark:border-orange-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+            <button
+              onClick={sendBroadcast}
+              disabled={sending || !broadcastTitle.trim() || !broadcastMsg.trim()}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-40 text-white rounded-xl text-sm font-medium transition-colors"
+            >
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Megaphone className="w-4 h-4" />}
+              Send to All
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {statCards.map(({ label, value, color }) => (
           <div key={label} className={`p-4 rounded-xl bg-${color}-50 dark:bg-${color}-900/20 border border-${color}-100 dark:border-${color}-800`}>

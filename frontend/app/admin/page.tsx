@@ -93,7 +93,7 @@ function AdminPage() {
         {tab === "orders" && <AdminOrders data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
         {tab === "trainings" && <AdminTrainings data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
         {tab === "support" && <AdminSupport data={data} privyId={privyUser?.id} onRefresh={refresh} />}
-        {tab === "analytics" && <AdminAnalytics data={data} />}
+        {tab === "analytics" && <AdminAnalytics data={data} privyId={privyUser?.id} />}
       </div>
     </div>
   )
