@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, MapPin, Phone, Mail, Wallet, Package, Calendar, Home } from "lucide-react"
+import { X, MapPin, Phone, Mail, Wallet, Package, Calendar, Home, Download } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 
 function UserProfileModal({ user, data, onClose }: { user: any; data: AdminData; onClose: () => void }) {
@@ -185,10 +185,25 @@ function UserProfileModal({ user, data, onClose }: { user: any; data: AdminData;
   )
 }
 
+const PAGE_SIZE = 20
+
+function exportCSV(users: any[]) {
+  const headers = ["Name", "Email", "Phone", "Location", "Role", "Wallet", "Joined"]
+  const rows = users.map(u => [u.name, u.email, u.phone, u.location, u.role || "buyer", u.wallet_address, new Date(u.created_at).toLocaleDateString()])
+  const csv = [headers, ...rows].map(r => r.map((v: any) => `"${v ?? ""}"`).join(",")).join("\n")
+  const blob = new Blob([csv], { type: "text/csv" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url; a.download = "users.csv"; a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function AdminUsers({
   data, privyId, onRefresh, onNotify
 }: { data: AdminData; privyId?: string; onRefresh: () => void; onNotify: (m: string) => void }) {
   const [selectedUser, setSelectedUser] = useState<any | null>(null)
+  const [search, setSearch] = useState("")
+  const [page, setPage] = useState(0)
 
   const updateRole = async (userId: string, role: string) => {
     await fetch("/api/admin/users", {
@@ -200,9 +215,26 @@ export default function AdminUsers({
     onRefresh()
   }
 
+  const filtered = data.users.filter((u: any) => {
+    const q = search.toLowerCase()
+    return !q || (u.name || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q) || (u.location || "").toLowerCase().includes(q)
+  })
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
   return (
     <>
       {selectedUser && <UserProfileModal user={selectedUser} data={data} onClose={() => setSelectedUser(null)} />}
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
+        <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
+          placeholder="Search by name, email, location…"
+          className="flex-1 text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500" />
+        <button onClick={() => exportCSV(filtered)}
+          className="flex items-center gap-1.5 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-xl transition-colors">
+          <Download className="w-4 h-4" />Export
+        </button>
+        <span className="text-xs text-gray-400 whitespace-nowrap">{filtered.length} users</span>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
@@ -217,7 +249,7 @@ export default function AdminUsers({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {data.users.map((u: any) => (
+            {paged.map((u: any) => (
               <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
@@ -254,6 +286,15 @@ export default function AdminUsers({
           </tbody>
         </table>
       </div>
+      {totalPages > 1 && (
+        <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500">
+          <span>Page {page + 1} of {totalPages}</span>
+          <div className="flex gap-2">
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
+          </div>
+        </div>
+      )}
     </>
   )
 }

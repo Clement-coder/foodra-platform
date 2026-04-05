@@ -5,6 +5,18 @@ import { ChevronDown, ChevronUp, Send, Paperclip, Loader2, CheckCircle } from "l
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
 
+export function getUnreadSupportCount(supportMessages: any[]): number {
+  const byUser: Record<string, any[]> = {}
+  for (const msg of supportMessages) {
+    if (!byUser[msg.user_id]) byUser[msg.user_id] = []
+    byUser[msg.user_id].push(msg)
+  }
+  return Object.values(byUser).filter(msgs => {
+    const last = msgs.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).at(-1)
+    return last && !last.is_admin_reply
+  }).length
+}
+
 export default function AdminSupport({ data, privyId, onRefresh }: {
   data: AdminData; privyId?: string; onRefresh: () => void
 }) {

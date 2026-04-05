@@ -143,6 +143,12 @@ const withAuth = <P extends object>(
       return <LoadingScreen message="Loading your profile..." />;
     }
 
+    // Block non-admins from /admin
+    if (authenticated && currentUser && pathname.startsWith("/admin") && currentUser.role !== "admin") {
+      router.replace("/");
+      return <LoadingScreen message="Redirecting..." />;
+    }
+
     // User is authenticated and profile data is loaded
     if (authenticated && currentUser) {
       return (
