@@ -81,15 +81,32 @@ function ProductModal({ product, farmer, privyId, onClose, onRefresh }: {
   )
 }
 
+const PAGE_SIZE = 20
+
 export default function AdminProducts({ data, privyId, onRefresh, onNotify }: {
   data: AdminData; privyId?: string; onRefresh: () => void; onNotify: (m: string) => void
 }) {
   const [selected, setSelected] = useState<any | null>(null)
+  const [search, setSearch] = useState("")
+  const [page, setPage] = useState(0)
   const getFarmer = (id: string) => data.users.find((u: any) => u.id === id)
+
+  const filtered = data.products.filter((p: any) => {
+    const q = search.toLowerCase()
+    return !q || (p.name || "").toLowerCase().includes(q) || (p.category || "").toLowerCase().includes(q) || (p.location || "").toLowerCase().includes(q)
+  })
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   return (
     <>
       {selected && <ProductModal product={selected} farmer={getFarmer(selected.farmer_id)} privyId={privyId} onClose={() => setSelected(null)} onRefresh={onRefresh} />}
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
+        <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
+          placeholder="Search by name, category, location…"
+          className="flex-1 text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500" />
+        <span className="text-xs text-gray-400 whitespace-nowrap">{filtered.length} products</span>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
@@ -104,7 +121,7 @@ export default function AdminProducts({ data, privyId, onRefresh, onNotify }: {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {data.products.map((p: any) => (
+            {paged.map((p: any) => (
               <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <td className="px-4 py-3"><div className="flex items-center gap-2">{p.image_url ? <img src={p.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0"><ImageIcon className="w-4 h-4 text-gray-400" /></div>}<span className="font-medium truncate max-w-[120px]">{p.name}</span></div></td>
                 <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{p.category}</td>
@@ -118,6 +135,15 @@ export default function AdminProducts({ data, privyId, onRefresh, onNotify }: {
           </tbody>
         </table>
       </div>
+      {totalPages > 1 && (
+        <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500">
+          <span>Page {page + 1} of {totalPages}</span>
+          <div className="flex gap-2">
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
+          </div>
+        </div>
+      )}
     </>
   )
 }

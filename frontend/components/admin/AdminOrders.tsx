@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, MapPin, Phone, Calendar, ExternalLink, ShoppingBag } from "lucide-react"
+import { X, MapPin, Phone, Calendar, ExternalLink, ShoppingBag, Download } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
 
@@ -163,15 +163,59 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
   )
 }
 
+function exportCSV(orders: any[], users: any[]) {
+  const getUser = (id: string) => users.find((u: any) => u.id === id)
+  const headers = ["Order ID", "Buyer", "Amount (₦)", "Status", "Escrow", "Date"]
+  const rows = orders.map(o => {
+    const buyer = getUser(o.buyer_id)
+    return [o.id, buyer?.name || "—", o.total_amount, o.status, o.escrow_status || "—", new Date(o.created_at).toLocaleDateString()]
+  })
+  const csv = [headers, ...rows].map(r => r.map((v: any) => `"${v ?? ""}"`).join(",")).join("\n")
+  const blob = new Blob([csv], { type: "text/csv" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url; a.download = "orders.csv"; a.click()
+  URL.revokeObjectURL(url)
+}
+
+const PAGE_SIZE = 20
+
 export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
   data: AdminData; privyId?: string; onRefresh: () => void; onNotify: (m: string) => void
 }) {
   const [selected, setSelected] = useState<any | null>(null)
+  const [search, setSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState("All")
+  const [page, setPage] = useState(0)
   const getBuyer = (id: string) => data.users.find((u: any) => u.id === id)
+
+  const filtered = data.orders.filter((o: any) => {
+    const buyer = getBuyer(o.buyer_id)
+    const q = search.toLowerCase()
+    const matchSearch = !q || o.id.toLowerCase().includes(q) || (buyer?.name || "").toLowerCase().includes(q)
+    const matchStatus = statusFilter === "All" || o.status === statusFilter
+    return matchSearch && matchStatus
+  })
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paged = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   return (
     <>
       {selected && <OrderModal order={selected} buyer={getBuyer(selected.buyer_id)} privyId={privyId} onClose={() => setSelected(null)} onRefresh={onRefresh} />}
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex flex-wrap items-center gap-3">
+        <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
+          placeholder="Search by order ID or buyer name…"
+          className="flex-1 min-w-[180px] text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500" />
+        <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(0) }}
+          className="text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500">
+          {["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map(s => <option key={s}>{s}</option>)}
+        </select>
+        <button onClick={() => exportCSV(filtered, data.users)}
+          className="flex items-center gap-1.5 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-xl transition-colors">
+          <Download className="w-4 h-4" />Export
+        </button>
+        <span className="text-xs text-gray-400 whitespace-nowrap">{filtered.length} orders</span>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
@@ -186,7 +230,7 @@ export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {data.orders.map((o: any) => {
+            {paged.map((o: any) => {
               const buyer = getBuyer(o.buyer_id)
               return (
                 <tr key={o.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
@@ -220,6 +264,15 @@ export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
           </tbody>
         </table>
       </div>
+      {totalPages > 1 && (
+        <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500">
+          <span>Page {page + 1} of {totalPages}</span>
+          <div className="flex gap-2">
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
+          </div>
+        </div>
+      )}
     </>
   )
 }

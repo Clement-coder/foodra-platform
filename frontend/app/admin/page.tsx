@@ -9,7 +9,7 @@ import AdminUsers from "@/components/admin/AdminUsers"
 import AdminProducts from "@/components/admin/AdminProducts"
 import AdminFunding from "@/components/admin/AdminFunding"
 import AdminOrders from "@/components/admin/AdminOrders"
-import AdminSupport from "@/components/admin/AdminSupport"
+import AdminSupport, { getUnreadSupportCount } from "@/components/admin/AdminSupport"
 import AdminTrainings from "@/components/admin/AdminTrainings"
 import AdminAnalytics from "@/components/admin/AdminAnalytics"
 import { useToast } from "@/lib/toast"
@@ -58,13 +58,13 @@ function AdminPage() {
     <div className="min-h-screen flex items-center justify-center text-gray-500">Access denied</div>
   )
 
-  const tabs: { key: Tab; label: string; icon: any; count: number | string }[] = [
+  const tabs: { key: Tab; label: string; icon: any; count: number | string; unread?: number }[] = [
     { key: "users", label: "Users", icon: Users, count: data.users.length },
     { key: "products", label: "Products", icon: Package, count: data.products.length },
     { key: "funding", label: "Funding", icon: DollarSign, count: data.funding.length },
     { key: "orders", label: "Orders", icon: ShoppingBag, count: data.orders.length },
     { key: "trainings", label: "Trainings", icon: BookOpen, count: data.trainings.length },
-    { key: "support", label: "Support", icon: MessageSquare, count: [...new Set(data.supportMessages.map((m: any) => m.user_id))].length },
+    { key: "support", label: "Support", icon: MessageSquare, count: [...new Set(data.supportMessages.map((m: any) => m.user_id))].length, unread: getUnreadSupportCount(data.supportMessages) },
     { key: "analytics", label: "Analytics", icon: BarChart2, count: "—" },
   ]
 
@@ -73,12 +73,15 @@ function AdminPage() {
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Admin Panel</h1>
 
       <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-6">
-        {tabs.map(({ key, label, icon: Icon, count }) => (
+        {tabs.map(({ key, label, icon: Icon, count, unread }) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`p-3 rounded-xl text-left transition-all ${tab === key ? "bg-green-600 text-white shadow-lg" : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-gray-800"}`}>
+            className={`relative p-3 rounded-xl text-left transition-all ${tab === key ? "bg-green-600 text-white shadow-lg" : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-gray-800"}`}>
             <Icon className="w-4 h-4 mb-1" />
             <div className="text-lg font-bold">{count}</div>
             <div className="text-xs opacity-80 truncate">{label}</div>
+            {unread != null && unread > 0 && (
+              <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unread}</span>
+            )}
           </button>
         ))}
       </div>

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Plus, Pencil, Trash2, X, Users } from "lucide-react"
+import { useState, useRef } from "react"
+import { Plus, Pencil, Trash2, X, Users, ImageIcon } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
 
@@ -14,11 +14,39 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
   const [form, setForm] = useState(initial ? {
     title: initial.title, summary: initial.summary || "", description: initial.description || "",
     date: initial.date?.slice(0, 16) || "", mode: initial.mode || "online",
-    location: initial.location || "", instructor: initial.instructor_name || "", capacity: initial.capacity
-  } : EMPTY)
+    location: initial.location || "", instructor: initial.instructor_name || "", capacity: initial.capacity,
+    image_url: initial.image_url || ""
+  } : { ...EMPTY, image_url: "" })
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+    const res = await fetch("/api/storage/product-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ base64, fileName: file.name }),
+    })
+    if (res.ok) {
+      const { imageUrl } = await res.json()
+      set("image_url", imageUrl)
+    } else {
+      toast.error("Failed to upload image.")
+    }
+    setUploading(false)
+    e.target.value = ""
+  }
 
   const save = async () => {
     if (!form.title || !form.date || !form.capacity) return
@@ -36,6 +64,24 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
 
   return (
     <div className="p-5 space-y-3">
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
+      {/* Image upload */}
+      <div>
+        <label className="text-xs text-gray-500 mb-1 block">Training Image</label>
+        <div className="flex items-center gap-3">
+          {form.image_url
+            ? <img src={form.image_url} alt="" className="w-20 h-14 rounded-xl object-cover border border-gray-200 dark:border-gray-700" />
+            : <div className="w-20 h-14 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-gray-200 dark:border-gray-700"><ImageIcon className="w-5 h-5 text-gray-400" /></div>
+          }
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+            className="text-sm px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors disabled:opacity-50">
+            {uploading ? "Uploading…" : form.image_url ? "Change Image" : "Upload Image"}
+          </button>
+          {form.image_url && (
+            <button type="button" onClick={() => set("image_url", "")} className="text-xs text-red-500 hover:underline">Remove</button>
+          )}
+        </div>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[
           { label: "Title *", key: "title", type: "text" },

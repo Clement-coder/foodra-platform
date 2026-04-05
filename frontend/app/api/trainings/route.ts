@@ -76,6 +76,7 @@ export async function PATCH(request: Request) {
     location: fields.location,
     instructor_name: fields.instructor,
     capacity: fields.capacity,
+    image_url: fields.image_url ?? undefined,
   }).eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
