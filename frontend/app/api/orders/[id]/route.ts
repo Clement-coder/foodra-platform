@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
+import { createNotification } from "@/lib/notify";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -86,5 +87,47 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const { error } = await supabase.from("orders").update({ status, updated_at: new Date().toISOString() }).eq("id", id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Notify buyer of status change
+  if (status) {
+    const { data: order } = await supabase.from("orders").select("buyer_id").eq("id", id).single()
+    if (order?.buyer_id) {
+      const statusMessages: Record<string, string> = {
+        Processing: "Your order is being processed.",
+        Shipped: "Your order has been shipped and is on its way!",
+        Delivered: "Your order has been delivered. Enjoy!",
+        Cancelled: "Your order has been cancelled.",
+      }
+      if (statusMessages[status]) {
+        await createNotification({
+          userId: order.buyer_id,
+          type: "order",
+          title: `Order ${status}`,
+          message: statusMessages[status],
+          link: `/orders/${id}`,
+        })
+      }
+    }
+  }
+
+  // Notify on escrow resolution
+  if (body.escrow_status) {
+    const { data: order } = await supabase.from("orders").select("buyer_id").eq("id", id).single()
+    if (order?.buyer_id) {
+      const msg = body.escrow_status === "released"
+        ? "Payment has been released to the farmer."
+        : "Payment has been refunded to your wallet."
+      await createNotification({
+        userId: order.buyer_id,
+        type: "order",
+        title: body.escrow_status === "released" ? "Payment Released" : "Payment Refunded",
+        message: msg,
+        link: `/orders/${id}`,
+      })
+    }
+    const { error: escrowErr } = await supabase.from("orders").update({ escrow_status: body.escrow_status }).eq("id", id)
+    if (escrowErr) return NextResponse.json({ error: escrowErr.message }, { status: 500 })
+  }
+
   return NextResponse.json({ success: true })
 }

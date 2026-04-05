@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
+import { createNotification } from '@/lib/notify'
 
 export async function POST(request: Request) {
   try {
@@ -22,6 +24,23 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Already enrolled' }, { status: 400 })
       }
       throw error
+    }
+
+    // Notify user of successful enrollment
+    if (body.userId) {
+      const supabaseAdmin = getSupabaseAdminClient()
+      let trainingTitle = "the training"
+      if (supabaseAdmin && body.trainingId) {
+        const { data: t } = await supabaseAdmin.from("trainings").select("title").eq("id", body.trainingId).single()
+        if (t?.title) trainingTitle = t.title
+      }
+      await createNotification({
+        userId: body.userId,
+        type: "training",
+        title: "Training Enrollment Confirmed",
+        message: `You have successfully enrolled in "${trainingTitle}".`,
+        link: `/training/${body.trainingId}`,
+      })
     }
 
     return NextResponse.json(data)

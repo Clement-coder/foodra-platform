@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
+import { createNotification } from '@/lib/notify'
 
 export async function GET(request: Request) {
   try {
@@ -126,6 +127,17 @@ export async function POST(request: Request) {
           .update({ quantity: newQty, is_available: newQty > 0 })
           .eq('id', item.productId)
       }
+    }
+
+    // Notify buyer of order placement
+    if (body.userId) {
+      await createNotification({
+        userId: body.userId,
+        type: "order",
+        title: "Order Placed Successfully",
+        message: `Your order of ₦${Number(body.totalAmount).toLocaleString()} has been placed and is being processed.`,
+        link: `/orders/${order.id}`,
+      })
     }
 
     return NextResponse.json(order)

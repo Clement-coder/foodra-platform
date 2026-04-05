@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
+import { createNotification } from '@/lib/notify'
 
 export async function GET(request: Request) {
   try {
@@ -127,6 +128,19 @@ export async function PATCH(request: Request) {
       .single()
 
     if (error) throw error
+
+    // Notify applicant
+    if (data?.user_id) {
+      await createNotification({
+        userId: data.user_id,
+        type: "funding",
+        title: status === "Approved" ? "Funding Application Approved 🎉" : "Funding Application Update",
+        message: status === "Approved"
+          ? "Congratulations! Your funding application has been approved."
+          : `Your funding application has been rejected.${body.note ? ` Reason: ${body.note}` : ""}`,
+        link: "/funding",
+      })
+    }
 
     return NextResponse.json(data)
   } catch (error: any) {

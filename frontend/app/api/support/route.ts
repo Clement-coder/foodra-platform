@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
+import { createNotification } from "@/lib/notify"
 
 // GET /api/support?userId=... - get messages for a user
 export async function GET(request: Request) {
@@ -54,6 +55,17 @@ export async function POST(request: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Notify user when admin replies
+  if (isAdminReply && userId) {
+    await createNotification({
+      userId,
+      type: "support",
+      title: "New Support Reply",
+      message: message && message !== "📎 Image" ? message.slice(0, 100) : "Admin sent you an image.",
+    })
+  }
+
   return NextResponse.json(data)
 }
 

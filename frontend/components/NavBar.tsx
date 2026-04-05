@@ -4,12 +4,14 @@ import { usePrivy } from "@privy-io/react-auth";
 import type React from "react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, ShoppingCart, Search, Wallet, Users } from "lucide-react";
+import { Loader2, ShoppingCart, Search, Wallet, Users, Bell } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileDropdown from "./ProfileDropdown";
 import SignupButton from "./SignupButton";
 import { useCart } from "@/lib/useCart";
 import { useUser } from "@/lib/useUser";
+import { useNotifications } from "@/lib/useNotifications";
+import { NotificationSidebar } from "./NotificationSidebar";
 import type { Product, User } from "@/lib/types";
 
 type SearchFilter = "all" | "products" | "users";
@@ -31,6 +33,8 @@ export function NavBar() {
   const { cartCount } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { notifications, unreadCount, markRead } = useNotifications(currentUser?.id);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [searchFilter, setSearchFilter] = useState<SearchFilter>("all");
   const [products, setProducts] = useState<Product[]>([]);
@@ -245,6 +249,22 @@ export function NavBar() {
               </a>
             )}
 
+            {/* Notifications bell */}
+            {authenticated && (
+              <button
+                onClick={() => setNotifOpen(true)}
+                className="relative p-2 hover:bg-accent rounded-lg transition-colors"
+                aria-label="Notifications"
+              >
+                <Bell className="h-6 w-6 text-foreground" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-green-600 text-white text-xs flex items-center justify-center font-semibold">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Users Link */}
             <a
               href="/users"
@@ -441,6 +461,12 @@ export function NavBar() {
           </motion.div>
         )}
       </AnimatePresence>
+      <NotificationSidebar
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        notifications={notifications}
+        onMarkRead={markRead}
+      />
     </>
   );
 }
