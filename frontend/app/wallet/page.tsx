@@ -554,7 +554,6 @@ function WalletPage() {
 
         </motion.div>
       </div>
-    </div>
 
       <Modal
         isOpen={isAddFundsModalOpen}
