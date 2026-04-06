@@ -8,7 +8,6 @@ import { QRCodeSVG } from "qrcode.react"
 import { FormInput } from "@/components/FormInput"
 import { DollarSign, History, PlusCircle, MinusCircle, Copy, RefreshCcw, Wallet, Eye, EyeOff, Banknote, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
 import { useToast } from "@/lib/toast"
 import { TransactionItem } from "@/components/TransactionItem"
@@ -352,218 +351,210 @@ function WalletPage() {
 
   const isWithdrawButtonDisabled = !!recipientError || !!amountError || !recipientAddress || !withdrawAmount
 
+  const shortAddress = user?.wallet?.address
+    ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}`
+    : ""
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-8">My Wallet</h1>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
-        {user?.wallet?.address && (
-          <Card className="mb-6 bg-gradient-to-br from-green-50 via-green-100 to-yellow-100">
-            <CardContent className="p-4">
-              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Wallet Address</p>
-              <div className="flex items-center gap-2">
-                <p className="font-mono text-sm flex-1 min-w-0 truncate">{user.wallet.address}</p>
-                <Button variant="ghost" size="sm" onClick={copyToClipboard} className="flex-shrink-0 h-8 w-8 p-0">
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="font-mono text-xs text-muted-foreground mt-1 sm:hidden break-all">{user.wallet.address}</p>
-            </CardContent>
-          </Card>
-        )}
+          {/* ── Hero Balance Card ── */}
+          <div className="relative rounded-3xl overflow-hidden mb-6 bg-gradient-to-br from-[#118C4C] via-[#0d7a42] to-[#1a5c35] shadow-2xl text-white p-6">
+            {/* decorative circles */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5" />
 
-        <Card className="mb-8 bg-gradient-to-br from-green-50 via-green-100 to-blue-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <h2 className="text-sm font-medium text-muted-foreground">Current Balance</h2>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setBalanceVisible((v) => !v)} title="Toggle balance visibility">
-                {balanceVisible ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleRefreshWalletData} title="Refresh" disabled={isRefreshingBalance}>
-                <RefreshCcw className={`h-4 w-4 text-muted-foreground ${isRefreshingBalance ? "animate-spin" : ""}`} />
-              </Button>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl sm:text-5xl font-bold text-[#118C4C] mb-1 flex items-center gap-3">
-              <span className="text-2xl font-bold text-blue-600">USDC</span>
-              {balanceVisible ? usdcBalance : "••••••"}
-            </div>
-            {usdNgnRate && (
-              <p className="text-xl font-semibold text-muted-foreground mb-3">
-                {balanceVisible
-                  ? `≈ ₦${(parseFloat(usdcBalance) * usdNgnRate).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} NGN`
-                  : "≈ ₦•••••• NGN"}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground border-t border-border/50 pt-2 mt-2">
-              Gas balance: {balanceVisible ? `${balance} ETH` : "•••••"} (Base Sepolia)
-            </p>
-            {usdNgnRate && (
-              <p className="text-xs text-muted-foreground mt-1">
-                1 USDC ≈ ₦{usdNgnRate.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
-          <Button onClick={() => setIsAddFundsModalOpen(true)} className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2" title="Add funds via crypto.">
-            <PlusCircle className="h-5 w-5" />
-            Add Funds
-          </Button>
-          <Button onClick={() => setIsNgnFundModalOpen(true)} className="bg-yellow-500 hover:bg-yellow-600 text-white gap-2" title="Fund wallet with NGN bank transfer.">
-            <Banknote className="h-5 w-5" />
-            Fund with NGN
-          </Button>
-          <Button onClick={() => setIsWithdrawFundsModalOpen(true)} variant="outline" className="gap-2" title="Withdraw funds from your wallet to another address.">
-            <MinusCircle className="h-5 w-5" />
-            Withdraw Funds
-          </Button>
-          <Button onClick={() => setIsComingSoonModalOpen(true)} variant="outline" className="gap-2" title="Bridge funds to another network.">
-            <Wallet className="h-5 w-5" />
-            Bridge Funds
-          </Button>
-        </div>
-
-        {/* Active funding request banner */}
-        {activeFundRequest && (
-          <Card className="mb-6 border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20">
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
-                    <Clock className="h-4 w-4" /> Pending Bank Transfer
-                  </p>
-                  <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
-                    Transfer ₦{Number(activeFundRequest.ngn_amount).toLocaleString()} and include reference <strong>{activeFundRequest.reference}</strong> in your narration.
-                  </p>
-                  <p className="text-xs text-yellow-600 mt-0.5">
-                    You will receive <strong>{activeFundRequest.usdc_amount} USDC</strong> · Rate: ₦{Number(activeFundRequest.rate_ngn_per_usdc).toFixed(2)}/USDC
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className={`text-2xl font-mono font-bold ${secondsLeft < 120 ? "text-red-600" : "text-yellow-700 dark:text-yellow-300"}`}>
-                    {countdownDisplay}
+            <div className="relative z-10">
+              {/* top row */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                    <Wallet className="h-4 w-4 text-white" />
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => setIsNgnConfirmModalOpen(true)} className="text-xs">
-                    View Details
-                  </Button>
+                  <span className="text-sm font-medium text-white/80">Foodra Wallet</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setBalanceVisible(v => !v)} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                    {balanceVisible ? <EyeOff className="h-4 w-4 text-white/70" /> : <Eye className="h-4 w-4 text-white/70" />}
+                  </button>
+                  <button onClick={handleRefreshWalletData} disabled={isRefreshingBalance} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                    <RefreshCcw className={`h-4 w-4 text-white/70 ${isRefreshingBalance ? "animate-spin" : ""}`} />
+                  </button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {/* Recent NGN funding requests */}
-        {fundRequests.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader className="pb-2">
-              <h2 className="text-base font-semibold">NGN Funding History</h2>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-border">
-                {fundRequests.slice(0, 5).map(r => (
-                  <div key={r.id} className="px-4 py-3 flex items-center justify-between gap-2 text-sm">
-                    <div>
-                      <span className="font-mono font-semibold text-[#118C4C]">{r.reference}</span>
-                      <span className="ml-2 text-muted-foreground">₦{Number(r.ngn_amount).toLocaleString()} → {r.usdc_amount} USDC</span>
-                    </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      r.status === "Confirmed" ? "bg-green-100 text-green-700"
-                      : r.status === "Rejected" ? "bg-red-100 text-red-700"
-                      : r.status === "Expired" ? "bg-gray-100 text-gray-500"
-                      : "bg-yellow-100 text-yellow-700"}`}>{r.status}</span>
-                  </div>
-                ))}
+              {/* balance */}
+              <div className="mb-1">
+                <p className="text-xs text-white/60 uppercase tracking-widest mb-1">Total Balance</p>
+                <div className="flex items-end gap-2">
+                  <span className="text-5xl font-bold tracking-tight">
+                    {balanceVisible ? usdcBalance : "••••••"}
+                  </span>
+                  <span className="text-xl font-semibold text-white/70 mb-1">USDC</span>
+                </div>
+                {usdNgnRate && (
+                  <p className="text-sm text-white/60 mt-1">
+                    {balanceVisible
+                      ? `≈ ₦${(parseFloat(usdcBalance) * usdNgnRate).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : "≈ ₦••••••"}
+                  </p>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        )}
 
-        <div className="flex justify-end mb-6">
-          <div className="inline-flex items-center gap-2 rounded-xl bg-slate-100 p-1.5 shadow-sm">
-            <span className="rounded-lg px-5 py-2.5 text-sm font-semibold bg-[#118C4C] text-white shadow-md">
-              Base Sepolia (Testnet)
-            </span>
+              {/* address + network row */}
+              <div className="flex items-center justify-between mt-5 pt-4 border-t border-white/10">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-xs text-white/60">Base Sepolia</span>
+                </div>
+                {user?.wallet?.address && (
+                  <button onClick={copyToClipboard} className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full">
+                    <Copy className="h-3 w-3" />
+                    {shortAddress}
+                  </button>
+                )}
+              </div>
+
+              {/* gas balance */}
+              <p className="text-xs text-white/40 mt-2">
+                Gas: {balanceVisible ? `${balance} ETH` : "•••••"}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <Card>
-          <CardHeader className="pb-4 bg-gradient-to-br from-green-100 via-blue-100 to-green-50">
-            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-              <div>
-                <h2 className="text-xl font-semibold text-foreground">Transaction History</h2>
-                <p className="text-sm text-muted-foreground">
-                  Recent transactions on the Base Sepolia network.
-                </p>
+          {/* ── Action Buttons ── */}
+          <div className="grid grid-cols-4 gap-3 mb-6">
+            {[
+              { label: "Add Funds", icon: PlusCircle, color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400", onClick: () => setIsAddFundsModalOpen(true), desc: "Receive crypto" },
+              { label: "Fund NGN", icon: Banknote, color: "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400", onClick: () => setIsNgnFundModalOpen(true), desc: "Bank transfer" },
+              { label: "Send", icon: MinusCircle, color: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400", onClick: () => setIsWithdrawFundsModalOpen(true), desc: "Withdraw ETH" },
+              { label: "Bridge", icon: RefreshCcw, color: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400", onClick: () => setIsComingSoonModalOpen(true), desc: "Cross-chain" },
+            ].map(({ label, icon: Icon, color, onClick, desc }) => (
+              <button key={label} onClick={onClick}
+                className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-95">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 leading-tight text-center">{label}</span>
+                <span className="text-[10px] text-gray-400 leading-tight text-center hidden sm:block">{desc}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* ── Active Funding Request Banner ── */}
+          {activeFundRequest && (
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+              className="mb-6 rounded-2xl border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-yellow-100 dark:bg-yellow-800/40 flex items-center justify-center flex-shrink-0">
+                    <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">Pending Bank Transfer</p>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-0.5">
+                      Send ₦{Number(activeFundRequest.ngn_amount).toLocaleString()} · ref: <strong>{activeFundRequest.reference}</strong>
+                    </p>
+                    <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-0.5">
+                      You receive <strong>{activeFundRequest.usdc_amount} USDC</strong>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <span className={`text-lg font-mono font-bold ${secondsLeft < 120 ? "text-red-600" : "text-yellow-700 dark:text-yellow-300"}`}>
+                    {countdownDisplay}
+                  </span>
+                  <button onClick={() => setIsNgnConfirmModalOpen(true)}
+                    className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-lg transition-colors">
+                    View Details
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    transactionFilter === "all"
-                      ? "bg-[#118C4C] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                  onClick={() => setTransactionFilter("all")}
-                >
-                  All
-                </button>
-                <button
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    transactionFilter === "send"
-                      ? "bg-[#118C4C] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                  onClick={() => setTransactionFilter("send")}
-                >
-                  Send
-                </button>
-                <button
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    transactionFilter === "receive"
-                      ? "bg-[#118C4C] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                  onClick={() => setTransactionFilter("receive")}
-                >
-                  Receive
-                </button>
-                <button
-                  className="p-2 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50"
-                  onClick={handleRefreshTransactions}
-                  title="Refresh transactions"
-                  disabled={isRefreshingTransactions}
-                >
-                  <RefreshCcw className={`h-4 w-4 text-muted-foreground ${isRefreshingTransactions ? "animate-spin" : ""}`} />
-                </button>
-                <History className="h-5 w-5 text-muted-foreground" />
+            </motion.div>
+          )}
+
+          {/* ── NGN Funding History ── */}
+          {fundRequests.length > 0 && (
+            <div className="mb-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                <Banknote className="h-4 w-4 text-gray-400" />
+                <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">NGN Funding History</h2>
               </div>
-            </div>
-</CardHeader>
-<CardContent className="p-4">
-            {filteredTransactions.length === 0 ? (
-              <div className="p-6 text-muted-foreground text-center flex flex-col items-center justify-center">
-                <Wallet className="h-12 w-12 mb-4 text-gray-400" />
-                <p className="text-lg font-medium">No transactions found yet.</p>
-                <p className="text-sm">Make your first transaction to see it here!</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-border">
-                {filteredTransactions.map((txn) => (
-                  <TransactionItem
-                    key={txn.hash + txn.type}
-                    txn={txn}
-                    userAddress={user!.wallet!.address}
-                    usdNgnRate={usdNgnRate}
-                  />
+              <div className="divide-y divide-gray-50 dark:divide-gray-800">
+                {fundRequests.slice(0, 5).map(r => (
+                  <div key={r.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <span className="font-mono text-sm font-bold text-[#118C4C]">{r.reference}</span>
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">
+                        ₦{Number(r.ngn_amount).toLocaleString()} → {r.usdc_amount} USDC
+                      </p>
+                    </div>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 ${
+                      r.status === "Confirmed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      : r.status === "Rejected" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                      : r.status === "Expired" ? "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"}`}>
+                      {r.status}
+                    </span>
+                  </div>
                 ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
+            </div>
+          )}
+
+          {/* ── Transaction History ── */}
+          <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <History className="h-4 w-4 text-gray-400" />
+                <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Transaction History</h2>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {(["all", "send", "receive"] as const).map(f => (
+                  <button key={f} onClick={() => setTransactionFilter(f)}
+                    className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors capitalize ${
+                      transactionFilter === f
+                        ? "bg-[#118C4C] text-white"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    }`}>
+                    {f}
+                  </button>
+                ))}
+                <button onClick={handleRefreshTransactions} disabled={isRefreshingTransactions}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50">
+                  <RefreshCcw className={`h-3.5 w-3.5 text-gray-400 ${isRefreshingTransactions ? "animate-spin" : ""}`} />
+                </button>
+              </div>
+            </div>
+            <div className="p-4">
+              {filteredTransactions.length === 0 ? (
+                <div className="py-12 flex flex-col items-center gap-3 text-gray-400">
+                  <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                    <History className="h-6 w-6 text-gray-300" />
+                  </div>
+                  <p className="text-sm font-medium">No transactions yet</p>
+                  <p className="text-xs text-center">Your on-chain activity will appear here</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-50 dark:divide-gray-800">
+                  {filteredTransactions.map(txn => (
+                    <TransactionItem
+                      key={txn.hash + txn.type}
+                      txn={txn}
+                      userAddress={user!.wallet!.address}
+                      usdNgnRate={usdNgnRate}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+        </motion.div>
+      </div>
+    </div>
 
       <Modal
         isOpen={isAddFundsModalOpen}
