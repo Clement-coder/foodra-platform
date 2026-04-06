@@ -154,6 +154,8 @@ function WalletPage() {
 
   const fetchFundRequests = async () => {
     if (!currentUser?.id) return
+    // Auto-expire stale requests first
+    await fetch("/api/wallet/expire-requests", { method: "POST" }).catch(() => {})
     try {
       const res = await fetch(`/api/wallet/fund-request?userId=${currentUser.id}`)
       if (res.ok) {
