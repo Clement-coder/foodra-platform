@@ -89,10 +89,10 @@ export function SignOutModal({ isOpen, onClose, logout }: SignOutModalProps) {
               <p className="text-muted-foreground mb-6">
                 Are you sure you want to sign out of your account?
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-3">
                 <Button
                   onClick={handleConfirmSignOut}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white transition-colors w-full"
+                  className="w-full bg-red-600 hover:bg-red-700 text-white text-base py-3"
                 >
                   Confirm Sign Out
                 </Button>
@@ -100,7 +100,7 @@ export function SignOutModal({ isOpen, onClose, logout }: SignOutModalProps) {
                   type="button"
                   variant="outline"
                   onClick={onClose}
-                  className="flex-1 w-full hover:bg-accent transition-colors"
+                  className="w-full text-base py-3"
                 >
                   Cancel
                 </Button>
