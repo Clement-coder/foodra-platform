@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Share2, ShoppingCart } from "lucide-react";
+import { MapPin, Share2, ShoppingCart, EyeOff, Eye, Trash2, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -14,18 +14,23 @@ import { generateAvatarUrl } from "@/lib/avatarGenerator";
 import { ShareOptionsModal } from "@/components/ShareOptionsModal";
 import { formatTimeAgo } from "@/lib/timeUtils";
 import { useToast } from "@/lib/toast";
+import { usePrivy } from "@privy-io/react-auth";
 
 interface ProductCardProps {
   product: Product;
+  onRefresh?: () => void;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, onRefresh }: ProductCardProps) {
   const { addToCart, cart } = useCart();
   const { currentUser } = useUser();
-  const { toast } = useToast();
+  const { user: privyUser } = usePrivy();
+  const { toast, confirm } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [availableQuantity, setAvailableQuantity] = useState(product.quantity);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const isOwnProduct = currentUser?.id === product.farmerId;
 
@@ -49,6 +54,30 @@ export function ProductCard({ product }: ProductCardProps) {
     addToCart(product);
     setTimeout(() => setIsAdding(false), 1000);
   };
+
+  const handleToggle = async () => {
+    const ok = await confirm({ message: `${isAvailable ? "Deactivate" : "Activate"} this listing?`, confirmLabel: isAvailable ? "Deactivate" : "Activate", danger: isAvailable })
+    if (!ok) return
+    setActionLoading(true)
+    const res = await fetch(`/api/products/${product.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actorPrivyId: privyUser?.id, is_available: !isAvailable }),
+    })
+    setActionLoading(false)
+    if (res.ok) { setIsAvailable(v => !v); toast.success(isAvailable ? "Listing deactivated" : "Listing activated"); onRefresh?.() }
+    else toast.error("Failed to update listing.")
+  }
+
+  const handleDelete = async () => {
+    const ok = await confirm({ title: "Delete Listing", message: "Permanently delete this product? This cannot be undone.", confirmLabel: "Delete", danger: true })
+    if (!ok) return
+    setActionLoading(true)
+    const res = await fetch(`/api/products/${product.id}?actorPrivyId=${privyUser?.id}`, { method: "DELETE" })
+    setActionLoading(false)
+    if (res.ok) { toast.success("Product deleted"); onRefresh?.() }
+    else toast.error("Failed to delete product.")
+  }
 
   return (
     <>
@@ -132,26 +161,37 @@ export function ProductCard({ product }: ProductCardProps) {
                 View
               </button>
             </Link>
-            <Button
-              onClick={handleAddToCart}
-              disabled={isAdding || availableQuantity <= 0 || isOwnProduct}
-              size="icon"
-              className="shrink-0 sm:flex-1 sm:w-auto sm:px-3 bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-md shadow-[#118C4C]/20 disabled:opacity-50"
-            >
-              {isAdding ? <span className="text-xs">✓</span> : <ShoppingCart className="h-4 w-4" />}
-              <span className="hidden sm:inline text-sm ml-1">{isOwnProduct ? "Your Product" : availableQuantity <= 0 ? "Out of Stock" : isAdding ? "Added!" : "Add"}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="shrink-0 sm:flex-1 sm:w-auto sm:px-3 border-[#118C4C]/30 hover:bg-[#118C4C]/10"
-              onClick={() => setIsShareModalOpen(true)}
-              aria-label={`Share ${product.productName}`}
-            >
-              <Share2 className="h-4 w-4 text-[#118C4C]" />
-              <span className="hidden sm:inline text-sm ml-1 text-[#118C4C]">Share</span>
-            </Button>
+            {isOwnProduct ? (
+              <>
+                <Button onClick={handleToggle} disabled={actionLoading} size="sm"
+                  className={`flex-1 text-xs ${isAvailable ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-200" : "bg-green-100 text-green-700 hover:bg-green-200 border border-green-200"}`}
+                  variant="ghost">
+                  {isAvailable ? <><EyeOff className="h-3.5 w-3.5 mr-1" />Hide</> : <><Eye className="h-3.5 w-3.5 mr-1" />Show</>}
+                </Button>
+                <Button onClick={handleDelete} disabled={actionLoading} size="sm" variant="ghost"
+                  className="flex-1 text-xs bg-red-50 text-red-600 hover:bg-red-100 border border-red-100">
+                  <Trash2 className="h-3.5 w-3.5 mr-1" />Delete
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  onClick={handleAddToCart}
+                  disabled={isAdding || availableQuantity <= 0}
+                  size="icon"
+                  className="shrink-0 sm:flex-1 sm:w-auto sm:px-3 bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-md shadow-[#118C4C]/20 disabled:opacity-50"
+                >
+                  {isAdding ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
+                  <span className="hidden sm:inline text-sm ml-1">{availableQuantity <= 0 ? "Out of Stock" : isAdding ? "Added!" : "Add"}</span>
+                </Button>
+                <Button type="button" variant="outline" size="icon"
+                  className="shrink-0 sm:flex-1 sm:w-auto sm:px-3 border-[#118C4C]/30 hover:bg-[#118C4C]/10"
+                  onClick={() => setIsShareModalOpen(true)}>
+                  <Share2 className="h-4 w-4 text-[#118C4C]" />
+                  <span className="hidden sm:inline text-sm ml-1 text-[#118C4C]">Share</span>
+                </Button>
+              </>
+            )}
           </CardFooter>
         </Card>
       </motion.div>

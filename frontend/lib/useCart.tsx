@@ -40,7 +40,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (cartKey) localStorage.setItem(cartKey, JSON.stringify(updated))
   }
 
-  const addToCart: CartContextValue["addToCart"] = (item) => {
+  const addToCart: CartContextValue["addToCart"] = async (item) => {
     if (!cartKey) return
     const normalizedItem: CartItem = "productId" in item
       ? item
@@ -52,20 +52,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
           image: item.image,
         }
 
-    setCart((prev) => {
-      const existing = prev.find((i) => i.productId === normalizedItem.productId)
-      const updated = existing
-        ? prev.map((i) =>
-            i.productId === normalizedItem.productId
-              ? { ...i, quantity: i.quantity + 1 }
-              : i
-          )
-        : [...prev, { ...normalizedItem, quantity: 1 }]
-      persist(updated)
-      window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId: normalizedItem.productId, change: 1 } }))
-      return updated
-    })
-    toast.success(`"${normalizedItem.productName}" added to cart`)
+    // Check live stock before adding
+    try {
+      const res = await fetch(`/api/products/${normalizedItem.productId}`)
+      if (res.ok) {
+        const product = await res.json()
+        if (!product || product.quantity < 1) {
+          toast.error(`"${normalizedItem.productName}" is out of stock.`)
+          return
+        }
+        setCart((prev) => {
+          const existing = prev.find((i) => i.productId === normalizedItem.productId)
+          const currentQty = existing?.quantity || 0
+          if (currentQty >= product.quantity) {
+            toast.error(`Only ${product.quantity} unit(s) available.`)
+            return prev
+          }
+          const updated = existing
+            ? prev.map((i) => i.productId === normalizedItem.productId ? { ...i, quantity: i.quantity + 1 } : i)
+            : [...prev, { ...normalizedItem, quantity: 1 }]
+          persist(updated)
+          window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId: normalizedItem.productId, change: 1 } }))
+          return updated
+        })
+        toast.success(`"${normalizedItem.productName}" added to cart`)
+      }
+    } catch {
+      toast.error("Could not verify stock. Please try again.")
+    }
   }
 
   const removeFromCart = (productId: string) => {
