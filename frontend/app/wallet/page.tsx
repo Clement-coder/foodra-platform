@@ -142,8 +142,16 @@ function WalletPage() {
   const fetchRateSettings = async () => {
     try {
       const res = await fetch("/api/admin/rate")
-      if (res.ok) setRateSettings(await res.json())
-    } catch { /* rate unavailable */ }
+      if (res.ok) {
+        const data = await res.json()
+        if (data?.base_ngn_per_usdc) setRateSettings(data)
+        else setRateSettings({ base_ngn_per_usdc: 1600, spread_percent: 2.5 })
+      } else {
+        setRateSettings({ base_ngn_per_usdc: 1600, spread_percent: 2.5 })
+      }
+    } catch {
+      setRateSettings({ base_ngn_per_usdc: 1600, spread_percent: 2.5 })
+    }
   }
 
   const fetchFundRequests = async () => {
@@ -179,8 +187,11 @@ function WalletPage() {
   useEffect(() => {
     fetchWalletData()
     fetchEthRate()
-    fetchRateSettings()
   }, [user, selectedChain])
+
+  useEffect(() => {
+    fetchRateSettings()
+  }, [])
 
   useEffect(() => {
     fetchFundRequests()
@@ -684,7 +695,7 @@ function WalletPage() {
           <Button
             onClick={handleNgnFundSubmit}
             disabled={isSubmittingFund || !ngnAmount || parseFloat(ngnAmount) <= 0 || !effectiveRate}
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-base font-semibold py-3"
           >
             {isSubmittingFund ? "Creating request…" : "Continue"}
           </Button>
