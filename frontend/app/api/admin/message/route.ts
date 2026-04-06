@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     type: "broadcast",
     title: "Message from Foodra Admin",
     message: message.trim(),
-    link: null,
+    link: undefined,
   })
 
   return NextResponse.json({ success: true })

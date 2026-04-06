@@ -181,6 +181,27 @@ export async function DELETE(request: Request) {
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     if (order.escrow_status === 'locked') return NextResponse.json({ error: 'Cannot delete locked escrow order' }, { status: 403 })
 
+    // Restore stock before deleting
+    const { data: items } = await supabaseAdmin
+      .from('order_items')
+      .select('product_id, quantity')
+      .eq('order_id', orderId)
+
+    for (const item of items || []) {
+      const { data: product } = await supabaseAdmin
+        .from('products')
+        .select('quantity')
+        .eq('id', item.product_id)
+        .single()
+      if (product !== null) {
+        const restored = (product?.quantity || 0) + item.quantity
+        await supabaseAdmin
+          .from('products')
+          .update({ quantity: restored, is_available: true })
+          .eq('id', item.product_id)
+      }
+    }
+
     await supabaseAdmin.from('order_items').delete().eq('order_id', orderId)
     await supabaseAdmin.from('orders').delete().eq('id', orderId)
 
