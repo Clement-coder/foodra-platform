@@ -1,12 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { X, MapPin, Phone, Mail, Wallet, Package, Calendar, Home, Download } from "lucide-react"
+import { X, MapPin, Phone, Mail, Wallet, Package, Calendar, Home, Download, Send } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
+import { useToast } from "@/lib/toast"
 
-function UserProfileModal({ user, data, onClose }: { user: any; data: AdminData; onClose: () => void }) {
+function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: AdminData; onClose: () => void; privyId?: string }) {
+  const { toast } = useToast()
   const [addresses, setAddresses] = useState<any[] | null>(null)
   const [loadingAddr, setLoadingAddr] = useState(false)
+  const [msgText, setMsgText] = useState("")
+  const [sending, setSending] = useState(false)
 
   const loadAddresses = async () => {
     if (addresses !== null) return
@@ -14,6 +18,19 @@ function UserProfileModal({ user, data, onClose }: { user: any; data: AdminData;
     const res = await fetch(`/api/delivery-addresses?userId=${user.id}`)
     setAddresses(res.ok ? await res.json() : [])
     setLoadingAddr(false)
+  }
+
+  const sendMessage = async () => {
+    if (!msgText.trim()) return
+    setSending(true)
+    const res = await fetch("/api/admin/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actorPrivyId: privyId, targetUserId: user.id, message: msgText }),
+    })
+    setSending(false)
+    if (res.ok) { toast.success("Message sent!"); setMsgText("") }
+    else toast.error("Failed to send message.")
   }
 
   // Load on mount
@@ -160,6 +177,25 @@ function UserProfileModal({ user, data, onClose }: { user: any; data: AdminData;
             </div>
           )}
 
+          {/* Message user */}
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+              <Send className="w-4 h-4" /> Send Message to User
+            </h4>
+            <div className="flex gap-2">
+              <input
+                value={msgText}
+                onChange={e => setMsgText(e.target.value)}
+                placeholder="Type a message…"
+                className="flex-1 text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <button onClick={sendMessage} disabled={sending || !msgText.trim()}
+                className="text-sm bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl transition-colors">
+                {sending ? "…" : "Send"}
+              </button>
+            </div>
+          </div>
+
           {/* Funding applications */}
           {userFunding.length > 0 && (
             <div>
@@ -224,7 +260,7 @@ export default function AdminUsers({
 
   return (
     <>
-      {selectedUser && <UserProfileModal user={selectedUser} data={data} onClose={() => setSelectedUser(null)} />}
+      {selectedUser && <UserProfileModal user={selectedUser} data={data} onClose={() => setSelectedUser(null)} privyId={privyId} />}
       <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
           placeholder="Search by name, email, location…"

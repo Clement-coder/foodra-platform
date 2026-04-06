@@ -15,6 +15,8 @@ import type { Product, CartItem } from "@/lib/types"
 import withAuth from "../../../components/withAuth";
 import { useCart } from "@/lib/useCart"
 import { useUser } from "@/lib/useUser"
+import { ProductComments } from "@/components/ProductComments"
+import { RatingSummary } from "@/components/RatingSummary"
 
 function ProductDetailPage() {
   const router = useRouter()
@@ -273,6 +275,7 @@ function ProductDetailPage() {
                   <div>
                     <p className="font-medium text-foreground">{product.farmerName}</p>
                     <p className="text-[#118C4C] text-xs font-medium">✓ Verified Farmer</p>
+                    <div className="mt-1"><RatingSummary farmerId={product.farmerId} /></div>
                   </div>
                 </div>
                 <Link href={`/users/${product.farmerId}`}>
@@ -284,6 +287,13 @@ function ProductDetailPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Comments */}
+        <Card className="mt-4 border-[#118C4C]/20">
+          <CardContent className="p-6">
+            <ProductComments productId={product.id} currentUserId={currentUser?.id} />
+          </CardContent>
+        </Card>
       </motion.div>
     </div>
   )

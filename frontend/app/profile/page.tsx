@@ -35,6 +35,7 @@ import withAuth from "@/components/withAuth"
 import { SignOutModal } from "@/components/SignOutModal"
 import { ProfileCompletionModal } from "@/components/ProfileCompletionModal"
 import { useUser } from "@/lib/useUser"
+import { RatingSummary } from "@/components/RatingSummary"
 import { supabase } from "@/lib/supabase"
 import { ProductCard } from "@/components/ProductCard"
 import type { Product } from "@/lib/types"
@@ -479,6 +480,19 @@ function ProfilePage() {
                 </ul>
               </CardContent>
             </Card>
+
+            {/* My Ratings */}
+            {user?.id && (
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-[#118C4C]" />
+                    My Ratings
+                  </h3>
+                  <RatingSummary farmerId={user.id} detail />
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </motion.div>
