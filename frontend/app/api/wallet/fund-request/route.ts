@@ -60,8 +60,8 @@ export async function POST(request: Request) {
     .single()
 
   const baseRate = rate?.base_ngn_per_usdc ?? 1600
-  const spreadPct = rate?.spread_percent ?? 2.5
-  const effectiveRate = baseRate * (1 + spreadPct / 100)
+  const spreadPct = 0  // no platform fee
+  const effectiveRate = baseRate
   const usdcAmount = parseFloat((ngnAmount / effectiveRate).toFixed(6))
 
   // Generate unique reference
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: error.message, details: error }, { status: 500 })
 
   // Notify user
   await createNotification({

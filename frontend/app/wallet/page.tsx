@@ -96,9 +96,7 @@ function WalletPage() {
   const [isSubmittingFund, setIsSubmittingFund] = useState(false)
   const { secondsLeft, display: countdownDisplay } = useCountdown(activeFundRequest?.expires_at ?? null)
 
-  const effectiveRate = rateSettings
-    ? rateSettings.base_ngn_per_usdc * (1 + rateSettings.spread_percent / 100)
-    : null
+  const effectiveRate = rateSettings ? rateSettings.base_ngn_per_usdc : null
   const previewUsdc = effectiveRate && ngnAmount && parseFloat(ngnAmount) > 0
     ? (parseFloat(ngnAmount) / effectiveRate).toFixed(4)
     : null
@@ -317,7 +315,11 @@ function WalletPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: currentUser.id, ngnAmount: parseFloat(ngnAmount) }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        toast.error(err.error || "Failed to create funding request. Please try again.")
+        return
+      }
       const req: FundRequest = await res.json()
       setActiveFundRequest(req)
       setFundRequests(prev => [req, ...prev])
@@ -671,8 +673,8 @@ function WalletPage() {
           {rateSettings && effectiveRate ? (
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 text-sm space-y-1">
               <p className="font-semibold text-blue-700 dark:text-blue-300">Current Exchange Rate</p>
-              <p className="text-blue-600 dark:text-blue-400">₦{effectiveRate.toFixed(2)} = 1 USDC</p>
-              <p className="text-xs text-blue-500">Base: ₦{rateSettings.base_ngn_per_usdc} + {rateSettings.spread_percent}% spread</p>
+              <p className="text-blue-600 dark:text-blue-400">₦{rateSettings.base_ngn_per_usdc.toFixed(2)} = 1 USDC</p>
+              <p className="text-xs text-green-600 font-medium">✓ No platform fee — free conversion</p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">Loading rate…</p>
@@ -688,7 +690,7 @@ function WalletPage() {
             <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3 text-sm space-y-1 border border-green-200 dark:border-green-800">
               <p className="text-xs text-muted-foreground">You will receive</p>
               <p className="text-2xl font-bold text-[#118C4C]">{previewUsdc} <span className="text-base">USDC</span></p>
-              <p className="text-xs text-muted-foreground">Rate: ₦{effectiveRate.toFixed(2)} per USDC · {rateSettings?.spread_percent}% platform fee included</p>
+              <p className="text-xs text-muted-foreground">Rate: ₦{rateSettings?.base_ngn_per_usdc?.toFixed(2)} per USDC · Free, no fees</p>
             </div>
           )}
           <p className="text-xs text-muted-foreground">After confirming, you will receive a unique reference and bank account details. Transfer the exact NGN amount and include the reference in your narration.</p>
