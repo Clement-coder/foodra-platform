@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       .from('orders')
       .select(`
         *,
-        order_items(*),
+        order_items(*, products(farmer_id, users!products_farmer_id_fkey(id, name, avatar_url))),
         users!orders_buyer_id_fkey(id, name, email, phone, avatar_url, wallet_address)
       `)
       .eq('buyer_id', userId)
@@ -51,6 +51,15 @@ export async function GET(request: Request) {
       escrowTxHash: o.escrow_tx_hash || null,
       escrowStatus: o.escrow_status || 'none',
       usdcAmount: o.usdc_amount || null,
+      // Deduplicated farmer list from order items
+      farmers: Array.from(
+        new Map(
+          (o.order_items || [])
+            .map((item: any) => item.products?.users)
+            .filter(Boolean)
+            .map((u: any) => [u.id, { id: u.id, name: u.name || "", email: "", phone: "", avatar: u.avatar_url || "", location: "" }])
+        ).values()
+      ),
       buyerName: o.users?.name || null,
       buyerPhone: o.users?.phone || null,
       buyerEmail: o.users?.email || null,
