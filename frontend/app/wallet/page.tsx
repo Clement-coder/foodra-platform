@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { usePrivy, useSendTransaction } from "@privy-io/react-auth"
 import { ethers } from "ethers"
 import { QRCodeSVG } from "qrcode.react"
@@ -362,63 +362,87 @@ function WalletPage() {
 
           {/* ── Hero Balance Card ── */}
           <div className="relative rounded-3xl overflow-hidden mb-6 bg-gradient-to-br from-[#118C4C] via-[#0d7a42] to-[#1a5c35] shadow-2xl text-white p-6">
-            {/* decorative circles */}
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
             <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5" />
 
             <div className="relative z-10">
               {/* top row */}
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                    <Wallet className="h-4 w-4 text-white" />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+                    <Wallet className="h-5 w-5 text-white" />
                   </div>
-                  <span className="text-sm font-medium text-white/80">Foodra Wallet</span>
+                  <span className="text-base font-semibold text-white/90">Foodra Wallet</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => setBalanceVisible(v => !v)} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-                    {balanceVisible ? <EyeOff className="h-4 w-4 text-white/70" /> : <Eye className="h-4 w-4 text-white/70" />}
+                  <button onClick={() => setBalanceVisible(v => !v)} className="p-2 rounded-full hover:bg-white/10 transition-colors" title={balanceVisible ? "Hide balance" : "Show balance"}>
+                    {balanceVisible ? <EyeOff className="h-5 w-5 text-white/80" /> : <Eye className="h-5 w-5 text-white/80" />}
                   </button>
                   <button onClick={handleRefreshWalletData} disabled={isRefreshingBalance} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-                    <RefreshCcw className={`h-4 w-4 text-white/70 ${isRefreshingBalance ? "animate-spin" : ""}`} />
+                    <RefreshCcw className={`h-5 w-5 text-white/80 ${isRefreshingBalance ? "animate-spin" : ""}`} />
                   </button>
                 </div>
               </div>
 
-              {/* balance */}
-              <div className="mb-1">
-                <p className="text-xs text-white/60 uppercase tracking-widest mb-1">Total Balance</p>
-                <div className="flex items-end gap-2">
-                  <span className="text-5xl font-bold tracking-tight">
-                    {balanceVisible ? usdcBalance : "••••••"}
-                  </span>
-                  <span className="text-xl font-semibold text-white/70 mb-1">USDC</span>
+              {/* balance — futuristic animated toggle */}
+              <div className="mb-2">
+                <p className="text-xs font-semibold text-white/50 uppercase tracking-[0.2em] mb-2">Total Balance</p>
+                <div className="flex items-end gap-3 h-16 overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    {balanceVisible ? (
+                      <motion.span key="visible"
+                        initial={{ opacity: 0, filter: "blur(12px)", y: 8 }}
+                        animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        exit={{ opacity: 0, filter: "blur(12px)", y: -8 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className="text-6xl font-bold tracking-tight leading-none">
+                        {usdcBalance}
+                      </motion.span>
+                    ) : (
+                      <motion.span key="hidden"
+                        initial={{ opacity: 0, filter: "blur(12px)", y: 8 }}
+                        animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                        exit={{ opacity: 0, filter: "blur(12px)", y: -8 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className="text-6xl font-bold tracking-tight leading-none text-white/40 select-none">
+                        ••••••
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                  <span className="text-2xl font-semibold text-white/60 mb-1">USDC</span>
                 </div>
-                {usdNgnRate && (
-                  <p className="text-sm text-white/60 mt-1">
-                    {balanceVisible
-                      ? `≈ ₦${(parseFloat(usdcBalance) * usdNgnRate).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                      : "≈ ₦••••••"}
-                  </p>
-                )}
+                <AnimatePresence mode="wait">
+                  {usdNgnRate && (
+                    <motion.p key={balanceVisible ? "ngn-v" : "ngn-h"}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="text-base text-white/60 mt-1 font-medium">
+                      {balanceVisible
+                        ? `≈ ₦${(parseFloat(usdcBalance) * usdNgnRate).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : "≈ ₦••••••"}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* address + network row */}
               <div className="flex items-center justify-between mt-5 pt-4 border-t border-white/10">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-xs text-white/60">Base Sepolia</span>
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-sm text-white/60 font-medium">Base Sepolia</span>
                 </div>
                 {user?.wallet?.address && (
-                  <button onClick={copyToClipboard} className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full">
-                    <Copy className="h-3 w-3" />
+                  <button onClick={copyToClipboard} className="flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full font-mono">
+                    <Copy className="h-3.5 w-3.5" />
                     {shortAddress}
                   </button>
                 )}
               </div>
 
               {/* gas balance */}
-              <p className="text-xs text-white/40 mt-2">
+              <p className="text-sm text-white/40 mt-2 font-medium">
                 Gas: {balanceVisible ? `${balance} ETH` : "•••••"}
               </p>
             </div>
@@ -433,12 +457,12 @@ function WalletPage() {
               { label: "Bridge", icon: RefreshCcw, color: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400", onClick: () => setIsComingSoonModalOpen(true), desc: "Cross-chain" },
             ].map(({ label, icon: Icon, color, onClick, desc }) => (
               <button key={label} onClick={onClick}
-                className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-95">
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
-                  <Icon className="h-5 w-5" />
+                className="flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-95">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
+                  <Icon className="h-6 w-6" />
                 </div>
-                <span className="text-xs font-semibold text-gray-800 dark:text-gray-200 leading-tight text-center">{label}</span>
-                <span className="text-[10px] text-gray-400 leading-tight text-center hidden sm:block">{desc}</span>
+                <span className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200 leading-tight text-center">{label}</span>
+                <span className="text-xs text-gray-400 leading-tight text-center hidden sm:block">{desc}</span>
               </button>
             ))}
           </div>
@@ -453,11 +477,11 @@ function WalletPage() {
                     <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">Pending Bank Transfer</p>
-                    <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-0.5">
+                    <p className="text-base font-semibold text-yellow-800 dark:text-yellow-300">Pending Bank Transfer</p>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-0.5">
                       Send ₦{Number(activeFundRequest.ngn_amount).toLocaleString()} · ref: <strong>{activeFundRequest.reference}</strong>
                     </p>
-                    <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-0.5">
+                    <p className="text-sm text-yellow-600 dark:text-yellow-500 mt-0.5">
                       You receive <strong>{activeFundRequest.usdc_amount} USDC</strong>
                     </p>
                   </div>
@@ -480,14 +504,14 @@ function WalletPage() {
             <div className="mb-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
                 <Banknote className="h-4 w-4 text-gray-400" />
-                <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">NGN Funding History</h2>
+                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">NGN Funding History</h2>
               </div>
               <div className="divide-y divide-gray-50 dark:divide-gray-800">
                 {fundRequests.slice(0, 5).map(r => (
-                  <div key={r.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div key={r.id} className="px-4 py-3.5 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <span className="font-mono text-sm font-bold text-[#118C4C]">{r.reference}</span>
-                      <p className="text-xs text-gray-500 mt-0.5 truncate">
+                      <p className="text-sm text-gray-500 mt-0.5 truncate">
                         ₦{Number(r.ngn_amount).toLocaleString()} → {r.usdc_amount} USDC
                       </p>
                     </div>
@@ -509,12 +533,12 @@ function WalletPage() {
             <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <History className="h-4 w-4 text-gray-400" />
-                <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Transaction History</h2>
+                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Transaction History</h2>
               </div>
               <div className="flex items-center gap-1.5">
                 {(["all", "send", "receive"] as const).map(f => (
                   <button key={f} onClick={() => setTransactionFilter(f)}
-                    className={`px-3 py-1 text-xs rounded-lg font-medium transition-colors capitalize ${
+                    className={`px-3 py-1.5 text-xs sm:text-sm rounded-lg font-medium transition-colors capitalize ${
                       transactionFilter === f
                         ? "bg-[#118C4C] text-white"
                         : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -534,8 +558,8 @@ function WalletPage() {
                   <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
                     <History className="h-6 w-6 text-gray-300" />
                   </div>
-                  <p className="text-sm font-medium">No transactions yet</p>
-                  <p className="text-xs text-center">Your on-chain activity will appear here</p>
+                  <p className="text-base font-medium">No transactions yet</p>
+                  <p className="text-sm text-center">Your on-chain activity will appear here</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-50 dark:divide-gray-800">
