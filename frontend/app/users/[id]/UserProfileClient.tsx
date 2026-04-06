@@ -24,6 +24,7 @@ import { ProductCard } from "@/components/ProductCard"
 import { Button } from "@/components/ui/button"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import Image from "next/image"
+import { RatingSummary } from "@/components/RatingSummary"
 
 interface UserProfileClientProps {
   user: User
@@ -36,7 +37,7 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
   const [copied, setCopied] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isImageFullScreen, setIsImageFullScreen] = useState(false)
-  const [activeTab, setActiveTab] = useState<'details' | 'products' | 'activity'>('details')
+  const [activeTab, setActiveTab] = useState<'details' | 'products' | 'activity' | 'ratings'>('details')
   const totalProducts = userProducts.length
   const totalUnits = userProducts.reduce((sum, p) => sum + (p.quantity || 0), 0)
   const avgPrice =
@@ -216,6 +217,16 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
             >
               Activity
             </button>
+            <button
+              onClick={() => setActiveTab('ratings')}
+              className={`px-4 py-3 font-medium transition-colors ${
+                activeTab === 'ratings'
+                  ? 'text-[#118C4C] border-b-2 border-[#118C4C]'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Ratings
+            </button>
           </div>
         </div>
 
@@ -290,6 +301,14 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
                   </li>
                 ))}
               </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'ratings' && (
+          <Card>
+            <CardContent className="p-6">
+              <RatingSummary farmerId={user.id} detail />
             </CardContent>
           </Card>
         )}

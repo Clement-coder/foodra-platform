@@ -15,6 +15,7 @@ import withAuth from "../../components/withAuth";
 import { useOrders } from "@/lib/useCart";
 import { useEscrow } from "@/lib/useEscrow";
 import { useUser } from "@/lib/useUser";
+import { RatingModal } from "@/components/RatingModal";
 
 function OrdersPage() {
   const { orders, refreshOrders } = useOrders();
@@ -24,6 +25,7 @@ function OrdersPage() {
   const { toast, confirm } = useToast();
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const [disputeOrder, setDisputeOrder] = useState<{ orderId: string; escrowOrderId: string } | null>(null);
+  const [ratingTarget, setRatingTarget] = useState<{ orderId: string; farmerId: string; farmerName: string } | null>(null);
 
   const handleDeleteOrder = async (orderId: string) => {
     if (!currentUser) return;
@@ -47,6 +49,10 @@ function OrdersPage() {
       });
       toast.success("Delivery confirmed! Payment released to farmer.");
       refreshOrders();
+      // Find farmer info from the order and prompt rating
+      const order = orders.find(o => o.id === orderId)
+      const farmer = order?.farmers?.[0]
+      if (farmer) setRatingTarget({ orderId, farmerId: farmer.id, farmerName: farmer.name })
     } else {
       toast.error("Failed to confirm delivery. Please try again.");
     }
@@ -220,6 +226,16 @@ function OrdersPage() {
           onConfirm={(reason, details) =>
             handleRaiseDispute(disputeOrder.orderId, disputeOrder.escrowOrderId, reason, details)
           }
+        />
+      )}
+      {ratingTarget && currentUser && (
+        <RatingModal
+          isOpen={!!ratingTarget}
+          onClose={() => setRatingTarget(null)}
+          orderId={ratingTarget.orderId}
+          farmerId={ratingTarget.farmerId}
+          farmerName={ratingTarget.farmerName}
+          buyerId={currentUser.id}
         />
       )}
     </div>
