@@ -55,5 +55,13 @@ CREATE TRIGGER trg_wfr_updated_at
 ALTER TABLE wallet_funding_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rate_settings ENABLE ROW LEVEL SECURITY;
 
--- Realtime for wallet_funding_requests
-ALTER PUBLICATION supabase_realtime ADD TABLE wallet_funding_requests;
+-- Realtime for wallet_funding_requests (safe to re-run)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'wallet_funding_requests'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE wallet_funding_requests;
+  END IF;
+END $$;
