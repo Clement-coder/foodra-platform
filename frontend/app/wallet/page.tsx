@@ -44,6 +44,24 @@ interface FundRequest {
   created_at: string;
 }
 
+// Smooth count-up hook
+function useCountUp(target: number, active: boolean, duration = 800) {
+  const [display, setDisplay] = useState("0")
+  useEffect(() => {
+    if (!active) { setDisplay("0"); return }
+    const start = performance.now()
+    const decimals = target % 1 !== 0 ? (String(target).split(".")[1]?.length ?? 4) : 0
+    const raf = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3) // ease-out cubic
+      setDisplay((eased * target).toFixed(decimals))
+      if (progress < 1) requestAnimationFrame(raf)
+    }
+    requestAnimationFrame(raf)
+  }, [target, active])
+  return display
+}
+
 // Countdown hook
 function useCountdown(expiresAt: string | null) {
   const [secondsLeft, setSecondsLeft] = useState(0)
@@ -99,6 +117,11 @@ function WalletPage() {
   const previewUsdc = effectiveRate && ngnAmount && parseFloat(ngnAmount) > 0
     ? (parseFloat(ngnAmount) / effectiveRate).toFixed(4)
     : null
+
+  const usdcNum = parseFloat(usdcBalance) || 0
+  const ngnEquiv = usdNgnRate ? usdcNum * usdNgnRate : 0
+  const countedUsdc = useCountUp(usdcNum, balanceVisible)
+  const countedNgn = useCountUp(ngnEquiv, balanceVisible && !!usdNgnRate, 900)
 
   const fetchWalletData = async () => {
     if (user?.wallet?.address) {
@@ -395,8 +418,8 @@ function WalletPage() {
                         animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
                         exit={{ opacity: 0, filter: "blur(12px)", y: -8 }}
                         transition={{ duration: 0.35, ease: "easeOut" }}
-                        className="text-6xl font-bold tracking-tight leading-none">
-                        {usdcBalance}
+                        className="text-6xl font-bold tracking-tight leading-none tabular-nums">
+                        {countedUsdc}
                       </motion.span>
                     ) : (
                       <motion.span key="hidden"
@@ -418,9 +441,9 @@ function WalletPage() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.25 }}
-                      className="text-base text-white/60 mt-1 font-medium">
+                      className="text-base text-white/60 mt-1 font-medium tabular-nums">
                       {balanceVisible
-                        ? `≈ ₦${(parseFloat(usdcBalance) * usdNgnRate).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        ? `≈ ₦${parseFloat(countedNgn).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                         : "≈ ₦••••••"}
                     </motion.p>
                   )}
