@@ -198,20 +198,23 @@ function WalletPage() {
   // Realtime: update fund request status when admin confirms/rejects
   useEffect(() => {
     if (!currentUser?.id) return
-    const channel = supabase
-      .channel(`wfr:${currentUser.id}`)
-      .on("postgres_changes", {
-        event: "UPDATE",
-        schema: "public",
-        table: "wallet_funding_requests",
-        filter: `user_id=eq.${currentUser.id}`,
-      }, (payload) => {
-        const updated = payload.new as FundRequest
-        setFundRequests(prev => prev.map(r => r.id === updated.id ? updated : r))
-        if (updated.status !== "Pending") setActiveFundRequest(null)
-      })
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    try {
+      channel = supabase
+        .channel(`wfr:${currentUser.id}`)
+        .on("postgres_changes", {
+          event: "UPDATE",
+          schema: "public",
+          table: "wallet_funding_requests",
+          filter: `user_id=eq.${currentUser.id}`,
+        }, (payload) => {
+          const updated = payload.new as FundRequest
+          setFundRequests(prev => prev.map(r => r.id === updated.id ? updated : r))
+          if (updated.status !== "Pending") setActiveFundRequest(null)
+        })
+        .subscribe()
+    } catch { /* realtime unavailable, polling via fetchFundRequests is sufficient */ }
+    return () => { if (channel) supabase.removeChannel(channel) }
   }, [currentUser?.id])
 
   // Auto-expire active request when countdown hits 0
