@@ -4,7 +4,7 @@ import Image from "next/image";
 const SOCIAL_LINKS = {
   linkedin: "https://www.linkedin.com/company/111768974",
   facebook: "https://web.facebook.com/profile.php?id=100063543806997",
-  x: "https://x.com",                   // TODO: update with Foodra X/Twitter URL
+  x: "https://x.com",
 };
 
 const LinkedInIcon = () => (
@@ -29,17 +29,24 @@ const Footer = () => {
   return (
     <footer className="bg-card border-t border-border shadow-sm mt-10">
       <div className="container mx-auto px-4 py-6 text-muted-foreground text-sm">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Row 1: logo + copyright */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Image src="/foodra_logo.jpeg" alt="Foodra Logo" width={44} height={34} className="rounded-bl-2xl rounded-tr-2xl" />
-            <p>&copy; {new Date().getFullYear()} Foodra Platform. All rights reserved.</p>
+            <p className="text-center sm:text-left">&copy; {new Date().getFullYear()} Foodra Platform. All rights reserved.</p>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
-            <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
-            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
-            <div className="flex items-center gap-3 ml-2 border-l border-border pl-4">
+
+          {/* Nav links + social */}
+          <div className="flex flex-col items-center sm:items-end gap-3">
+            {/* Nav links — wrap on small screens */}
+            <div className="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-1">
+              <Link href="/about" className="hover:text-foreground transition-colors whitespace-nowrap">About</Link>
+              <Link href="/contact" className="hover:text-foreground transition-colors whitespace-nowrap">Contact</Link>
+              <Link href="/privacy" className="hover:text-foreground transition-colors whitespace-nowrap">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors whitespace-nowrap">Terms of Service</Link>
+            </div>
+            {/* Social icons */}
+            <div className="flex items-center gap-4">
               <Link href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-foreground transition-colors">
                 <LinkedInIcon />
               </Link>
