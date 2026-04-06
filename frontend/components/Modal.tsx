@@ -43,7 +43,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             exit={{ opacity: 0 }}
             style={{ opacity: backdropOpacity }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
           />
 
           {/* ── Mobile: bottom sheet ── */}
@@ -59,7 +59,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="pointer-events-auto w-full bg-background rounded-t-2xl shadow-2xl max-h-[92vh] flex flex-col"
+              className="pointer-events-auto w-full bg-background rounded-t-3xl shadow-2xl max-h-[92vh] flex flex-col"
               role="dialog"
               aria-modal="true"
               aria-labelledby="modal-title"
