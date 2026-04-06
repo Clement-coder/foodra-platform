@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { X } from "lucide-react"
 import { motion, AnimatePresence, useDragControls, useMotionValue, useTransform } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -16,8 +16,7 @@ interface ModalProps {
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   const dragControls = useDragControls()
   const y = useMotionValue(0)
-  // fade backdrop as sheet is dragged down
-  const backdropOpacity = useTransform(y, [0, 300], [1, 0])
+  const sheetOpacity = useTransform(y, [0, 300], [1, 0])
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : ""
@@ -25,25 +24,24 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   }, [isOpen])
 
   const handleDragEnd = (_: any, info: { offset: { y: number }; velocity: { y: number } }) => {
-    if (info.offset.y > 120 || info.velocity.y > 500) {
-      onClose()
-    } else {
-      y.set(0)
-    }
+    if (info.offset.y > 120 || info.velocity.y > 500) onClose()
+    else y.set(0)
   }
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Blur layer — always full opacity so blur never disappears */}
+          <div className="fixed inset-0 z-40 backdrop-blur-sm" />
+
+          {/* Dim layer — fades in/out */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ opacity: backdropOpacity }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+            className="fixed inset-0 z-40 bg-black/50"
           />
 
           {/* ── Mobile: bottom sheet ── */}
@@ -54,7 +52,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
               dragConstraints={{ top: 0 }}
               dragElastic={{ top: 0.05, bottom: 0.3 }}
               onDragEnd={handleDragEnd}
-              style={{ y }}
+              style={{ y, opacity: sheetOpacity }}
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -72,7 +70,6 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                 <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
               </div>
 
-              {/* Header */}
               <div className="flex items-center justify-between px-5 py-3 border-b border-border">
                 <h2 id="modal-title" className="text-lg font-semibold text-foreground">{title}</h2>
                 <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
@@ -80,7 +77,6 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                 </Button>
               </div>
 
-              {/* Content */}
               <div className="overflow-y-auto flex-1 p-5">{children}</div>
             </motion.div>
           </div>
