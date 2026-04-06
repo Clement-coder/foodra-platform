@@ -119,40 +119,47 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {/* Confirm dialog */}
       <AnimatePresence>
         {confirmState && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-          >
+          <>
+            <div className="fixed inset-0 z-[200] backdrop-blur-sm" />
             <motion.div
-              initial={{ scale: 0.92, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.92, opacity: 0 }}
-              transition={{ duration: 0.18 }}
-              className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6"
-            >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto ${confirmState.danger ? "bg-red-100 dark:bg-red-900/30" : "bg-amber-100 dark:bg-amber-900/30"}`}>
-                <AlertTriangle className={`w-6 h-6 ${confirmState.danger ? "text-red-600" : "text-amber-600"}`} />
-              </div>
-              <h3 className="text-base font-bold text-center text-gray-900 dark:text-white mb-2">
-                {confirmState.title || "Are you sure?"}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6 leading-relaxed">
-                {confirmState.message}
-              </p>
-              <div className="flex gap-3">
-                <button onClick={() => handleConfirm(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  Cancel
-                </button>
-                <button onClick={() => handleConfirm(true)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-colors ${confirmState.danger ? "bg-red-600 hover:bg-red-700" : "bg-[#118C4C] hover:bg-[#0d6b3a]"}`}>
-                  {confirmState.confirmLabel || "Confirm"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[200] bg-black/50"
+              onClick={() => handleConfirm(false)}
+            />
+            <div className="fixed inset-0 z-[201] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+              <motion.div
+                initial={{ y: "100%", opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: "100%", opacity: 0 }}
+                transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                className="pointer-events-auto bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-sm p-6"
+              >
+                <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-5 sm:hidden" />
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 mx-auto ${confirmState.danger ? "bg-red-100 dark:bg-red-900/30" : "bg-amber-100 dark:bg-amber-900/30"}`}>
+                  <AlertTriangle className={`w-6 h-6 ${confirmState.danger ? "text-red-600" : "text-amber-600"}`} />
+                </div>
+                <h3 className="text-base font-bold text-center text-gray-900 dark:text-white mb-2">
+                  {confirmState.title || "Are you sure?"}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-6 leading-relaxed">
+                  {confirmState.message}
+                </p>
+                <div className="flex flex-col gap-3">
+                  <button onClick={() => handleConfirm(true)}
+                    className={`w-full py-3 rounded-xl text-base font-semibold text-white transition-colors ${confirmState.danger ? "bg-red-600 hover:bg-red-700" : "bg-[#118C4C] hover:bg-[#0d6b3a]"}`}>
+                    {confirmState.confirmLabel || "Confirm"}
+                  </button>
+                  <button onClick={() => handleConfirm(false)}
+                    className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </>
         )}
       </AnimatePresence>
     </ToastContext.Provider>
