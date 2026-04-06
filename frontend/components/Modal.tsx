@@ -56,7 +56,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
               className="pointer-events-auto w-full bg-background rounded-t-3xl shadow-2xl max-h-[92vh] flex flex-col"
               role="dialog"
               aria-modal="true"
@@ -84,10 +84,10 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           {/* ── Desktop: centered dialog ── */}
           <div className="fixed inset-0 z-50 hidden sm:flex items-center justify-center p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              initial={{ opacity: 0, scale: 0.97, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
               className="bg-background rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col"
               role="dialog"
               aria-modal="true"
