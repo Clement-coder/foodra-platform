@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { usePrivy, useWallets, useSendTransaction } from "@privy-io/react-auth"
-import { useAccount } from "wagmi"
+import { usePrivy, useSendTransaction } from "@privy-io/react-auth"
 import { ethers } from "ethers"
 import { QRCodeSVG } from "qrcode.react"
 import { FormInput } from "@/components/FormInput"
-import { DollarSign, History, PlusCircle, MinusCircle, ArrowUpCircle, ArrowDownCircle, Copy, RefreshCcw, Wallet, ChevronDown, Eye, EyeOff } from "lucide-react"
+import { DollarSign, History, PlusCircle, MinusCircle, Copy, RefreshCcw, Wallet, Eye, EyeOff, Banknote, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Modal } from "@/components/Modal"
@@ -15,7 +14,8 @@ import { useToast } from "@/lib/toast"
 import { TransactionItem } from "@/components/TransactionItem"
 import { baseSepolia } from "viem/chains"
 import type { Chain } from "viem"
-
+import { useUser } from "@/lib/useUser"
+import { supabase } from "@/lib/supabase"
 
 interface Transaction {
   hash: string;
@@ -28,11 +28,45 @@ interface Transaction {
   tokenDecimals?: string;
 }
 
+interface RateSettings {
+  base_ngn_per_usdc: number;
+  spread_percent: number;
+}
+
+interface FundRequest {
+  id: string;
+  reference: string;
+  ngn_amount: number;
+  usdc_amount: number;
+  rate_ngn_per_usdc: number;
+  spread_percent: number;
+  status: "Pending" | "Confirmed" | "Rejected" | "Expired";
+  expires_at: string;
+  created_at: string;
+}
+
+// Countdown hook
+function useCountdown(expiresAt: string | null) {
+  const [secondsLeft, setSecondsLeft] = useState(0)
+  useEffect(() => {
+    if (!expiresAt) return
+    const tick = () => {
+      const diff = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
+      setSecondsLeft(diff)
+    }
+    tick()
+    const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [expiresAt])
+  const m = Math.floor(secondsLeft / 60).toString().padStart(2, "0")
+  const s = (secondsLeft % 60).toString().padStart(2, "0")
+  return { secondsLeft, display: `${m}:${s}` }
+}
+
 function WalletPage() {
   const { user } = usePrivy()
-  const { wallets } = useWallets()
-  const { chainId } = useAccount()
   const { sendTransaction } = useSendTransaction()
+  const { currentUser } = useUser()
   const { toast } = useToast()
   const [balance, setBalance] = useState<string>("0")
   const [usdNgnRate, setUsdNgnRate] = useState<number | null>(null)
@@ -41,6 +75,8 @@ function WalletPage() {
   const [isWithdrawFundsModalOpen, setIsWithdrawFundsModalOpen] = useState(false)
   const [isConfirmWithdrawModalOpen, setIsConfirmWithdrawModalOpen] = useState(false)
   const [isComingSoonModalOpen, setIsComingSoonModalOpen] = useState(false)
+  const [isNgnFundModalOpen, setIsNgnFundModalOpen] = useState(false)
+  const [isNgnConfirmModalOpen, setIsNgnConfirmModalOpen] = useState(false)
   const [recipientAddress, setRecipientAddress] = useState("")
   const [withdrawAmount, setWithdrawAmount] = useState("")
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -52,8 +88,20 @@ function WalletPage() {
   const [recipientError, setRecipientError] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
   const [selectedChain] = useState<Chain>(baseSepolia)
+  // NGN funding state
+  const [rateSettings, setRateSettings] = useState<RateSettings | null>(null)
+  const [ngnAmount, setNgnAmount] = useState("")
+  const [activeFundRequest, setActiveFundRequest] = useState<FundRequest | null>(null)
+  const [fundRequests, setFundRequests] = useState<FundRequest[]>([])
+  const [isSubmittingFund, setIsSubmittingFund] = useState(false)
+  const { secondsLeft, display: countdownDisplay } = useCountdown(activeFundRequest?.expires_at ?? null)
 
-  const handleChainSwitch = (_chainId: number) => { /* locked to Base Sepolia */ }
+  const effectiveRate = rateSettings
+    ? rateSettings.base_ngn_per_usdc * (1 + rateSettings.spread_percent / 100)
+    : null
+  const previewUsdc = effectiveRate && ngnAmount && parseFloat(ngnAmount) > 0
+    ? (parseFloat(ngnAmount) / effectiveRate).toFixed(4)
+    : null
 
   const fetchWalletData = async () => {
     if (user?.wallet?.address) {
@@ -91,6 +139,26 @@ function WalletPage() {
     }
   }
 
+  const fetchRateSettings = async () => {
+    try {
+      const res = await fetch("/api/admin/rate")
+      if (res.ok) setRateSettings(await res.json())
+    } catch { /* rate unavailable */ }
+  }
+
+  const fetchFundRequests = async () => {
+    if (!currentUser?.id) return
+    try {
+      const res = await fetch(`/api/wallet/fund-request?userId=${currentUser.id}`)
+      if (res.ok) {
+        const list: FundRequest[] = await res.json()
+        setFundRequests(list)
+        const pending = list.find(r => r.status === "Pending" && new Date(r.expires_at) > new Date())
+        setActiveFundRequest(pending ?? null)
+      }
+    } catch { /* ignore */ }
+  }
+
   const fetchEthRate = async () => {
     try {
       const [ethRes, fxRes] = await Promise.all([
@@ -111,7 +179,39 @@ function WalletPage() {
   useEffect(() => {
     fetchWalletData()
     fetchEthRate()
+    fetchRateSettings()
   }, [user, selectedChain])
+
+  useEffect(() => {
+    fetchFundRequests()
+  }, [currentUser?.id])
+
+  // Realtime: update fund request status when admin confirms/rejects
+  useEffect(() => {
+    if (!currentUser?.id) return
+    const channel = supabase
+      .channel(`wfr:${currentUser.id}`)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "wallet_funding_requests",
+        filter: `user_id=eq.${currentUser.id}`,
+      }, (payload) => {
+        const updated = payload.new as FundRequest
+        setFundRequests(prev => prev.map(r => r.id === updated.id ? updated : r))
+        if (updated.status !== "Pending") setActiveFundRequest(null)
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [currentUser?.id])
+
+  // Auto-expire active request when countdown hits 0
+  useEffect(() => {
+    if (activeFundRequest && secondsLeft === 0) {
+      setActiveFundRequest(null)
+      fetchFundRequests()
+    }
+  }, [secondsLeft])
 
   useEffect(() => {
     // Real-time validation for recipient address
@@ -159,6 +259,11 @@ function WalletPage() {
     }
   }
 
+  const copyText = (text: string, label = "Copied!") => {
+    navigator.clipboard.writeText(text)
+    toast.success(label)
+  }
+
   const handleWithdraw = () => {
     if (recipientError || amountError || !recipientAddress || !withdrawAmount) {
       return
@@ -189,6 +294,29 @@ function WalletPage() {
       console.error("Error sending transaction:", error)
       toast.error("Transaction failed. Please try again.")
       setIsConfirmWithdrawModalOpen(false)
+    }
+  }
+
+  const handleNgnFundSubmit = async () => {
+    if (!currentUser?.id || !ngnAmount || parseFloat(ngnAmount) <= 0) return
+    setIsSubmittingFund(true)
+    try {
+      const res = await fetch("/api/wallet/fund-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id, ngnAmount: parseFloat(ngnAmount) }),
+      })
+      if (!res.ok) throw new Error()
+      const req: FundRequest = await res.json()
+      setActiveFundRequest(req)
+      setFundRequests(prev => [req, ...prev])
+      setNgnAmount("")
+      setIsNgnFundModalOpen(false)
+      setIsNgnConfirmModalOpen(true)
+    } catch {
+      toast.error("Failed to create funding request. Please try again.")
+    } finally {
+      setIsSubmittingFund(false)
     }
   }
 
@@ -262,10 +390,14 @@ function WalletPage() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <Button onClick={() => setIsAddFundsModalOpen(true)} className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2" title="Add funds to your wallet by scanning the QR code or copying the address.">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
+          <Button onClick={() => setIsAddFundsModalOpen(true)} className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2" title="Add funds via crypto.">
             <PlusCircle className="h-5 w-5" />
             Add Funds
+          </Button>
+          <Button onClick={() => setIsNgnFundModalOpen(true)} className="bg-yellow-500 hover:bg-yellow-600 text-white gap-2" title="Fund wallet with NGN bank transfer.">
+            <Banknote className="h-5 w-5" />
+            Fund with NGN
           </Button>
           <Button onClick={() => setIsWithdrawFundsModalOpen(true)} variant="outline" className="gap-2" title="Withdraw funds from your wallet to another address.">
             <MinusCircle className="h-5 w-5" />
@@ -276,6 +408,61 @@ function WalletPage() {
             Bridge Funds
           </Button>
         </div>
+
+        {/* Active funding request banner */}
+        {activeFundRequest && (
+          <Card className="mb-6 border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20">
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-300 flex items-center gap-2">
+                    <Clock className="h-4 w-4" /> Pending Bank Transfer
+                  </p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
+                    Transfer ₦{Number(activeFundRequest.ngn_amount).toLocaleString()} and include reference <strong>{activeFundRequest.reference}</strong> in your narration.
+                  </p>
+                  <p className="text-xs text-yellow-600 mt-0.5">
+                    You will receive <strong>{activeFundRequest.usdc_amount} USDC</strong> · Rate: ₦{Number(activeFundRequest.rate_ngn_per_usdc).toFixed(2)}/USDC
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className={`text-2xl font-mono font-bold ${secondsLeft < 120 ? "text-red-600" : "text-yellow-700 dark:text-yellow-300"}`}>
+                    {countdownDisplay}
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => setIsNgnConfirmModalOpen(true)} className="text-xs">
+                    View Details
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Recent NGN funding requests */}
+        {fundRequests.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader className="pb-2">
+              <h2 className="text-base font-semibold">NGN Funding History</h2>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border">
+                {fundRequests.slice(0, 5).map(r => (
+                  <div key={r.id} className="px-4 py-3 flex items-center justify-between gap-2 text-sm">
+                    <div>
+                      <span className="font-mono font-semibold text-[#118C4C]">{r.reference}</span>
+                      <span className="ml-2 text-muted-foreground">₦{Number(r.ngn_amount).toLocaleString()} → {r.usdc_amount} USDC</span>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      r.status === "Confirmed" ? "bg-green-100 text-green-700"
+                      : r.status === "Rejected" ? "bg-red-100 text-red-700"
+                      : r.status === "Expired" ? "bg-gray-100 text-gray-500"
+                      : "bg-yellow-100 text-yellow-700"}`}>{r.status}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex justify-end mb-6">
           <div className="inline-flex items-center gap-2 rounded-xl bg-slate-100 p-1.5 shadow-sm">
@@ -465,6 +652,108 @@ function WalletPage() {
             Close
           </Button>
         </div>
+      </Modal>
+
+      {/* NGN Fund — enter amount */}
+      <Modal isOpen={isNgnFundModalOpen} onClose={() => setIsNgnFundModalOpen(false)} title="Fund Wallet with NGN">
+        <div className="space-y-4">
+          {rateSettings && effectiveRate ? (
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 text-sm space-y-1">
+              <p className="font-semibold text-blue-700 dark:text-blue-300">Current Exchange Rate</p>
+              <p className="text-blue-600 dark:text-blue-400">₦{effectiveRate.toFixed(2)} = 1 USDC</p>
+              <p className="text-xs text-blue-500">Base: ₦{rateSettings.base_ngn_per_usdc} + {rateSettings.spread_percent}% spread</p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Loading rate…</p>
+          )}
+          <FormInput
+            label="Amount in NGN (₦)"
+            placeholder="e.g. 50000"
+            value={ngnAmount}
+            onChange={e => setNgnAmount(e.target.value)}
+            required
+          />
+          {previewUsdc && effectiveRate && (
+            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3 text-sm space-y-1 border border-green-200 dark:border-green-800">
+              <p className="text-xs text-muted-foreground">You will receive</p>
+              <p className="text-2xl font-bold text-[#118C4C]">{previewUsdc} <span className="text-base">USDC</span></p>
+              <p className="text-xs text-muted-foreground">Rate: ₦{effectiveRate.toFixed(2)} per USDC · {rateSettings?.spread_percent}% platform fee included</p>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">After confirming, you will receive a unique reference and bank account details. Transfer the exact NGN amount and include the reference in your narration.</p>
+          <Button
+            onClick={handleNgnFundSubmit}
+            disabled={isSubmittingFund || !ngnAmount || parseFloat(ngnAmount) <= 0 || !effectiveRate}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
+          >
+            {isSubmittingFund ? "Creating request…" : "Continue"}
+          </Button>
+        </div>
+      </Modal>
+
+      {/* NGN Fund — bank transfer instructions */}
+      <Modal isOpen={isNgnConfirmModalOpen} onClose={() => setIsNgnConfirmModalOpen(false)} title="Complete Your Bank Transfer">
+        {activeFundRequest && (
+          <div className="space-y-4">
+            <div className={`flex items-center gap-2 p-3 rounded-xl text-sm font-medium ${
+              secondsLeft > 120 ? "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300"
+              : secondsLeft > 0 ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300"
+              : "bg-gray-100 text-gray-500"}`}>
+              <Clock className="h-4 w-4 flex-shrink-0" />
+              {secondsLeft > 0 ? <>Expires in <strong className="ml-1 font-mono">{countdownDisplay}</strong></> : "This request has expired"}
+            </div>
+
+            <div className="bg-muted rounded-xl p-4 space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Reference (include in narration)</span>
+                <div className="flex items-center gap-1">
+                  <span className="font-mono font-bold text-[#118C4C] text-base">{activeFundRequest.reference}</span>
+                  <button onClick={() => copyText(activeFundRequest.reference, "Reference copied!")} className="p-1 hover:bg-gray-200 rounded">
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Amount to transfer</span>
+                <span className="font-bold text-lg">₦{Number(activeFundRequest.ngn_amount).toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">You will receive</span>
+                <span className="font-bold text-[#118C4C]">{activeFundRequest.usdc_amount} USDC</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Rate</span>
+                <span>₦{Number(activeFundRequest.rate_ngn_per_usdc).toFixed(2)} / USDC</span>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-2 text-sm">
+              <p className="font-semibold text-foreground">Bank Transfer Details</p>
+              <div className="flex justify-between"><span className="text-muted-foreground">Bank</span><span className="font-medium">Foodra Finance Bank</span></div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Account Number</span>
+                <div className="flex items-center gap-1">
+                  <span className="font-mono font-bold">0123456789</span>
+                  <button onClick={() => copyText("0123456789", "Account number copied!")} className="p-1 hover:bg-gray-200 rounded">
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Account Name</span><span className="font-medium">Foodra Platform Ltd</span></div>
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-xs text-amber-700 dark:text-amber-300 space-y-1">
+              <p className="font-semibold">⚠ Important</p>
+              <p>You MUST include <strong>{activeFundRequest.reference}</strong> in your transfer narration/description.</p>
+              <p>Transfer the exact amount of ₦{Number(activeFundRequest.ngn_amount).toLocaleString()}. Partial transfers will not be processed.</p>
+              <p>USDC will be credited within 30 minutes of confirmation.</p>
+            </div>
+
+            <Button onClick={() => setIsNgnConfirmModalOpen(false)} className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+              I&apos;ve Made the Transfer
+            </Button>
+          </div>
+        )}
       </Modal>
     </div>
   )

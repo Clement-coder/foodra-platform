@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   if (!actor || actor.role !== "admin")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-  const [users, products, funding, orders, enrollments, supportMessages, trainings] = await Promise.all([
+  const [users, products, funding, orders, enrollments, supportMessages, trainings, walletRequests] = await Promise.all([
     supabaseAdmin.from("users").select("id, name, email, phone, location, avatar_url, wallet_address, role, created_at").order("created_at", { ascending: false }),
     supabaseAdmin.from("products").select("id, name, category, price, quantity, image_url, location, is_available, created_at, farmer_id").order("created_at", { ascending: false }),
     supabaseAdmin.from("funding_applications").select("*").order("created_at", { ascending: false }),
@@ -24,6 +24,7 @@ export async function GET(request: Request) {
     supabaseAdmin.from("training_enrollments").select("id, training_id, user_id, full_name, created_at").order("created_at", { ascending: false }),
     supabaseAdmin.from("support_messages").select("id, user_id, message, image_url, is_admin_reply, created_at").order("created_at", { ascending: false }),
     supabaseAdmin.from("trainings").select("id, title, summary, date, mode, location, instructor_name, capacity, image_url, created_at").order("date", { ascending: true }),
+    supabaseAdmin.from("wallet_funding_requests").select("*, users(id, name, email, wallet_address)").order("created_at", { ascending: false }),
   ])
 
   return NextResponse.json({
@@ -34,5 +35,6 @@ export async function GET(request: Request) {
     enrollments: enrollments.data || [],
     supportMessages: supportMessages.data || [],
     trainings: trainings.data || [],
+    walletRequests: walletRequests.data || [],
   })
 }
