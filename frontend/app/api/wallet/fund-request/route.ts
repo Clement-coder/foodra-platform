@@ -28,7 +28,10 @@ export async function GET(request: Request) {
       .from("wallet_funding_requests")
       .select("*, users(id, name, email, wallet_address)")
       .order("created_at", { ascending: false })
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error("wallet_funding_requests admin GET error:", error.message)
+      return NextResponse.json([])
+    }
     return NextResponse.json(data)
   }
 
@@ -38,7 +41,11 @@ export async function GET(request: Request) {
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    // Table may not exist yet — return empty rather than 500
+    console.error("wallet_funding_requests GET error:", error.message)
+    return NextResponse.json([])
+  }
   return NextResponse.json(data)
 }
 
