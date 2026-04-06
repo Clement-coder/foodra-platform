@@ -64,6 +64,10 @@ export async function POST(request: Request) {
   const effectiveRate = baseRate
   const usdcAmount = parseFloat((ngnAmount / effectiveRate).toFixed(6))
 
+  if (usdcAmount < 1) {
+    return NextResponse.json({ error: `Minimum funding is 1 USDC. Please enter at least ₦${Math.ceil(effectiveRate).toLocaleString()}.` }, { status: 400 })
+  }
+
   // Generate unique reference
   let reference = generateReference()
   let attempts = 0

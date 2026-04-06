@@ -687,16 +687,19 @@ function WalletPage() {
             required
           />
           {previewUsdc && effectiveRate && (
-            <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-3 text-sm space-y-1 border border-green-200 dark:border-green-800">
+            <div className={`rounded-xl p-3 text-sm space-y-1 border ${parseFloat(previewUsdc) < 1 ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800" : "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"}`}>
               <p className="text-xs text-muted-foreground">You will receive</p>
-              <p className="text-2xl font-bold text-[#118C4C]">{previewUsdc} <span className="text-base">USDC</span></p>
-              <p className="text-xs text-muted-foreground">Rate: ₦{rateSettings?.base_ngn_per_usdc?.toFixed(2)} per USDC · Free, no fees</p>
+              <p className={`text-2xl font-bold ${parseFloat(previewUsdc) < 1 ? "text-red-600" : "text-[#118C4C]"}`}>{previewUsdc} <span className="text-base">USDC</span></p>
+              {parseFloat(previewUsdc) < 1
+                ? <p className="text-xs text-red-600 font-medium">Minimum is 1 USDC. Enter at least ₦{effectiveRate ? Math.ceil(effectiveRate).toLocaleString() : "—"}</p>
+                : <p className="text-xs text-muted-foreground">Rate: ₦{rateSettings?.base_ngn_per_usdc?.toFixed(2)} per USDC · Free, no fees</p>
+              }
             </div>
           )}
           <p className="text-xs text-muted-foreground">After confirming, you will receive a unique reference and bank account details. Transfer the exact NGN amount and include the reference in your narration.</p>
           <Button
             onClick={handleNgnFundSubmit}
-            disabled={isSubmittingFund || !ngnAmount || parseFloat(ngnAmount) <= 0 || !effectiveRate}
+            disabled={isSubmittingFund || !ngnAmount || parseFloat(ngnAmount) <= 0 || !effectiveRate || (!!previewUsdc && parseFloat(previewUsdc) < 1)}
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white text-base font-semibold py-3"
           >
             {isSubmittingFund ? "Creating request…" : "Continue"}
