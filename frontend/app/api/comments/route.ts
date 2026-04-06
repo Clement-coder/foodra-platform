@@ -30,6 +30,16 @@ export async function POST(request: Request) {
   if (!productId || !userId || !comment?.trim())
     return NextResponse.json({ error: "productId, userId, comment required" }, { status: 400 })
 
+  // Block product owner from commenting on their own product
+  const { data: product } = await supabase
+    .from("products")
+    .select("farmer_id, name")
+    .eq("id", productId)
+    .single()
+
+  if (product?.farmer_id === userId)
+    return NextResponse.json({ error: "You cannot comment on your own product" }, { status: 403 })
+
   const { data, error } = await supabase
     .from("product_comments")
     .insert({ product_id: productId, user_id: userId, comment: comment.trim() })
@@ -39,12 +49,6 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Notify the product owner (farmer)
-  const { data: product } = await supabase
-    .from("products")
-    .select("farmer_id, name")
-    .eq("id", productId)
-    .single()
-
   if (product && product.farmer_id !== userId) {
     await createNotification({
       userId: product.farmer_id,
