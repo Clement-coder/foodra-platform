@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { ArrowUpRight, BadgeCheck, Copy, User as UserIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { User } from "@/lib/types"
+import { RatingSummary } from "@/components/RatingSummary"
 
 interface UserCardProps {
   user: User
@@ -67,6 +68,10 @@ export function UserCard({ user }: UserCardProps) {
             className="h-4 w-4 text-[#118C4C] hover:scale-110 transition cursor-pointer"
           />
         )}
+      </div>
+
+      <div className="mt-3 px-1">
+        <RatingSummary farmerId={user.id} />
       </div>
     </motion.div>
   )

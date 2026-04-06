@@ -291,7 +291,7 @@ function ProductDetailPage() {
         {/* Comments */}
         <Card className="mt-4 border-[#118C4C]/20">
           <CardContent className="p-6">
-            <ProductComments productId={product.id} currentUserId={currentUser?.id} />
+            <ProductComments productId={product.id} currentUserId={currentUser?.id} productOwnerId={product.farmerId} />
           </CardContent>
         </Card>
       </motion.div>

@@ -18,9 +18,11 @@ interface Comment {
 interface ProductCommentsProps {
   productId: string
   currentUserId?: string
+  productOwnerId?: string
 }
 
-export function ProductComments({ productId, currentUserId }: ProductCommentsProps) {
+export function ProductComments({ productId, currentUserId, productOwnerId }: ProductCommentsProps) {
+  const isOwner = currentUserId && productOwnerId && currentUserId === productOwnerId
   const { toast } = useToast()
   const [comments, setComments] = useState<Comment[]>([])
   const [text, setText] = useState("")
@@ -66,8 +68,8 @@ export function ProductComments({ productId, currentUserId }: ProductCommentsPro
         Comments ({comments.length})
       </h3>
 
-      {/* Input */}
-      {currentUserId && (
+      {/* Input — hidden for product owner */}
+      {currentUserId && !isOwner && (
         <div className="flex gap-2 mb-5">
           <input
             value={text}
