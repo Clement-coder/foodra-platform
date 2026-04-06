@@ -51,16 +51,17 @@ export async function POST(request: Request) {
   const { userId, ngnAmount } = body
   if (!userId || !ngnAmount) return NextResponse.json({ error: "userId and ngnAmount required" }, { status: 400 })
 
-  // Fetch current rate
-  const { data: rate, error: rateErr } = await supabase
+  // Fetch current rate — fall back to default if not configured
+  const { data: rate } = await supabase
     .from("rate_settings")
     .select("base_ngn_per_usdc, spread_percent")
     .order("updated_at", { ascending: false })
     .limit(1)
     .single()
-  if (rateErr || !rate) return NextResponse.json({ error: "Rate not configured" }, { status: 500 })
 
-  const effectiveRate = rate.base_ngn_per_usdc * (1 + rate.spread_percent / 100)
+  const baseRate = rate?.base_ngn_per_usdc ?? 1600
+  const spreadPct = rate?.spread_percent ?? 2.5
+  const effectiveRate = baseRate * (1 + spreadPct / 100)
   const usdcAmount = parseFloat((ngnAmount / effectiveRate).toFixed(6))
 
   // Generate unique reference
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
       ngn_amount: ngnAmount,
       usdc_amount: usdcAmount,
       rate_ngn_per_usdc: effectiveRate,
-      spread_percent: rate.spread_percent,
+      spread_percent: spreadPct,
       expires_at: expiresAt,
     })
     .select()
