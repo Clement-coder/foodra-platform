@@ -76,7 +76,8 @@ export async function POST(request: Request) {
           name: body.name || "User",
           email: body.email || null,
           wallet_address: body.wallet || null,
-          avatar_url: body.avatar || null,
+          // Don't overwrite a custom uploaded avatar — only set if user has no avatar yet
+          ...(existingUser.avatar_url ? {} : { avatar_url: body.avatar || null }),
         }
       : {
           privy_id: body.privyId,

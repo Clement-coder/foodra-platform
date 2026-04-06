@@ -71,8 +71,17 @@ function ProfilePage() {
         body: JSON.stringify({ base64, userId: user.id }),
       })
       if (!res.ok) throw new Error("Upload failed")
-      toast.success("Avatar updated successfully!")
+      const { avatarUrl } = await res.json()
+      // Update user record with cache-busted URL so UI refreshes immediately
+      const cacheBusted = `${avatarUrl}?t=${Date.now()}`
+      await fetch("/api/users/sync", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ privyId: privyUser?.id, avatar_url: cacheBusted }),
+      })
+      // Force re-sync to update currentUser state
       window.location.reload()
+      toast.success("Avatar updated!")
     } catch {
       toast.error("Failed to upload avatar. Please try again.")
     } finally {

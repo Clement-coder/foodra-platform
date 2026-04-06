@@ -101,7 +101,11 @@ function WalletPage() {
   const [isRefreshingTransactions, setIsRefreshingTransactions] = useState(false)
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false)
   const [usdcBalance, setUsdcBalance] = useState<string>("0")
-  const [balanceVisible, setBalanceVisible] = useState(true)
+  const [balanceVisible, setBalanceVisible] = useState(() => {
+    if (typeof window === "undefined") return true
+    const stored = localStorage.getItem("foodra_balance_visible")
+    return stored === null ? true : stored === "true"
+  })
   const [recipientError, setRecipientError] = useState<string | null>(null)
   const [amountError, setAmountError] = useState<string | null>(null)
   const [selectedChain] = useState<Chain>(baseSepolia)
@@ -380,7 +384,7 @@ function WalletPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
           {/* ── Hero Balance Card ── */}
@@ -398,7 +402,11 @@ function WalletPage() {
                   <span className="text-base font-semibold text-white/90">Foodra Wallet</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => setBalanceVisible(v => !v)} className="p-2 rounded-full hover:bg-white/10 transition-colors" title={balanceVisible ? "Hide balance" : "Show balance"}>
+                  <button onClick={() => setBalanceVisible(v => {
+                    const next = !v
+                    localStorage.setItem("foodra_balance_visible", String(next))
+                    return next
+                  })} className="p-2 rounded-full hover:bg-white/10 transition-colors" title={balanceVisible ? "Hide balance" : "Show balance"}>
                     {balanceVisible ? <EyeOff className="h-5 w-5 text-white/80" /> : <Eye className="h-5 w-5 text-white/80" />}
                   </button>
                   <button onClick={handleRefreshWalletData} disabled={isRefreshingBalance} className="p-2 rounded-full hover:bg-white/10 transition-colors">
