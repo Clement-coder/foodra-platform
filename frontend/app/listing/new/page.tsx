@@ -29,6 +29,7 @@ function NewListingPage() {
   const [user, setUser] = useState<User | null>(null)
   const [imageBase64, setImageBase64] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [confirmed, setConfirmed] = useState(false)
 
   const {
     register,
@@ -228,10 +229,25 @@ function NewListingPage() {
                 error={errors.image?.message}
               />
 
+              {/* Confirmation checkbox */}
+              <label className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${confirmed ? "border-[#118C4C] bg-[#118C4C]/5" : "border-border hover:border-[#118C4C]/50"}`}>
+                <input
+                  type="checkbox"
+                  checked={confirmed}
+                  onChange={e => setConfirmed(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-[#118C4C] flex-shrink-0"
+                />
+                <span className="text-sm text-muted-foreground leading-relaxed">
+                  I confirm that the information provided above is accurate and truthful. I agree that this listing complies with Foodra&apos;s{" "}
+                  <a href="/terms" target="_blank" className="text-[#118C4C] underline underline-offset-2 hover:text-[#0d6d3a]">Terms of Service</a>
+                  {" "}and that I am the rightful owner or authorised seller of this product.
+                </span>
+              </label>
+
               <Button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white"
+                disabled={isSubmitting || !confirmed}
+                className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white disabled:opacity-50"
               >
                 {isSubmitting ? "Listing Product..." : "List Product"}
               </Button>
