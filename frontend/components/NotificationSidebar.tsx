@@ -66,10 +66,18 @@ export function NotificationSidebar({ open, onClose, notifications, onMarkRead }
             ref={ref}
             initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-[61] w-full max-w-sm bg-white dark:bg-gray-900 shadow-2xl flex flex-col"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={{ left: 0, right: 0.4 }}
+            onDragEnd={(_, info) => { if (info.offset.x > 80 || info.velocity.x > 500) onClose() }}
+            className="fixed right-0 top-0 bottom-0 z-[61] w-full max-w-sm bg-white dark:bg-gray-900 shadow-2xl flex flex-col cursor-grab active:cursor-grabbing"
           >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+            </div>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 cursor-default">
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-green-600" />
                 <h2 className="font-bold text-gray-900 dark:text-white">Notifications</h2>
@@ -92,7 +100,7 @@ export function NotificationSidebar({ open, onClose, notifications, onMarkRead }
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto cursor-default" onPointerDown={(e) => e.stopPropagation()}>
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
                   <Bell className="w-12 h-12 opacity-20" />

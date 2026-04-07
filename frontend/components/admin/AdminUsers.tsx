@@ -4,6 +4,7 @@ import { useState } from "react"
 import { X, MapPin, Phone, Mail, Wallet, Package, Calendar, Home, Download, Send } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
+import { CustomSelect } from "@/components/CustomSelect"
 
 function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: AdminData; onClose: () => void; privyId?: string }) {
   const { toast } = useToast()
@@ -303,12 +304,16 @@ export default function AdminUsers({
                 <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden lg:table-cell">{u.phone || "—"}</td>
                 <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden lg:table-cell">{u.location || "—"}</td>
                 <td className="px-4 py-3">
-                  <select value={u.role || "buyer"} onChange={e => updateRole(u.id, e.target.value)}
-                    className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500">
-                    <option value="buyer">Buyer</option>
-                    <option value="farmer">Farmer</option>
-                    <option value="admin">Admin</option>
-                  </select>
+                  <CustomSelect
+                    value={u.role || "buyer"}
+                    onChange={(v) => updateRole(u.id, v)}
+                    options={[
+                      { value: "buyer", label: "Buyer" },
+                      { value: "farmer", label: "Farmer" },
+                      { value: "admin", label: "Admin" },
+                    ]}
+                    className="w-28"
+                  />
                 </td>
                 <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">{new Date(u.created_at).toLocaleDateString()}</td>
                 <td className="px-4 py-3">

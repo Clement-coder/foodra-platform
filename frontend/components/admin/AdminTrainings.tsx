@@ -3,6 +3,7 @@
 import { useState, useRef } from "react"
 import { Plus, Pencil, Trash2, X, Users, ImageIcon } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
+import { CustomSelect } from "@/components/CustomSelect"
 import { useToast } from "@/lib/toast"
 
 const EMPTY = { title: "", summary: "", description: "", date: "", mode: "online", location: "", instructor: "", capacity: 20 }
@@ -98,11 +99,12 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
         ))}
         <div>
           <label className="text-xs text-gray-500 mb-1 block">Mode</label>
-          <select value={form.mode} onChange={e => set("mode", e.target.value)}
-            className="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500">
-            <option value="online">Online</option>
-            <option value="offline">Offline</option>
-          </select>
+          <CustomSelect
+            value={form.mode}
+            onChange={(v) => set("mode", v)}
+            options={[{ value: "online", label: "Online" }, { value: "offline", label: "Offline" }]}
+            className="w-full"
+          />
         </div>
       </div>
       <div>
