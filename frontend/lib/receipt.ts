@@ -15,7 +15,17 @@ interface ReceiptOptions {
   filename: string
 }
 
-export function downloadReceiptImage({ title, subtitle, lines, filename }: ReceiptOptions) {
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = "anonymous"
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+}
+
+export async function downloadReceiptImage({ title, subtitle, lines, filename }: ReceiptOptions) {
   const W = 600
   const PADDING = 40
   const LINE_H = 28
@@ -24,10 +34,8 @@ export function downloadReceiptImage({ title, subtitle, lines, filename }: Recei
   const H = HEADER_H + lines.length * LINE_H + 60 + FOOTER_H
 
   const canvas = document.createElement("canvas")
-  canvas.width = W * 2   // 2x for retina
+  canvas.width = W * 2
   canvas.height = H * 2
-  canvas.style.width = `${W}px`
-  canvas.style.height = `${H}px`
   const ctx = canvas.getContext("2d")!
   ctx.scale(2, 2)
 
@@ -39,27 +47,36 @@ export function downloadReceiptImage({ title, subtitle, lines, filename }: Recei
   ctx.fillStyle = "#118C4C"
   ctx.fillRect(0, 0, W, HEADER_H)
 
-  // Logo circle
-  ctx.fillStyle = "rgba(255,255,255,0.15)"
-  ctx.beginPath()
-  ctx.arc(PADDING + 22, HEADER_H / 2, 22, 0, Math.PI * 2)
-  ctx.fill()
+  // Draw real logo
+  try {
+    const logo = await loadImage("/foodra_logo.jpeg")
+    const logoH = 52
+    const logoW = Math.round((logo.width / logo.height) * logoH)
+    const lx = PADDING
+    const ly = (HEADER_H - logoH) / 2
+    ctx.save()
+    ctx.beginPath()
+    ctx.roundRect(lx, ly, logoW, logoH, 8)
+    ctx.clip()
+    ctx.drawImage(logo, lx, ly, logoW, logoH)
+    ctx.restore()
 
-  // "F" logo letter
-  ctx.fillStyle = "#ffffff"
-  ctx.font = "bold 26px sans-serif"
-  ctx.textAlign = "center"
-  ctx.fillText("F", PADDING + 22, HEADER_H / 2 + 9)
-
-  // Title
-  ctx.textAlign = "left"
-  ctx.font = "bold 22px sans-serif"
-  ctx.fillStyle = "#ffffff"
-  ctx.fillText("Foodra", PADDING + 56, HEADER_H / 2 - 6)
-
-  ctx.font = "13px sans-serif"
-  ctx.fillStyle = "rgba(255,255,255,0.75)"
-  ctx.fillText(subtitle, PADDING + 56, HEADER_H / 2 + 14)
+    ctx.font = "bold 22px sans-serif"
+    ctx.fillStyle = "#ffffff"
+    ctx.textAlign = "left"
+    ctx.fillText("Foodra", lx + logoW + 12, HEADER_H / 2 - 4)
+    ctx.font = "13px sans-serif"
+    ctx.fillStyle = "rgba(255,255,255,0.75)"
+    ctx.fillText(subtitle, lx + logoW + 12, HEADER_H / 2 + 14)
+  } catch {
+    ctx.font = "bold 22px sans-serif"
+    ctx.fillStyle = "#ffffff"
+    ctx.textAlign = "left"
+    ctx.fillText("Foodra", PADDING, HEADER_H / 2 + 6)
+    ctx.font = "13px sans-serif"
+    ctx.fillStyle = "rgba(255,255,255,0.75)"
+    ctx.fillText(subtitle, PADDING, HEADER_H / 2 + 22)
+  }
 
   // Receipt title top-right
   ctx.textAlign = "right"
@@ -70,6 +87,7 @@ export function downloadReceiptImage({ title, subtitle, lines, filename }: Recei
   // Divider
   ctx.strokeStyle = "#e5e7eb"
   ctx.lineWidth = 1
+  ctx.setLineDash([])
   ctx.beginPath()
   ctx.moveTo(PADDING, HEADER_H + 20)
   ctx.lineTo(W - PADDING, HEADER_H + 20)
@@ -78,10 +96,10 @@ export function downloadReceiptImage({ title, subtitle, lines, filename }: Recei
   // Lines
   let y = HEADER_H + 48
   for (const line of lines) {
+    if (!line.label && !line.value) { y += LINE_H * 0.4; continue }
     const isTotal = line.bold && line.green
 
     if (isTotal) {
-      // Total row background
       ctx.fillStyle = "#f0fdf4"
       ctx.fillRect(PADDING - 8, y - 18, W - PADDING * 2 + 16, LINE_H + 4)
     }
@@ -96,7 +114,6 @@ export function downloadReceiptImage({ title, subtitle, lines, filename }: Recei
     ctx.fillStyle = line.green ? "#118C4C" : line.bold ? "#111827" : "#374151"
     ctx.fillText(line.value, W - PADDING, y)
 
-    // Dotted separator for non-total, non-small lines
     if (!line.small && !isTotal) {
       ctx.strokeStyle = "#f3f4f6"
       ctx.setLineDash([2, 4])
@@ -115,7 +132,6 @@ export function downloadReceiptImage({ title, subtitle, lines, filename }: Recei
   const footerY = H - FOOTER_H + 16
   ctx.fillStyle = "#f9fafb"
   ctx.fillRect(0, H - FOOTER_H, W, FOOTER_H)
-
   ctx.strokeStyle = "#e5e7eb"
   ctx.lineWidth = 1
   ctx.setLineDash([])
@@ -123,14 +139,12 @@ export function downloadReceiptImage({ title, subtitle, lines, filename }: Recei
   ctx.moveTo(0, H - FOOTER_H)
   ctx.lineTo(W, H - FOOTER_H)
   ctx.stroke()
-
   ctx.textAlign = "center"
   ctx.font = "11px sans-serif"
   ctx.fillStyle = "#9ca3af"
   ctx.fillText("foodra.app  •  Powered by Foodra Platform", W / 2, footerY)
   ctx.fillText("Thank you for using Foodra", W / 2, footerY + 16)
 
-  // Download
   canvas.toBlob((blob) => {
     if (!blob) return
     const a = document.createElement("a")
@@ -141,7 +155,7 @@ export function downloadReceiptImage({ title, subtitle, lines, filename }: Recei
   }, "image/png")
 }
 
-// Mask sensitive data: show first 2 + last 2 chars
+// Mask sensitive data
 export function maskSensitive(value: string): string {
   if (!value || value.length <= 6) return "••••••"
   return value.slice(0, 3) + "•".repeat(Math.min(value.length - 5, 8)) + value.slice(-3)

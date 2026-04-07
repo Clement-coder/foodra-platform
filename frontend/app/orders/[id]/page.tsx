@@ -94,7 +94,7 @@ function OrderDetailPage() {
 
   const hasDelivery = order.deliveryFullName || order.deliveryAddress;
 
-  const downloadInvoice = () => {
+  const downloadInvoice = async () => {
     const farmerNames = [...new Set(order.farmers?.map(f => f.name).filter(Boolean) || [])]
     const lines = [
       { label: "Order ID", value: `#${order.id.slice(-6).toUpperCase()}` },

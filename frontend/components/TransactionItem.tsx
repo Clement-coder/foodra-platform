@@ -44,7 +44,7 @@ export function TransactionItem({ txn, userAddress, usdNgnRate }: TransactionIte
   const symbol = isUsdc ? (txn.tokenSymbol || "USDC") : "ETH"
   const date = new Date(parseInt(txn.timeStamp) * 1000)
 
-  const handleDownloadReceipt = (e: React.MouseEvent) => {
+  const handleDownloadReceipt = async (e: React.MouseEvent) => {
     e.stopPropagation()
     const counterparty = isSender ? txn.to : txn.from
     const shortHash = `${txn.hash.slice(0, 10)}...${txn.hash.slice(-8)}`
