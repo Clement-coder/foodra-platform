@@ -11,7 +11,7 @@ type CartContextValue = {
   cartCount: number
   addToCart: (item: CartItem | { id: string; productName: string; pricePerUnit: number; quantity: number; image: string }) => void
   removeFromCart: (productId: string) => void
-  updateQuantity: (productId: string, quantity: number) => void
+  updateQuantity: (productId: string, quantity: number) => Promise<void>
   clearCart: () => void
   totalAmount: number
 }
@@ -95,11 +95,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = async (productId: string, quantity: number) => {
+    if (quantity < 1) return
+    // Check stock before incrementing
+    const item = cart.find((i) => i.productId === productId)
+    if (!item) return
+    const oldQuantity = item.quantity
+    if (quantity > oldQuantity) {
+      try {
+        const res = await fetch(`/api/products/${productId}`)
+        if (res.ok) {
+          const product = await res.json()
+          if (quantity > product.quantity) {
+            toast.error(`Only ${product.quantity} ${product.unit || 'unit'}(s) available.`)
+            return
+          }
+        }
+      } catch { /* allow optimistically */ }
+    }
     setCart((prev) => {
-      const item = prev.find((i) => i.productId === productId)
-      const oldQuantity = item?.quantity || 0
-      const change = quantity - oldQuantity
+      const change = quantity - (prev.find((i) => i.productId === productId)?.quantity || 0)
       const updated = prev.map((i) => (i.productId === productId ? { ...i, quantity } : i))
       persist(updated)
       window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId, change } }))

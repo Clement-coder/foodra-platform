@@ -3,62 +3,35 @@
 import { useEffect, useState } from "react"
 import { ShoppingBag, DollarSign, GraduationCap } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import type { User, Product, FundingApplication, Enrollment } from "@/lib/types"
-import { loadFromLocalStorage } from "@/lib/localStorage"
+import type { User } from "@/lib/types"
 
 interface FarmerProfileSummaryProps {
   user: User
 }
 
 export function FarmerProfileSummary({ user }: FarmerProfileSummaryProps) {
-  const [stats, setStats] = useState({
-    productsListed: 0,
-    fundingApplied: 0,
-    trainingsJoined: 0,
-  })
+  const [stats, setStats] = useState({ productsListed: 0, fundingApplied: 0, trainingsJoined: 0 })
 
   useEffect(() => {
-    // Count products listed by this user
-    const products = loadFromLocalStorage<Product[]>("foodra_products", [])
-    const userProducts = products.filter((p) => p.farmerId === user.id)
+    if (!user.id) return
 
-    // Count funding applications
-    const applications = loadFromLocalStorage<FundingApplication[]>("foodra_applications", [])
-    const userApplications = applications.filter((a) => a.userId === user.id)
-
-    // Count training enrollments
-    const enrollments = loadFromLocalStorage<Enrollment[]>("foodra_enrollments", [])
-    const userEnrollments = enrollments.filter((e) => e.userId === user.id)
-
-    setStats({
-      productsListed: userProducts.length,
-      fundingApplied: userApplications.length,
-      trainingsJoined: userEnrollments.length,
-    })
+    Promise.all([
+      fetch(`/api/products?farmerId=${user.id}`).then((r) => r.ok ? r.json() : []),
+      fetch(`/api/funding?userId=${user.id}`).then((r) => r.ok ? r.json() : []),
+      fetch(`/api/trainings/enroll?userId=${user.id}`).then((r) => r.ok ? r.json() : { count: 0 }),
+    ]).then(([products, funding, enrollments]) => {
+      setStats({
+        productsListed: Array.isArray(products) ? products.length : 0,
+        fundingApplied: Array.isArray(funding) ? funding.length : 0,
+        trainingsJoined: enrollments?.count ?? (Array.isArray(enrollments) ? enrollments.length : 0),
+      })
+    }).catch(() => {})
   }, [user.id])
 
   const statCards = [
-    {
-      icon: ShoppingBag,
-      label: "Products Listed",
-      value: stats.productsListed,
-      color: "text-blue-600 dark:text-blue-400",
-      bg: "bg-blue-100 dark:bg-blue-900/20",
-    },
-    {
-      icon: DollarSign,
-      label: "Funding Applied",
-      value: stats.fundingApplied,
-      color: "text-green-600 dark:text-green-400",
-      bg: "bg-green-100 dark:bg-green-900/20",
-    },
-    {
-      icon: GraduationCap,
-      label: "Trainings Joined",
-      value: stats.trainingsJoined,
-      color: "text-purple-600 dark:text-purple-400",
-      bg: "bg-purple-100 dark:bg-purple-900/20",
-    },
+    { icon: ShoppingBag, label: "Products Listed", value: stats.productsListed, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-100 dark:bg-blue-900/20" },
+    { icon: DollarSign, label: "Funding Applied", value: stats.fundingApplied, color: "text-green-600 dark:text-green-400", bg: "bg-green-100 dark:bg-green-900/20" },
+    { icon: GraduationCap, label: "Trainings Joined", value: stats.trainingsJoined, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-100 dark:bg-purple-900/20" },
   ]
 
   return (

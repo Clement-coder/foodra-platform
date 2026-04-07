@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
+import { createNotification } from "@/lib/notify";
 
 export async function PATCH(
   request: Request,
@@ -32,6 +33,29 @@ export async function PATCH(
         .update(orderUpdate)
         .eq("id", id);
       if (error) throw error;
+    }
+
+    // Notify farmer when escrow is locked (payment secured)
+    if (escrowStatus === "locked") {
+      const { data: orderData } = await supabase
+        .from("orders")
+        .select("total_amount, order_items(products!inner(farmer_id))")
+        .eq("id", id)
+        .single();
+      if (orderData) {
+        const farmerIds = [...new Set(
+          (orderData.order_items as any[]).map((i: any) => i.products?.farmer_id).filter(Boolean)
+        )];
+        for (const farmerId of farmerIds) {
+          await createNotification({
+            userId: farmerId as string,
+            type: "order",
+            title: "Payment Secured in Escrow 🔒",
+            message: `A buyer has paid ₦${Number(orderData.total_amount).toLocaleString()} for your product. Funds are held in escrow until delivery is confirmed.`,
+            link: "/sales",
+          });
+        }
+      }
     }
 
     // Update per-item escrow order IDs

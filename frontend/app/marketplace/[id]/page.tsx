@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/Skeleton"
 import { useToast } from "@/lib/toast"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import type { Product, CartItem } from "@/lib/types"
-import withAuth from "../../../components/withAuth";
 import { useCart } from "@/lib/useCart"
 import { useUser } from "@/lib/useUser"
 import { ProductComments } from "@/components/ProductComments"
@@ -153,7 +152,7 @@ function ProductDetailPage() {
 
             <div className="flex items-baseline gap-3 mb-6">
               <span className="text-4xl font-bold text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
-              <span className="text-muted-foreground">per unit</span>
+              <span className="text-muted-foreground">per {product.unit || 'unit'}</span>
             </div>
 
             <Card className="mb-6 border-[#118C4C]/20">
@@ -173,7 +172,7 @@ function ProductDetailPage() {
                   </div>
                   <div className="pt-2 border-t border-[#118C4C]/20">
                     <p className="text-sm text-muted-foreground">Available Stock</p>
-                    <p className="text-lg font-semibold text-[#118C4C]">{product.quantity} units</p>
+                    <p className="text-lg font-semibold text-[#118C4C]">{product.quantity} {product.unit || 'unit'}{product.quantity !== 1 ? 's' : ''}</p>
                   </div>
                 </div>
               </CardContent>
@@ -243,10 +242,10 @@ function ProductDetailPage() {
                 </div>
                 <div className="flex justify-between p-2 rounded-lg bg-muted/50">
                   <span className="text-muted-foreground">Available Stock:</span>
-                  <span className="font-medium text-[#118C4C]">{product.quantity} units</span>
+                  <span className="font-medium text-[#118C4C]">{product.quantity} {product.unit || 'unit'}{product.quantity !== 1 ? 's' : ''}</span>
                 </div>
                 <div className="flex justify-between p-2 rounded-lg bg-muted/50">
-                  <span className="text-muted-foreground">Price per Unit:</span>
+                  <span className="text-muted-foreground">Price per {product.unit || 'unit'}:</span>
                   <span className="font-medium text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between p-2 rounded-lg bg-muted/50">
@@ -299,4 +298,4 @@ function ProductDetailPage() {
   )
 }
 
-export default withAuth(ProductDetailPage);
+export default ProductDetailPage;

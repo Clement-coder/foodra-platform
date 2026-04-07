@@ -84,6 +84,7 @@ export const productListingSchema = z
       { errorMap: () => ({ message: "Please select a valid category" }) }
     ),
     quantity: z.number().positive("Quantity must be greater than 0").refine((val) => !isNaN(val), { message: "Please enter a valid number" }),
+    unit: z.string().min(1, "Unit is required"),
     pricePerUnit: z.number().positive("Price must be greater than 0").refine((val) => !isNaN(val), { message: "Please enter a valid number" }),
     description: z.string().min(10, "Description must be at least 10 characters"),
     image: z.string().min(1, "Product image is required"),

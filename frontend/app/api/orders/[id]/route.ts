@@ -81,8 +81,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { actorPrivyId, status } = body
 
   if (actorPrivyId) {
-    const { data: actor } = await supabase.from("users").select("role").eq("privy_id", actorPrivyId).single()
-    if (!actor || actor.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    const { data: actor } = await supabase.from("users").select("id, role").eq("privy_id", actorPrivyId).single()
+    if (!actor) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+
+    if (actor.role !== "admin") {
+      // Farmers may only mark their own orders as Shipped
+      if (status !== "Shipped") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      // Verify this farmer has at least one item in this order
+      const { data: items } = await supabase
+        .from("order_items")
+        .select("products!inner(farmer_id)")
+        .eq("order_id", id)
+      const isFarmerOnOrder = (items ?? []).some((i: any) => i.products?.farmer_id === actor.id)
+      if (!isFarmerOnOrder) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
   }
 
   const { error } = await supabase.from("orders").update({ status, updated_at: new Date().toISOString() }).eq("id", id)

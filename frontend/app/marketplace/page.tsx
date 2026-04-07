@@ -3,15 +3,21 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Filter, PackageOpen } from "lucide-react";
+import { Plus, Filter, PackageOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { GridLayout } from "@/components/GridLayout";
 import { Skeleton } from "@/components/Skeleton";
 import type { Product } from "@/lib/types";
-import withAuth from "../../components/withAuth";
 import { usePrivy } from "@privy-io/react-auth";
+
+const DEFAULT_CATEGORIES = [
+  "All", "Vegetables", "Fruits", "Grains", "Tubers",
+  "Legumes", "Poultry", "Livestock", "Seafood", "Spices", "Others",
+];
+
+const PAGE_SIZE = 12;
 
 function MarketplacePage() {
   const searchParams = useSearchParams();
@@ -21,17 +27,14 @@ function MarketplacePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await fetch('/api/products');
-        if (!res.ok) {
-          console.error('Failed to fetch products:', res.status);
-          return;
-        }
+        if (!res.ok) return;
         const data = await res.json();
-        console.log('Fetched products:', data);
         setProducts(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -39,19 +42,22 @@ function MarketplacePage() {
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
+  // Reset to page 1 when filter/search changes
+  useEffect(() => { setPage(1); }, [selectedCategory, searchQuery]);
+
   const categories = useMemo(() => {
-    const cats = ["All", ...new Set(products.map((p) => p.category))];
-    return cats;
+    const fromProducts = new Set(products.map((p) => p.category));
+    return DEFAULT_CATEGORIES.filter((c) => c === "All" || fromProducts.has(c)).concat(
+      [...fromProducts].filter((c) => !DEFAULT_CATEGORIES.includes(c))
+    );
   }, [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
-      const matchesCategory =
-        selectedCategory === "All" || product.category === selectedCategory;
+      const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
       const matchesSearch =
         searchQuery === "" ||
         product.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -59,6 +65,9 @@ function MarketplacePage() {
       return matchesCategory && matchesSearch;
     });
   }, [products, selectedCategory, searchQuery]);
+
+  const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
+  const paginatedProducts = filteredProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -79,7 +88,7 @@ function MarketplacePage() {
           {authenticated && (
             <Link href="/orders">
               <Button variant="outline" className="gap-2 flex items-center border-[#118C4C]/30 hover:bg-[#118C4C]/5">
-                <PackageOpen  />
+                <PackageOpen />
                 View My Orders
               </Button>
             </Link>
@@ -99,9 +108,7 @@ function MarketplacePage() {
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-3">
           <Filter className="h-4 w-4 text-[#118C4C]" />
-          <span className="text-sm font-medium text-muted-foreground">
-            Filter by category:
-          </span>
+          <span className="text-sm font-medium text-muted-foreground">Filter by category:</span>
         </div>
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => (
@@ -125,16 +132,14 @@ function MarketplacePage() {
       {/* Products Grid */}
       {loading ? (
         <GridLayout>
-          {[...Array(6)].map((_, i) => (
+          {[...Array(PAGE_SIZE)].map((_, i) => (
             <Skeleton key={i} className="h-96" />
           ))}
         </GridLayout>
       ) : filteredProducts.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-muted-foreground mb-4">
-            {searchQuery
-              ? "No products found matching your search."
-              : "No products available yet."}
+            {searchQuery ? "No products found matching your search." : "No products available yet."}
           </p>
           {authenticated && (
             <Link href="/listing/new">
@@ -145,20 +150,57 @@ function MarketplacePage() {
           )}
         </div>
       ) : (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <GridLayout>
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </GridLayout>
-        </motion.div>
+        <>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+            <GridLayout>
+              {paginatedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </GridLayout>
+          </motion.div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-10">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="border-[#118C4C]/30"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <Button
+                  key={p}
+                  variant={p === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPage(p)}
+                  className={p === page ? "bg-[#118C4C] text-white" : "border-[#118C4C]/30"}
+                >
+                  {p}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="border-[#118C4C]/30"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          <p className="text-center text-xs text-muted-foreground mt-3">
+            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredProducts.length)} of {filteredProducts.length} products
+          </p>
+        </>
       )}
     </div>
   );
 }
 
-export default withAuth(MarketplacePage);
+export default MarketplacePage;

@@ -40,6 +40,7 @@ const Footer = () => {
           <div className="flex flex-col items-center sm:items-end gap-3">
             {/* Nav links — wrap on small screens */}
             <div className="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-1">
+              <Link href="/how-it-works" className="hover:text-foreground transition-colors whitespace-nowrap">How It Works</Link>
               <Link href="/about" className="hover:text-foreground transition-colors whitespace-nowrap">About</Link>
               <Link href="/contact" className="hover:text-foreground transition-colors whitespace-nowrap">Contact</Link>
               <Link href="/privacy" className="hover:text-foreground transition-colors whitespace-nowrap">Privacy Policy</Link>

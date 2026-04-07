@@ -16,6 +16,7 @@ export interface Product {
   productName: string
   category: string
   quantity: number
+  unit: string
   pricePerUnit: number
   description: string
   image: string

@@ -147,10 +147,10 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                 <span className="text-base sm:text-2xl font-bold text-[#118C4C]">
                   ₦{product.pricePerUnit.toLocaleString()}
                 </span>
-                <span className="text-xs text-muted-foreground hidden sm:inline">per unit</span>
+                <span className="text-xs text-muted-foreground hidden sm:inline">per {product.unit || 'unit'}</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                {availableQuantity} units
+                {availableQuantity} {product.unit || 'unit'}{availableQuantity !== 1 ? 's' : ''} available
               </p>
             </div>
           </CardContent>
