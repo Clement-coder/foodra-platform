@@ -17,6 +17,7 @@ import withAuth from "@/components/withAuth";
 import { useEscrow } from "@/lib/useEscrow";
 import { useUser } from "@/lib/useUser";
 import { useToast } from "@/lib/toast";
+import { downloadReceiptImage, maskSensitive } from "@/lib/receipt";
 import type { Order } from "@/lib/types";
 
 function OrderDetailPage() {
@@ -94,31 +95,33 @@ function OrderDetailPage() {
   const hasDelivery = order.deliveryFullName || order.deliveryAddress;
 
   const downloadInvoice = () => {
-    const items = order.items.map(i =>
-      `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i.productName}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${i.quantity}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">₦${(i.pricePerUnit * i.quantity).toLocaleString()}</td></tr>`
-    ).join("")
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Foodra Receipt #${order.id.slice(-6).toUpperCase()}</title>
-    <style>body{font-family:sans-serif;max-width:600px;margin:40px auto;color:#111}h1{color:#118C4C}table{width:100%;border-collapse:collapse}th{background:#f5f5f5;padding:8px;text-align:left}td{padding:8px}.total{font-size:1.2em;font-weight:bold;color:#118C4C}.footer{margin-top:32px;font-size:12px;color:#888}</style>
-    </head><body>
-    <h1>Foodra</h1><p style="color:#888">Receipt / Invoice</p>
-    <hr/>
-    <p><strong>Order ID:</strong> #${order.id.slice(-6).toUpperCase()}</p>
-    <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString("en-NG", { year:"numeric", month:"long", day:"numeric" })}</p>
-    <p><strong>Status:</strong> ${order.status}</p>
-    ${hasDelivery ? `<p><strong>Delivery to:</strong> ${order.deliveryFullName || ""}, ${order.deliveryAddress || ""}, ${order.deliveryCity || ""}, ${order.deliveryState || ""}</p>` : ""}
-    <br/>
-    <table><thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th></tr></thead>
-    <tbody>${items}</tbody></table>
-    <br/><p class="total">Total: ₦${Number(order.totalAmount).toLocaleString()}</p>
-    ${order.usdcAmount ? `<p style="color:#888;font-size:13px">USDC equivalent: ${order.usdcAmount.toFixed(2)} USDC</p>` : ""}
-    <div class="footer"><p>Foodra Platform — foodra.app</p><p>Thank you for your purchase.</p></div>
-    </body></html>`
-    const blob = new Blob([html], { type: "text/html" })
-    const a = document.createElement("a")
-    a.href = URL.createObjectURL(blob)
-    a.download = `foodra-receipt-${order.id.slice(-6).toUpperCase()}.html`
-    a.click()
-    URL.revokeObjectURL(a.href)
+    const farmerNames = [...new Set(order.farmers?.map(f => f.name).filter(Boolean) || [])]
+    const lines = [
+      { label: "Order ID", value: `#${order.id.slice(-6).toUpperCase()}` },
+      { label: "Date", value: new Date(order.createdAt).toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" }) },
+      { label: "Status", value: order.status },
+      ...(farmerNames.length ? [{ label: "Sold by", value: farmerNames.join(", ") }] : []),
+      { label: "", value: "" },
+      ...order.items.map(i => ({
+        label: `${i.productName} ×${i.quantity}`,
+        value: `₦${(i.pricePerUnit * i.quantity).toLocaleString()}`,
+      })),
+      { label: "", value: "" },
+      { label: "Total", value: `₦${Number(order.totalAmount).toLocaleString()}`, bold: true, green: true },
+      ...(order.usdcAmount ? [{ label: "USDC equivalent", value: `${order.usdcAmount.toFixed(2)} USDC`, small: true }] : []),
+      ...(order.escrowStatus && order.escrowStatus !== "none" ? [{ label: "Payment status", value: order.escrowStatus, small: true }] : []),
+      { label: "", value: "" },
+      // Delivery — mask sensitive fields
+      ...(order.deliveryFullName ? [{ label: "Recipient", value: maskSensitive(order.deliveryFullName), small: true }] : []),
+      ...(order.deliveryPhone ? [{ label: "Phone", value: maskSensitive(order.deliveryPhone), small: true }] : []),
+      ...(order.deliveryAddress ? [{ label: "Address", value: `${order.deliveryCity || ""}, ${order.deliveryState || ""}`, small: true }] : []),
+    ]
+    downloadReceiptImage({
+      title: "ORDER RECEIPT",
+      subtitle: `Receipt #${order.id.slice(-6).toUpperCase()}`,
+      lines,
+      filename: `foodra-order-${order.id.slice(-6).toUpperCase()}`,
+    })
   };
 
   return (
@@ -131,12 +134,14 @@ function OrderDetailPage() {
           </h1>
           <p className="text-muted-foreground text-sm mt-1">#{order.id.slice(-10).toUpperCase()}</p>
         </div>
-        <Button variant="outline" onClick={() => router.push("/orders")} className="gap-2 border-[#118C4C]/30 hover:bg-[#118C4C]/5">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
-        <Button variant="outline" onClick={downloadInvoice} className="gap-2 border-[#118C4C]/30 hover:bg-[#118C4C]/5">
-          <Download className="h-4 w-4" /> Receipt
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => router.push("/orders")} className="gap-2 border-[#118C4C]/30 hover:bg-[#118C4C]/5">
+            <ArrowLeft className="h-4 w-4" /> Back
+          </Button>
+          <Button variant="outline" onClick={downloadInvoice} className="gap-2 border-[#118C4C]/30 hover:bg-[#118C4C]/5">
+            <Download className="h-4 w-4" /> Receipt
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-5">

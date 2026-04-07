@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowDownCircle, ArrowUpCircle, ChevronDown, ExternalLink } from "lucide-react"
+import { ArrowDownCircle, ArrowUpCircle, ChevronDown, ExternalLink, Download } from "lucide-react"
+import { downloadReceiptImage } from "@/lib/receipt"
 
 interface Transaction {
   hash: string;
@@ -41,6 +42,27 @@ export function TransactionItem({ txn, userAddress, usdNgnRate }: TransactionIte
     : `${isSender ? "Sent" : "Received"} ETH`
 
   const symbol = isUsdc ? (txn.tokenSymbol || "USDC") : "ETH"
+  const date = new Date(parseInt(txn.timeStamp) * 1000)
+
+  const handleDownloadReceipt = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const counterparty = isSender ? txn.to : txn.from
+    const shortHash = `${txn.hash.slice(0, 10)}...${txn.hash.slice(-8)}`
+    downloadReceiptImage({
+      title: "TX RECEIPT",
+      subtitle: label,
+      lines: [
+        { label: "Date", value: date.toLocaleString("en-NG") },
+        { label: "Type", value: label },
+        { label: isSender ? "To" : "From", value: `${counterparty.slice(0, 8)}...${counterparty.slice(-6)}` },
+        { label: "Amount", value: `${displayValue} ${symbol}`, bold: true, green: true },
+        ...(ngnValue !== null ? [{ label: "NGN equivalent", value: `₦${ngnValue.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, small: true }] : []),
+        { label: "Tx Hash", value: shortHash, small: true },
+        { label: "Network", value: "Base Sepolia", small: true },
+      ],
+      filename: `foodra-tx-${txn.hash.slice(-8)}`,
+    })
+  }
 
   return (
     <div className="border-b border-border last:border-b-0">
@@ -55,12 +77,10 @@ export function TransactionItem({ txn, userAddress, usdNgnRate }: TransactionIte
           }
           <div>
             <p className="font-medium text-sm">{label}</p>
-            <p className="text-xs text-muted-foreground">
-              {new Date(parseInt(txn.timeStamp) * 1000).toLocaleString()}
-            </p>
+            <p className="text-xs text-muted-foreground">{date.toLocaleString()}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="text-right">
             <p className={`font-bold text-sm ${isSender ? "text-red-500" : "text-[#118C4C]"}`}>
               {isSender ? "-" : "+"}{displayValue} {symbol}
@@ -69,6 +89,10 @@ export function TransactionItem({ txn, userAddress, usdNgnRate }: TransactionIte
               <p className="text-xs text-muted-foreground">≈ ₦{ngnValue.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
             )}
           </div>
+          <button onClick={handleDownloadReceipt} title="Download receipt"
+            className="p-1.5 rounded-lg hover:bg-[#118C4C]/10 transition-colors flex-shrink-0">
+            <Download className="h-3.5 w-3.5 text-[#118C4C]" />
+          </button>
           <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </motion.div>
