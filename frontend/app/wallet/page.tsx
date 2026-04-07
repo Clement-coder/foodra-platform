@@ -128,38 +128,59 @@ function WalletPage() {
   const countedNgn = useCountUp(ngnEquiv, balanceVisible && !!usdNgnRate, 900)
 
   const fetchWalletData = async () => {
-    if (user?.wallet?.address) {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000))
+    const address = user?.wallet?.address
+    if (!address) return
+    setIsRefreshingBalance(true)
+    try {
+      const provider = new ethers.JsonRpcProvider("https://sepolia.base.org")
 
-        const provider = new ethers.JsonRpcProvider("https://sepolia.base.org")
-        const balance = await provider.getBalance(user.wallet.address)
-        setBalance(parseFloat(ethers.formatEther(balance)).toFixed(6))
+      // ETH balance
+      const rawBalance = await provider.getBalance(address)
+      setBalance(parseFloat(ethers.formatEther(rawBalance)).toFixed(6))
 
-        // Fetch MockUSDC balance
-        const usdcAddress = process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS
-        if (usdcAddress) {
+      // USDC balance — try contract first, fall back to Blockscout token balances
+      const usdcAddress = process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS
+      if (usdcAddress) {
+        try {
           const usdcContract = new ethers.Contract(
             usdcAddress,
             ["function balanceOf(address) view returns (uint256)"],
             provider
           )
-          const raw: bigint = await usdcContract.balanceOf(user.wallet.address)
+          const raw: bigint = await usdcContract.balanceOf(address)
           setUsdcBalance((Number(raw) / 1_000_000).toFixed(4))
+        } catch {
+          // fallback: fetch from Blockscout token balances
+          const res = await fetch(`https://base-sepolia.blockscout.com/api/v2/addresses/${address}/token-balances`)
+          if (res.ok) {
+            const tokens = await res.json()
+            const usdc = tokens.find((t: any) => t.token?.symbol?.toUpperCase().includes("USDC"))
+            if (usdc) setUsdcBalance((Number(usdc.value) / Math.pow(10, Number(usdc.token?.decimals || 6))).toFixed(4))
+          }
         }
-
-        const response = await fetch(`/api/wallet/transactions?address=${user.wallet.address}`)
-        const data = await response.json()
-
-        if (data.status === "1" && Array.isArray(data.result)) {
-          setTransactions(data.result)
-        } else {
-          setTransactions([])
+      } else {
+        // No contract address configured — fetch all token balances and find USDC
+        const res = await fetch(`https://base-sepolia.blockscout.com/api/v2/addresses/${address}/token-balances`)
+        if (res.ok) {
+          const tokens = await res.json()
+          const usdc = tokens.find((t: any) => t.token?.symbol?.toUpperCase().includes("USDC"))
+          if (usdc) setUsdcBalance((Number(usdc.value) / Math.pow(10, Number(usdc.token?.decimals || 6))).toFixed(4))
         }
-      } catch (error) {
-        console.error("Error fetching wallet data:", error)
-        toast.error("Error fetching wallet data.")
       }
+
+      // Transactions
+      const txRes = await fetch(`/api/wallet/transactions?address=${address}`)
+      const txData = await txRes.json()
+      if (txData.status === "1" && Array.isArray(txData.result)) {
+        setTransactions(txData.result)
+      } else {
+        setTransactions([])
+      }
+    } catch (error) {
+      console.error("Error fetching wallet data:", error)
+      toast.error("Could not fetch wallet data. Check your connection.")
+    } finally {
+      setIsRefreshingBalance(false)
     }
   }
 
@@ -211,9 +232,11 @@ function WalletPage() {
   }
 
   useEffect(() => {
-    fetchWalletData()
-    fetchEthRate()
-  }, [user, selectedChain])
+    if (user?.wallet?.address) {
+      fetchWalletData()
+      fetchEthRate()
+    }
+  }, [user?.wallet?.address, selectedChain])
 
   useEffect(() => {
     fetchRateSettings()
@@ -278,10 +301,8 @@ function WalletPage() {
   }, [recipientAddress, withdrawAmount, balance])
 
   const handleRefreshWalletData = async () => {
-    setIsRefreshingBalance(true)
     await fetchWalletData()
     await fetchEthRate()
-    setIsRefreshingBalance(false)
     toast.success("Wallet data refreshed!")
   }
 
@@ -420,7 +441,11 @@ function WalletPage() {
                 <p className="text-xs font-semibold text-white/50 uppercase tracking-[0.2em] mb-2">Total Balance</p>
                 <div className="flex items-end gap-3 h-16 overflow-hidden">
                   <AnimatePresence mode="wait">
-                    {balanceVisible ? (
+                    {isRefreshingBalance && balance === "0" ? (
+                      <motion.div key="loading"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="h-12 w-40 rounded-xl bg-white/20 animate-pulse" />
+                    ) : balanceVisible ? (
                       <motion.span key="visible"
                         initial={{ opacity: 0, filter: "blur(12px)", y: 8 }}
                         animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
