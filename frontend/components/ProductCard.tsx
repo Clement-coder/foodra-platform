@@ -66,7 +66,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
     })
     setActionLoading(false)
     if (res.ok) { setIsAvailable(v => !v); toast.success(isAvailable ? "Listing deactivated" : "Listing activated"); onRefresh?.() }
-    else toast.error("Failed to update listing.")
+    else { const e = await res.json().catch(() => ({})); toast.error(e.error || "Failed to update listing.") }
   }
 
   const handleDelete = async () => {
@@ -76,7 +76,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
     const res = await fetch(`/api/products/${product.id}?actorPrivyId=${privyUser?.id}`, { method: "DELETE" })
     setActionLoading(false)
     if (res.ok) { toast.success("Product deleted"); onRefresh?.() }
-    else toast.error("Failed to delete product.")
+    else { const e = await res.json().catch(() => ({})); toast.error(e.error || "Failed to delete product.") }
   }
 
   return (

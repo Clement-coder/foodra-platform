@@ -49,6 +49,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { data: product } = await supabaseAdmin.from('products').select('farmer_id').eq('id', id).single()
     if (!product || product.farmer_id !== actor.id)
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    // Farmers cannot deactivate if there are locked escrow orders for this product
+    if ('is_available' in updates && !updates.is_available) {
+      const { data: activeItems } = await supabaseAdmin
+        .from('order_items')
+        .select('order_id, orders!inner(escrow_status, status)')
+        .eq('product_id', id)
+        .in('orders.escrow_status', ['locked'])
+      if (activeItems && activeItems.length > 0)
+        return NextResponse.json({ error: 'Cannot deactivate — this product has active escrow orders in progress.' }, { status: 409 })
+    }
   }
 
   const { error } = await supabaseAdmin.from('products').update(updates).eq('id', id)
@@ -72,6 +83,15 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { data: product } = await supabaseAdmin.from('products').select('farmer_id').eq('id', id).single()
     if (!product || product.farmer_id !== actor.id)
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    // Farmers cannot delete if there are any active orders (Pending/Processing/Shipped or locked escrow)
+    const { data: activeItems } = await supabaseAdmin
+      .from('order_items')
+      .select('order_id, orders!inner(status, escrow_status)')
+      .eq('product_id', id)
+      .or('orders.status.in.(Pending,Processing,Shipped),orders.escrow_status.in.(locked)')
+    if (activeItems && activeItems.length > 0)
+      return NextResponse.json({ error: 'Cannot delete — this product has active orders that must be fulfilled first.' }, { status: 409 })
   }
 
   const { error } = await supabaseAdmin.from('products').delete().eq('id', id)
