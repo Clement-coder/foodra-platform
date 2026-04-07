@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { GraduationCap } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { GraduationCap, Search } from "lucide-react"
 import { motion } from "framer-motion"
 import { TrainingCard } from "@/components/TrainingCard"
 import { GridLayout } from "@/components/GridLayout"
@@ -14,31 +14,25 @@ function TrainingPage() {
   const [trainings, setTrainings] = useState<Training[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "online" | "offline">("all")
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
-    const fetchTrainings = async () => {
-      try {
-        const res = await fetch('/api/trainings');
-        const data = await res.json();
-        setTrainings(data);
-      } catch (error) {
-        console.error('Error fetching trainings:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTrainings();
+    fetch('/api/trainings')
+      .then(r => r.json())
+      .then(data => setTrainings(data))
+      .catch(console.error)
+      .finally(() => setLoading(false))
   }, [])
 
-  const filteredTrainings = trainings.filter((training) => {
-    if (filter === "all") return true
-    return training.mode === filter
-  })
+  const filteredTrainings = useMemo(() => trainings.filter((t) => {
+    const matchMode = filter === "all" || t.mode === filter
+    const q = search.toLowerCase()
+    const matchSearch = !q || t.title.toLowerCase().includes(q) || t.instructor.toLowerCase().includes(q) || (t.location || "").toLowerCase().includes(q)
+    return matchMode && matchSearch
+  }), [trainings, filter, search])
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-[#118C4C]/10 p-3 rounded-lg">
@@ -50,51 +44,33 @@ function TrainingPage() {
           </div>
         </div>
 
-        {/* Filter buttons */}
-        <div className="flex gap-2">
-          <Button
-            variant={filter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("all")}
-            className={
-              filter === "all" ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white" : "bg-transparent hover:bg-accent"
-            }
-          >
-            All Training
-          </Button>
-          <Button
-            variant={filter === "online" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("online")}
-            className={
-              filter === "online" ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white" : "bg-transparent hover:bg-accent"
-            }
-          >
-            Online
-          </Button>
-          <Button
-            variant={filter === "offline" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("offline")}
-            className={
-              filter === "offline" ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white" : "bg-transparent hover:bg-accent"
-            }
-          >
-            In-Person
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by title, instructor, location…"
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-[#118C4C] focus:border-transparent"
+            />
+          </div>
+          <div className="flex gap-2">
+            {(["all", "online", "offline"] as const).map((f) => (
+              <Button key={f} variant={filter === f ? "default" : "outline"} size="sm"
+                onClick={() => setFilter(f)}
+                className={filter === f ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white" : "bg-transparent hover:bg-accent"}>
+                {f === "all" ? "All" : f === "online" ? "Online" : "In-Person"}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Training Grid */}
       {loading ? (
-        <GridLayout>
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-96" />
-          ))}
-        </GridLayout>
+        <GridLayout>{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-96" />)}</GridLayout>
       ) : filteredTrainings.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-muted-foreground">No training programs available at the moment.</p>
+          <p className="text-muted-foreground">{search ? `No trainings found for "${search}".` : "No training programs available at the moment."}</p>
         </div>
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
@@ -109,4 +85,4 @@ function TrainingPage() {
   )
 }
 
-export default withAuth(TrainingPage);
+export default withAuth(TrainingPage)

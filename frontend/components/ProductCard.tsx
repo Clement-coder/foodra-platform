@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Share2, ShoppingCart, EyeOff, Eye, Trash2, Check } from "lucide-react";
+import { MapPin, Share2, ShoppingCart, EyeOff, Eye, Trash2, Check, PackagePlus, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -31,6 +31,9 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
   const [availableQuantity, setAvailableQuantity] = useState(product.quantity);
   const [isAvailable, setIsAvailable] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [restockOpen, setRestockOpen] = useState(false);
+  const [restockQty, setRestockQty] = useState(product.quantity);
+  const [restockPrice, setRestockPrice] = useState(product.pricePerUnit);
 
   const isOwnProduct = currentUser?.id === product.farmerId;
 
@@ -79,8 +82,54 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
     else { const e = await res.json().catch(() => ({})); toast.error(e.error || "Failed to delete product.") }
   }
 
+  const handleRestock = async () => {
+    setActionLoading(true)
+    const res = await fetch(`/api/products/${product.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actorPrivyId: privyUser?.id, quantity: restockQty, price: restockPrice, is_available: restockQty > 0 }),
+    })
+    setActionLoading(false)
+    if (res.ok) {
+      setAvailableQuantity(restockQty)
+      setRestockOpen(false)
+      toast.success("Product updated")
+      onRefresh?.()
+    } else {
+      const e = await res.json().catch(() => ({}))
+      toast.error(e.error || "Failed to update product.")
+    }
+  }
+
   return (
     <>
+      {/* Restock modal */}
+      {restockOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setRestockOpen(false)}>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-foreground">Edit Listing</h3>
+              <button onClick={() => setRestockOpen(false)}><X className="h-5 w-5 text-muted-foreground" /></button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4 truncate font-medium">{product.productName}</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-foreground block mb-1">Quantity ({product.unit || 'unit'})</label>
+                <input type="number" min="0" value={restockQty} onChange={e => setRestockQty(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-[#118C4C]" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-foreground block mb-1">Price per {product.unit || 'unit'} (₦)</label>
+                <input type="number" min="1" value={restockPrice} onChange={e => setRestockPrice(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-[#118C4C]" />
+              </div>
+            </div>
+            <Button onClick={handleRestock} disabled={actionLoading} className="w-full mt-4 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+              {actionLoading ? "Saving…" : "Save Changes"}
+            </Button>
+          </div>
+        </div>
+      )}
       <ShareOptionsModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
@@ -163,6 +212,10 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
             </Link>
             {isOwnProduct ? (
               <>
+                <Button onClick={() => { setRestockQty(product.quantity); setRestockPrice(product.pricePerUnit); setRestockOpen(true) }} disabled={actionLoading} size="sm" variant="ghost"
+                  className="flex-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100">
+                  <PackagePlus className="h-3.5 w-3.5 mr-1" />Edit
+                </Button>
                 <Button onClick={handleToggle} disabled={actionLoading} size="sm"
                   className={`flex-1 text-xs ${isAvailable ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-200" : "bg-green-100 text-green-700 hover:bg-green-200 border border-green-200"}`}
                   variant="ghost">

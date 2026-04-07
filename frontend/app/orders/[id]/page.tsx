@@ -6,7 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, MapPin, Phone, User, Mail, Package,
-  Calendar, DollarSign, ExternalLink, Loader2, CheckCircle, AlertTriangle,
+  Calendar, DollarSign, ExternalLink, Loader2, CheckCircle, AlertTriangle, Download,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -93,6 +93,34 @@ function OrderDetailPage() {
 
   const hasDelivery = order.deliveryFullName || order.deliveryAddress;
 
+  const downloadInvoice = () => {
+    const items = order.items.map(i =>
+      `<tr><td style="padding:8px;border-bottom:1px solid #eee">${i.productName}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${i.quantity}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right">₦${(i.pricePerUnit * i.quantity).toLocaleString()}</td></tr>`
+    ).join("")
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Foodra Receipt #${order.id.slice(-6).toUpperCase()}</title>
+    <style>body{font-family:sans-serif;max-width:600px;margin:40px auto;color:#111}h1{color:#118C4C}table{width:100%;border-collapse:collapse}th{background:#f5f5f5;padding:8px;text-align:left}td{padding:8px}.total{font-size:1.2em;font-weight:bold;color:#118C4C}.footer{margin-top:32px;font-size:12px;color:#888}</style>
+    </head><body>
+    <h1>Foodra</h1><p style="color:#888">Receipt / Invoice</p>
+    <hr/>
+    <p><strong>Order ID:</strong> #${order.id.slice(-6).toUpperCase()}</p>
+    <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString("en-NG", { year:"numeric", month:"long", day:"numeric" })}</p>
+    <p><strong>Status:</strong> ${order.status}</p>
+    ${hasDelivery ? `<p><strong>Delivery to:</strong> ${order.deliveryFullName || ""}, ${order.deliveryAddress || ""}, ${order.deliveryCity || ""}, ${order.deliveryState || ""}</p>` : ""}
+    <br/>
+    <table><thead><tr><th>Item</th><th style="text-align:center">Qty</th><th style="text-align:right">Amount</th></tr></thead>
+    <tbody>${items}</tbody></table>
+    <br/><p class="total">Total: ₦${Number(order.totalAmount).toLocaleString()}</p>
+    ${order.usdcAmount ? `<p style="color:#888;font-size:13px">USDC equivalent: ${order.usdcAmount.toFixed(2)} USDC</p>` : ""}
+    <div class="footer"><p>Foodra Platform — foodra.app</p><p>Thank you for your purchase.</p></div>
+    </body></html>`
+    const blob = new Blob([html], { type: "text/html" })
+    const a = document.createElement("a")
+    a.href = URL.createObjectURL(blob)
+    a.download = `foodra-receipt-${order.id.slice(-6).toUpperCase()}.html`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <div className="flex items-center justify-between mb-8">
@@ -105,6 +133,9 @@ function OrderDetailPage() {
         </div>
         <Button variant="outline" onClick={() => router.push("/orders")} className="gap-2 border-[#118C4C]/30 hover:bg-[#118C4C]/5">
           <ArrowLeft className="h-4 w-4" /> Back
+        </Button>
+        <Button variant="outline" onClick={downloadInvoice} className="gap-2 border-[#118C4C]/30 hover:bg-[#118C4C]/5">
+          <Download className="h-4 w-4" /> Receipt
         </Button>
       </div>
 

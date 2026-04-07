@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
-import { DollarSign, Plus, TrendingUp } from "lucide-react"
+import { DollarSign, Plus, TrendingUp, Search } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -15,6 +15,7 @@ function FundingPage() {
   const { currentUser: user, isLoading } = useUser()
   const [applications, setApplications] = useState<FundingApplication[]>([])
   const [filter, setFilter] = useState<"all" | "Pending" | "Approved" | "Rejected">("all")
+  const [search, setSearch] = useState("")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -39,10 +40,12 @@ function FundingPage() {
     }
   }
 
-  const filteredApplications = applications.filter((app) => {
-    if (filter === "all") return true
-    return app.status === filter
-  })
+  const filteredApplications = useMemo(() => applications.filter((app) => {
+    const matchStatus = filter === "all" || app.status === filter
+    const q = search.toLowerCase()
+    const matchSearch = !q || app.fullName.toLowerCase().includes(q) || app.location.toLowerCase().includes(q) || app.farmType.toLowerCase().includes(q)
+    return matchStatus && matchSearch
+  }), [applications, filter, search])
 
   const stats = {
     total: applications.length,
@@ -120,49 +123,27 @@ function FundingPage() {
         </div>
       )}
 
-      {/* Filter buttons */}
+      {/* Search + Filter */}
       {applications.length > 0 && (
-        <div className="flex gap-2 mb-6">
-          <Button
-            variant={filter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("all")}
-            className={
-              filter === "all" ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white" : "bg-transparent hover:bg-accent"
-            }
-          >
-            All
-          </Button>
-          <Button
-            variant={filter === "Pending" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("Pending")}
-            className={
-              filter === "Pending" ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white" : "bg-transparent hover:bg-accent"
-            }
-          >
-            Pending
-          </Button>
-          <Button
-            variant={filter === "Approved" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("Approved")}
-            className={
-              filter === "Approved" ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white" : "bg-transparent hover:bg-accent"
-            }
-          >
-            Approved
-          </Button>
-          <Button
-            variant={filter === "Rejected" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter("Rejected")}
-            className={
-              filter === "Rejected" ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white" : "bg-transparent hover:bg-accent"
-            }
-          >
-            Rejected
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by name, location, farm type…"
+              className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-[#118C4C] focus:border-transparent"
+            />
+          </div>
+          <div className="flex gap-2">
+            {(["all", "Pending", "Approved", "Rejected"] as const).map((f) => (
+              <Button key={f} variant={filter === f ? "default" : "outline"} size="sm"
+                onClick={() => setFilter(f)}
+                className={filter === f ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white" : "bg-transparent hover:bg-accent"}>
+                {f === "all" ? "All" : f}
+              </Button>
+            ))}
+          </div>
         </div>
       )}
 
