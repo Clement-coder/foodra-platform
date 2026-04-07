@@ -27,6 +27,7 @@ const mapUser = (u: any) => ({
   phone: u.phone || "",
   location: u.location || undefined,
   role: u.role || "buyer",
+  termsAcceptedAt: u.terms_accepted_at || null,
 })
 
 const isMissingColumnError = (error: any) =>
@@ -132,6 +133,7 @@ export async function PATCH(request: Request) {
     if ("avatar_url" in body) updatePayload.avatar_url = body.avatar_url || null
     if ("location" in body) updatePayload.location = body.location || null
     if ("role" in body && body.role) updatePayload.role = body.role
+    if ("terms_accepted_at" in body) updatePayload.terms_accepted_at = typeof body.terms_accepted_at === "string" ? body.terms_accepted_at : null
 
     if (Object.keys(updatePayload).length === 0) {
       return NextResponse.json({ error: "No update fields provided" }, { status: 400 })

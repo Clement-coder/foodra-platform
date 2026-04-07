@@ -9,6 +9,7 @@ export interface User {
   location?: string
   role?: "farmer" | "buyer" | "admin"
   linked_accounts?: Array<{ type: string }>
+  termsAcceptedAt?: string | null
 }
 
 export interface Product {
