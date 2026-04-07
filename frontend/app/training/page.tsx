@@ -8,8 +8,7 @@ import { GridLayout } from "@/components/GridLayout"
 import { Skeleton } from "@/components/Skeleton"
 import { Button } from "@/components/ui/button"
 import type { Training } from "@/lib/types"
-import withAuth from "../../components/withAuth";
-import { loadFromLocalStorage } from "@/lib/localStorage"
+import withAuth from "../../components/withAuth"
 
 function TrainingPage() {
   const [trainings, setTrainings] = useState<Training[]>([])

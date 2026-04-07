@@ -72,7 +72,7 @@ function OrdersPage() {
       await fetch(`/api/orders/${orderId}/dispute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason, details }),
+        body: JSON.stringify({ reason, details, userId: currentUser?.id }),
       }).catch(() => {}); // non-blocking — dispute is already on-chain
       toast.success("Dispute raised. Our team will review and resolve it within 3–5 business days.");
       refreshOrders();

@@ -1,22 +1,25 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
+import { createNotification } from '@/lib/notify'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const { data: products, error } = await supabase
+    const { searchParams } = new URL(request.url)
+    const farmerId = searchParams.get('farmerId')
+
+    let query = supabase
       .from('products')
-      .select(`
-        *,
-        users!products_farmer_id_fkey (
-          id,
-          name,
-          avatar_url
-        )
-      `)
-      .eq('is_available', true)
+      .select(`*, users!products_farmer_id_fkey (id, name, avatar_url)`)
       .order('created_at', { ascending: false })
 
+    if (farmerId) {
+      query = query.eq('farmer_id', farmerId)
+    } else {
+      query = query.eq('is_available', true)
+    }
+
+    const { data: products, error } = await query
     if (error) throw error
 
     const formatted = products?.map((p) => ({
@@ -24,6 +27,7 @@ export async function GET() {
       productName: p.name,
       category: p.category,
       quantity: p.quantity,
+      unit: p.unit || 'unit',
       pricePerUnit: p.price,
       description: p.description || '',
       image: p.image_url || '',
@@ -67,6 +71,7 @@ export async function POST(request: Request) {
         name: body.productName,
         category: body.category,
         quantity: body.quantity,
+        unit: body.unit || 'unit',
         price: body.pricePerUnit,
         description: body.description,
         image_url: body.image,
@@ -76,6 +81,15 @@ export async function POST(request: Request) {
       .single()
 
     if (error) throw error
+
+    // Notify farmer of successful listing
+    await createNotification({
+      userId: body.farmerId,
+      type: "system",
+      title: "Product Listed Successfully ✅",
+      message: `"${body.productName}" is now live on the marketplace.`,
+      link: `/marketplace/${data.id}`,
+    })
 
     return NextResponse.json(data)
   } catch (error: any) {

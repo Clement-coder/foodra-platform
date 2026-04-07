@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -12,21 +12,17 @@ import { FormInput } from "@/components/FormInput"
 import { FormNumber } from "@/components/FormNumber"
 import { FormSelect } from "@/components/FormSelector"
 import { ImageMockUploader } from "@/components/ImageMockUploader"
-import { NotificationDiv } from "@/components/NotificationDiv"
 import { productListingSchema, type ProductListingFormData, CATEGORY_PRODUCTS } from "@/lib/schemas"
-import type { User, Product } from "@/lib/types"
-import withAuth from "../../../components/withAuth";
-import { usePrivy } from "@privy-io/react-auth";
-import { loadFromLocalStorage, saveToLocalStorage } from "@/lib/localStorage"
-import { generateAvatarUrl } from "@/lib/avatarGenerator"
-import { getGoogleLinkedAccount, getPrivyProfilePicture } from "@/lib/privyUser"
+import withAuth from "../../../components/withAuth"
+import { usePrivy } from "@privy-io/react-auth"
+import { useUser } from "@/lib/useUser"
 import { useToast } from "@/lib/toast"
 
 function NewListingPage() {
   const router = useRouter()
-  const { user: privyUser } = usePrivy();
+  const { user: privyUser } = usePrivy()
+  const { currentUser } = useUser()
   const { toast } = useToast()
-  const [user, setUser] = useState<User | null>(null)
   const [imageBase64, setImageBase64] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
@@ -40,72 +36,22 @@ function NewListingPage() {
     resolver: zodResolver(productListingSchema),
   })
 
-  useEffect(() => {
-    if (privyUser) {
-      const storedUser = loadFromLocalStorage<User | null>(`foodra_user_${privyUser.id}`, null);
-      if (storedUser) {
-        setUser(storedUser);
-      } else {
-        const googleAccount = getGoogleLinkedAccount(privyUser as any)
-        const profilePicture = getPrivyProfilePicture(privyUser as any)
-        
-        const newUser: User = {
-          id: privyUser.id,
-          name: googleAccount?.name || privyUser.google?.name || privyUser.email?.address || "Unnamed User",
-          email: privyUser.email?.address || "",
-          phone: privyUser.phone?.number || "",
-          location: "Nigeria",
-          avatar: profilePicture || generateAvatarUrl(privyUser.id),
-          wallet: privyUser.wallet?.address || "",
-          role: "farmer",
-          createdAt: new Date().toISOString(),
-        };
-        saveToLocalStorage(`foodra_user_${privyUser.id}`, newUser);
-        setUser(newUser);
-      }
-    }
-  }, [privyUser]);
-
-
-
-
   const onSubmit = async (data: ProductListingFormData) => {
     setIsSubmitting(true)
 
     try {
-      if (!privyUser?.id) {
+      if (!privyUser?.id || !currentUser) {
         throw new Error("User session not found. Please sign in again.")
       }
 
-      // Sync user to Supabase first and use returned DB user id for products.farmer_id
-      const syncResponse = await fetch('/api/users/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          privyId: privyUser?.id,
-          name: user?.name || "",
-          email: user?.email || "",
-          wallet: user?.wallet || "",
-          avatar: user?.avatar || "",
-        }),
-      })
-      if (!syncResponse.ok) {
-        const errorBody = await syncResponse.json().catch(() => ({}))
-        throw new Error(errorBody?.error || 'Failed to sync user')
-      }
-
-      const syncedUser = await syncResponse.json()
-      const farmerId = syncedUser?.id || user?.id
+      const farmerId = currentUser.id
 
       let imageUrl = imageBase64 || data.image
       if (imageBase64?.startsWith("data:image/")) {
         const uploadResponse = await fetch('/api/storage/product-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            base64: imageBase64,
-            fileName: data.productName,
-          }),
+          body: JSON.stringify({ base64: imageBase64, fileName: data.productName }),
         })
         if (!uploadResponse.ok) {
           const errorBody = await uploadResponse.json().catch(() => ({}))
@@ -124,10 +70,11 @@ function NewListingPage() {
           productName: data.productName,
           category: data.category,
           quantity: data.quantity,
+          unit: data.unit,
           pricePerUnit: data.pricePerUnit,
           description: data.description,
           image: imageUrl,
-          location: user?.location || "Nigeria",
+          location: currentUser.location || "Nigeria",
         }),
       })
 
@@ -145,7 +92,7 @@ function NewListingPage() {
     }
   }
 
-  if (!user) {
+  if (!currentUser) {
     return null
   }
 
@@ -184,7 +131,7 @@ function NewListingPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormNumber
-                  label="Quantity (units)"
+                  label="Quantity"
                   {...register("quantity", { valueAsNumber: true })}
                   error={errors.quantity?.message}
                   placeholder="100"
@@ -192,7 +139,29 @@ function NewListingPage() {
                   required
                 />
 
-                <FormNumber
+                <FormSelect
+                  label="Unit"
+                  {...register("unit")}
+                  error={errors.unit?.message}
+                  options={[
+                    { value: "", label: "Select unit" },
+                    { value: "kg", label: "Kilogram (kg)" },
+                    { value: "g", label: "Gram (g)" },
+                    { value: "tonne", label: "Tonne" },
+                    { value: "bag", label: "Bag" },
+                    { value: "crate", label: "Crate" },
+                    { value: "basket", label: "Basket" },
+                    { value: "bunch", label: "Bunch" },
+                    { value: "piece", label: "Piece" },
+                    { value: "dozen", label: "Dozen" },
+                    { value: "litre", label: "Litre (L)" },
+                    { value: "unit", label: "Unit" },
+                  ]}
+                  required
+                />
+              </div>
+
+              <FormNumber
                   label="Price per Unit (₦)"
                   {...register("pricePerUnit", { valueAsNumber: true })}
                   error={errors.pricePerUnit?.message}
@@ -200,7 +169,6 @@ function NewListingPage() {
                   min="1"
                   required
                 />
-              </div>
 
               <div className="space-y-2">
                 <label htmlFor="description" className="block text-sm font-medium text-foreground">

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, PackageOpen, MapPin, Phone, Mail, User, Calendar,
-  ExternalLink, Loader2, Share2, Copy, Check, TrendingUp, ShieldCheck, Package,
+  ExternalLink, Loader2, Share2, Check, TrendingUp, ShieldCheck, Package, Truck,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
 import withAuth from "@/components/withAuth";
 import { useUser } from "@/lib/useUser";
+import { usePrivy } from "@privy-io/react-auth";
+import { useToast } from "@/lib/toast";
 
 interface SaleOrder {
   id: string;
@@ -85,17 +87,41 @@ function ShareButton({ sale }: { sale: SaleOrder }) {
 
 function SalesPage() {
   const { currentUser } = useUser();
+  const { user: privyUser } = usePrivy();
   const router = useRouter();
+  const { toast, confirm } = useToast();
   const [sales, setSales] = useState<SaleOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shippingId, setShippingId] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchSales = () => {
     if (!currentUser) return;
     fetch(`/api/orders/farmer?farmerId=${currentUser.id}`)
       .then((r) => r.json())
       .then((data) => setSales(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false));
-  }, [currentUser]);
+  };
+
+  useEffect(() => { fetchSales(); }, [currentUser]);
+
+  const handleMarkShipped = async (orderId: string) => {
+    const ok = await confirm({ title: "Mark as Shipped", message: "Confirm you have dispatched this order?", confirmLabel: "Mark Shipped" });
+    if (!ok) return;
+    setShippingId(orderId);
+    const res = await fetch(`/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actorPrivyId: privyUser?.id, status: "Shipped" }),
+    });
+    setShippingId(null);
+    if (res.ok) {
+      toast.success("Order marked as shipped.");
+      fetchSales();
+    } else {
+      const e = await res.json().catch(() => ({}));
+      toast.error(e.error || "Failed to update order.");
+    }
+  };
 
   if (loading) {
     return (
@@ -285,6 +311,29 @@ function SalesPage() {
                         <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800/30 text-xs text-yellow-700 dark:text-yellow-400">
                           <ShieldCheck className="h-4 w-4 flex-shrink-0 mt-0.5" />
                           <p>Payment of ₦{sale.totalAmount.toLocaleString()} is secured in escrow. It will be released to you once the buyer confirms delivery.</p>
+                        </div>
+                      )}
+
+                      {/* Mark as Shipped */}
+                      {sale.escrowStatus === "locked" && sale.status !== "Shipped" && sale.status !== "Delivered" && (
+                        <Button
+                          onClick={() => handleMarkShipped(sale.id)}
+                          disabled={shippingId === sale.id}
+                          size="sm"
+                          className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2"
+                        >
+                          {shippingId === sale.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Truck className="h-4 w-4" />
+                          )}
+                          Mark as Shipped
+                        </Button>
+                      )}
+                      {sale.status === "Shipped" && (
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/30 text-xs text-blue-700 dark:text-blue-400">
+                          <Truck className="h-4 w-4 flex-shrink-0" />
+                          <p>Marked as shipped. Awaiting buyer delivery confirmation.</p>
                         </div>
                       )}
                       {sale.escrowStatus === "released" && (

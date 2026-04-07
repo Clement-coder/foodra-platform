@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { usePrivy } from "@privy-io/react-auth"
 import { useUser } from "@/lib/useUser"
 import withAuth from "@/components/withAuth"
-import { Users, Package, DollarSign, ShoppingBag, MessageSquare, BookOpen, BarChart2, Wallet } from "lucide-react"
+import { Users, Package, DollarSign, ShoppingBag, MessageSquare, BookOpen, BarChart2, Wallet, AlertTriangle } from "lucide-react"
 import AdminUsers from "@/components/admin/AdminUsers"
 import AdminProducts from "@/components/admin/AdminProducts"
 import AdminFunding from "@/components/admin/AdminFunding"
@@ -13,6 +13,7 @@ import AdminSupport, { getUnreadSupportCount } from "@/components/admin/AdminSup
 import AdminTrainings from "@/components/admin/AdminTrainings"
 import AdminAnalytics from "@/components/admin/AdminAnalytics"
 import AdminWalletRequests from "@/components/admin/AdminWalletRequests"
+import AdminDisputes from "@/components/admin/AdminDisputes"
 import { useToast } from "@/lib/toast"
 
 export type AdminData = {
@@ -24,9 +25,10 @@ export type AdminData = {
   supportMessages: any[]
   trainings: any[]
   walletRequests: any[]
+  disputes: any[]
 }
 
-type Tab = "users" | "products" | "funding" | "orders" | "support" | "trainings" | "analytics" | "wallet"
+type Tab = "users" | "products" | "funding" | "orders" | "disputes" | "support" | "trainings" | "analytics" | "wallet"
 
 function AdminPage() {
   const { user: privyUser } = usePrivy()
@@ -65,6 +67,7 @@ function AdminPage() {
     { key: "products", label: "Products", icon: Package, count: data.products.length },
     { key: "funding", label: "Funding", icon: DollarSign, count: data.funding.length },
     { key: "orders", label: "Orders", icon: ShoppingBag, count: data.orders.length },
+    { key: "disputes", label: "Disputes", icon: AlertTriangle, count: (data.disputes || []).filter((d: any) => d.status === "open").length, unread: (data.disputes || []).filter((d: any) => d.status === "open").length },
     { key: "trainings", label: "Trainings", icon: BookOpen, count: data.trainings.length },
     { key: "support", label: "Support", icon: MessageSquare, count: [...new Set(data.supportMessages.map((m: any) => m.user_id))].length, unread: getUnreadSupportCount(data.supportMessages) },
     { key: "wallet", label: "Wallet", icon: Wallet, count: (data.walletRequests || []).filter((r: any) => r.status === "Pending").length, unread: (data.walletRequests || []).filter((r: any) => r.status === "Pending").length },
@@ -75,7 +78,7 @@ function AdminPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Admin Panel</h1>
 
-      <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-6">
+      <div className="grid grid-cols-4 sm:grid-cols-9 gap-2 mb-6">
         {tabs.map(({ key, label, icon: Icon, count, unread }) => (
           <button key={key} onClick={() => setTab(key)}
             className={`relative p-3 rounded-xl text-left transition-all ${tab === key ? "bg-green-600 text-white shadow-lg" : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-gray-800"}`}>
@@ -94,6 +97,7 @@ function AdminPage() {
         {tab === "products" && <AdminProducts data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
         {tab === "funding" && <AdminFunding data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
         {tab === "orders" && <AdminOrders data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
+        {tab === "disputes" && <AdminDisputes data={data} privyId={privyUser?.id} onRefresh={refresh} />}
         {tab === "trainings" && <AdminTrainings data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
         {tab === "support" && <AdminSupport data={data} privyId={privyUser?.id} onRefresh={refresh} />}
         {tab === "wallet" && <AdminWalletRequests data={data} privyId={privyUser?.id} onRefresh={refresh} />}

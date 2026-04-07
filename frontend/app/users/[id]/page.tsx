@@ -48,6 +48,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
     productName: p.name,
     category: p.category,
     quantity: p.quantity,
+    unit: p.unit || 'unit',
     pricePerUnit: p.price,
     description: p.description || "",
     image: p.image_url || "",

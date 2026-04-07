@@ -66,6 +66,20 @@ export async function POST(request: Request) {
     })
   }
 
+  // Notify all admins when a user sends a new message (not an admin reply)
+  if (!isAdminReply) {
+    const { data: admins } = await supabaseAdmin.from("users").select("id").eq("role", "admin")
+    for (const admin of admins || []) {
+      await createNotification({
+        userId: admin.id,
+        type: "support",
+        title: "New Support Message",
+        message: message && message !== "📎 Image" ? message.slice(0, 100) : "A user sent an image.",
+        link: "/admin",
+      })
+    }
+  }
+
   return NextResponse.json(data)
 }
 

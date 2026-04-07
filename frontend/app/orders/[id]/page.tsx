@@ -15,6 +15,7 @@ import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
 import { DisputeModal } from "@/components/DisputeModal";
 import withAuth from "@/components/withAuth";
 import { useEscrow } from "@/lib/useEscrow";
+import { useUser } from "@/lib/useUser";
 import { useToast } from "@/lib/toast";
 import type { Order } from "@/lib/types";
 
@@ -22,6 +23,7 @@ function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { toast, confirm } = useToast();
+  const { currentUser } = useUser();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [disputeOpen, setDisputeOpen] = useState(false);
@@ -55,6 +57,7 @@ function OrderDetailPage() {
     const success = await raiseDispute(escrowOrderId);
     if (success) {
       await fetch(`/api/orders/${order.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "disputed" }) });
+      await fetch(`/api/orders/${order.id}/dispute`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason, details, userId: currentUser?.id }) }).catch(() => {});
       toast.success("Dispute raised. Our team will review within 3–5 business days.");
       setDisputeOpen(false);
       fetchOrder();

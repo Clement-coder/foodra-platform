@@ -80,6 +80,15 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
+    // Notify applicant of submission
+    await createNotification({
+      userId: body.userId,
+      type: "funding",
+      title: "Funding Application Submitted",
+      message: `Your application for ₦${Number(body.amountRequested).toLocaleString()} has been received and is under review. You'll be notified of the decision within 5–7 business days.`,
+      link: "/funding",
+    })
+
     return NextResponse.json(data)
   } catch (error: any) {
     console.error('Error creating application:', error)

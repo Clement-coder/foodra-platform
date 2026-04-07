@@ -101,6 +101,7 @@ export const metadata: Metadata = {
     apple: { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
     shortcut: "/icon-32x32.png",
   },
+  manifest: "/manifest.webmanifest",
 }
 
 // ---- ROOT LAYOUT ----

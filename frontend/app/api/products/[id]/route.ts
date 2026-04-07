@@ -18,6 +18,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       productName: product.name,
       category: product.category,
       quantity: product.quantity,
+      unit: product.unit || 'unit',
       pricePerUnit: product.price,
       description: product.description || '',
       image: product.image_url || '',

@@ -1,4 +1,4 @@
-import { Mail, MapPin, Phone } from "lucide-react"
+import { Mail, MapPin, Phone, Clock, Shield } from "lucide-react"
 import GetInTouch from "@/components/GetInTouch"
 
 const contactItems = [
@@ -6,16 +6,25 @@ const contactItems = [
     title: "Email",
     value: "support@foodra.app",
     icon: Mail,
+    href: "mailto:support@foodra.app",
   },
   {
     title: "Phone",
     value: "+234 800 000 0000",
     icon: Phone,
+    href: "tel:+2348000000000",
   },
   {
-    title: "Location",
+    title: "Office Address",
     value: "Lagos, Nigeria",
     icon: MapPin,
+    href: null,
+  },
+  {
+    title: "Support Hours",
+    value: "Mon – Fri, 9am – 6pm WAT",
+    icon: Clock,
+    href: null,
   },
 ]
 
@@ -36,14 +45,32 @@ export default function ContactPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {contactItems.map((item) => (
           <div key={item.title} className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
             <item.icon className="h-5 w-5 text-[#118C4C] mb-3" />
             <p className="text-sm text-muted-foreground">{item.title}</p>
-            <p className="text-foreground font-semibold mt-1">{item.value}</p>
+            {item.href ? (
+              <a href={item.href} className="text-foreground font-semibold mt-1 hover:text-[#118C4C] transition-colors block">
+                {item.value}
+              </a>
+            ) : (
+              <p className="text-foreground font-semibold mt-1">{item.value}</p>
+            )}
           </div>
         ))}
+      </div>
+
+      {/* Trust note for financial platform */}
+      <div className="flex items-start gap-3 rounded-2xl border border-[#118C4C]/20 bg-[#118C4C]/5 p-4 mb-8 text-sm text-muted-foreground">
+        <Shield className="h-5 w-5 text-[#118C4C] shrink-0 mt-0.5" />
+        <p>
+          Foodra is a registered technology company operating in Nigeria. We handle financial transactions through blockchain-based escrow and are committed to transparent, secure operations. For disputes or urgent financial concerns, email{" "}
+          <a href="mailto:support@foodra.app" className="text-[#118C4C] font-medium hover:underline">
+            support@foodra.app
+          </a>{" "}
+          with your order reference.
+        </p>
       </div>
 
       <div className="rounded-2xl overflow-hidden border border-border/60">
