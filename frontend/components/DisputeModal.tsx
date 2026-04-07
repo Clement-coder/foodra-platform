@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/ui/button";
+import { CustomSelect } from "@/components/CustomSelect";
 
 const DISPUTE_REASONS = [
   "Item not received",
@@ -59,18 +60,13 @@ export function DisputeModal({ isOpen, onClose, orderId, onConfirm, loading }: D
         {/* Reason */}
         <div className="space-y-2">
           <label htmlFor="dispute-reason" className="text-sm font-medium block">Reason for dispute <span className="text-red-500">*</span></label>
-          <select
-            id="dispute-reason"
+          <CustomSelect
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={setReason}
             disabled={loading}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-[#118C4C] focus:ring-offset-2 disabled:opacity-50"
-          >
-            <option value="">Select a reason...</option>
-            {DISPUTE_REASONS.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
+            options={[{ value: "", label: "Select a reason..." }, ...DISPUTE_REASONS.map((r) => ({ value: r, label: r }))]}
+            className="w-full"
+          />
         </div>
 
         {/* Details */}

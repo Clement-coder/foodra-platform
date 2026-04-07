@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Phone, User, ChevronDown, Plus, CheckCircle2, Loader2, Globe } from "lucide-react";
+import { MapPin, Phone, User, Plus, CheckCircle2, Loader2, Globe } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/ui/button";
+import { CustomSelect } from "@/components/CustomSelect";
 import type { DeliveryAddress } from "@/lib/types";
 
 interface Country { name: string; code: string; }
@@ -208,23 +209,19 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
 
                 {/* Country */}
                 <div className="space-y-1">
-                  <label htmlFor="country" className="text-sm font-medium block">Country <span className="text-red-500">*</span></label>
-                  <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <select
-                      id="country"
+                  <label className="text-sm font-medium block">Country <span className="text-red-500">*</span></label>
+                  <div className="relative flex items-center">
+                    <Globe className="absolute left-3 z-10 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <CustomSelect
                       value={form.country}
-                      onChange={(e) => {
-                        const selected = countries.find((c) => c.name === e.target.value);
-                        setForm((f) => ({ ...f, country: e.target.value, countryCode: selected?.code || "", state: "" }));
+                      onChange={(val) => {
+                        const selected = countries.find((c) => c.name === val);
+                        setForm((f) => ({ ...f, country: val, countryCode: selected?.code || "", state: "" }));
                       }}
                       disabled={saving || countries.length === 0}
-                      className={`${selectCls} pl-9`}
-                    >
-                      <option value="">Select country</option>
-                      {countries.map((c) => <option key={c.code} value={c.name}>{c.name}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      options={[{ value: "", label: "Select country" }, ...countries.map((c) => ({ value: c.name, label: c.name }))]}
+                      className="w-full pl-8"
+                    />
                   </div>
                   {errors.country && <p className="text-xs text-red-500">{errors.country}</p>}
                 </div>
@@ -237,28 +234,20 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
                   <Field id="city" label="City / Town" placeholder="Lagos" />
                   {/* State */}
                   <div className="space-y-1">
-                    <label htmlFor="state" className="text-sm font-medium block">State / Region <span className="text-red-500">*</span></label>
-                    <div className="relative">
-                      {loadingStates ? (
-                        <div className="flex items-center gap-2 px-3 py-2 border border-input rounded-md text-sm text-muted-foreground">
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading...
-                        </div>
-                      ) : (
-                        <>
-                          <select
-                            id="state"
-                            value={form.state}
-                            onChange={(e) => set("state", e.target.value)}
-                            disabled={saving || states.length === 0}
-                            className={selectCls}
-                          >
-                            <option value="">{states.length === 0 ? "Select country first" : "Select state"}</option>
-                            {states.map((s) => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        </>
-                      )}
-                    </div>
+                    <label className="text-sm font-medium block">State / Region <span className="text-red-500">*</span></label>
+                    {loadingStates ? (
+                      <div className="flex items-center gap-2 px-3 py-2 border border-input rounded-md text-sm text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading...
+                      </div>
+                    ) : (
+                      <CustomSelect
+                        value={form.state}
+                        onChange={(v) => set("state", v)}
+                        disabled={saving || states.length === 0}
+                        options={[{ value: "", label: states.length === 0 ? "Select country first" : "Select state" }, ...states.map((s) => ({ value: s, label: s }))]}
+                        className="w-full"
+                      />
+                    )}
                     {errors.state && <p className="text-xs text-red-500">{errors.state}</p>}
                   </div>
                 </div>

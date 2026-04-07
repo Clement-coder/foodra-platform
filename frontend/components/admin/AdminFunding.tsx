@@ -2,6 +2,7 @@ import { useState } from "react"
 import { X, Download } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
+import { CustomSelect } from "@/components/CustomSelect"
 
 const PAGE_SIZE = 20
 
@@ -115,13 +116,17 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
           placeholder="Search by name, location, farm type…"
           className="flex-1 min-w-[180px] text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500" />
-        <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(0) }}
-          className="text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500">
-          <option value="All">All</option>
-          <option value="Pending">Pending</option>
-          <option value="Approved">Approved</option>
-          <option value="Rejected">Rejected</option>
-        </select>
+        <CustomSelect
+          value={statusFilter}
+          onChange={(v) => { setStatusFilter(v); setPage(0) }}
+          options={[
+            { value: "All", label: "All" },
+            { value: "Pending", label: "Pending" },
+            { value: "Approved", label: "Approved" },
+            { value: "Rejected", label: "Rejected" },
+          ]}
+          className="w-36"
+        />
         <button onClick={() => exportCSV(filtered)}
           className="flex items-center gap-1.5 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-xl transition-colors">
           <Download className="w-4 h-4" />Export

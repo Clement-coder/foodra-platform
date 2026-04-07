@@ -4,6 +4,7 @@ import { useState } from "react"
 import { X, MapPin, Phone, Calendar, ExternalLink, ShoppingBag, Download } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
+import { CustomSelect } from "@/components/CustomSelect"
 
 const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"]
 
@@ -206,10 +207,12 @@ export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
           placeholder="Search by order ID or buyer name…"
           className="flex-1 min-w-[180px] text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500" />
-        <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(0) }}
-          className="text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500">
-          {["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map(s => <option key={s}>{s}</option>)}
-        </select>
+        <CustomSelect
+          value={statusFilter}
+          onChange={(v) => { setStatusFilter(v); setPage(0) }}
+          options={["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map(s => ({ value: s, label: s }))}
+          className="w-40"
+        />
         <button onClick={() => exportCSV(filtered, data.users)}
           className="flex items-center gap-1.5 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-xl transition-colors">
           <Download className="w-4 h-4" />Export
