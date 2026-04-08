@@ -108,8 +108,17 @@ const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => {
   );
 };
 
-// Module-level flag — persists across page navigations (HOC remounts)
-let termsModalShownThisSession = false;
+// Persisted in localStorage so it survives page refreshes within the same session
+function hasShownTermsThisSession(): boolean {
+  if (typeof window === "undefined") return false
+  return localStorage.getItem("foodra_terms_shown") === "1"
+}
+function markTermsShown() {
+  if (typeof window !== "undefined") localStorage.setItem("foodra_terms_shown", "1")
+}
+function clearTermsShown() {
+  if (typeof window !== "undefined") localStorage.removeItem("foodra_terms_shown")
+}
 
 const withAuth = <P extends object>(
   WrappedComponent: React.ComponentType<P>
@@ -142,9 +151,9 @@ const withAuth = <P extends object>(
 
       setAuthModalOpen(false);
 
-      // Show terms once — only on first load after login, never again this session
-      if (authenticated && currentUser && !currentUser.termsAcceptedAt && !termsModalShownThisSession) {
-        termsModalShownThisSession = true;
+      // Show terms once per new user — never again after acceptance
+      if (authenticated && currentUser && !currentUser.termsAcceptedAt && !hasShownTermsThisSession()) {
+        markTermsShown();
         setShowTerms(true);
         return;
       }
@@ -217,7 +226,7 @@ const withAuth = <P extends object>(
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ privyId: currentUser.id, terms_accepted_at: now }),
         });
-        termsModalShownThisSession = true; // keep suppressed for rest of session
+        clearTermsShown(); // no longer needed — DB flag takes over
         setShowTerms(false);
       };
 
