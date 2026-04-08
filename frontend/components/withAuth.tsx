@@ -108,6 +108,9 @@ const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => {
   );
 };
 
+// Module-level flag — persists across page navigations (HOC remounts)
+let termsModalShownThisSession = false;
+
 const withAuth = <P extends object>(
   WrappedComponent: React.ComponentType<P>
 ) => {
@@ -120,7 +123,6 @@ const withAuth = <P extends object>(
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [showProfileToast, setShowProfileToast] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
-    const termsShownRef = useRef(false);
     const prevAuthRef = useRef<boolean | null>(null);
 
     useEffect(() => {
@@ -141,8 +143,8 @@ const withAuth = <P extends object>(
       setAuthModalOpen(false);
 
       // Show terms once — only on first load after login, never again this session
-      if (authenticated && currentUser && !currentUser.termsAcceptedAt && !termsShownRef.current) {
-        termsShownRef.current = true;
+      if (authenticated && currentUser && !currentUser.termsAcceptedAt && !termsModalShownThisSession) {
+        termsModalShownThisSession = true;
         setShowTerms(true);
         return;
       }
@@ -215,6 +217,7 @@ const withAuth = <P extends object>(
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ privyId: currentUser.id, terms_accepted_at: now }),
         });
+        termsModalShownThisSession = true; // keep suppressed for rest of session
         setShowTerms(false);
       };
 
