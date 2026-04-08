@@ -120,6 +120,7 @@ const withAuth = <P extends object>(
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [showProfileToast, setShowProfileToast] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
+    const termsShownRef = useRef(false);
     const prevAuthRef = useRef<boolean | null>(null);
 
     useEffect(() => {
@@ -139,12 +140,12 @@ const withAuth = <P extends object>(
 
       setAuthModalOpen(false);
 
-      // Show terms if not yet accepted
-      if (authenticated && currentUser && !currentUser.termsAcceptedAt) {
+      // Show terms once — only on first load after login, never again this session
+      if (authenticated && currentUser && !currentUser.termsAcceptedAt && !termsShownRef.current) {
+        termsShownRef.current = true;
         setShowTerms(true);
         return;
       }
-      setShowTerms(false);
 
       // Check profile completion and show toast if incomplete
       if (authenticated && currentUser) {
