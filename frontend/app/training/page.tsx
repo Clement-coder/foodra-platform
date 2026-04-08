@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react"
 import { GraduationCap, Search } from "lucide-react"
 import { motion } from "framer-motion"
 import { TrainingCard } from "@/components/TrainingCard"
-import { GridLayout } from "@/components/GridLayout"
 import { Skeleton } from "@/components/Skeleton"
 import { Button } from "@/components/ui/button"
 import type { Training } from "@/lib/types"
@@ -67,18 +66,20 @@ function TrainingPage() {
       </div>
 
       {loading ? (
-        <GridLayout>{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-96" />)}</GridLayout>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-3 sm:p-6">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-96" />)}
+        </div>
       ) : filteredTrainings.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-muted-foreground">{search ? `No trainings found for "${search}".` : "No training programs available at the moment."}</p>
         </div>
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-          <GridLayout>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-3 sm:p-6">
             {filteredTrainings.map((training) => (
               <TrainingCard key={training.id} training={training} />
             ))}
-          </GridLayout>
+          </div>
         </motion.div>
       )}
     </div>
