@@ -106,7 +106,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Foodra",
   },
 }
@@ -121,10 +121,13 @@ export default function RootLayout({
     <html lang="en" className={`${geistMono.variable}`}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+        {/* Android Chrome — matches app background per color scheme */}
         <meta name="theme-color" content="#f5faf6" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#1a2420" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#1b2b24" media="(prefers-color-scheme: dark)" />
+        {/* iOS PWA — black-translucent makes the status bar overlay the app
+            so the navbar background bleeds all the way to the top edge */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Foodra" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
