@@ -7,6 +7,7 @@ import { BottomTabBar } from "@/components/BottomTableBar"
 import Footer from "@/components/Footer"
 import { CartProvider } from "@/lib/useCart"
 import AppLoader from "@/components/AppLoader"
+import PWAManager from "@/components/PWAManager"
 import "./globals.css"
 import Providers from "./Provider"
 import { SupportChat } from "@/components/SupportChat"
@@ -152,6 +153,7 @@ export default function RootLayout({
               </div>
               <BottomTabBar />
               <SupportChat />
+              <PWAManager />
             </AppLoader>
           </CartProvider>
           </ToastProvider>
