@@ -115,9 +115,11 @@
   * {
     @apply border-border outline-ring/50;
   }
-  /* Fill the status bar zone with app background on iOS black-translucent */
+  /* Fill the status bar zone with app background on iOS */
   html {
     @apply bg-background;
+    /* Extend background behind status bar */
+    background-attachment: fixed;
   }
   body {
     @apply bg-background text-foreground;
