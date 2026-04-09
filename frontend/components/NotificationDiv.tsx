@@ -34,22 +34,22 @@ export function NotificationDiv({
   const styles = {
     error: {
       container: "bg-gradient-to-r from-red-500 to-rose-600 text-white border border-red-400/50",
-      actionButton: "bg-white text-red-600 hover:bg-red-50",
+      actionButton: "bg-card text-red-600 hover:bg-red-50",
       icon: AlertCircle,
     },
     success: {
       container: "bg-gradient-to-r from-green-600 to-emerald-600 text-white border border-green-400/50",
-      actionButton: "bg-white text-green-700 hover:bg-green-50",
+      actionButton: "bg-card text-green-700 hover:bg-green-50",
       icon: CheckCircle,
     },
     info: {
       container: "bg-gradient-to-r from-blue-500 to-cyan-600 text-white border border-blue-400/50",
-      actionButton: "bg-white text-blue-700 hover:bg-blue-50",
+      actionButton: "bg-card text-blue-700 hover:bg-blue-50",
       icon: Info,
     },
     warning: {
       container: "bg-gradient-to-r from-orange-500 to-red-500 text-white border border-orange-400/50",
-      actionButton: "bg-white text-orange-600 hover:bg-orange-50",
+      actionButton: "bg-card text-orange-600 hover:bg-orange-50",
       icon: TriangleAlert,
     },
   }

@@ -20,7 +20,7 @@ function Stars({ value, size = "sm" }: { value: number; size?: "sm" | "md" }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map(n => (
-        <Star key={n} className={`${cls} ${n <= Math.round(value) ? "fill-yellow-400 text-yellow-400" : "text-gray-300 dark:text-gray-600"}`} />
+        <Star key={n} className={`${cls} ${n <= Math.round(value) ? "fill-yellow-400 text-yellow-400" : "text-gray-300 dark:text-muted-foreground"}`} />
       ))}
     </div>
   )
@@ -64,7 +64,7 @@ export function RatingSummary({ farmerId, detail = false }: RatingSummaryProps) 
           <div key={n} className="flex items-center gap-2 text-xs">
             <span className="w-3 text-right text-muted-foreground">{n}</span>
             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 flex-shrink-0" />
-            <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+            <div className="flex-1 h-1.5 bg-muted dark:bg-gray-800 rounded-full overflow-hidden">
               <div className="h-full bg-yellow-400 rounded-full transition-all"
                 style={{ width: data.total ? `${((data.breakdown[n] || 0) / data.total) * 100}%` : "0%" }} />
             </div>

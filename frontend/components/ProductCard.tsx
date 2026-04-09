@@ -106,7 +106,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
       {/* Restock modal */}
       {restockOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setRestockOpen(false)}>
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-foreground">Edit Listing</h3>
               <button onClick={() => setRestockOpen(false)}><X className="h-5 w-5 text-muted-foreground" /></button>
@@ -157,7 +157,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
               <span className="truncate bg-[#118C4C]/90 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-medium backdrop-blur-sm shrink-0">
                 {formatTimeAgo(product.createdAt)}
               </span>
-              <span className="truncate bg-white/95 dark:bg-black/95 text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-[#118C4C]/30 backdrop-blur-sm min-w-0">
+              <span className="truncate bg-card/95 text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-[#118C4C]/30 backdrop-blur-sm min-w-0">
                 {product.category}
               </span>
             </div>

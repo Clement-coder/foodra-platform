@@ -100,7 +100,7 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
     <div className="flex gap-1">
       {RANGES.map(r => (
         <button key={r} onClick={() => setRange(r)}
-          className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-colors ${range === r ? "bg-green-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"}`}>
+          className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-colors ${range === r ? "bg-green-600 text-white" : "bg-gray-200 bg-card text-muted-foreground text-foreground hover:bg-gray-300 dark:hover:bg-gray-600"}`}>
           {r}mo
         </button>
       ))}
@@ -120,21 +120,21 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
             value={broadcastTitle}
             onChange={e => setBroadcastTitle(e.target.value)}
             placeholder="Notification title…"
-            className="w-full text-sm border border-orange-200 dark:border-orange-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full text-sm border border-orange-200 dark:border-orange-700 rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-orange-400"
           />
           <textarea
             value={broadcastMsg}
             onChange={e => setBroadcastMsg(e.target.value)}
             placeholder="Message body…"
             rows={2}
-            className="w-full text-sm border border-orange-200 dark:border-orange-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+            className="w-full text-sm border border-orange-200 dark:border-orange-700 rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
           />
           <div className="flex gap-3">
             <input
               value={broadcastLink}
               onChange={e => setBroadcastLink(e.target.value)}
               placeholder="Optional link (e.g. /marketplace)"
-              className="flex-1 text-sm border border-orange-200 dark:border-orange-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="flex-1 text-sm border border-orange-200 dark:border-orange-700 rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-orange-400"
             />
             <button
               onClick={sendBroadcast}
@@ -152,57 +152,57 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
         {statCards.map(({ label, value, color }) => (
           <div key={label} className={`p-4 rounded-xl bg-${color}-50 dark:bg-${color}-900/20 border border-${color}-100 dark:border-${color}-800`}>
             <p className={`text-2xl font-bold text-${color}-600 dark:text-${color}-400`}>{value}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{label}</p>
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">{label}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Revenue over time */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
+        <div className="bg-muted bg-card rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Revenue (Last {range} Months)</h3>
+            <h3 className="text-sm font-semibold text-foreground text-foreground">Revenue (Last {range} Months)</h3>
             <RangeSelector />
           </div>
           <div className="flex items-end gap-2 h-32">
             {revenueByMonth.map(({ label, amount }) => (
               <div key={label} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-[10px] text-gray-500">{amount > 0 ? `₦${(amount / 1000).toFixed(0)}k` : ""}</span>
+                <span className="text-[10px] text-muted-foreground">{amount > 0 ? `₦${(amount / 1000).toFixed(0)}k` : ""}</span>
                 <div className="w-full bg-green-500 rounded-t-md transition-all" style={{ height: `${(amount / maxRevenue) * 96}px`, minHeight: amount > 0 ? 4 : 0 }} />
-                <span className="text-xs text-gray-400">{label}</span>
+                <span className="text-xs text-muted-foreground">{label}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* New users per month */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
+        <div className="bg-muted bg-card rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">New Users (Last {range} Months)</h3>
+            <h3 className="text-sm font-semibold text-foreground text-foreground">New Users (Last {range} Months)</h3>
             <RangeSelector />
           </div>
           <div className="flex items-end gap-2 h-32">
             {usersByMonth.map(({ label, count }) => (
               <div key={label} className="flex-1 flex flex-col items-center gap-1">
-                <span className="text-xs text-gray-500">{count}</span>
+                <span className="text-xs text-muted-foreground">{count}</span>
                 <div className="w-full bg-blue-500 rounded-t-md transition-all" style={{ height: `${(count / maxUsers) * 96}px`, minHeight: count > 0 ? 4 : 0 }} />
-                <span className="text-xs text-gray-400">{label}</span>
+                <span className="text-xs text-muted-foreground">{label}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Top product categories */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Top Product Categories</h3>
+        <div className="bg-muted bg-card rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-foreground text-foreground mb-4">Top Product Categories</h3>
           <div className="space-y-3">
             {topCategories.map(([cat, count]) => (
               <div key={cat}>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-gray-600 dark:text-gray-400">{cat}</span>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">{count}</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground">{cat}</span>
+                  <span className="font-medium text-foreground text-foreground">{count}</span>
                 </div>
-                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-gray-200 bg-card rounded-full overflow-hidden">
                   <div className="h-full bg-green-500 rounded-full" style={{ width: `${(count / maxCat) * 100}%` }} />
                 </div>
               </div>
@@ -211,34 +211,34 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
         </div>
 
         {/* Order status breakdown */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Order Status Breakdown</h3>
+        <div className="bg-muted bg-card rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-foreground text-foreground mb-4">Order Status Breakdown</h3>
           <div className="space-y-2">
             {Object.entries(statusCount).map(([status, count]) => (
-              <div key={status} className="flex items-center justify-between p-2 bg-white dark:bg-gray-900 rounded-lg">
+              <div key={status} className="flex items-center justify-between p-2 bg-card dark:bg-card rounded-lg">
                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                   status === "Delivered" ? "bg-green-100 text-green-700"
                   : status === "Cancelled" ? "bg-red-100 text-red-700"
                   : status === "Shipped" ? "bg-purple-100 text-purple-700"
                   : "bg-blue-100 text-blue-700"}`}>{status}</span>
-                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{count}</span>
+                <span className="text-sm font-bold text-foreground text-foreground">{count}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Funding breakdown */}
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Funding Applications</h3>
+        <div className="bg-muted bg-card rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-foreground text-foreground mb-4">Funding Applications</h3>
           <div className="space-y-2">
             {[
               { label: "Pending", count: pendingFunding, color: "yellow" },
               { label: "Approved", count: approvedFunding, color: "green" },
               { label: "Rejected", count: data.funding.filter((f: any) => f.status === "Rejected").length, color: "red" },
             ].map(({ label, count, color }) => (
-              <div key={label} className="flex items-center justify-between p-2 bg-white dark:bg-gray-900 rounded-lg">
+              <div key={label} className="flex items-center justify-between p-2 bg-card dark:bg-card rounded-lg">
                 <span className={`text-xs px-2 py-1 rounded-full font-medium bg-${color}-100 text-${color}-700`}>{label}</span>
-                <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{count}</span>
+                <span className="text-sm font-bold text-foreground text-foreground">{count}</span>
               </div>
             ))}
           </div>

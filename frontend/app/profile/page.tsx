@@ -42,6 +42,7 @@ import type { Product } from "@/lib/types"
 import { calculateProfileCompletion } from "@/lib/profileUtils"
 import { africanCountries } from "@/lib/countries"
 import { formatTimeAgo } from "@/lib/timeUtils"
+import ThemeToggle from "@/components/ThemeToggle"
 
 function ProfilePage() {
   const { currentUser: user, isLoading, updateUser } = useUser()
@@ -317,38 +318,38 @@ function ProfilePage() {
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-sky-200 bg-gradient-to-br from-sky-50 to-cyan-50 px-4 py-3">
+                    <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">
                       <p className="text-xs font-semibold text-sky-700 mb-1">Email</p>
-                      <p className="text-sm font-medium text-slate-800 break-all">{userEmail}</p>
+                      <p className="text-sm font-medium text-foreground break-all">{userEmail}</p>
                     </div>
-                    <div className="rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-lime-50 px-4 py-3">
+                    <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">
                       <p className="text-xs font-semibold text-emerald-700 mb-1">Location</p>
-                      <p className="text-sm font-medium text-slate-800">{user.location || "—"}</p>
+                      <p className="text-sm font-medium text-foreground">{user.location || "—"}</p>
                     </div>
-                    <div className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50 px-4 py-3">
+                    <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">
                       <p className="text-xs font-semibold text-violet-700 mb-1 flex items-center gap-1">
                         <BadgeCheck className="h-3.5 w-3.5" />
                         Account Type
                       </p>
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-sm font-medium text-foreground">
                         {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 px-4 py-3">
+                    <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">
                       <p className="text-xs font-semibold text-rose-700 mb-1">Sign Up Method</p>
-                      <p className="text-sm font-medium text-slate-800 flex items-center gap-2">
+                      <p className="text-sm font-medium text-foreground flex items-center gap-2">
                         {getSignUpMethod() === "Google" && (
                           <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
                         )}
                         {getSignUpMethod()}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 px-4 py-3">
+                    <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">
                       <p className="text-xs font-semibold text-amber-700 mb-1 flex items-center gap-1">
                         <CalendarDays className="h-3.5 w-3.5" />
                         Joined
                       </p>
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-sm font-medium text-foreground">
                         {new Date(user.createdAt).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "long",
@@ -378,6 +379,7 @@ function ProfilePage() {
                   <LogOut className="h-3.5 w-3.5 sm:mr-1.5" />
                   <span className="hidden sm:inline">Sign Out</span>
                 </Button>
+                <ThemeToggle />
                 {user.role === "admin" && (
                   <a href="/admin">
                     <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">

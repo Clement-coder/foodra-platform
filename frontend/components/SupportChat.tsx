@@ -167,10 +167,10 @@ export function SupportChat() {
       </button>
 
       {open && (
-        <div style={panelStyle} className="z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[70vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+        <div style={panelStyle} className="z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[70vh] bg-card dark:bg-card rounded-2xl shadow-2xl border border-border dark:border-border flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-green-600 px-4 py-3 flex items-center gap-3 flex-shrink-0">
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-card/20 rounded-full flex items-center justify-center">
               <MessageCircle className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1">
@@ -185,7 +185,7 @@ export function SupportChat() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
             {messages.length === 0 && (
-              <div className="text-center text-gray-400 text-sm py-8">
+              <div className="text-center text-muted-foreground text-sm py-8">
                 <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-40" />
                 <p>Send us a message and we'll get back to you!</p>
               </div>
@@ -200,7 +200,7 @@ export function SupportChat() {
                 )}
                 <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                   msg.is_admin_reply
-                    ? "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm"
+                    ? "bg-muted dark:bg-gray-800 text-foreground dark:text-gray-200 rounded-tl-sm"
                     : "bg-green-600 text-white rounded-tr-sm"
                 }`}>
                   {msg.image_url && (
@@ -209,7 +209,7 @@ export function SupportChat() {
                     </a>
                   )}
                   {msg.message !== "📎 Image" && <p>{msg.message}</p>}
-                  <p className={`text-xs mt-1 ${msg.is_admin_reply ? "text-gray-400" : "text-green-200"}`}>
+                  <p className={`text-xs mt-1 ${msg.is_admin_reply ? "text-muted-foreground" : "text-green-200"}`}>
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
@@ -230,12 +230,12 @@ export function SupportChat() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-gray-100 dark:border-gray-800 p-3 flex items-center gap-2 flex-shrink-0">
+          <div className="border-t border-border dark:border-border p-3 flex items-center gap-2 flex-shrink-0">
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading || sending}
-              className="text-gray-400 hover:text-green-600 transition-colors flex-shrink-0 disabled:opacity-40"
+              className="text-muted-foreground hover:text-green-600 transition-colors flex-shrink-0 disabled:opacity-40"
             >
               {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Paperclip className="w-5 h-5" />}
             </button>
@@ -244,7 +244,7 @@ export function SupportChat() {
               onChange={e => setText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && !sending && send()}
               placeholder="Type a message…"
-              className="flex-1 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white placeholder-gray-400"
+              className="flex-1 text-sm bg-muted dark:bg-gray-800 border border-border dark:border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-foreground dark:text-white placeholder-gray-400"
             />
             <button
               onClick={() => send()}

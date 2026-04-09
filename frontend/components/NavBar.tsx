@@ -253,9 +253,6 @@ export function NavBar() {
               </button>
             )}
 
-            {/* Theme toggle */}
-            <ThemeToggle />
-
             {/* Avatar / Auth */}
             {authenticated && currentUser && !isLoading ? (
               <>

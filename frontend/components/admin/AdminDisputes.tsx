@@ -46,8 +46,8 @@ function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between z-10">
+      <div className="bg-card dark:bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="sticky top-0 bg-card dark:bg-card border-b border-border dark:border-border px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg font-bold flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-red-500" />Dispute Details</h2>
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
@@ -59,29 +59,29 @@ function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
               <p className="text-red-800 dark:text-red-300 font-medium">{dispute.reason}</p>
             </div>
             {dispute.details && (
-              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                <p className="text-xs text-gray-400 mb-1">Details</p>
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{dispute.details}</p>
+              <div className="p-3 bg-muted bg-card rounded-xl">
+                <p className="text-xs text-muted-foreground mb-1">Details</p>
+                <p className="text-foreground text-foreground leading-relaxed">{dispute.details}</p>
               </div>
             )}
           </div>
 
           {/* Buyer */}
           {dispute.users && (
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <p className="text-xs text-gray-400 mb-2">Raised by</p>
+            <div className="p-3 bg-muted bg-card rounded-xl">
+              <p className="text-xs text-muted-foreground mb-2">Raised by</p>
               <p className="font-medium">{dispute.users.name || "—"}</p>
-              <p className="text-xs text-gray-400">{dispute.users.email || "—"}</p>
+              <p className="text-xs text-muted-foreground">{dispute.users.email || "—"}</p>
             </div>
           )}
 
           {/* Order summary */}
           {order && (
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-1">
-              <p className="text-xs text-gray-400 mb-1">Order</p>
+            <div className="p-3 bg-muted bg-card rounded-xl space-y-1">
+              <p className="text-xs text-muted-foreground mb-1">Order</p>
               <p className="font-mono text-xs">#{order.id.slice(-6).toUpperCase()}</p>
               <p className="font-bold">₦{Number(order.total_amount).toLocaleString()}</p>
-              <p className="text-xs text-gray-400">Escrow: <span className="font-medium text-red-600">{order.escrow_status}</span></p>
+              <p className="text-xs text-muted-foreground">Escrow: <span className="font-medium text-red-600">{order.escrow_status}</span></p>
               {order.escrow_tx_hash && (
                 <a href={`https://sepolia.basescan.org/tx/${order.escrow_tx_hash}`} target="_blank" rel="noopener noreferrer"
                   className="text-xs text-green-600 underline flex items-center gap-1">
@@ -140,20 +140,20 @@ export default function AdminDisputes({ data, privyId, onRefresh }: {
         />
       )}
 
-      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
+      <div className="px-4 py-3 border-b border-border dark:border-border flex items-center gap-3">
         <div className="flex gap-1">
           {(["open", "resolved", "all"] as const).map((f) => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium capitalize transition-colors ${filter === f ? "bg-red-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium capitalize transition-colors ${filter === f ? "bg-red-600 text-white" : "bg-muted bg-card text-muted-foreground text-foreground hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
               {f}
             </button>
           ))}
         </div>
-        <span className="text-xs text-gray-400">{filtered.length} dispute{filtered.length !== 1 ? "s" : ""}</span>
+        <span className="text-xs text-muted-foreground">{filtered.length} dispute{filtered.length !== 1 ? "s" : ""}</span>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="p-12 text-center text-gray-400">
+        <div className="p-12 text-center text-muted-foreground">
           <AlertTriangle className="w-10 h-10 mx-auto mb-3 opacity-30" />
           <p className="text-sm">No {filter === "all" ? "" : filter} disputes</p>
         </div>
@@ -162,7 +162,7 @@ export default function AdminDisputes({ data, privyId, onRefresh }: {
           {filtered.map((d: any) => {
             const order = getOrder(d.order_id)
             return (
-              <div key={d.id} className="px-4 py-4 flex items-start gap-4 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              <div key={d.id} className="px-4 py-4 flex items-start gap-4 hover:bg-muted dark:hover:bg-gray-800/50">
                 <div className={`mt-0.5 p-2 rounded-lg flex-shrink-0 ${d.status === "open" ? "bg-red-100 dark:bg-red-900/30" : "bg-green-100 dark:bg-green-900/30"}`}>
                   <AlertTriangle className={`w-4 h-4 ${d.status === "open" ? "text-red-600" : "text-green-600"}`} />
                 </div>
@@ -171,15 +171,15 @@ export default function AdminDisputes({ data, privyId, onRefresh }: {
                     <span className="font-medium text-sm">{d.users?.name || "Unknown user"}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${d.status === "open" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{d.status}</span>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">{d.reason}</p>
-                  {d.details && <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{d.details}</p>}
-                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                  <p className="text-sm text-foreground text-foreground font-medium">{d.reason}</p>
+                  {d.details && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{d.details}</p>}
+                  <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                     {order && <span>Order #{order.id.slice(-6).toUpperCase()} · ₦{Number(order.total_amount).toLocaleString()}</span>}
                     <span>{new Date(d.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
                 <button onClick={() => setSelected(d)}
-                  className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-700 hover:text-red-700 px-3 py-1.5 rounded-lg transition-colors font-medium flex-shrink-0">
+                  className="text-xs bg-muted bg-card hover:bg-red-100 dark:hover:bg-red-900/30 text-foreground hover:text-red-700 px-3 py-1.5 rounded-lg transition-colors font-medium flex-shrink-0">
                   {d.status === "open" ? "Resolve" : "View"}
                 </button>
               </div>

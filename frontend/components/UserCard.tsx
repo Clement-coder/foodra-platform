@@ -28,7 +28,7 @@ export function UserCard({ user }: UserCardProps) {
       whileHover={{ y: -5 }}
       transition={{ duration: 0.2 }}
       onClick={() => router.push(`/users/${user.id}`)}
-      className="group cursor-pointer rounded-2xl border border-[#118C4C]/15 bg-white/90 backdrop-blur p-5 shadow-sm hover:shadow-xl hover:border-[#118C4C]/35 transition-all duration-300"
+      className="group cursor-pointer rounded-2xl border border-[#118C4C]/15 bg-card p-5 shadow-sm hover:shadow-xl hover:border-[#118C4C]/35 transition-all duration-300"
     >
       <div className="flex items-start justify-between mb-4">
         <span className="inline-flex items-center gap-1 rounded-full bg-[#118C4C]/10 text-[#118C4C] text-[11px] px-2.5 py-1 font-semibold">
@@ -53,13 +53,13 @@ export function UserCard({ user }: UserCardProps) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <h3 className="font-bold text-base text-slate-900 truncate">{user.name || "Unnamed User"}</h3>
-          <p className="text-sm text-slate-600 truncate mt-0.5">{user.email || "No email provided"}</p>
+          <h3 className="font-bold text-base text-foreground truncate">{user.name || "Unnamed User"}</h3>
+          <p className="text-sm text-muted-foreground truncate mt-0.5">{user.email || "No email provided"}</p>
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
-        <span className="text-xs font-mono text-slate-600">
+      <div className="flex items-center justify-between rounded-xl border border-border bg-muted px-3 py-2.5">
+        <span className="text-xs font-mono text-muted-foreground">
           {shortWallet || "No wallet"}
         </span>
         {user.wallet && (

@@ -404,7 +404,7 @@ function WalletPage() {
     : ""
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
 
@@ -513,12 +513,12 @@ function WalletPage() {
               { label: "Bridge", icon: RefreshCcw, color: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400", onClick: () => setIsComingSoonModalOpen(true), desc: "Cross-chain" },
             ].map(({ label, icon: Icon, color, onClick, desc }) => (
               <button key={label} onClick={onClick}
-                className="flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-95">
+                className="flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl bg-card border border-border hover:shadow-md hover:-translate-y-0.5 transition-all active:scale-95">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
                   <Icon className="h-6 w-6" />
                 </div>
-                <span className="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-200 leading-tight text-center">{label}</span>
-                <span className="text-xs text-gray-400 leading-tight text-center hidden sm:block">{desc}</span>
+                <span className="text-xs sm:text-sm font-semibold text-foreground leading-tight text-center">{label}</span>
+                <span className="text-xs text-muted-foreground leading-tight text-center hidden sm:block">{desc}</span>
               </button>
             ))}
           </div>
@@ -557,24 +557,24 @@ function WalletPage() {
 
           {/* ── NGN Funding History ── */}
           {fundRequests.length > 0 && (
-            <div className="mb-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
-              <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-                <Banknote className="h-4 w-4 text-gray-400" />
-                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">NGN Funding History</h2>
+            <div className="mb-6 rounded-2xl bg-card border border-border overflow-hidden shadow-sm">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Banknote className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-base font-semibold text-foreground">NGN Funding History</h2>
               </div>
               <div className="divide-y divide-gray-50 dark:divide-gray-800">
                 {fundRequests.slice(0, 5).map(r => (
                   <div key={r.id} className="px-4 py-3.5 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <span className="font-mono text-sm font-bold text-[#118C4C]">{r.reference}</span>
-                      <p className="text-sm text-gray-500 mt-0.5 truncate">
+                      <p className="text-sm text-muted-foreground mt-0.5 truncate">
                         ₦{Number(r.ngn_amount).toLocaleString()} → {r.usdc_amount} USDC
                       </p>
                     </div>
                     <span className={`text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 ${
                       r.status === "Confirmed" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                       : r.status === "Rejected" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                      : r.status === "Expired" ? "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                      : r.status === "Expired" ? "bg-gray-100 text-muted-foreground dark:bg-gray-800 dark:text-muted-foreground"
                       : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"}`}>
                       {r.status}
                     </span>
@@ -585,11 +585,11 @@ function WalletPage() {
           )}
 
           {/* ── Transaction History ── */}
-          <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+          <div className="rounded-2xl bg-card border border-border overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <History className="h-4 w-4 text-gray-400" />
-                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Transaction History</h2>
+                <History className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-base font-semibold text-foreground">Transaction History</h2>
               </div>
               <div className="flex items-center gap-1.5">
                 {(["all", "send", "receive"] as const).map(f => (
@@ -597,22 +597,22 @@ function WalletPage() {
                     className={`px-3 py-1.5 text-xs sm:text-sm rounded-lg font-medium transition-colors capitalize ${
                       transactionFilter === f
                         ? "bg-[#118C4C] text-white"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-muted-foreground hover:bg-accent dark:hover:bg-gray-700"
                     }`}>
                     {f}
                   </button>
                 ))}
                 <button onClick={handleRefreshTransactions} disabled={isRefreshingTransactions}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50">
-                  <RefreshCcw className={`h-3.5 w-3.5 text-gray-400 ${isRefreshingTransactions ? "animate-spin" : ""}`} />
+                  className="p-1.5 rounded-lg hover:bg-accent transition-colors disabled:opacity-50">
+                  <RefreshCcw className={`h-3.5 w-3.5 text-muted-foreground ${isRefreshingTransactions ? "animate-spin" : ""}`} />
                 </button>
               </div>
             </div>
             <div className="p-4">
               {filteredTransactions.length === 0 ? (
-                <div className="py-12 flex flex-col items-center gap-3 text-gray-400">
-                  <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
-                    <History className="h-6 w-6 text-gray-300" />
+                <div className="py-12 flex flex-col items-center gap-3 text-muted-foreground">
+                  <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+                    <History className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="text-base font-medium">No transactions yet</p>
                   <p className="text-sm text-center">Your on-chain activity will appear here</p>
@@ -789,7 +789,7 @@ function WalletPage() {
             <div className={`flex items-center gap-2 p-3 rounded-xl text-sm font-medium ${
               secondsLeft > 120 ? "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300"
               : secondsLeft > 0 ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300"
-              : "bg-gray-100 text-gray-500"}`}>
+              : "bg-gray-100 text-muted-foreground"}`}>
               <Clock className="h-4 w-4 flex-shrink-0" />
               {secondsLeft > 0 ? <>Expires in <strong className="ml-1 font-mono">{countdownDisplay}</strong></> : "This request has expired"}
             </div>
@@ -799,7 +799,7 @@ function WalletPage() {
                 <span className="text-muted-foreground">Reference (include in narration)</span>
                 <div className="flex items-center gap-1">
                   <span className="font-mono font-bold text-[#118C4C] text-base">{activeFundRequest.reference}</span>
-                  <button onClick={() => copyText(activeFundRequest.reference, "Reference copied!")} className="p-1 hover:bg-gray-200 rounded">
+                  <button onClick={() => copyText(activeFundRequest.reference, "Reference copied!")} className="p-1 hover:bg-accent rounded">
                     <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
                 </div>
@@ -818,14 +818,14 @@ function WalletPage() {
               </div>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-2 text-sm">
+            <div className="bg-muted rounded-xl p-4 space-y-2 text-sm">
               <p className="font-semibold text-foreground">Bank Transfer Details</p>
               <div className="flex justify-between"><span className="text-muted-foreground">Bank</span><span className="font-medium">Foodra Finance Bank</span></div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Account Number</span>
                 <div className="flex items-center gap-1">
                   <span className="font-mono font-bold">0123456789</span>
-                  <button onClick={() => copyText("0123456789", "Account number copied!")} className="p-1 hover:bg-gray-200 rounded">
+                  <button onClick={() => copyText("0123456789", "Account number copied!")} className="p-1 hover:bg-accent rounded">
                     <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
                 </div>
