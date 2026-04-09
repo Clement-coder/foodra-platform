@@ -153,14 +153,12 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                 <span className="text-muted-foreground">No image</span>
               </div>
             )}
-            <div className="absolute top-2 right-2 max-w-[45%]">
-              <span className="block truncate bg-white/95 dark:bg-black/95 text-xs font-semibold px-2 py-1 rounded-full border border-[#118C4C]/30 backdrop-blur-sm">
-                {product.category}
-              </span>
-            </div>
-            <div className="absolute top-2 left-2 max-w-[50%]">
-              <span className="block truncate bg-[#118C4C]/90 text-white text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
+            <div className="absolute top-2 left-2 right-2 flex justify-between gap-1 min-w-0">
+              <span className="truncate bg-[#118C4C]/90 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-medium backdrop-blur-sm shrink-0">
                 {formatTimeAgo(product.createdAt)}
+              </span>
+              <span className="truncate bg-white/95 dark:bg-black/95 text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-[#118C4C]/30 backdrop-blur-sm min-w-0">
+                {product.category}
               </span>
             </div>
           </div>
