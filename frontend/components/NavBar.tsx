@@ -179,31 +179,21 @@ export function NavBar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full p-3 bg-background backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
+      {/* Fixed navbar — covers status bar area on PWA */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border/60"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <div className="flex h-14 items-center justify-between px-3 md:px-6 max-w-7xl mx-auto">
           {/* Logo */}
-          <span className="flex items-center gap-2">
-            <a
-              href="/"
-              className="flex items-center space-x-2 text-2xl font-bold text-[#118C4C] hover:opacity-80 transition-opacity"
-            >
-              <img
-                src="/foodra_logo.jpeg"
-                alt="Foodra Logo"
-                className="h-10 rounded-bl-xl rounded-tr-2xl"
-              />
-            </a>
-            <span className="font-bold lg:flex hidden text-green-800 text-xl">
-              FOODRA
-            </span>
-          </span>
+          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img src="/foodra_logo.jpeg" alt="Foodra" className="h-8 w-8 rounded-lg rounded-bl-xl rounded-tr-2xl object-cover" />
+            <span className="font-bold text-[#118C4C] text-base tracking-tight hidden sm:block">FOODRA</span>
+          </a>
 
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md mx-8">
+          {/* Desktop search */}
+          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-sm mx-6">
             <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Search className="h-5 w-5 text-muted-foreground" />
-              </div>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="search"
                 placeholder="Search anything"
@@ -211,80 +201,71 @@ export function NavBar() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsSearchOpen(true)}
                 onClick={() => setIsSearchOpen(true)}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
-                aria-label="Search anything"
+                className="w-full pl-9 pr-4 py-1.5 text-sm rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
               />
             </div>
           </form>
 
-          {/* Right side actions */}
-          <div className="flex items-center space-x-4">
-            {/* Cart indicator */}
-            <a
-              href="/shop"
-              className="relative p-2 hover:bg-accent rounded-lg transition-colors md:flex items-center space-x-2"
-              aria-label={`Shopping cart with ${cartCount} items`}
+          {/* Right actions */}
+          <div className="flex items-center gap-1">
+            {/* Mobile search icon */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              className="md:hidden p-2 rounded-lg hover:bg-accent transition-colors"
+              aria-label="Search"
             >
-              <ShoppingCart className="h-6 w-6 text-foreground" />
-              <span className="hidden md:inline text-sm font-medium">
-                Shop
-              </span>
+              <Search className="h-5 w-5 text-foreground" />
+            </button>
+
+            {/* Cart */}
+            <a href="/shop" className="relative p-2 rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5" aria-label="Shop">
+              <ShoppingCart className="h-5 w-5 text-foreground" />
+              <span className="hidden md:inline text-sm font-medium">Shop</span>
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-[#118C4C] text-white text-xs flex items-center justify-center font-semibold">
+                <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-[#118C4C] text-white text-[10px] flex items-center justify-center font-bold">
                   {cartCount}
                 </span>
               )}
             </a>
 
-            {/* Wallet Link */}
+            {/* Wallet — desktop only */}
             {authenticated && (
-              <a
-                href="/wallet"
-                className="p-2 hover:bg-accent rounded-lg transition-colors md:flex items-center space-x-2"
-              >
-                <Wallet className="h-6 w-6" />
-                <span className="hidden md:inline text-sm font-medium">
-                  Wallet
-                </span>
+              <a href="/wallet" className="hidden md:flex p-2 rounded-lg hover:bg-accent transition-colors items-center gap-1.5">
+                <Wallet className="h-5 w-5" />
+                <span className="text-sm font-medium">Wallet</span>
               </a>
             )}
 
-            {/* Notifications bell */}
+            {/* Notifications */}
             {authenticated && (
               <button
                 onClick={() => setNotifOpen(true)}
-                className="relative p-2 hover:bg-accent rounded-lg transition-colors"
+                className="relative p-2 rounded-lg hover:bg-accent transition-colors"
                 aria-label="Notifications"
               >
-                <Bell className="h-6 w-6 text-foreground" />
+                <Bell className="h-5 w-5 text-foreground" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-green-600 text-white text-xs flex items-center justify-center font-semibold">
+                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-green-600 text-white text-[10px] flex items-center justify-center font-bold">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
               </button>
             )}
 
-            {/* Auth buttons */}
+            {/* Avatar / Auth */}
             {authenticated && currentUser && !isLoading ? (
               <>
-                {/* Mobile: avatar link to profile */}
-                <a href="/profile" className="md:hidden flex-shrink-0">
+                <a href="/profile" className="md:hidden flex-shrink-0 ml-1">
                   {currentUser.avatar ? (
-                    <img
-                      src={currentUser.avatar}
-                      alt={currentUser.name}
-                      referrerPolicy="no-referrer"
-                      className="w-9 h-9 rounded-full object-cover border-2 border-[#118C4C]"
-                    />
+                    <img src={currentUser.avatar} alt={currentUser.name} referrerPolicy="no-referrer"
+                      className="w-8 h-8 rounded-full object-cover border-2 border-[#118C4C]" />
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-[#118C4C] flex items-center justify-center text-white text-sm font-bold border-2 border-[#118C4C]">
+                    <div className="w-8 h-8 rounded-full bg-[#118C4C] flex items-center justify-center text-white text-xs font-bold border-2 border-[#118C4C]">
                       {(currentUser.name || "U")[0].toUpperCase()}
                     </div>
                   )}
                 </a>
-                {/* Desktop: full dropdown */}
-                <div className="hidden md:block">
+                <div className="hidden md:block ml-1">
                   <ProfileDropdown user={currentUser} />
                 </div>
               </>
@@ -293,151 +274,90 @@ export function NavBar() {
             )}
           </div>
         </div>
-
-          <form
-            onSubmit={handleSearch}
-            className="md:hidden pb-2 pt-1"
-          >
-            <div>
-              <div className="relative w-full">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Search className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <input
-                  type="search"
-                  placeholder="Search anything"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setIsSearchOpen(true)}
-                  onClick={() => setIsSearchOpen(true)}
-                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
-                  aria-label="Search anything"
-                />
-              </div>
-            </div>
-          </form>
-        </div>
       </nav>
 
+      {/* Search modal */}
       <AnimatePresence>
         {isSearchOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setIsSearchOpen(false)}
             className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm p-4 flex items-start justify-center"
           >
             <motion.div
-              initial={{ opacity: 0, y: -30, scale: 0.96 }}
+              initial={{ opacity: 0, y: -20, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.98 }}
-              transition={{ duration: 0.22, ease: "easeOut" }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
               className="mt-16 w-full max-w-2xl rounded-2xl border border-border/50 bg-card/95 shadow-2xl"
             >
-              <form onSubmit={handleSearch} className="p-4 sm:p-5">
-                <label htmlFor="navbar-modal-search" className="sr-only">
-                  Search anything
-                </label>
+              <form onSubmit={handleSearch} className="p-4">
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
-                    id="navbar-modal-search"
-                    type="search"
-                    autoFocus
+                    id="navbar-modal-search" type="search" autoFocus
                     placeholder="Search products, users, categories..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-14 rounded-xl border border-input bg-background pl-12 pr-24 text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
-                    aria-label="Search anything"
+                    className="w-full h-12 rounded-xl border border-input bg-background pl-11 pr-20 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
                   />
-                  <button
-                    type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 rounded-lg bg-[#118C4C] text-white text-sm font-medium hover:bg-[#0d6d3a] transition-colors"
-                  >
+                  <button type="submit"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 px-3 rounded-lg bg-[#118C4C] text-white text-xs font-medium hover:bg-[#0d6d3a] transition-colors">
                     Search
                   </button>
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Press <kbd className="rounded border border-border px-1.5 py-0.5">Esc</kbd> to close
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Press <kbd className="rounded border border-border px-1 py-0.5">Esc</kbd> to close
                 </p>
 
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-3 flex items-center gap-2">
                   {(["all", "products", "users"] as SearchFilter[]).map((filter) => (
-                    <button
-                      key={filter}
-                      type="button"
-                      onClick={() => setSearchFilter(filter)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${
-                        searchFilter === filter
-                          ? "bg-[#118C4C] text-white"
-                          : "bg-muted text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
+                    <button key={filter} type="button" onClick={() => setSearchFilter(filter)}
+                      className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors ${
+                        searchFilter === filter ? "bg-[#118C4C] text-white" : "bg-muted text-muted-foreground hover:text-foreground"
+                      }`}>
                       {filter}
                     </button>
                   ))}
                 </div>
 
                 {searchQuery.trim().length > 0 && (
-                  <div className="mt-4 border-t border-border/60 pt-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-                      Matching Results
-                    </p>
-
+                  <div className="mt-3 border-t border-border/60 pt-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Results</p>
                     {isSuggestionsLoading ? (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Searching...
+                        <Loader2 className="h-4 w-4 animate-spin" /> Searching...
                       </div>
                     ) : filteredSuggestions.length > 0 ? (
-                      <div className="space-y-2">
-                        {filteredSuggestions.map((suggestion) => (
-                          <button
-                            key={suggestion.id}
-                            type="button"
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className="w-full rounded-xl border border-border/60 bg-background/70 px-3 py-2 text-left hover:bg-accent/60 transition-colors"
-                          >
+                      <div className="space-y-1.5">
+                        {filteredSuggestions.map((s) => (
+                          <button key={s.id} type="button" onClick={() => handleSuggestionClick(s)}
+                            className="w-full rounded-xl border border-border/60 bg-background/70 px-3 py-2 text-left hover:bg-accent/60 transition-colors">
                             <div className="flex items-center justify-between gap-3">
-                              <p className="text-sm font-medium text-foreground truncate">{suggestion.title}</p>
-                              <span className="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-muted text-muted-foreground">
-                                {suggestion.type}
-                              </span>
+                              <p className="text-sm font-medium text-foreground truncate">{s.title}</p>
+                              <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{s.type}</span>
                             </div>
-                            <p className="text-xs text-muted-foreground truncate mt-1">{suggestion.subtitle}</p>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{s.subtitle}</p>
                           </button>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">No matches found. Try a different keyword.</p>
+                      <p className="text-sm text-muted-foreground">No matches found.</p>
                     )}
                   </div>
                 )}
 
                 {recentSearches.length > 0 && (
-                  <div className="mt-4 border-t border-border/60 pt-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Recent Searches
-                      </p>
-                      <button
-                        type="button"
-                        onClick={clearRecentSearches}
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        Clear
-                      </button>
+                  <div className="mt-3 border-t border-border/60 pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recent</p>
+                      <button type="button" onClick={clearRecentSearches} className="text-xs text-muted-foreground hover:text-foreground">Clear</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {recentSearches.map((term) => (
-                        <button
-                          key={term}
-                          type="button"
-                          onClick={() => handleRecentSearchClick(term)}
-                          className="px-3 py-1.5 rounded-full bg-muted text-foreground text-sm hover:bg-[#118C4C]/15 transition-colors"
-                        >
+                        <button key={term} type="button" onClick={() => handleRecentSearchClick(term)}
+                          className="px-3 py-1 rounded-full bg-muted text-foreground text-xs hover:bg-[#118C4C]/15 transition-colors">
                           {term}
                         </button>
                       ))}
@@ -449,12 +369,8 @@ export function NavBar() {
           </motion.div>
         )}
       </AnimatePresence>
-      <NotificationSidebar
-        open={notifOpen}
-        onClose={() => setNotifOpen(false)}
-        notifications={notifications}
-        onMarkRead={markRead}
-      />
+
+      <NotificationSidebar open={notifOpen} onClose={() => setNotifOpen(false)} notifications={notifications} onMarkRead={markRead} />
     </>
   );
 }

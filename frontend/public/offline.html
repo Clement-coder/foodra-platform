@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Foodra — You're offline</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f5faf6; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 24px; }
+    img { width: 64px; border-radius: 16px; margin-bottom: 16px; }
+    h1 { font-size: 1.4rem; color: #118C4C; margin: 0 0 8px; }
+    p { color: #555; font-size: 0.9rem; margin: 0 0 20px; }
+    button { background: #118C4C; color: #fff; border: none; padding: 12px 28px; border-radius: 12px; font-size: 0.95rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div>
+    <img src="/icon-192x192.png" alt="Foodra" />
+    <h1>You're offline</h1>
+    <p>Check your connection and try again.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>
