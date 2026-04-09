@@ -1,11 +1,14 @@
 import webpush from "web-push"
 import { getSupabaseAdminClient } from "./supabaseAdmin"
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
+function getWebPush() {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT!,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  )
+  return webpush
+}
 
 export async function sendPushToUser(
   userId: string,
@@ -21,11 +24,11 @@ export async function sendPushToUser(
 
   if (!subs?.length) return
 
+  const wp = getWebPush()
   await Promise.allSettled(
     subs.map((row: any) => {
       const sub = JSON.parse(row.subscription)
-      return webpush.sendNotification(sub, JSON.stringify(payload)).catch(() => {
-        // Remove dead subscriptions
+      return wp.sendNotification(sub, JSON.stringify(payload)).catch(() => {
         supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint)
       })
     })
