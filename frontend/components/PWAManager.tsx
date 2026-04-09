@@ -54,21 +54,25 @@ export default function PWAManager() {
 
   const handlePushEnable = async () => {
     setShowPushBanner(false)
-    const permission = await Notification.requestPermission()
-    if (permission !== "granted" || !currentUser) return
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission !== "granted" || !currentUser) return
 
-    const reg = await navigator.serviceWorker.ready
-    const existing = await reg.pushManager.getSubscription()
-    const sub = existing || await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
-    })
+      const reg = await navigator.serviceWorker.ready
+      const existing = await reg.pushManager.getSubscription()
+      const sub = existing || await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
+      })
 
-    await fetch("/api/push", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subscription: sub.toJSON(), userId: currentUser.id }),
-    })
+      await fetch("/api/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: sub.toJSON(), userId: currentUser.id }),
+      })
+    } catch (err) {
+      console.error("Push subscription failed:", err)
+    }
   }
 
   const handleUpdate = () => {
