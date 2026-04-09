@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { ShoppingBag, GraduationCap, DollarSign, Users, TrendingUp, Shield, ArrowRight, Target, Eye, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { UserCard } from "@/components/UserCard"
 import { User } from "@/lib/types"
 
 import HeroSection from "@/components/HeroSection"
@@ -20,13 +19,43 @@ export default function LandingPage() {
    }, [])
 
   const [communityUsers, setCommunityUsers] = useState<User[]>([])
+  const carouselRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch("/api/users")
       .then((r) => r.ok ? r.json() : [])
-      .then((data: User[]) => setCommunityUsers(Array.isArray(data) ? data.slice(0, 6) : []))
+      .then((data: User[]) => setCommunityUsers(Array.isArray(data) ? data.slice(0, 12) : []))
       .catch(() => {})
   }, [])
+
+  // Auto-scroll carousel
+  useEffect(() => {
+    const el = carouselRef.current
+    if (!el || communityUsers.length === 0) return
+    let frame: number
+    let pos = 0
+    const speed = 0.5
+    const scroll = () => {
+      pos += speed
+      if (pos >= el.scrollWidth / 2) pos = 0
+      el.scrollLeft = pos
+      frame = requestAnimationFrame(scroll)
+    }
+    frame = requestAnimationFrame(scroll)
+    const pause = () => cancelAnimationFrame(frame)
+    const resume = () => { frame = requestAnimationFrame(scroll) }
+    el.addEventListener("mouseenter", pause)
+    el.addEventListener("mouseleave", resume)
+    el.addEventListener("touchstart", pause, { passive: true })
+    el.addEventListener("touchend", resume)
+    return () => {
+      cancelAnimationFrame(frame)
+      el.removeEventListener("mouseenter", pause)
+      el.removeEventListener("mouseleave", resume)
+      el.removeEventListener("touchstart", pause)
+      el.removeEventListener("touchend", resume)
+    }
+  }, [communityUsers])
 
   // --- Features, stats, benefits ---
   const features = [
@@ -82,34 +111,48 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Community Section */}
+      {/* Community Carousel */}
       {communityUsers.length > 0 && (
-        <section className="py-20 px-4">
-          <div className="container mx-auto max-w-6xl">
-            <div className="flex items-center justify-between mb-10">
-              <div>
-                <p className="inline-flex items-center gap-2 rounded-full bg-[#118C4C]/10 px-3 py-1 text-xs font-semibold text-[#118C4C] mb-3">
-                  <Users className="h-3.5 w-3.5" />
-                  Community
-                </p>
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground">Meet Our Farmers & Buyers</h2>
-                <p className="text-muted-foreground mt-2">Real people growing Africa's food future</p>
+        <section className="py-8 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#118C4C]/10 px-2.5 py-1 text-xs font-semibold text-[#118C4C]">
+                  <Users className="h-3 w-3" /> Community
+                </span>
+                <h2 className="text-base font-bold text-foreground">Meet Our Farmers & Buyers</h2>
               </div>
-              <Link href="/users" className="hidden sm:flex items-center gap-2 text-sm font-medium text-[#118C4C] hover:underline">
-                View all <ArrowRight className="h-4 w-4" />
+              <Link href="/users" className="flex items-center gap-1 text-xs font-medium text-[#118C4C] hover:underline">
+                View all <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {communityUsers.map((user) => (
-                <UserCard key={user.id} user={user} />
+
+            {/* Carousel track — duplicated for seamless loop */}
+            <div
+              ref={carouselRef}
+              className="flex gap-3 overflow-x-auto scrollbar-hide"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {[...communityUsers, ...communityUsers].map((user, i) => (
+                <Link
+                  key={`${user.id}-${i}`}
+                  href={`/users/${user.id}`}
+                  className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16 group"
+                >
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#118C4C]/20 bg-muted group-hover:border-[#118C4C] transition-colors">
+                    {user.avatar ? (
+                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-full h-full bg-[#118C4C]/10 flex items-center justify-center text-[#118C4C] font-bold text-sm">
+                        {(user.name || "U")[0].toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-center text-muted-foreground truncate w-full leading-tight">
+                    {(user.name || "User").split(" ")[0]}
+                  </span>
+                </Link>
               ))}
-            </div>
-            <div className="mt-8 text-center sm:hidden">
-              <Link href="/users">
-                <Button variant="outline" className="border-[#118C4C] text-[#118C4C]">
-                  View all members <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
             </div>
           </div>
         </section>

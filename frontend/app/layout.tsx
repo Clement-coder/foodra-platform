@@ -135,11 +135,16 @@ export default function RootLayout({
             }
           `}
         </style>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{})}`,
+          }}
+        />
         <Providers>
           <ToastProvider>
           <CartProvider>
             <NavBar />
-            <main className="min-h-screen pb-24 md:pb-8">{children}</main>
+            <main className="min-h-screen pb-24 md:pb-8 pt-[56px]">{children}</main>
             <div className="mb-20 md:mb-0">
               <Footer />
             </div>
