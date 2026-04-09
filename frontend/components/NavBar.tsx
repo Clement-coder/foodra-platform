@@ -8,6 +8,7 @@ import { Loader2, ShoppingCart, Search, Wallet, Users, Bell } from "lucide-react
 import { AnimatePresence, motion } from "framer-motion";
 import ProfileDropdown from "./ProfileDropdown";
 import SignupButton from "./SignupButton";
+import ThemeToggle from "./ThemeToggle";
 import { useCart } from "@/lib/useCart";
 import { useUser } from "@/lib/useUser";
 import { useNotifications } from "@/lib/useNotifications";
@@ -251,6 +252,9 @@ export function NavBar() {
                 )}
               </button>
             )}
+
+            {/* Theme toggle */}
+            <ThemeToggle />
 
             {/* Avatar / Auth */}
             {authenticated && currentUser && !isLoading ? (

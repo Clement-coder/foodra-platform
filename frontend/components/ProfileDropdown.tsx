@@ -6,6 +6,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { Home, ShoppingBag, GraduationCap, DollarSign, User as UserIcon, ChevronDown, PackagePlus, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import ThemeToggle from "./ThemeToggle"
 
 interface ProfileDropdownProps {
   user: User
@@ -72,6 +73,10 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
                   <span>{link.name}</span>
                 </Link>
               ))}
+              <div className="px-3 pt-2 pb-1 border-t border-border/50 mt-1">
+                <p className="text-xs text-muted-foreground mb-2">Theme</p>
+                <ThemeToggle className="w-full" />
+              </div>
             </div>
           </motion.div>
         )}
