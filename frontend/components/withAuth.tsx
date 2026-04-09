@@ -7,44 +7,9 @@ import AuthModal from "./AuthModal";
 import { useUser } from "@/lib/useUser";
 import { calculateProfileCompletion } from "@/lib/profileUtils";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Loader2, ShieldCheck } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { NotificationDiv } from "./NotificationDiv";
 import { useToast } from "@/lib/toast";
-
-const TermsModal = ({ onAccept }: { onAccept: () => void }) => (
-  <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-6"
-    >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-[#118C4C]/10 rounded-xl">
-          <ShieldCheck className="h-6 w-6 text-[#118C4C]" />
-        </div>
-        <h2 className="text-lg font-bold text-foreground">Terms of Service</h2>
-      </div>
-      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-        Before using Foodra, please read and accept our{" "}
-        <a href="/terms" target="_blank" className="text-[#118C4C] underline underline-offset-2 font-medium">Terms of Service</a>{" "}
-        and{" "}
-        <a href="/privacy" target="_blank" className="text-[#118C4C] underline underline-offset-2 font-medium">Privacy Policy</a>.
-        By continuing, you agree that Foodra may process your data to provide marketplace, training, funding, and wallet services.
-      </p>
-      <div className="bg-[#118C4C]/5 border border-[#118C4C]/20 rounded-xl p-3 mb-5 text-xs text-muted-foreground space-y-1">
-        <p>✓ Your data is stored securely on Supabase</p>
-        <p>✓ Payments are secured via blockchain escrow</p>
-        <p>✓ You can delete your account at any time</p>
-      </div>
-      <button
-        onClick={onAccept}
-        className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white font-semibold py-3 rounded-xl transition-colors"
-      >
-        I Accept — Continue to Foodra
-      </button>
-    </motion.div>
-  </div>
-);
 
 // Beautiful Loading Component
 const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => {
@@ -108,18 +73,6 @@ const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => {
   );
 };
 
-// Persisted in localStorage so it survives page refreshes within the same session
-function hasShownTermsThisSession(): boolean {
-  if (typeof window === "undefined") return false
-  return localStorage.getItem("foodra_terms_shown") === "1"
-}
-function markTermsShown() {
-  if (typeof window !== "undefined") localStorage.setItem("foodra_terms_shown", "1")
-}
-function clearTermsShown() {
-  if (typeof window !== "undefined") localStorage.removeItem("foodra_terms_shown")
-}
-
 const withAuth = <P extends object>(
   WrappedComponent: React.ComponentType<P>
 ) => {
@@ -131,7 +84,6 @@ const withAuth = <P extends object>(
     const { toast } = useToast();
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [showProfileToast, setShowProfileToast] = useState(false);
-    const [showTerms, setShowTerms] = useState(false);
     const prevAuthRef = useRef<boolean | null>(null);
 
     useEffect(() => {
@@ -151,26 +103,13 @@ const withAuth = <P extends object>(
 
       setAuthModalOpen(false);
 
-      // Show terms once per new user — never again after acceptance
-      if (authenticated && currentUser && !currentUser.termsAcceptedAt && !hasShownTermsThisSession()) {
-        markTermsShown();
-        setShowTerms(true);
-        return;
-      }
-
       // Check profile completion and show toast if incomplete
       if (authenticated && currentUser) {
         const completion = calculateProfileCompletion(currentUser);
         
-        // Show toast notification if profile is incomplete and not on profile page
         if (completion < 100 && pathname !== "/profile") {
           setShowProfileToast(true);
-          
-          // Auto-hide toast after 10 seconds
-          const timer = setTimeout(() => {
-            setShowProfileToast(false);
-          }, 10000);
-          
+          const timer = setTimeout(() => setShowProfileToast(false), 10000);
           return () => clearTimeout(timer);
         } else {
           setShowProfileToast(false);
@@ -219,20 +158,8 @@ const withAuth = <P extends object>(
 
     // User is authenticated and profile data is loaded
     if (authenticated && currentUser) {
-      const handleAcceptTerms = async () => {
-        const now = new Date().toISOString();
-        await fetch("/api/users/sync", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ privyId: currentUser.id, terms_accepted_at: now }),
-        });
-        clearTermsShown(); // no longer needed — DB flag takes over
-        setShowTerms(false);
-      };
-
       return (
         <>
-          {showTerms && <TermsModal onAccept={handleAcceptTerms} />}
           <WrappedComponent {...props} />
           <AnimatePresence>
             {showProfileToast && (

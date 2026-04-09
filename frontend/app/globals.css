@@ -115,9 +115,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* Fill the status bar zone with app background on iOS black-translucent */
+  html {
+    @apply bg-background;
+  }
   body {
     @apply bg-background text-foreground;
-    /* horizontal safe area only — top is handled by the fixed navbar */
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
     overscroll-behavior-y: contain;
