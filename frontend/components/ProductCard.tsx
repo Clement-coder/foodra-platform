@@ -153,13 +153,13 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                 <span className="text-muted-foreground">No image</span>
               </div>
             )}
-            <div className="absolute top-2 right-2">
-              <span className="bg-white/95 dark:bg-black/95 text-xs font-semibold px-3 py-1.5 rounded-full border border-[#118C4C]/30 backdrop-blur-sm">
+            <div className="absolute top-2 right-2 max-w-[45%]">
+              <span className="block truncate bg-white/95 dark:bg-black/95 text-xs font-semibold px-2 py-1 rounded-full border border-[#118C4C]/30 backdrop-blur-sm">
                 {product.category}
               </span>
             </div>
-            <div className="absolute top-2 left-2">
-              <span className="bg-[#118C4C]/90 text-white text-xs px-3 py-1.5 rounded-full font-medium backdrop-blur-sm">
+            <div className="absolute top-2 left-2 max-w-[50%]">
+              <span className="block truncate bg-[#118C4C]/90 text-white text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm">
                 {formatTimeAgo(product.createdAt)}
               </span>
             </div>
@@ -206,7 +206,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
 
           <CardFooter className="p-2 sm:p-4 pt-0 flex gap-1.5 sm:gap-2">
             <Link href={`/marketplace/${product.id}`} className="flex-1">
-              <button className="w-full border-2 border-[#118C4C] hover:bg-[#118C4C] hover:text-white duration-300 ease-in-out rounded-xl text-[#118C4C] text-center py-2 px-2 bg-transparent font-medium text-xs sm:text-sm whitespace-nowrap">
+              <button className="w-full border border-[#118C4C]/50 hover:bg-[#118C4C] hover:text-white duration-300 ease-in-out rounded-xl text-[#118C4C] text-center py-2 px-2 bg-transparent font-medium text-xs sm:text-sm whitespace-nowrap">
                 View
               </button>
             </Link>
