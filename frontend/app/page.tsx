@@ -1,11 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { ShoppingBag, GraduationCap, DollarSign, Users, TrendingUp, Shield, ArrowRight, Target, Eye, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { UserCard } from "@/components/UserCard"
+import { User } from "@/lib/types"
 
 import HeroSection from "@/components/HeroSection"
 import Gallery from "@/components/Gallery"
@@ -16,6 +18,15 @@ export default function LandingPage() {
   useEffect(() => {
     
    }, [])
+
+  const [communityUsers, setCommunityUsers] = useState<User[]>([])
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: User[]) => setCommunityUsers(Array.isArray(data) ? data.slice(0, 6) : []))
+      .catch(() => {})
+  }, [])
 
   // --- Features, stats, benefits ---
   const features = [
@@ -70,6 +81,39 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Community Section */}
+      {communityUsers.length > 0 && (
+        <section className="py-20 px-4">
+          <div className="container mx-auto max-w-6xl">
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <p className="inline-flex items-center gap-2 rounded-full bg-[#118C4C]/10 px-3 py-1 text-xs font-semibold text-[#118C4C] mb-3">
+                  <Users className="h-3.5 w-3.5" />
+                  Community
+                </p>
+                <h2 className="text-3xl md:text-4xl font-bold text-foreground">Meet Our Farmers & Buyers</h2>
+                <p className="text-muted-foreground mt-2">Real people growing Africa's food future</p>
+              </div>
+              <Link href="/users" className="hidden sm:flex items-center gap-2 text-sm font-medium text-[#118C4C] hover:underline">
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              {communityUsers.map((user) => (
+                <UserCard key={user.id} user={user} />
+              ))}
+            </div>
+            <div className="mt-8 text-center sm:hidden">
+              <Link href="/users">
+                <Button variant="outline" className="border-[#118C4C] text-[#118C4C]">
+                  View all members <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="py-20 px-4 bg-muted/30">
         <div className="container mx-auto max-w-6xl">

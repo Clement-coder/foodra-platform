@@ -26,7 +26,7 @@ export function BottomTabBar() {
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border shadow-lg"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border shadow-lg pwa-bottom-nav"
       role="navigation"
       aria-label="Bottom navigation"
     >

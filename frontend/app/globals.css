@@ -117,11 +117,20 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* iOS safe area support (notch + home bar) */
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
   /* Prevent iOS zoom on input focus */
   input, textarea, select {
     font-size: 16px !important;
   }
+}
+
+/* PWA bottom nav safe area (home bar on iPhone) */
+.pwa-bottom-nav {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
 /* Custom scrollbar styling */
