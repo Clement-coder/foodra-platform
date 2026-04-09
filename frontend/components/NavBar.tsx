@@ -228,11 +228,11 @@ export function NavBar() {
               )}
             </a>
 
-            {/* Wallet — desktop only */}
+            {/* Wallet */}
             {authenticated && (
-              <a href="/wallet" className="hidden md:flex p-2 rounded-lg hover:bg-accent transition-colors items-center gap-1.5">
+              <a href="/wallet" className="p-2 rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5">
                 <Wallet className="h-5 w-5" />
-                <span className="text-sm font-medium">Wallet</span>
+                <span className="hidden md:inline text-sm font-medium">Wallet</span>
               </a>
             )}
 
