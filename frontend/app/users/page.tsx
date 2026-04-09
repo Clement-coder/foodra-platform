@@ -37,7 +37,7 @@ export default function UsersPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="relative overflow-hidden rounded-3xl border border-[#118C4C]/20 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-6 md:p-8 mb-8">
+      <div className="relative overflow-hidden rounded-3xl border border-[#118C4C]/20 bg-card p-6 md:p-8 mb-8">
         <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#118C4C]/10 blur-2xl" />
         <div className="absolute -left-10 -bottom-12 h-40 w-40 rounded-full bg-emerald-200/30 blur-2xl" />
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-5">
@@ -46,8 +46,8 @@ export default function UsersPage() {
               <Sparkles className="h-3.5 w-3.5" />
               Community Directory
             </p>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Explore Users</h1>
-            <p className="text-slate-600 mt-2 text-sm md:text-base">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Explore Users</h1>
+            <p className="text-muted-foreground mt-2 text-sm md:text-base">
               Discover buyers and farmers, open profiles, and explore their listed products.
             </p>
           </div>
@@ -61,7 +61,7 @@ export default function UsersPage() {
             placeholder="Search by name or email"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white/95 focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-[#118C4C] transition-shadow"
           />
         </div>
       </div>

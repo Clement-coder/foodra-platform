@@ -59,7 +59,7 @@ export function RatingModal({ isOpen, onClose, orderId, farmerId, farmerName, bu
               <Star className={`h-10 w-10 transition-colors ${
                 n <= (hovered || stars)
                   ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-300 dark:text-gray-600"
+                  : "text-gray-300 dark:text-muted-foreground"
               }`} />
             </button>
           ))}

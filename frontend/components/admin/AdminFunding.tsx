@@ -9,8 +9,8 @@ const PAGE_SIZE = 20
 function FundingDetailModal({ f, onClose }: { f: any; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between z-10">
+      <div className="bg-card dark:bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="sticky top-0 bg-card dark:bg-card border-b border-border dark:border-border px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg font-bold">Funding Application</h2>
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
@@ -29,16 +29,16 @@ function FundingDetailModal({ f, onClose }: { f: any; onClose: () => void }) {
               { label: "Amount Requested", value: `₦${Number(f.amount_requested).toLocaleString()}` },
               { label: "Submitted", value: new Date(f.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) },
             ].map(({ label, value }) => (
-              <div key={label} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                <p className="text-xs text-gray-400 mb-0.5">{label}</p>
-                <p className="font-medium text-gray-900 dark:text-white">{value || "—"}</p>
+              <div key={label} className="p-3 bg-muted bg-card rounded-xl">
+                <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+                <p className="font-medium text-foreground dark:text-white">{value || "—"}</p>
               </div>
             ))}
           </div>
           {f.expected_outcome && (
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <p className="text-xs text-gray-400 mb-1">Expected Outcome</p>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{f.expected_outcome}</p>
+            <div className="p-3 bg-muted bg-card rounded-xl">
+              <p className="text-xs text-muted-foreground mb-1">Expected Outcome</p>
+              <p className="text-foreground text-foreground leading-relaxed">{f.expected_outcome}</p>
             </div>
           )}
           {f.rejection_note && (
@@ -112,10 +112,10 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
   return (
     <>
       {viewing && <FundingDetailModal f={viewing} onClose={() => setViewing(null)} />}
-      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex flex-wrap items-center gap-3">
+      <div className="px-4 py-3 border-b border-border dark:border-border flex flex-wrap items-center gap-3">
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
           placeholder="Search by name, location, farm type…"
-          className="flex-1 min-w-[180px] text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500" />
+          className="flex-1 min-w-[180px] text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
         <CustomSelect
           value={statusFilter}
           onChange={(v) => { setStatusFilter(v); setPage(0) }}
@@ -128,14 +128,14 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
           className="w-36"
         />
         <button onClick={() => exportCSV(filtered)}
-          className="flex items-center gap-1.5 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-xl transition-colors">
+          className="flex items-center gap-1.5 text-sm bg-muted bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground text-foreground px-3 py-2 rounded-xl transition-colors">
           <Download className="w-4 h-4" />Export
         </button>
-        <span className="text-xs text-gray-400 whitespace-nowrap">{filtered.length} applications</span>
+        <span className="text-xs text-muted-foreground whitespace-nowrap">{filtered.length} applications</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+          <thead className="bg-muted bg-card text-muted-foreground dark:text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left">Applicant</th>
               <th className="px-4 py-3 text-left hidden sm:table-cell">Farm Type</th>
@@ -148,16 +148,16 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {paged.map((f: any) => (
               <>
-                <tr key={f.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <tr key={f.id} className="hover:bg-muted dark:hover:bg-gray-800/50">
                   <td className="px-4 py-3">
                     <button onClick={() => setViewing(f)} className="text-left hover:underline">
                       <div className="font-medium">{f.full_name}</div>
-                      <div className="text-xs text-gray-400">{f.location}</div>
+                      <div className="text-xs text-muted-foreground">{f.location}</div>
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{f.farm_type}</td>
+                  <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{f.farm_type}</td>
                   <td className="px-4 py-3 font-medium">₦{Number(f.amount_requested).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{f.years_of_experience}yr</td>
+                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{f.years_of_experience}yr</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                       f.status === "Approved" ? "bg-green-100 text-green-700"
@@ -166,7 +166,7 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <button onClick={() => setViewing(f)} className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-700 hover:text-blue-700 px-2 py-1 rounded-lg">View</button>
+                      <button onClick={() => setViewing(f)} className="text-xs bg-muted bg-card hover:bg-blue-100 dark:hover:bg-blue-900/30 text-foreground hover:text-blue-700 px-2 py-1 rounded-lg">View</button>
                       {f.status === "Pending" && (
                         <>
                           <button onClick={() => approve(f.id)} className="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700">Approve</button>
@@ -186,11 +186,11 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
                           onChange={e => setRejectNote(prev => ({ ...prev, [f.id]: e.target.value }))}
                           placeholder="Enter reason for rejection..."
                           rows={2}
-                          className="w-full text-sm bg-white dark:bg-gray-800 border border-red-200 dark:border-red-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
+                          className="w-full text-sm bg-card bg-card border border-red-200 dark:border-red-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
                         />
                         <div className="flex gap-2">
                           <button onClick={() => reject(f.id)} className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700">Confirm Reject</button>
-                          <button onClick={() => setRejectOpen(null)} className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-300">Cancel</button>
+                          <button onClick={() => setRejectOpen(null)} className="text-xs bg-gray-200 bg-card text-foreground text-foreground px-3 py-1.5 rounded-lg hover:bg-gray-300">Cancel</button>
                         </div>
                       </div>
                     </td>
@@ -202,11 +202,11 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
         </table>
       </div>
       {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500">
+        <div className="px-4 py-3 border-t border-border dark:border-border flex items-center justify-between text-xs text-muted-foreground">
           <span>Page {page + 1} of {totalPages}</span>
           <div className="flex gap-2">
-            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
-            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
           </div>
         </div>
       )}

@@ -44,11 +44,11 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+      <div className="bg-card dark:bg-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">User Profile</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+        <div className="sticky top-0 bg-card dark:bg-card border-b border-border dark:border-border px-6 py-4 flex items-center justify-between z-10">
+          <h2 className="text-lg font-bold text-foreground dark:text-white">User Profile</h2>
+          <button onClick={onClose} className="p-2 hover:bg-muted dark:hover:bg-gray-800 rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -64,7 +64,7 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
               </div>
             )}
             <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{user.name || "—"}</h3>
+              <h3 className="text-xl font-bold text-foreground dark:text-white">{user.name || "—"}</h3>
               <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                 user.role === "admin" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
                 : user.role === "farmer" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
@@ -75,39 +75,39 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
 
           {/* Contact info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <div className="flex items-center gap-3 p-3 bg-muted bg-card rounded-xl">
+              <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <div>
-                <p className="text-xs text-gray-400">Email</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white break-all">{user.email || "—"}</p>
+                <p className="text-xs text-muted-foreground">Email</p>
+                <p className="text-sm font-medium text-foreground dark:text-white break-all">{user.email || "—"}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <div className="flex items-center gap-3 p-3 bg-muted bg-card rounded-xl">
+              <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <div>
-                <p className="text-xs text-gray-400">Phone</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{user.phone || "—"}</p>
+                <p className="text-xs text-muted-foreground">Phone</p>
+                <p className="text-sm font-medium text-foreground dark:text-white">{user.phone || "—"}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <div className="flex items-center gap-3 p-3 bg-muted bg-card rounded-xl">
+              <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <div>
-                <p className="text-xs text-gray-400">Location</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{user.location || "—"}</p>
+                <p className="text-xs text-muted-foreground">Location</p>
+                <p className="text-sm font-medium text-foreground dark:text-white">{user.location || "—"}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <Wallet className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <div className="flex items-center gap-3 p-3 bg-muted bg-card rounded-xl">
+              <Wallet className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <div>
-                <p className="text-xs text-gray-400">Wallet</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white font-mono truncate">{user.wallet_address ? `${user.wallet_address.slice(0, 10)}…${user.wallet_address.slice(-6)}` : "—"}</p>
+                <p className="text-xs text-muted-foreground">Wallet</p>
+                <p className="text-sm font-medium text-foreground dark:text-white font-mono truncate">{user.wallet_address ? `${user.wallet_address.slice(0, 10)}…${user.wallet_address.slice(-6)}` : "—"}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <div className="flex items-center gap-3 p-3 bg-muted bg-card rounded-xl">
+              <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <div>
-                <p className="text-xs text-gray-400">Joined</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{new Date(user.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
+                <p className="text-xs text-muted-foreground">Joined</p>
+                <p className="text-sm font-medium text-foreground dark:text-white">{new Date(user.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
               </div>
             </div>
           </div>
@@ -122,55 +122,55 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
             ].map(({ label, value, color }) => (
               <div key={label} className={`p-3 rounded-xl text-center bg-${color}-50 dark:bg-${color}-900/20`}>
                 <p className={`text-2xl font-bold text-${color}-600 dark:text-${color}-400`}>{value}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+                <p className="text-xs text-muted-foreground dark:text-muted-foreground">{label}</p>
               </div>
             ))}
           </div>
 
           {/* Delivery Addresses */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-foreground text-foreground mb-3 flex items-center gap-2">
               <Home className="w-4 h-4" /> Delivery Addresses
             </h4>
             {loadingAddr ? (
-              <div className="text-sm text-gray-400 py-2">Loading…</div>
+              <div className="text-sm text-muted-foreground py-2">Loading…</div>
             ) : addresses && addresses.length > 0 ? (
               <div className="space-y-2">
                 {addresses.map((addr: any) => (
-                  <div key={addr.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm">
+                  <div key={addr.id} className="p-3 border border-border dark:border-border rounded-xl text-sm">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-gray-900 dark:text-white">{addr.fullName}</span>
+                      <span className="font-medium text-foreground dark:text-white">{addr.fullName}</span>
                       {addr.isDefault && <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">Default</span>}
                     </div>
-                    <p className="text-gray-500 dark:text-gray-400">{addr.addressLine}{addr.streetLine2 ? `, ${addr.streetLine2}` : ""}</p>
-                    {addr.landmark && <p className="text-gray-400 text-xs">Near: {addr.landmark}</p>}
-                    <p className="text-gray-500 dark:text-gray-400">{addr.city}, {addr.state}, {addr.country}</p>
-                    <p className="text-gray-400 text-xs mt-1">{addr.phone}</p>
+                    <p className="text-muted-foreground dark:text-muted-foreground">{addr.addressLine}{addr.streetLine2 ? `, ${addr.streetLine2}` : ""}</p>
+                    {addr.landmark && <p className="text-muted-foreground text-xs">Near: {addr.landmark}</p>}
+                    <p className="text-muted-foreground dark:text-muted-foreground">{addr.city}, {addr.state}, {addr.country}</p>
+                    <p className="text-muted-foreground text-xs mt-1">{addr.phone}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-400 py-2">No delivery addresses saved</p>
+              <p className="text-sm text-muted-foreground py-2">No delivery addresses saved</p>
             )}
           </div>
 
           {/* Products */}
           {userProducts.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-foreground text-foreground mb-3 flex items-center gap-2">
                 <Package className="w-4 h-4" /> Listed Products
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {userProducts.map((p: any) => (
-                  <div key={p.id} className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                  <div key={p.id} className="rounded-xl overflow-hidden border border-border dark:border-border">
                     {p.image_url ? (
                       <img src={p.image_url} alt={p.name} className="w-full h-20 object-cover" />
                     ) : (
-                      <div className="w-full h-20 bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 text-xs">No image</div>
+                      <div className="w-full h-20 bg-muted bg-card flex items-center justify-center text-muted-foreground text-xs">No image</div>
                     )}
                     <div className="p-2">
-                      <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{p.name}</p>
-                      <p className="text-xs text-gray-400">₦{Number(p.price).toLocaleString()}</p>
+                      <p className="text-xs font-medium text-foreground dark:text-white truncate">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">₦{Number(p.price).toLocaleString()}</p>
                     </div>
                   </div>
                 ))}
@@ -180,7 +180,7 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
 
           {/* Message user */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-foreground text-foreground mb-2 flex items-center gap-2">
               <Send className="w-4 h-4" /> Send Message to User
             </h4>
             <div className="flex gap-2">
@@ -188,7 +188,7 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
                 value={msgText}
                 onChange={e => setMsgText(e.target.value)}
                 placeholder="Type a message…"
-                className="flex-1 text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               <button onClick={sendMessage} disabled={sending || !msgText.trim()}
                 className="text-sm bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl transition-colors">
@@ -200,13 +200,13 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
           {/* Funding applications */}
           {userFunding.length > 0 && (
             <div>
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Funding Applications</h4>
+              <h4 className="text-sm font-semibold text-foreground text-foreground mb-3">Funding Applications</h4>
               <div className="space-y-2">
                 {userFunding.map((f: any) => (
-                  <div key={f.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-sm flex items-center justify-between">
+                  <div key={f.id} className="p-3 border border-border dark:border-border rounded-xl text-sm flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">₦{Number(f.amount_requested).toLocaleString()}</p>
-                      <p className="text-xs text-gray-400">{f.farm_type} • {f.years_of_experience}yr exp</p>
+                      <p className="font-medium text-foreground dark:text-white">₦{Number(f.amount_requested).toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">{f.farm_type} • {f.years_of_experience}yr exp</p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                       f.status === "Approved" ? "bg-green-100 text-green-700" : f.status === "Rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
@@ -262,19 +262,19 @@ export default function AdminUsers({
   return (
     <>
       {selectedUser && <UserProfileModal user={selectedUser} data={data} onClose={() => setSelectedUser(null)} privyId={privyId} />}
-      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
+      <div className="px-4 py-3 border-b border-border dark:border-border flex items-center gap-3">
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
           placeholder="Search by name, email, location…"
-          className="flex-1 text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500" />
+          className="flex-1 text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
         <button onClick={() => exportCSV(filtered)}
-          className="flex items-center gap-1.5 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-xl transition-colors">
+          className="flex items-center gap-1.5 text-sm bg-muted bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground text-foreground px-3 py-2 rounded-xl transition-colors">
           <Download className="w-4 h-4" />Export
         </button>
-        <span className="text-xs text-gray-400 whitespace-nowrap">{filtered.length} users</span>
+        <span className="text-xs text-muted-foreground whitespace-nowrap">{filtered.length} users</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+          <thead className="bg-muted bg-card text-muted-foreground dark:text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left">User</th>
               <th className="px-4 py-3 text-left hidden md:table-cell">Email</th>
@@ -287,7 +287,7 @@ export default function AdminUsers({
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {paged.map((u: any) => (
-              <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              <tr key={u.id} className="hover:bg-muted dark:hover:bg-gray-800/50">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     {u.avatar_url ? (
@@ -297,12 +297,12 @@ export default function AdminUsers({
                         {(u.name || "U")[0].toUpperCase()}
                       </div>
                     )}
-                    <span className="font-medium text-gray-900 dark:text-white truncate max-w-[100px]">{u.name || "—"}</span>
+                    <span className="font-medium text-foreground dark:text-white truncate max-w-[100px]">{u.name || "—"}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden md:table-cell truncate max-w-[160px]">{u.email || "—"}</td>
-                <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden lg:table-cell">{u.phone || "—"}</td>
-                <td className="px-4 py-3 text-gray-500 dark:text-gray-400 hidden lg:table-cell">{u.location || "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground dark:text-muted-foreground hidden md:table-cell truncate max-w-[160px]">{u.email || "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground dark:text-muted-foreground hidden lg:table-cell">{u.phone || "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground dark:text-muted-foreground hidden lg:table-cell">{u.location || "—"}</td>
                 <td className="px-4 py-3">
                   <CustomSelect
                     value={u.role || "buyer"}
@@ -315,10 +315,10 @@ export default function AdminUsers({
                     className="w-28"
                   />
                 </td>
-                <td className="px-4 py-3 text-gray-400 text-xs hidden sm:table-cell">{new Date(u.created_at).toLocaleDateString()}</td>
+                <td className="px-4 py-3 text-muted-foreground text-xs hidden sm:table-cell">{new Date(u.created_at).toLocaleDateString()}</td>
                 <td className="px-4 py-3">
                   <button onClick={() => setSelectedUser(u)}
-                    className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
+                    className="text-xs bg-muted bg-card hover:bg-green-100 dark:hover:bg-green-900/30 text-foreground text-foreground hover:text-green-700 dark:hover:text-green-400 px-3 py-1.5 rounded-lg transition-colors font-medium">
                     View
                   </button>
                 </td>
@@ -328,11 +328,11 @@ export default function AdminUsers({
         </table>
       </div>
       {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-500">
+        <div className="px-4 py-3 border-t border-border dark:border-border flex items-center justify-between text-xs text-muted-foreground">
           <span>Page {page + 1} of {totalPages}</span>
           <div className="flex gap-2">
-            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
-            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
           </div>
         </div>
       )}

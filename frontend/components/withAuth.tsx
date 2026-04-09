@@ -14,7 +14,7 @@ import { useToast } from "@/lib/toast";
 // Beautiful Loading Component
 const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -49,7 +49,7 @@ const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">{message}</h2>
+          <h2 className="text-xl font-semibold text-foreground mb-2">{message}</h2>
           <div className="flex gap-1 justify-center">
             <motion.div
               animate={{ opacity: [0.4, 1, 0.4] }}
@@ -130,15 +130,15 @@ const withAuth = <P extends object>(
     // User is not authenticated
     if (!authenticated) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-lime-50">
+        <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center p-8 max-w-sm">
             <div className="w-16 h-16 bg-[#118C4C]/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#118C4C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Sign in required</h2>
-            <p className="text-gray-500 text-sm mb-6">You need to be signed in to access this page.</p>
+            <h2 className="text-xl font-bold text-foreground mb-2">Sign in required</h2>
+            <p className="text-muted-foreground text-sm mb-6">You need to be signed in to access this page.</p>
             <AuthModal isOpen={authModalOpen} onClose={handleCloseAuthModal} />
           </div>
         </div>
@@ -182,13 +182,13 @@ const withAuth = <P extends object>(
 
     // Fallback error state
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center p-8 max-w-md">
           <div className="mb-4">
             <AlertCircle className="h-16 w-16 text-red-500 mx-auto" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops! Something went wrong</h2>
-          <p className="text-gray-600 mb-6">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Oops! Something went wrong</h2>
+          <p className="text-muted-foreground mb-6">
             We couldn't load your account. Please try refreshing the page or contact support if the problem persists.
           </p>
           <button

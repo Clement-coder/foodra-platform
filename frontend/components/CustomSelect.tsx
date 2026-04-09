@@ -33,11 +33,11 @@ export function CustomSelect({ value, onChange, options, className = "", disable
         type="button"
         disabled={disabled}
         onClick={() => setOpen((v) => !v)}
-        className={`flex items-center justify-between gap-2 w-full text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors ${open ? "border-green-500" : "hover:border-green-400"} ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        className={`flex items-center justify-between gap-2 w-full text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card dark:bg-gray-800 text-foreground dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors ${open ? "border-green-500" : "hover:border-green-400"} ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
       >
         <span className="truncate">{selected?.label ?? value}</span>
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+          <ChevronDown className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
         </motion.span>
       </button>
 
@@ -48,7 +48,7 @@ export function CustomSelect({ value, onChange, options, className = "", disable
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute z-50 top-full mt-1 w-full min-w-[140px] max-h-52 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg shadow-black/10 py-1"
+            className="absolute z-50 top-full mt-1 w-full min-w-[140px] max-h-52 overflow-y-auto rounded-xl border border-border dark:border-border bg-card dark:bg-gray-800 shadow-lg shadow-black/10 py-1"
           >
             {options.map((o) => (
               <li
@@ -57,7 +57,7 @@ export function CustomSelect({ value, onChange, options, className = "", disable
                 className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer transition-colors ${
                   value === o.value
                     ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 font-medium"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    : "text-foreground dark:text-gray-300 hover:bg-muted dark:hover:bg-gray-700"
                 }`}
               >
                 {o.label}
