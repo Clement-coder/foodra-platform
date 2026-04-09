@@ -6,6 +6,7 @@ import { NavBar } from "@/components/NavBar"
 import { BottomTabBar } from "@/components/BottomTableBar"
 import Footer from "@/components/Footer"
 import { CartProvider } from "@/lib/useCart"
+import AppLoader from "@/components/AppLoader"
 import "./globals.css"
 import Providers from "./Provider"
 import { SupportChat } from "@/components/SupportChat"
@@ -143,13 +144,15 @@ export default function RootLayout({
         <Providers>
           <ToastProvider>
           <CartProvider>
-            <NavBar />
-            <main className="min-h-screen pb-24 md:pb-8 pt-[56px]">{children}</main>
-            <div className="mb-20 md:mb-0">
-              <Footer />
-            </div>
-            <BottomTabBar />
-            <SupportChat />
+            <AppLoader>
+              <NavBar />
+              <main className="min-h-screen pb-24 md:pb-8 pt-[56px]">{children}</main>
+              <div className="mb-20 md:mb-0">
+                <Footer />
+              </div>
+              <BottomTabBar />
+              <SupportChat />
+            </AppLoader>
           </CartProvider>
           </ToastProvider>
           <Analytics />
