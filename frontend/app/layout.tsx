@@ -102,6 +102,11 @@ export const metadata: Metadata = {
     shortcut: "/icon-32x32.png",
   },
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Foodra",
+  },
 }
 
 // ---- ROOT LAYOUT ----
@@ -113,7 +118,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistMono.variable}`}>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#f5faf6" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#1a2420" media="(prefers-color-scheme: dark)" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Foodra" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="antialiased">
         <style>

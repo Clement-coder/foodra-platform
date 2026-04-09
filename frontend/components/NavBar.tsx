@@ -265,18 +265,6 @@ export function NavBar() {
               </button>
             )}
 
-            {/* Users Link */}
-            <a
-              href="/users"
-              className="p-2 hover:bg-accent rounded-lg transition-colors md:flex items-center space-x-2"
-              aria-label="Explore users"
-            >
-              <Users className="h-6 w-6 text-foreground" />
-              <span className="hidden md:inline text-sm font-medium">
-                Users
-              </span>
-            </a>
-
             {/* Auth buttons */}
             {authenticated && currentUser && !isLoading ? (
               <>
