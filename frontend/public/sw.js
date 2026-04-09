@@ -60,3 +60,8 @@ self.addEventListener("notificationclick", (e) => {
     })
   );
 });
+
+// Allow update banner to trigger immediate activation
+self.addEventListener("message", (e) => {
+  if (e.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
