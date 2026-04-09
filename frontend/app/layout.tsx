@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
 import { Analytics } from "@vercel/analytics/next"
 import { NavBar } from "@/components/NavBar"
@@ -50,6 +50,19 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
 })
 
+
+// ---- VIEWPORT (controls status bar color on Android + iOS PWA) ----
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5faf6" },
+    { media: "(prefers-color-scheme: dark)", color: "#1b2b24" },
+  ],
+}
 
 // ---- METADATA ----
 export const metadata: Metadata = {
@@ -106,7 +119,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Foodra",
   },
 }
@@ -120,13 +133,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistMono.variable}`} suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-        {/* theme-color tells Android Chrome + iOS Safari what color to paint the status bar */}
-        <meta name="theme-color" content="#f5faf6" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#1b2b24" media="(prefers-color-scheme: dark)" />
-        {/* iOS PWA: default keeps status bar text readable in both modes */}
+        {/* iOS PWA: black-translucent overlays status bar with app color */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Foodra" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>

@@ -111,6 +111,12 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Immediate background paint — prevents white flash before CSS loads */
+html, body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
