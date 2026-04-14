@@ -11,6 +11,7 @@ import { GridLayout } from "@/components/GridLayout";
 import { Skeleton } from "@/components/Skeleton";
 import type { Product } from "@/lib/types";
 import { usePrivy } from "@privy-io/react-auth";
+import { WeatherWidget } from "@/components/WeatherWidget";
 
 const DEFAULT_CATEGORIES = [
   "All", "Vegetables", "Fruits", "Grains", "Tubers",
@@ -103,6 +104,9 @@ function MarketplacePage() {
           )}
         </div>
       </div>
+
+      {/* Weather Widget */}
+      <WeatherWidget />
 
       {/* Category Filter */}
       <div className="mb-8">
