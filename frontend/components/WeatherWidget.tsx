@@ -50,6 +50,10 @@ export function WeatherWidget() {
             geoData.address?.city ||
             geoData.address?.town ||
             geoData.address?.village ||
+            geoData.address?.suburb ||
+            geoData.address?.county ||
+            geoData.address?.state_district ||
+            geoData.address?.state ||
             "Your location";
 
           // Fetch weather
