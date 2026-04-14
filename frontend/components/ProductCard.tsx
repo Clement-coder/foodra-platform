@@ -139,7 +139,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
       />
       <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
         <Card className="overflow-hidden h-full flex flex-col border-[#118C4C]/20 hover:border-[#118C4C]/40 hover:shadow-lg hover:shadow-[#118C4C]/10 transition-all">
-          <div className="relative h-28 sm:h-48 w-full bg-muted">
+          <div className="relative h-48 sm:h-56 w-full bg-muted">
             {product.image ? (
               <Image
                 src={product.image}
@@ -167,7 +167,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
             <h3 className="font-semibold text-sm sm:text-lg mb-1 sm:mb-2 line-clamp-1">
               {product.productName}
             </h3>
-            <p className="text-xs text-muted-foreground mb-2 sm:mb-3 line-clamp-2 hidden sm:block">
+            <p className="text-xs text-muted-foreground mb-2 sm:mb-3 line-clamp-2">
               {product.description}
             </p>
 
@@ -191,10 +191,10 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                 <span className="truncate">{product.location}</span>
               </div>
               <div className="flex items-baseline gap-1">
-                <span className="text-base sm:text-2xl font-bold text-[#118C4C]">
+                <span className="text-xl sm:text-2xl font-bold text-[#118C4C]">
                   ₦{product.pricePerUnit.toLocaleString()}
                 </span>
-                <span className="text-xs text-muted-foreground hidden sm:inline">per {product.unit || 'unit'}</span>
+                <span className="text-xs text-muted-foreground">per {product.unit || 'unit'}</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 {availableQuantity} {product.unit || 'unit'}{availableQuantity !== 1 ? 's' : ''} available

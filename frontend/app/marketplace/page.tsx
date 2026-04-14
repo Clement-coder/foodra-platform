@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/Skeleton";
 import type { Product } from "@/lib/types";
 import { usePrivy } from "@privy-io/react-auth";
 import { WeatherWidget } from "@/components/WeatherWidget";
+import { useUser } from "@/lib/useUser";
 
 const DEFAULT_CATEGORIES = [
   "All", "Vegetables", "Fruits", "Grains", "Tubers",
@@ -24,6 +25,7 @@ function MarketplacePage() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
   const { authenticated } = usePrivy();
+  const { currentUser } = useUser();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,7 +108,7 @@ function MarketplacePage() {
       </div>
 
       {/* Weather Widget */}
-      <WeatherWidget />
+      <WeatherWidget userId={currentUser?.id} />
 
       {/* Category Filter */}
       <div className="mb-8">
