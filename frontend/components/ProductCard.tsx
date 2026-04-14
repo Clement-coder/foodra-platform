@@ -137,8 +137,9 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
         text={`Check out this product: ${product.productName}`}
         url={typeof window !== "undefined" ? `${window.location.origin}/marketplace/${product.id}` : ""}
       />
+      <Link href={`/marketplace/${product.id}`}>
       <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
-        <Card className="overflow-hidden h-full flex flex-col border-[#118C4C]/20 hover:border-[#118C4C]/40 hover:shadow-lg hover:shadow-[#118C4C]/10 transition-all">
+        <Card className="overflow-hidden h-full flex flex-col border-[#118C4C]/20 hover:border-[#118C4C]/40 hover:shadow-lg hover:shadow-[#118C4C]/10 transition-all cursor-pointer">
           <div className="relative h-48 sm:h-56 w-full bg-muted">
             {product.image ? (
               <Image
@@ -202,24 +203,24 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
             </div>
           </CardContent>
 
-          <CardFooter className="p-2 sm:p-4 pt-0 flex gap-1.5 sm:gap-2">
-            <Link href={`/marketplace/${product.id}`} className="flex-1">
+          <CardFooter className="p-2 sm:p-4 pt-0 flex gap-1.5 sm:gap-2" onClick={e => e.preventDefault()}>
+            <Link href={`/marketplace/${product.id}`} className="flex-1" onClick={e => e.stopPropagation()}>
               <button className="w-full border border-[#118C4C]/50 hover:bg-[#118C4C] hover:text-white duration-300 ease-in-out rounded-xl text-[#118C4C] text-center py-2 px-2 bg-transparent font-medium text-xs sm:text-sm whitespace-nowrap">
                 View
               </button>
             </Link>
             {isOwnProduct ? (
               <>
-                <Button onClick={() => { setRestockQty(product.quantity); setRestockPrice(product.pricePerUnit); setRestockOpen(true) }} disabled={actionLoading} size="sm" variant="ghost"
+                <Button onClick={(e) => { e.preventDefault(); setRestockQty(product.quantity); setRestockPrice(product.pricePerUnit); setRestockOpen(true) }} disabled={actionLoading} size="sm" variant="ghost"
                   className="flex-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100">
                   <PackagePlus className="h-3.5 w-3.5 mr-1" />Edit
                 </Button>
-                <Button onClick={handleToggle} disabled={actionLoading} size="sm"
+                <Button onClick={(e) => { e.preventDefault(); handleToggle() }} disabled={actionLoading} size="sm"
                   className={`flex-1 text-xs ${isAvailable ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-200" : "bg-green-100 text-green-700 hover:bg-green-200 border border-green-200"}`}
                   variant="ghost">
                   {isAvailable ? <><EyeOff className="h-3.5 w-3.5 mr-1" />Hide</> : <><Eye className="h-3.5 w-3.5 mr-1" />Show</>}
                 </Button>
-                <Button onClick={handleDelete} disabled={actionLoading} size="sm" variant="ghost"
+                <Button onClick={(e) => { e.preventDefault(); handleDelete() }} disabled={actionLoading} size="sm" variant="ghost"
                   className="flex-1 text-xs bg-red-50 text-red-600 hover:bg-red-100 border border-red-100">
                   <Trash2 className="h-3.5 w-3.5 mr-1" />Delete
                 </Button>
@@ -227,7 +228,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
             ) : (
               <>
                 <Button
-                  onClick={handleAddToCart}
+                  onClick={(e) => { e.preventDefault(); handleAddToCart() }}
                   disabled={isAdding || availableQuantity <= 0}
                   size="icon"
                   className="shrink-0 sm:flex-1 sm:w-auto sm:px-3 bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-md shadow-[#118C4C]/20 disabled:opacity-50"
@@ -237,7 +238,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                 </Button>
                 <Button type="button" variant="outline" size="icon"
                   className="shrink-0 sm:flex-1 sm:w-auto sm:px-3 border-[#118C4C]/30 hover:bg-[#118C4C]/10"
-                  onClick={() => setIsShareModalOpen(true)}>
+                  onClick={(e) => { e.preventDefault(); setIsShareModalOpen(true) }}>
                   <Share2 className="h-4 w-4 text-[#118C4C]" />
                   <span className="hidden sm:inline text-sm ml-1 text-[#118C4C]">Share</span>
                 </Button>
@@ -246,6 +247,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
           </CardFooter>
         </Card>
       </motion.div>
+      </Link>
     </>
   );
 }
