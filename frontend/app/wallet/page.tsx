@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { usePrivy, useSendTransaction, useFiatOnramp } from "@privy-io/react-auth"
+import { usePrivy, useSendTransaction, useFundWallet } from "@privy-io/react-auth"
 import { ethers } from "ethers"
 import { QRCodeSVG } from "qrcode.react"
 import { FormInput } from "@/components/FormInput"
@@ -83,7 +83,7 @@ function useCountdown(expiresAt: string | null) {
 function WalletPage() {
   const { user } = usePrivy()
   const { sendTransaction } = useSendTransaction()
-  const { fund: fiatOnramp } = useFiatOnramp()
+  const { fundWallet } = useFundWallet()
   const { currentUser } = useUser()
   const { toast } = useToast()
   const [balance, setBalance] = useState<string>("0")
@@ -509,7 +509,7 @@ function WalletPage() {
           <div className="grid grid-cols-5 gap-3 mb-6">
             {[
               { label: "Add Funds", icon: PlusCircle, color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400", onClick: () => setIsAddFundsModalOpen(true), desc: "Receive crypto" },
-              { label: "Buy Crypto", icon: CreditCard, color: "bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400", onClick: () => user?.wallet?.address && fiatOnramp({ source: { assets: ["usd", "eur", "gbp"], defaultAsset: "usd" }, destination: { asset: "usdc", chain: "eip155:84532", address: user.wallet.address }, environment: "production" }).catch(() => {}), desc: "Card / Bank" },
+              { label: "Buy Crypto", icon: CreditCard, color: "bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400", onClick: () => user?.wallet?.address && fundWallet({ address: user.wallet.address, options: { chain: baseSepolia } }), desc: "Card / Bank" },
               { label: "Fund NGN", icon: Banknote, color: "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400", onClick: () => setIsNgnFundModalOpen(true), desc: "Bank transfer" },
               { label: "Send", icon: MinusCircle, color: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400", onClick: () => setIsWithdrawFundsModalOpen(true), desc: "Withdraw ETH" },
               { label: "Bridge", icon: RefreshCcw, color: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400", onClick: () => setIsComingSoonModalOpen(true), desc: "Cross-chain" },
