@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { GridLayout } from "@/components/GridLayout";
 import { Skeleton } from "@/components/Skeleton";
+import { AdvancedSearchFilters, DEFAULT_FILTERS, type SearchFilters } from "@/components/AdvancedSearchFilters";
 import type { Product } from "@/lib/types";
 import { usePrivy } from "@privy-io/react-auth";
 import { WeatherWidget } from "@/components/WeatherWidget";
@@ -31,6 +32,7 @@ function MarketplacePage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [page, setPage] = useState(1);
+  const [advFilters, setAdvFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -49,7 +51,38 @@ function MarketplacePage() {
   }, []);
 
   // Reset to page 1 when filter/search changes
-  useEffect(() => { setPage(1); }, [selectedCategory, searchQuery]);
+  useEffect(() => { setPage(1); }, [selectedCategory, searchQuery, advFilters]);
+
+  const locations = useMemo(() => {
+    const locs = new Set(products.map((p) => p.location).filter(Boolean));
+    return [...locs].sort();
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    let result = products.filter((product) => {
+      const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+      const matchesSearch =
+        searchQuery === "" ||
+        product.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesMinPrice = advFilters.minPrice === null || product.pricePerUnit >= advFilters.minPrice;
+      const matchesMaxPrice = advFilters.maxPrice === null || product.pricePerUnit <= advFilters.maxPrice;
+      const matchesLocation = advFilters.location === "" || product.location === advFilters.location;
+      return matchesCategory && matchesSearch && matchesMinPrice && matchesMaxPrice && matchesLocation;
+    });
+
+    // Sort
+    switch (advFilters.sortBy) {
+      case "price_asc": result = result.sort((a, b) => a.pricePerUnit - b.pricePerUnit); break;
+      case "price_desc": result = result.sort((a, b) => b.pricePerUnit - a.pricePerUnit); break;
+      case "name_asc": result = result.sort((a, b) => a.productName.localeCompare(b.productName)); break;
+      default: break; // newest — already sorted by API
+    }
+    return result;
+  }, [products, selectedCategory, searchQuery, advFilters]);
+
+  const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
+  const paginatedProducts = filteredProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const categories = useMemo(() => {
     const fromProducts = new Set(products.map((p) => p.category));
@@ -57,20 +90,6 @@ function MarketplacePage() {
       [...fromProducts].filter((c) => !DEFAULT_CATEGORIES.includes(c))
     );
   }, [products]);
-
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
-      const matchesSearch =
-        searchQuery === "" ||
-        product.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [products, selectedCategory, searchQuery]);
-
-  const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
-  const paginatedProducts = filteredProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -112,9 +131,16 @@ function MarketplacePage() {
 
       {/* Category Filter */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 mb-3">
-          <Filter className="h-4 w-4 text-[#118C4C]" />
-          <span className="text-sm font-medium text-muted-foreground">Filter by category:</span>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-[#118C4C]" />
+            <span className="text-sm font-medium text-muted-foreground">Filter by category:</span>
+          </div>
+          <AdvancedSearchFilters
+            filters={advFilters}
+            onChange={setAdvFilters}
+            locations={locations}
+          />
         </div>
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => (

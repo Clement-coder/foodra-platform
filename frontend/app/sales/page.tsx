@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
+import { FarmerAnalyticsDashboard } from "@/components/FarmerAnalyticsDashboard";
 import withAuth from "@/components/withAuth";
 import { useUser } from "@/lib/useUser";
 import { usePrivy } from "@privy-io/react-auth";
@@ -174,6 +175,9 @@ function SalesPage() {
         </div>
       ) : (
         <>
+          {/* Analytics Dashboard */}
+          <FarmerAnalyticsDashboard sales={sales} />
+
           {/* Summary stats */}
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[

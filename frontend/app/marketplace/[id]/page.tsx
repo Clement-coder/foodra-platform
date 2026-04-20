@@ -16,6 +16,9 @@ import { useCart } from "@/lib/useCart"
 import { useUser } from "@/lib/useUser"
 import { ProductComments } from "@/components/ProductComments"
 import { RatingSummary } from "@/components/RatingSummary"
+import { productJsonLd } from "@/lib/seo"
+import { GridLayout } from "@/components/GridLayout"
+import { ProductCard } from "@/components/ProductCard"
 
 function ProductDetailPage() {
   const router = useRouter()
@@ -25,6 +28,7 @@ function ProductDetailPage() {
   const { addToCart } = useCart()
   const { toast } = useToast()
   const [product, setProduct] = useState<Product | null>(null)
+  const [related, setRelated] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isImageFullScreen, setIsImageFullScreen] = useState(false)
@@ -35,7 +39,11 @@ function ProductDetailPage() {
       setLoading(true)
       try {
         const res = await fetch(`/api/products/${id}`)
-        setProduct(res.ok ? await res.json() : null)
+        const p = res.ok ? await res.json() : null
+        setProduct(p)
+        if (p) {
+          fetch(`/api/products/${id}/related`).then(r => r.json()).then(setRelated).catch(() => {})
+        }
       } catch {
         setProduct(null)
       } finally {
@@ -75,6 +83,11 @@ function ProductDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* JSON-LD structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(product)) }}
+      />
       <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2">
         <ArrowLeft className="h-4 w-4" />
         Back
@@ -197,6 +210,14 @@ function ProductDetailPage() {
               </div>
             )}
 
+            {isOwnProduct && (
+              <Link href={`/listing/${product.id}/edit`} className="block mb-4">
+                <Button variant="outline" size="lg" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C]/5 gap-2">
+                  Edit Product
+                </Button>
+              </Link>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link href="/shop" className="block">
                 <Button variant="outline" size="lg" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C]/5">
@@ -293,6 +314,19 @@ function ProductDetailPage() {
             <ProductComments productId={product.id} currentUserId={currentUser?.id} productOwnerId={product.farmerId} />
           </CardContent>
         </Card>
+
+        {/* Related Products */}
+        {related.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+              <div className="h-1 w-8 bg-[#118C4C] rounded" />
+              More in {product.category}
+            </h2>
+            <GridLayout>
+              {related.map((p) => <ProductCard key={p.id} product={p} />)}
+            </GridLayout>
+          </div>
+        )}
       </motion.div>
     </div>
   )

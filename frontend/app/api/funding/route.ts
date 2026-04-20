@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
+import { rateLimit, getClientIp } from '@/lib/rateLimit'
 
 export async function GET(request: Request) {
   try {
@@ -52,6 +53,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // Rate limit: 5 applications per IP per hour
+    const ip = getClientIp(request)
+    const rl = rateLimit(`funding:${ip}`, { limit: 5, windowSec: 3600 })
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Too many applications. Please try again later.' }, { status: 429 })
+    }
+
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY is not configured' }, { status: 500 })
     }
