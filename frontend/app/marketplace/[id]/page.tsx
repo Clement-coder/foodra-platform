@@ -16,6 +16,7 @@ import { useCart } from "@/lib/useCart"
 import { useUser } from "@/lib/useUser"
 import { ProductComments } from "@/components/ProductComments"
 import { RatingSummary } from "@/components/RatingSummary"
+import { productJsonLd } from "@/lib/seo"
 
 function ProductDetailPage() {
   const router = useRouter()
@@ -75,6 +76,11 @@ function ProductDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* JSON-LD structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(product)) }}
+      />
       <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2">
         <ArrowLeft className="h-4 w-4" />
         Back
