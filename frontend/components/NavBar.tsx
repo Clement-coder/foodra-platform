@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ProfileDropdown from "./ProfileDropdown";
 import SignupButton from "./SignupButton";
 import ThemeToggle from "./ThemeToggle";
+import LanguageSwitcher from "./LanguageSwitcher";
 import { useCart } from "@/lib/useCart";
 import { useUser } from "@/lib/useUser";
 import { useNotifications } from "@/lib/useNotifications";
@@ -273,6 +274,9 @@ export function NavBar() {
             ) : (
               <SignupButton />
             )}
+            <div className="hidden md:block">
+              <LanguageSwitcher compact />
+            </div>
           </div>
         </div>
       </nav>
