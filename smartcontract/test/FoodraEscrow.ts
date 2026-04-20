@@ -243,4 +243,108 @@ describe("FoodraEscrow", function () {
       expect(id1).to.not.equal(id2);
     });
   });
+
+  // ── Edge Cases ───────────────────────────────────────────
+
+  describe("Edge Cases", function () {
+    it("cannot confirmDelivery on a disputed escrow", async function () {
+      const { escrow, buyer, farmer, orderId } = await deploy();
+      await escrow.connect(buyer).createEscrow(orderId, farmer.address, ONE_USDC, 0n);
+      await escrow.connect(buyer).raiseDispute(orderId);
+      await expect(
+        escrow.connect(buyer).confirmDelivery(orderId)
+      ).to.be.revertedWithCustomError(escrow, "EscrowNotLocked");
+    });
+
+    it("cannot autoRelease on a disputed escrow", async function () {
+      const { escrow, buyer, farmer, orderId } = await deploy();
+      await escrow.connect(buyer).createEscrow(orderId, farmer.address, ONE_USDC, 0n);
+      await escrow.connect(buyer).raiseDispute(orderId);
+      await time.increase(SEVEN_DAYS + 1);
+      await expect(escrow.autoRelease(orderId))
+        .to.be.revertedWithCustomError(escrow, "EscrowNotLocked");
+    });
+
+    it("cannot raiseDispute on a released escrow", async function () {
+      const { escrow, buyer, farmer, orderId } = await deploy();
+      await escrow.connect(buyer).createEscrow(orderId, farmer.address, ONE_USDC, 0n);
+      await escrow.connect(buyer).confirmDelivery(orderId);
+      await expect(
+        escrow.connect(buyer).raiseDispute(orderId)
+      ).to.be.revertedWithCustomError(escrow, "EscrowNotLocked");
+    });
+
+    it("getEscrow returns zero struct for unknown orderId", async function () {
+      const { escrow } = await deploy();
+      const unknown = ethers.keccak256(ethers.toUtf8Bytes("nonexistent"));
+      const e = await escrow.getEscrow(unknown);
+      expect(e.buyer).to.equal(ethers.ZeroAddress);
+      expect(e.amount).to.equal(0n);
+    });
+
+    it("fee of 0 bps sends full amount to farmer", async function () {
+      const { escrow, usdc, owner, buyer, farmer, orderId } = await deploy();
+      await escrow.connect(owner).updateFee(0);
+      const amount = 50n * ONE_USDC;
+      await escrow.connect(buyer).createEscrow(orderId, farmer.address, amount, 0n);
+      const farmerBefore = await usdc.balanceOf(farmer.address);
+      await escrow.connect(buyer).confirmDelivery(orderId);
+      expect(await usdc.balanceOf(farmer.address)).to.equal(farmerBefore + amount);
+    });
+
+    it("fee of 10% (max) sends correct amounts", async function () {
+      const { escrow, usdc, owner, buyer, farmer, treasury, orderId } = await deploy();
+      await escrow.connect(owner).updateFee(1000); // 10%
+      const amount = 100n * ONE_USDC;
+      await escrow.connect(buyer).createEscrow(orderId, farmer.address, amount, 0n);
+      const farmerBefore = await usdc.balanceOf(farmer.address);
+      const treasuryBefore = await usdc.balanceOf(treasury.address);
+      await escrow.connect(buyer).confirmDelivery(orderId);
+      expect(await usdc.balanceOf(farmer.address)).to.equal(farmerBefore + 90_000_000n);
+      expect(await usdc.balanceOf(treasury.address)).to.equal(treasuryBefore + 10_000_000n);
+    });
+
+    it("transferOwnership works and old owner loses access", async function () {
+      const { escrow, owner, stranger } = await deploy();
+      await escrow.connect(owner).transferOwnership(stranger.address);
+      expect(await escrow.owner()).to.equal(stranger.address);
+      await expect(escrow.connect(owner).updateFee(100))
+        .to.be.revertedWithCustomError(escrow, "NotOwner");
+    });
+
+    it("transferOwnership reverts for zero address", async function () {
+      const { escrow, owner } = await deploy();
+      await expect(escrow.connect(owner).transferOwnership(ethers.ZeroAddress))
+        .to.be.revertedWithCustomError(escrow, "InvalidAddress");
+    });
+
+    it("resolveDispute reverts if escrow is not disputed", async function () {
+      const { escrow, owner, buyer, farmer, orderId } = await deploy();
+      await escrow.connect(buyer).createEscrow(orderId, farmer.address, ONE_USDC, 0n);
+      // Still LOCKED, not DISPUTED
+      await expect(
+        escrow.connect(owner).resolveDispute(orderId, ethers.ZeroAddress)
+      ).to.be.revertedWithCustomError(escrow, "EscrowNotLocked");
+    });
+
+    it("multiple independent escrows do not interfere", async function () {
+      const { escrow, usdc, buyer, farmer, owner } = await deploy();
+      const id1 = await escrow.computeOrderId("order-1", "product-A");
+      const id2 = await escrow.computeOrderId("order-2", "product-B");
+
+      await escrow.connect(buyer).createEscrow(id1, farmer.address, 10n * ONE_USDC, 0n);
+      await escrow.connect(buyer).createEscrow(id2, farmer.address, 20n * ONE_USDC, 0n);
+
+      // Confirm first, dispute second
+      await escrow.connect(buyer).confirmDelivery(id1);
+      await escrow.connect(buyer).raiseDispute(id2);
+
+      expect((await escrow.getEscrow(id1)).status).to.equal(1); // RELEASED
+      expect((await escrow.getEscrow(id2)).status).to.equal(3); // DISPUTED
+
+      // Resolve second
+      await escrow.connect(owner).resolveDispute(id2, ethers.ZeroAddress);
+      expect((await escrow.getEscrow(id2)).status).to.equal(2); // REFUNDED
+    });
+  });
 });
