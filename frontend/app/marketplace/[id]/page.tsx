@@ -197,6 +197,14 @@ function ProductDetailPage() {
               </div>
             )}
 
+            {isOwnProduct && (
+              <Link href={`/listing/${product.id}/edit`} className="block mb-4">
+                <Button variant="outline" size="lg" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C]/5 gap-2">
+                  Edit Product
+                </Button>
+              </Link>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link href="/shop" className="block">
                 <Button variant="outline" size="lg" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C]/5">
