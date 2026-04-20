@@ -84,11 +84,12 @@ describe("FoodraEscrow – confirmDelivery (unit)", function () {
       .to.be.revertedWithCustomError(escrow, "EscrowNotLocked");
   });
 
-  it("reverts if orderId does not exist", async function () {
+  it("reverts if orderId does not exist (NotBuyer since buyer check runs first)", async function () {
     const { escrow, buyer } = await deploy();
     const unknown = ethers.keccak256(ethers.toUtf8Bytes("nonexistent"));
+    // onlyBuyer modifier checks buyer == msg.sender first; zero address != buyer → NotBuyer
     await expect(escrow.connect(buyer).confirmDelivery(unknown))
-      .to.be.revertedWithCustomError(escrow, "EscrowNotFound");
+      .to.be.revertedWithCustomError(escrow, "NotBuyer");
   });
 
   it("fee = 0 bps: farmer receives full amount, treasury receives 0", async function () {
