@@ -71,8 +71,9 @@ describe("FoodraEscrow – Access Control Matrix", function () {
   });
 
   // confirmDelivery — only buyer
-  it("confirmDelivery: farmer cannot confirm (disputed escrow → NotLocked, but fresh escrow → NotBuyer)", async function () {
-    const { escrow, usdc, owner, buyer, farmer } = await setup();
+  it("confirmDelivery: farmer cannot confirm a fresh locked escrow → NotBuyer", async function () {
+    const { escrow, owner, buyer, farmer } = await setup();
+    const usdc = await ethers.getContractAt("MockUSDC", await escrow.usdc());
     // Create a fresh locked escrow
     const id2 = ethers.keccak256(ethers.toUtf8Bytes("fresh"));
     await usdc.connect(buyer).approve(await escrow.getAddress(), 100n * ONE_USDC);
