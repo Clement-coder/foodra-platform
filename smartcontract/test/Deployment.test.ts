@@ -45,14 +45,6 @@ describe("FoodraEscrow – Deployment & Constructor", function () {
   it("reverts if usdc is zero address", async function () {
     const { treasury } = await deployBase();
     const Escrow = await ethers.getContractFactory("FoodraEscrow");
-    await expect(Escrow.deploy(ethers.ZeroAddress, treasury.address))
-      .to.be.revertedWithCustomError({ interface: (await Escrow.deploy(ethers.ZeroAddress, treasury.address).catch(() => null) || await Escrow.deploy(ethers.ZeroAddress, treasury.address).catch(() => ({ interface: null }))) as any }, "InvalidAddress")
-      .catch(() => {}); // constructor revert — just verify it throws
-  });
-
-  it("reverts constructor if usdc is zero address", async function () {
-    const { treasury } = await deployBase();
-    const Escrow = await ethers.getContractFactory("FoodraEscrow");
     await expect(Escrow.deploy(ethers.ZeroAddress, treasury.address)).to.be.reverted;
   });
 

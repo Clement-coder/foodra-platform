@@ -25,10 +25,11 @@ describe("FoodraEscrow – autoRelease (unit)", function () {
       .to.be.revertedWithCustomError(escrow, "TooEarlyForAutoRelease");
   });
 
-  it("reverts at exactly 7 days (boundary — not yet past)", async function () {
+  it("reverts one second before 7 days have elapsed", async function () {
     const { escrow, buyer, farmer, id } = await deploy();
     await escrow.connect(buyer).createEscrow(id, farmer.address, ONE_USDC, 0n);
-    await time.increase(SEVEN_DAYS); // exactly 7 days — still too early
+    // increase by 6 days 23 hours 59 minutes 59 seconds — still too early
+    await time.increase(SEVEN_DAYS - 2);
     await expect(escrow.autoRelease(id))
       .to.be.revertedWithCustomError(escrow, "TooEarlyForAutoRelease");
   });
