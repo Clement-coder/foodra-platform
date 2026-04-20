@@ -3,6 +3,7 @@ import { X, Download } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
 import { CustomSelect } from "@/components/CustomSelect"
+import { CreditScoreCard } from "@/components/CreditScoreCard"
 
 const PAGE_SIZE = 20
 
@@ -47,6 +48,23 @@ function FundingDetailModal({ f, onClose }: { f: any; onClose: () => void }) {
               <p className="text-red-700 dark:text-red-300">{f.rejection_note}</p>
             </div>
           )}
+          {/* AI Credit Score */}
+          <CreditScoreCard
+            application={{
+              id: f.id,
+              userId: f.user_id,
+              fullName: f.full_name,
+              phoneNumber: f.phone_number,
+              location: f.location,
+              farmSize: Number(f.farm_size) || 0,
+              farmType: f.farm_type || "",
+              yearsOfExperience: Number(f.years_of_experience) || 0,
+              amountRequested: Number(f.amount_requested) || 0,
+              expectedOutcome: f.expected_outcome || "",
+              status: f.status,
+              submittedAt: f.created_at,
+            }}
+          />
         </div>
       </div>
     </div>
