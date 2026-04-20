@@ -15,6 +15,210 @@ To offer value to African farmers through sustainable practices and a sustainabl
 ## Core Features
 
 ### 1. Marketplace
+- Farmers can list, edit, and delete agricultural products
+- Advanced filtering: category, price range, location, sort order
+- Related products section on product detail pages
+- Wishlist with price alerts (localStorage + server-side)
+- Product view tracking for analytics
+- Search with debounce and full-text support
+
+### 2. Training Programs
+- Access to online and offline agricultural training sessions
+- Expert instructors teaching modern farming techniques
+- Enrollment system with capacity tracking
+- Training categories covering various farming practices
+
+### 3. Funding Applications
+- Farmers can apply for loans and grants
+- **AI Credit Scoring** — explainable rule-based engine scoring 0–100 with tier and recommendation
+- Application tracking (Pending, Approved, Rejected)
+- Admin review with credit score breakdown
+
+### 4. Digital Wallet
+- Blockchain-based wallet integration via Privy
+- Support for Base and Base Sepolia networks
+- ETH balance tracking with real-time conversion to USD, USDC, and NGN
+- Send and receive cryptocurrency
+- Transaction history with filtering
+- QR code generation for receiving payments
+- MoonPay/Coinbase fiat on-ramp
+
+### 5. User Authentication & Profiles
+- Decentralized authentication via Privy
+- Wallet-based identity management
+- User profiles with avatar generation
+- Profile completion tracking
+- Farmer verification system
+
+### 6. Multi-Language Support
+- English, Yoruba (Yorùbá), Hausa, Igbo
+- Language switcher in NavBar
+- Persistent locale preference
+
+### 7. Admin Dashboard
+- Users, products, funding, orders, disputes, trainings, support, wallet requests
+- Analytics with revenue charts, user growth, category breakdown
+- Broadcast notifications to all users
+- CSV export for orders, users, and funding data
+- AI credit score visible on each funding application
+
+### 8. Farmer Sales Dashboard
+- Revenue analytics with monthly charts
+- Top products by revenue
+- Escrow status breakdown
+- Order management with shipping workflow
+
+## Technology Stack
+
+### Frontend
+- **Framework**: Next.js 16 (React 19)
+- **Styling**: Tailwind CSS 4
+- **UI Components**: Radix UI, NextUI
+- **Animations**: Framer Motion
+- **Forms**: React Hook Form with Zod validation
+- **State Management**: React hooks
+
+### Backend & Database
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Privy (wallet-based auth)
+- **Storage**: Supabase Storage (images)
+- **API**: Next.js API Routes
+
+### Blockchain & Web3
+- **Wallet Integration**: Privy
+- **Blockchain Network**: Base (Mainnet & Sepolia Testnet)
+- **Web3 Library**: Ethers.js, Wagmi
+- **Escrow Contract**: FoodraEscrow (USDC, 2.5% fee, 7-day auto-release)
+
+### Additional Libraries
+- **QR Codes**: qrcode.react
+- **Date Handling**: date-fns
+- **Email**: EmailJS
+- **Analytics**: Vercel Analytics
+
+## Project Structure
+
+```
+foodra-platform/
+├── frontend/
+│   ├── app/
+│   │   ├── marketplace/        # Product listings, detail, edit
+│   │   ├── training/           # Training programs
+│   │   ├── funding/            # Funding applications
+│   │   ├── wallet/             # Crypto wallet interface
+│   │   ├── profile/            # User profiles
+│   │   ├── shop/               # Shopping cart and checkout
+│   │   ├── orders/             # Order management
+│   │   ├── sales/              # Farmer sales dashboard
+│   │   ├── wishlist/           # Wishlist with price alerts
+│   │   ├── admin/              # Admin dashboard
+│   │   ├── users/              # User directory
+│   │   ├── search/             # Search functionality
+│   │   └── api/                # API routes
+│   ├── components/             # Reusable UI components
+│   └── lib/
+│       ├── types.ts            # TypeScript interfaces
+│       ├── i18n.ts             # Multi-language support
+│       ├── creditScore.ts      # AI credit scoring engine
+│       ├── wishlist.ts         # Wishlist utilities
+│       ├── rateLimit.ts        # API rate limiting
+│       ├── seo.ts              # SEO metadata helpers
+│       ├── formatters.ts       # Currency/address formatters
+│       └── analytics.ts        # Event tracking
+└── smartcontract/
+    ├── contracts/              # FoodraEscrow.sol, MockUSDC.sol
+    ├── scripts/                # deploy.ts, deploy-mainnet.ts, verify.ts
+    └── test/                   # 25+ comprehensive tests
+```
+
+## Getting Started
+
+### Prerequisites
+- Node.js 20+
+- npm or pnpm
+- MetaMask or compatible Web3 wallet
+- Supabase account
+
+### Frontend Setup
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local
+# Fill in your credentials
+npm run dev
+```
+
+### Smart Contract Setup
+
+```bash
+cd smartcontract
+pnpm install
+cp .env.example .env
+npx hardhat compile
+npx hardhat test
+# Deploy to testnet
+npx hardhat run scripts/deploy.ts --network baseSepolia
+```
+
+### Supabase Setup
+
+Run SQL scripts in `/supabase` in order:
+1. `schema.sql` — core tables
+2. `rls.sql` — security policies
+3. `storage.sql` — image storage
+4. `cart_management.sql`, `notifications.sql`, `ratings_comments.sql`
+5. `escrow_migration.sql`, `order_tracking.sql`
+6. `credit_score.sql`, `wishlist.sql`, `product_views.sql`
+7. `farmer_verification.sql`, `search_indexes.sql`
+8. `seed.sql` — optional sample data
+
+## Implementation Status
+
+### ✅ Complete
+- Marketplace with advanced filtering, related products, wishlist, price alerts
+- Training program enrollment system
+- Funding applications with AI credit scoring
+- Digital wallet with multi-chain support and fiat on-ramp
+- User authentication and profiles
+- Shopping cart and escrow-based checkout
+- Transaction history tracking
+- Farmer sales analytics dashboard
+- Admin dashboard (users, products, funding, orders, disputes, analytics, CSV export)
+- Notification system (in-app + push)
+- Dispute resolution workflow
+- Multi-language support (EN, YO, HA, IG)
+- Smart contract (FoodraEscrow) with 25+ tests
+- Base Mainnet deployment scripts
+- SEO metadata and JSON-LD structured data
+- PWA with offline detection
+- Rate limiting on sensitive endpoints
+- Farmer verification system (DB layer)
+
+### 📋 Planned
+- IPFS integration for decentralized storage
+- Mobile application
+- Insurance integration
+- AI-powered crop disease detection
+
+## License
+
+MIT
+
+
+Foodra is a decentralized agricultural technology platform that empowers smallholder farmers with direct market access, training programs, funding opportunities, and blockchain-based digital wallets. The platform is designed to drive financial inclusion, improve productivity, and strengthen food security across Africa, starting with Nigeria.
+
+## Vision
+
+To contribute towards an Africa that does not depend on the outside world to feed her. Using the least available resources to maximize the capacity of the African food production and supply chain. Through the application of technology, available financial support, and market availability, smallholder farmers will boost in capacity and in turn boost the African food capacity.
+
+## Mission
+
+To offer value to African farmers through sustainable practices and a sustainable supply chain. This includes sustainable practices that protect our environment, a sustainable supply chain that ensures fair value distribution, and farmer empowerment through technology and market access.
+
+## Core Features
+
+### 1. Marketplace
 - Farmers can list and sell agricultural products directly to buyers
 - Product listings include name, category, quantity, price, description, and images
 - Search and filter functionality by category
