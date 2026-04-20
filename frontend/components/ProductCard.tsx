@@ -12,6 +12,7 @@ import { useCart } from "@/lib/useCart";
 import { useUser } from "@/lib/useUser";
 import { generateAvatarUrl } from "@/lib/avatarGenerator";
 import { ShareOptionsModal } from "@/components/ShareOptionsModal";
+import { WishlistButton } from "@/components/WishlistButton";
 import { formatTimeAgo } from "@/lib/timeUtils";
 import { useToast } from "@/lib/toast";
 import { usePrivy } from "@privy-io/react-auth";
@@ -242,6 +243,13 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                   <Share2 className="h-4 w-4 text-[#118C4C]" />
                   <span className="hidden sm:inline text-sm ml-1 text-[#118C4C]">Share</span>
                 </Button>
+                <WishlistButton
+                  productId={product.id}
+                  productName={product.productName}
+                  image={product.image}
+                  pricePerUnit={product.pricePerUnit}
+                  className="shrink-0"
+                />
               </>
             )}
           </CardFooter>
