@@ -12,6 +12,7 @@ import "./globals.css"
 import Providers from "./Provider"
 import { SupportChat } from "@/components/SupportChat"
 import { ToastProvider } from "@/lib/toast"
+import { OfflineBanner } from "@/components/OfflineBanner"
 
 // ---- LOCAL FONTS ----
 
@@ -178,6 +179,7 @@ export default function RootLayout({
               <BottomTabBar />
               <SupportChat />
               <PWAManager />
+              <OfflineBanner />
             </AppLoader>
           </CartProvider>
           </ToastProvider>
