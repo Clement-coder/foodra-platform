@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { usePrivy } from "@privy-io/react-auth";
 import { ArrowLeft, PackageOpen, Calendar, DollarSign, CheckCircle, AlertTriangle, Trash2, MapPin, Phone, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,11 +17,13 @@ import { useOrders } from "@/lib/useCart";
 import { useEscrow } from "@/lib/useEscrow";
 import { useUser } from "@/lib/useUser";
 import { RatingModal } from "@/components/RatingModal";
+import { authFetch } from "@/lib/authFetch";
 
 function OrdersPage() {
   const { orders, refreshOrders } = useOrders();
   const { confirmDelivery, raiseDispute, loading } = useEscrow();
   const { currentUser } = useUser();
+  const { getAccessToken } = usePrivy();
   const router = useRouter();
   const { toast, confirm } = useToast();
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
@@ -31,7 +34,7 @@ function OrdersPage() {
     if (!currentUser) return;
     const ok = await confirm({ title: "Delete Order", message: "Remove this order permanently?", confirmLabel: "Delete", danger: true });
     if (!ok) return;
-    await fetch(`/api/orders?orderId=${orderId}&userId=${currentUser.id}`, { method: "DELETE" });
+    await authFetch(getAccessToken, `/api/orders?orderId=${orderId}&userId=${currentUser.id}`, { method: "DELETE" });
     toast.success("Order removed.");
     refreshOrders();
   };
@@ -42,7 +45,7 @@ function OrdersPage() {
     setActiveOrderId(orderId);
     const success = await confirmDelivery(escrowOrderId);
     if (success) {
-      await fetch(`/api/orders/${orderId}/escrow`, {
+      await authFetch(getAccessToken, `/api/orders/${orderId}/escrow`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ escrowStatus: "released" }),
@@ -63,16 +66,16 @@ function OrdersPage() {
     setActiveOrderId(orderId);
     const ok = await raiseDispute(escrowOrderId);
     if (ok) {
-      await fetch(`/api/orders/${orderId}/escrow`, {
+      await authFetch(getAccessToken, `/api/orders/${orderId}/escrow`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ escrowStatus: "disputed" }),
       });
       // Save dispute details
-      await fetch(`/api/orders/${orderId}/dispute`, {
+      await authFetch(getAccessToken, `/api/orders/${orderId}/dispute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason, details, userId: currentUser?.id }),
+        body: JSON.stringify({ reason, details }),
       }).catch(() => {}); // non-blocking — dispute is already on-chain
       toast.success("Dispute raised. Our team will review and resolve it within 3–5 business days.");
       refreshOrders();
@@ -235,7 +238,6 @@ function OrdersPage() {
           orderId={ratingTarget.orderId}
           farmerId={ratingTarget.farmerId}
           farmerName={ratingTarget.farmerName}
-          buyerId={currentUser.id}
         />
       )}
     </div>
