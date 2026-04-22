@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { createNotification } from "@/lib/notify"
+import { AuthError, requireAuthenticatedUser } from "@/lib/serverAuth"
 
 // GET /api/comments?productId=xxx
 export async function GET(request: Request) {
@@ -23,41 +24,50 @@ export async function GET(request: Request) {
 
 // POST /api/comments
 export async function POST(request: Request) {
-  const supabase = getSupabaseAdminClient()
-  if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
+  try {
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
 
-  const { productId, userId, comment } = await request.json()
-  if (!productId || !userId || !comment?.trim())
-    return NextResponse.json({ error: "productId, userId, comment required" }, { status: 400 })
+    const auth = await requireAuthenticatedUser(request)
+    const { productId, comment } = await request.json()
 
-  // Block product owner from commenting on their own product
-  const { data: product } = await supabase
-    .from("products")
-    .select("farmer_id, name")
-    .eq("id", productId)
-    .single()
+    if (!productId || !comment?.trim())
+      return NextResponse.json({ error: "productId and comment required" }, { status: 400 })
 
-  if (product?.farmer_id === userId)
-    return NextResponse.json({ error: "You cannot comment on your own product" }, { status: 403 })
+    // Block product owner from commenting on their own product
+    const { data: product } = await supabase
+      .from("products")
+      .select("farmer_id, name")
+      .eq("id", productId)
+      .single()
 
-  const { data, error } = await supabase
-    .from("product_comments")
-    .insert({ product_id: productId, user_id: userId, comment: comment.trim() })
-    .select("id, comment, created_at, user_id, users!product_comments_user_id_fkey(name, avatar_url)")
-    .single()
+    if (product?.farmer_id === auth.user.id)
+      return NextResponse.json({ error: "You cannot comment on your own product" }, { status: 403 })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    const { data, error } = await supabase
+      .from("product_comments")
+      .insert({ product_id: productId, user_id: auth.user.id, comment: comment.trim() })
+      .select("id, comment, created_at, user_id, users!product_comments_user_id_fkey(name, avatar_url)")
+      .single()
 
-  // Notify the product owner (farmer)
-  if (product && product.farmer_id !== userId) {
-    await createNotification({
-      userId: product.farmer_id,
-      type: "order",
-      title: "New Comment on Your Product 💬",
-      message: `Someone commented on your product "${product.name}".`,
-      link: `/marketplace/${productId}`,
-    })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    // Notify the product owner (farmer)
+    if (product && product.farmer_id !== auth.user.id) {
+      await createNotification({
+        userId: product.farmer_id,
+        type: "order",
+        title: "New Comment on Your Product 💬",
+        message: `Someone commented on your product "${product.name}".`,
+        link: `/marketplace/${productId}`,
+      })
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
+    return NextResponse.json({ error: "Failed to post comment" }, { status: 500 })
   }
-
-  return NextResponse.json(data)
 }
