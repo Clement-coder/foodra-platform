@@ -41,6 +41,8 @@ export async function POST(request: Request) {
     if (!productId || !comment?.trim())
       return NextResponse.json({ error: "productId and comment required" }, { status: 400 })
 
+    const trimmed = comment.trim().slice(0, 1000)
+
     // Block product owner from commenting on their own product
     const { data: product } = await supabase
       .from("products")
@@ -53,7 +55,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from("product_comments")
-      .insert({ product_id: productId, user_id: auth.user.id, comment: comment.trim() })
+      .insert({ product_id: productId, user_id: auth.user.id, comment: trimmed })
       .select("id, comment, created_at, user_id, users!product_comments_user_id_fkey(name, avatar_url)")
       .single()
 
