@@ -51,6 +51,10 @@ export async function POST(request: Request) {
     if (!farmerId || !orderId || !stars)
       return NextResponse.json({ error: "farmerId, orderId, stars required" }, { status: 400 })
 
+    const starsInt = Math.round(Number(stars))
+    if (starsInt < 1 || starsInt > 5)
+      return NextResponse.json({ error: "stars must be between 1 and 5" }, { status: 400 })
+
     // Verify order belongs to the authenticated buyer and is delivered/released
     const { data: order } = await supabase
       .from("orders")
@@ -66,7 +70,7 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from("farmer_ratings")
-      .insert({ farmer_id: farmerId, buyer_id: auth.user.id, order_id: orderId, stars })
+      .insert({ farmer_id: farmerId, buyer_id: auth.user.id, order_id: orderId, stars: starsInt })
       .select()
       .single()
 
@@ -80,7 +84,7 @@ export async function POST(request: Request) {
       userId: farmerId,
       type: "order",
       title: "New Rating Received ⭐",
-      message: `You received a ${stars}-star rating from a buyer.`,
+      message: `You received a ${starsInt}-star rating from a buyer.`,
       link: "/profile",
     })
 
