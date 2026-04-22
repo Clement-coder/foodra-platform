@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/lib/toast"
 import { formatTimeAgo } from "@/lib/timeUtils"
 import { supabase } from "@/lib/supabase"
+import { usePrivy } from "@privy-io/react-auth"
+import { authFetch } from "@/lib/authFetch"
 
 interface Comment {
   id: string
@@ -24,6 +26,7 @@ interface ProductCommentsProps {
 export function ProductComments({ productId, currentUserId, productOwnerId }: ProductCommentsProps) {
   const isOwner = currentUserId && productOwnerId && currentUserId === productOwnerId
   const { toast } = useToast()
+  const { getAccessToken } = usePrivy()
   const [comments, setComments] = useState<Comment[]>([])
   const [text, setText] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -47,10 +50,10 @@ export function ProductComments({ productId, currentUserId, productOwnerId }: Pr
   const submit = async () => {
     if (!text.trim() || !currentUserId) return
     setSubmitting(true)
-    const res = await fetch("/api/comments", {
+    const res = await authFetch(getAccessToken, "/api/comments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId, userId: currentUserId, comment: text }),
+      body: JSON.stringify({ productId, comment: text }),
     })
     setSubmitting(false)
     if (res.ok) {
