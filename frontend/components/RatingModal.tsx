@@ -5,6 +5,8 @@ import { Star } from "lucide-react"
 import { Modal } from "@/components/Modal"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/lib/toast"
+import { usePrivy } from "@privy-io/react-auth"
+import { authFetch } from "@/lib/authFetch"
 
 interface RatingModalProps {
   isOpen: boolean
@@ -12,11 +14,11 @@ interface RatingModalProps {
   orderId: string
   farmerId: string
   farmerName: string
-  buyerId: string
 }
 
-export function RatingModal({ isOpen, onClose, orderId, farmerId, farmerName, buyerId }: RatingModalProps) {
+export function RatingModal({ isOpen, onClose, orderId, farmerId, farmerName }: RatingModalProps) {
   const { toast } = useToast()
+  const { getAccessToken } = usePrivy()
   const [stars, setStars] = useState(0)
   const [hovered, setHovered] = useState(0)
   const [submitting, setSubmitting] = useState(false)
@@ -24,10 +26,10 @@ export function RatingModal({ isOpen, onClose, orderId, farmerId, farmerName, bu
   const submit = async () => {
     if (!stars) return
     setSubmitting(true)
-    const res = await fetch("/api/ratings", {
+    const res = await authFetch(getAccessToken, "/api/ratings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ buyerId, farmerId, orderId, stars }),
+      body: JSON.stringify({ farmerId, orderId, stars }),
     })
     setSubmitting(false)
     if (res.ok) {
