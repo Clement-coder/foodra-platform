@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { createNotification } from "@/lib/notify"
+import { AuthError, requireAuthenticatedUser } from "@/lib/serverAuth"
 
 // GET /api/ratings?farmerId=xxx  — public: avg + count per star
 // GET /api/ratings?farmerId=xxx&detail=1  — full list with buyer name (for profile)
@@ -33,45 +34,54 @@ export async function GET(request: Request) {
 
 // POST /api/ratings — submit a rating (buyer only, after delivery)
 export async function POST(request: Request) {
-  const supabase = getSupabaseAdminClient()
-  if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
+  try {
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
 
-  const { buyerId, farmerId, orderId, stars } = await request.json()
-  if (!buyerId || !farmerId || !orderId || !stars)
-    return NextResponse.json({ error: "buyerId, farmerId, orderId, stars required" }, { status: 400 })
+    const auth = await requireAuthenticatedUser(request)
+    const { farmerId, orderId, stars } = await request.json()
 
-  // Verify order belongs to buyer and is delivered/released
-  const { data: order } = await supabase
-    .from("orders")
-    .select("id, buyer_id, escrow_status, status")
-    .eq("id", orderId)
-    .single()
+    if (!farmerId || !orderId || !stars)
+      return NextResponse.json({ error: "farmerId, orderId, stars required" }, { status: 400 })
 
-  if (!order || order.buyer_id !== buyerId)
-    return NextResponse.json({ error: "Order not found or not yours" }, { status: 403 })
+    // Verify order belongs to the authenticated buyer and is delivered/released
+    const { data: order } = await supabase
+      .from("orders")
+      .select("id, buyer_id, escrow_status, status")
+      .eq("id", orderId)
+      .single()
 
-  if (order.escrow_status !== "released" && order.status !== "Delivered")
-    return NextResponse.json({ error: "You can only rate after delivery is confirmed" }, { status: 400 })
+    if (!order || order.buyer_id !== auth.user.id)
+      return NextResponse.json({ error: "Order not found or not yours" }, { status: 403 })
 
-  const { data, error } = await supabase
-    .from("farmer_ratings")
-    .insert({ farmer_id: farmerId, buyer_id: buyerId, order_id: orderId, stars })
-    .select()
-    .single()
+    if (order.escrow_status !== "released" && order.status !== "Delivered")
+      return NextResponse.json({ error: "You can only rate after delivery is confirmed" }, { status: 400 })
 
-  if (error) {
-    if (error.code === "23505") return NextResponse.json({ error: "You already rated this order" }, { status: 409 })
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const { data, error } = await supabase
+      .from("farmer_ratings")
+      .insert({ farmer_id: farmerId, buyer_id: auth.user.id, order_id: orderId, stars })
+      .select()
+      .single()
+
+    if (error) {
+      if (error.code === "23505") return NextResponse.json({ error: "You already rated this order" }, { status: 409 })
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Notify farmer
+    await createNotification({
+      userId: farmerId,
+      type: "order",
+      title: "New Rating Received ⭐",
+      message: `You received a ${stars}-star rating from a buyer.`,
+      link: "/profile",
+    })
+
+    return NextResponse.json(data)
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
+    return NextResponse.json({ error: "Failed to submit rating" }, { status: 500 })
   }
-
-  // Notify farmer
-  await createNotification({
-    userId: farmerId,
-    type: "order",
-    title: "New Rating Received ⭐",
-    message: `You received a ${stars}-star rating from a buyer.`,
-    link: "/profile",
-  })
-
-  return NextResponse.json(data)
 }
