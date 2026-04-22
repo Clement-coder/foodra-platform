@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { createNotification } from "@/lib/notify"
 import { AuthError, requireAuthenticatedUser } from "@/lib/serverAuth"
+import { rateLimit, getClientIp } from "@/lib/rateLimit"
 
 // GET /api/comments?productId=xxx
 export async function GET(request: Request) {
@@ -27,6 +28,12 @@ export async function POST(request: Request) {
   try {
     const supabase = getSupabaseAdminClient()
     if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
+
+    const ip = getClientIp(request)
+    const rl = rateLimit(`comments:${ip}`, { limit: 20, windowSec: 3600 })
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many comments. Please slow down." }, { status: 429 })
+    }
 
     const auth = await requireAuthenticatedUser(request)
     const { productId, comment } = await request.json()

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { createNotification } from "@/lib/notify"
 import { AuthError, requireAuthenticatedUser } from "@/lib/serverAuth"
+import { rateLimit, getClientIp } from "@/lib/rateLimit"
 
 // GET /api/ratings?farmerId=xxx  — public: avg + count per star
 // GET /api/ratings?farmerId=xxx&detail=1  — full list with buyer name (for profile)
@@ -37,6 +38,12 @@ export async function POST(request: Request) {
   try {
     const supabase = getSupabaseAdminClient()
     if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
+
+    const ip = getClientIp(request)
+    const rl = rateLimit(`ratings:${ip}`, { limit: 10, windowSec: 3600 })
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many rating attempts. Please try again later." }, { status: 429 })
+    }
 
     const auth = await requireAuthenticatedUser(request)
     const { farmerId, orderId, stars } = await request.json()
