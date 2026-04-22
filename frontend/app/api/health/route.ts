@@ -11,9 +11,18 @@ export async function GET() {
     dbOk = !error
   }
 
-  const status = dbOk ? "ok" : "degraded"
+  const privyConfigured = !!(
+    process.env.NEXT_PUBLIC_PRIVY_APP_ID && process.env.PRIVY_SECRET_KEY
+  )
+
+  const allOk = dbOk && privyConfigured
   return NextResponse.json(
-    { status, db: dbOk ? "connected" : "error", ts: new Date().toISOString() },
-    { status: dbOk ? 200 : 503 }
+    {
+      status: allOk ? "ok" : "degraded",
+      db: dbOk ? "connected" : "error",
+      auth: privyConfigured ? "configured" : "missing_secret",
+      ts: new Date().toISOString(),
+    },
+    { status: allOk ? 200 : 503 }
   )
 }
