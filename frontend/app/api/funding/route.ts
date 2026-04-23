@@ -111,6 +111,7 @@ export async function POST(request: Request) {
       amountRequested: body.amountRequested,
       farmType: body.farmType,
       location: body.location,
+      expectedOutcome: body.expectedOutcome,
     })
 
     // Update application with credit score

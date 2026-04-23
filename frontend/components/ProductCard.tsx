@@ -245,13 +245,6 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                   <Share2 className="h-4 w-4 text-[#118C4C]" />
                   <span className="hidden sm:inline text-sm ml-1 text-[#118C4C]">Share</span>
                 </Button>
-                <WishlistButton
-                  productId={product.id}
-                  productName={product.productName}
-                  image={product.image}
-                  pricePerUnit={product.pricePerUnit}
-                  className="shrink-0 lg:hidden"
-                />
               </>
             )}
           </CardFooter>
