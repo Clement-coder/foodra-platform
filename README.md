@@ -194,6 +194,10 @@ Run SQL scripts in `/supabase` in order:
 - PWA with offline detection
 - Rate limiting on sensitive endpoints
 - Farmer verification system (DB layer)
+- **Product analytics and view tracking** ✅
+- **Wishlist with price alerts** ✅
+- **Enhanced order tracking** ✅
+- **Search performance optimization** ✅
 
 ### 📋 Planned
 - IPFS integration for decentralized storage
