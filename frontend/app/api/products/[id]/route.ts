@@ -6,6 +6,8 @@ import { notifyWishlistPriceDrop } from '@/lib/wishlistServer'
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  console.log("Fetching product with ID:", id)
+  
   try {
     const { data: product, error } = await supabase
       .from('products')
@@ -13,7 +15,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       .eq('id', id)
       .single()
 
-    if (error) throw error
+    console.log("Product query result:", { product, error })
+
+    if (error) {
+      console.error("Product fetch error:", error)
+      throw error
+    }
+
+    if (!product) {
+      console.log("No product found for ID:", id)
+      return NextResponse.json({ error: "Product not found" }, { status: 404 })
+    }
 
     return NextResponse.json({
       id: product.id,
