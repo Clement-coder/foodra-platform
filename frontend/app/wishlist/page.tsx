@@ -4,42 +4,78 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Heart, Trash2, Bell, BellOff, ShoppingCart } from "lucide-react"
+import { usePrivy } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/lib/toast"
 import { useCart } from "@/lib/useCart"
+import { useUser } from "@/lib/useUser"
+import { authFetch } from "@/lib/authFetch"
 import { getWishlist, removeFromWishlist, setAlertPrice, type WishlistItem } from "@/lib/wishlist"
 
 export default function WishlistPage() {
+  const { getAccessToken } = usePrivy()
+  const { currentUser } = useUser()
   const [items, setItems] = useState<WishlistItem[]>([])
   const { addToCart } = useCart()
   const { toast } = useToast()
 
-  const refresh = () => setItems(getWishlist())
+  const refresh = async () => {
+    if (currentUser?.id) {
+      const res = await authFetch(getAccessToken, "/api/wishlist")
+      if (res.ok) {
+        setItems(await res.json())
+        return
+      }
+    }
+    setItems(getWishlist())
+  }
 
   useEffect(() => {
     refresh()
-    window.addEventListener("wishlistchange", refresh)
-    return () => window.removeEventListener("wishlistchange", refresh)
-  }, [])
+    const handler = () => { void refresh() }
+    window.addEventListener("wishlistchange", handler)
+    return () => window.removeEventListener("wishlistchange", handler)
+  }, [currentUser?.id, getAccessToken])
 
-  const handleRemove = (productId: string) => {
-    removeFromWishlist(productId)
+  const handleRemove = async (productId: string) => {
+    if (currentUser?.id) {
+      await authFetch(getAccessToken, `/api/wishlist?productId=${productId}`, { method: "DELETE" })
+    } else {
+      removeFromWishlist(productId)
+    }
     toast.success("Removed from wishlist")
+    await refresh()
   }
 
-  const handleAlertToggle = (item: WishlistItem) => {
+  const handleAlertToggle = async (item: WishlistItem) => {
     if (item.alertPrice !== null) {
-      setAlertPrice(item.productId, null)
+      if (currentUser?.id) {
+        await authFetch(getAccessToken, "/api/wishlist", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId: item.productId, alertPrice: null }),
+        })
+      } else {
+        setAlertPrice(item.productId, null)
+      }
       toast.success("Price alert removed")
     } else {
       const price = prompt(`Set alert price for ${item.productName} (₦):`, String(item.priceAtAdd))
       if (price && !isNaN(Number(price))) {
-        setAlertPrice(item.productId, Number(price))
+        if (currentUser?.id) {
+          await authFetch(getAccessToken, "/api/wishlist", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId: item.productId, alertPrice: Number(price) }),
+          })
+        } else {
+          setAlertPrice(item.productId, Number(price))
+        }
         toast.success(`Alert set at ₦${Number(price).toLocaleString()}`)
       }
     }
-    refresh()
+    await refresh()
   }
 
   return (
@@ -75,7 +111,7 @@ export default function WishlistPage() {
                   <Link href={`/marketplace/${item.productId}`}>
                     <h3 className="font-semibold text-foreground truncate hover:text-[#118C4C]">{item.productName}</h3>
                   </Link>
-                  <p className="text-[#118C4C] font-bold">₦{item.priceAtAdd.toLocaleString()}</p>
+                  <p className="text-[#118C4C] font-bold">₦{Number(item.currentPrice ?? item.priceAtAdd).toLocaleString()}</p>
                   {item.alertPrice !== null && (
                     <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1 mt-0.5">
                       <Bell className="h-3 w-3" />
