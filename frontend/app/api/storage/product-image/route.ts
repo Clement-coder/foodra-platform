@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
+import { AuthError, requireAuthenticatedUser } from "@/lib/serverAuth"
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to initialize Supabase admin client" }, { status: 500 })
     }
 
+    await requireAuthenticatedUser(request)
     const body = (await request.json()) as { base64?: string; fileName?: string }
     if (!body?.base64) {
       return NextResponse.json({ error: "base64 image is required" }, { status: 400 })
@@ -60,6 +62,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ imageUrl: data.publicUrl, path: filePath })
   } catch (error: any) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error("Error uploading product image:", error)
     return NextResponse.json(
       { error: error?.message || "Failed to upload image", code: error?.code },
