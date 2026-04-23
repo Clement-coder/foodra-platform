@@ -9,6 +9,7 @@ import { format } from "date-fns"
 import { useState } from "react"
 import { useUser } from "@/lib/useUser"
 import { usePrivy } from "@privy-io/react-auth"
+import { authFetch } from "@/lib/authFetch"
 
 interface FundingCardProps {
   application: FundingApplication
@@ -17,22 +18,19 @@ interface FundingCardProps {
 
 export function FundingCard({ application, onStatusChange }: FundingCardProps) {
   const { currentUser } = useUser()
-  const { user: privyUser } = usePrivy()
+  const { getAccessToken } = usePrivy()
   const [isUpdating, setIsUpdating] = useState(false)
   const isAdmin = currentUser?.role === "admin"
 
   const handleStatusChange = async (newStatus: "Approved" | "Rejected") => {
-    if (!privyUser?.id) return
-
     setIsUpdating(true)
     try {
-      const response = await fetch("/api/funding", {
+      const response = await authFetch(getAccessToken, "/api/funding", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           applicationId: application.id,
           status: newStatus,
-          actorPrivyId: privyUser.id,
         }),
       })
       if (!response.ok) {

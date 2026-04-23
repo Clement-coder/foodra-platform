@@ -16,10 +16,11 @@ import withAuth from "../../../components/withAuth";
 import { usePrivy } from "@privy-io/react-auth"
 import { useUser } from "@/lib/useUser"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 function ApplyFundingPage() {
   const router = useRouter()
-  const { user: privyUser } = usePrivy()
+  const { user: privyUser, getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -72,11 +73,10 @@ function ApplyFundingPage() {
     }
 
     try {
-      const syncResponse = await fetch('/api/users/sync', {
+      const syncResponse = await authFetch(getAccessToken, '/api/users/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          privyId: privyUser.id,
           name: currentUser?.name || data.fullName,
           email: currentUser?.email || privyUser.email?.address || "",
           wallet: currentUser?.wallet || privyUser.wallet?.address || "",
@@ -94,11 +94,10 @@ function ApplyFundingPage() {
         throw new Error("Unable to resolve user account for funding application.")
       }
 
-      const response = await fetch('/api/funding', {
+      const response = await authFetch(getAccessToken, '/api/funding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId,
           fullName: data.fullName,
           phoneNumber: data.phoneNumber,
           location: data.location,
