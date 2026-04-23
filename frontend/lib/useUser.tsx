@@ -5,9 +5,10 @@ import { usePrivy } from "@privy-io/react-auth"
 import type { User } from "./types"
 import { generateAvatarUrl } from "./avatarGenerator"
 import { getGoogleLinkedAccount, getPrivyProfilePicture } from "./privyUser"
+import { authFetch } from "./authFetch"
 
 export function useUser() {
-  const { user: privyUser, authenticated, ready } = usePrivy()
+  const { user: privyUser, authenticated, ready, getAccessToken } = usePrivy()
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const privyUserAny = privyUser as any
@@ -52,11 +53,10 @@ export function useUser() {
     const syncUser = async () => {
       if (authenticated && privyUser) {
         try {
-          const response = await fetch("/api/users/sync", {
+          const response = await authFetch(getAccessToken, "/api/users/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              privyId: privyUser.id,
               name: getPrivyName(),
               email: getPrivyEmail(),
               wallet: getPrivyWallet(),
@@ -102,7 +102,7 @@ export function useUser() {
 
       if (Object.keys(payload).length === 1) return true
 
-      const response = await fetch("/api/users/sync", {
+      const response = await authFetch(getAccessToken, "/api/users/sync", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

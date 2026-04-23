@@ -8,6 +8,7 @@ export interface User {
   phone?: string
   location?: string
   role?: "farmer" | "buyer" | "admin"
+  isVerified?: boolean
   linked_accounts?: Array<{ type: string }>
   termsAcceptedAt?: string | null
 }
