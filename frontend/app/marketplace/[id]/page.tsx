@@ -31,6 +31,7 @@ function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null)
   const [related, setRelated] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isImageFullScreen, setIsImageFullScreen] = useState(false)
 
@@ -40,7 +41,11 @@ function ProductDetailPage() {
       setLoading(true)
       try {
         const res = await fetch(`/api/products/${id}`)
-        const p = res.ok ? await res.json() : null
+        if (!res.ok) {
+          setError(`Failed to load product: ${res.status}`)
+          return
+        }
+        const p = await res.json()
         setProduct(p)
         if (p) {
           // Track product view
@@ -48,7 +53,8 @@ function ProductDetailPage() {
           // Fetch related products
           fetch(`/api/products/${id}/related`).then(r => r.json()).then(setRelated).catch(() => {})
         }
-      } catch {
+      } catch (err) {
+        setError(`Error loading product: ${err}`)
         setProduct(null)
       } finally {
         setLoading(false)
@@ -73,11 +79,11 @@ function ProductDetailPage() {
     )
   }
 
-  if (!product) {
+  if (!product && !loading) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold text-foreground mb-4">Product Not Found</h1>
-        <p className="text-muted-foreground mb-8">The product you're looking for doesn't exist.</p>
+        <p className="text-muted-foreground mb-4">{error || "The product you're looking for doesn't exist."}</p>
         <Link href="/marketplace">
           <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white">Back to Marketplace</Button>
         </Link>
