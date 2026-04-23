@@ -141,8 +141,8 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
       />
       <Link href={`/marketplace/${product.id}`}>
       <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
-        <Card className="overflow-hidden h-full flex flex-col border-[#118C4C]/20 hover:border-[#118C4C]/40 hover:shadow-lg hover:shadow-[#118C4C]/10 transition-all cursor-pointer">
-          <div className="relative h-48 sm:h-56 w-full bg-muted">
+        <Card className="overflow-hidden flex flex-col border-[#118C4C]/20 hover:border-[#118C4C]/40 hover:shadow-lg hover:shadow-[#118C4C]/10 transition-all cursor-pointer max-h-96">
+          <div className="relative h-40 w-full bg-muted">
             {product.image ? (
               <Image
                 src={product.image}
