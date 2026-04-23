@@ -29,8 +29,7 @@ export function OrderTracker({ status, shippedAt, deliveredAt, estimatedDelivery
         <div className="absolute left-0 right-0 top-5 h-0.5 bg-muted mx-8" />
         <div
           className="absolute left-8 top-5 h-0.5 bg-[#118C4C] transition-all duration-500"
-          style={{ width: `${(activeIdx / (STEPS.length - 1)) * calc}%`.replace("calc", "") }}
-          // inline style workaround
+          style={{ width: `calc(${(activeIdx / (STEPS.length - 1)) * 100}% - 4rem)` }}
         />
         <div
           className="absolute top-5 h-0.5 bg-[#118C4C] transition-all duration-500"
