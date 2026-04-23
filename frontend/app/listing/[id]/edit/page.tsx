@@ -18,12 +18,13 @@ import { usePrivy } from "@privy-io/react-auth"
 import { useUser } from "@/lib/useUser"
 import { useToast } from "@/lib/toast"
 import type { Product } from "@/lib/types"
+import { authFetch } from "@/lib/authFetch"
 
 function EditListingPage() {
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
-  const { user: privyUser } = usePrivy()
+  const { user: privyUser, getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const { toast, confirm } = useToast()
   const [imageBase64, setImageBase64] = useState("")
@@ -75,7 +76,7 @@ function EditListingPage() {
     try {
       let imageUrl = imageBase64 || data.image
       if (imageBase64?.startsWith("data:image/")) {
-        const uploadRes = await fetch("/api/storage/product-image", {
+        const uploadRes = await authFetch(getAccessToken, "/api/storage/product-image", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ base64: imageBase64, fileName: data.productName }),
@@ -86,11 +87,10 @@ function EditListingPage() {
         }
       }
 
-      const res = await fetch(`/api/products/${id}`, {
+      const res = await authFetch(getAccessToken, `/api/products/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          actorPrivyId: privyUser?.id,
           name: data.productName,
           category: data.category,
           quantity: data.quantity,
@@ -124,7 +124,7 @@ function EditListingPage() {
     })
     if (!ok) return
     setIsDeleting(true)
-    const res = await fetch(`/api/products/${id}?actorPrivyId=${privyUser?.id}`, { method: "DELETE" })
+    const res = await authFetch(getAccessToken, `/api/products/${id}`, { method: "DELETE" })
     setIsDeleting(false)
     if (res.ok) {
       toast.success("Product deleted.")
