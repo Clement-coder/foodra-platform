@@ -1,25 +1,28 @@
 "use client"
 
 import { useState } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import { Image as ImageIcon, X, MapPin, Calendar, Trash2, EyeOff, Eye } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 function ProductModal({ product, farmer, privyId, onClose, onRefresh }: {
   product: any; farmer: any; privyId?: string
   onClose: () => void; onRefresh: () => void
 }) {
   const { toast, confirm } = useToast()
+  const { getAccessToken } = usePrivy()
   const [loading, setLoading] = useState(false)
 
   const toggle = async () => {
     const ok = await confirm({ message: `${product.is_available ? "Deactivate" : "Activate"} this product?`, confirmLabel: product.is_available ? "Deactivate" : "Activate", danger: product.is_available })
     if (!ok) return
     setLoading(true)
-    const res = await fetch(`/api/products/${product.id}`, {
+    const res = await authFetch(getAccessToken, `/api/products/${product.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actorPrivyId: privyId, is_available: !product.is_available }),
+      body: JSON.stringify({ is_available: !product.is_available }),
     })
     if (res.ok) { toast.success(product.is_available ? "Product deactivated" : "Product activated"); onRefresh(); onClose() }
     else toast.error("Failed to update product.")
@@ -30,7 +33,7 @@ function ProductModal({ product, farmer, privyId, onClose, onRefresh }: {
     const ok = await confirm({ title: "Delete Product", message: "This will permanently delete the product. This cannot be undone.", confirmLabel: "Delete", danger: true })
     if (!ok) return
     setLoading(true)
-    const res = await fetch(`/api/products/${product.id}?actorPrivyId=${privyId}`, { method: "DELETE" })
+    const res = await authFetch(getAccessToken, `/api/products/${product.id}`, { method: "DELETE" })
     if (res.ok) { toast.success("Product deleted"); onRefresh(); onClose() }
     else toast.error("Failed to delete product.")
     setLoading(false)

@@ -1,13 +1,16 @@
 import { useState } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import { Megaphone, Loader2 } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 const RANGES = [3, 6, 12] as const
 type Range = typeof RANGES[number]
 
 export default function AdminAnalytics({ data, privyId }: { data: AdminData; privyId?: string }) {
   const { toast } = useToast()
+  const { getAccessToken } = usePrivy()
   const [broadcastTitle, setBroadcastTitle] = useState("")
   const [broadcastMsg, setBroadcastMsg] = useState("")
   const [broadcastLink, setBroadcastLink] = useState("")
@@ -16,12 +19,11 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
   const sendBroadcast = async () => {
     if (!broadcastTitle.trim() || !broadcastMsg.trim()) return
     setSending(true)
-    const res = await fetch("/api/notifications", {
+    const res = await authFetch(getAccessToken, "/api/notifications", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         broadcast: true,
-        actorPrivyId: privyId,
         type: "broadcast",
         title: broadcastTitle.trim(),
         message: broadcastMsg.trim(),

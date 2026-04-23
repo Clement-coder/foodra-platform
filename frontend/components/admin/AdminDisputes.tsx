@@ -1,14 +1,17 @@
 "use client"
 
 import { useState } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import { AlertTriangle, X, ExternalLink } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
   dispute: any; order: any; privyId?: string; onClose: () => void; onRefresh: () => void
 }) {
   const { toast, confirm } = useToast()
+  const { getAccessToken } = usePrivy()
   const [saving, setSaving] = useState(false)
 
   const resolveEscrow = async (action: "release" | "refund") => {
@@ -22,18 +25,18 @@ function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
     setSaving(true)
 
     // Update escrow status on the order
-    const res = await fetch(`/api/orders/${dispute.order_id}`, {
+    const res = await authFetch(getAccessToken, `/api/orders/${dispute.order_id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actorPrivyId: privyId, escrow_status: action === "release" ? "released" : "refunded" }),
+      body: JSON.stringify({ escrow_status: action === "release" ? "released" : "refunded" }),
     })
 
     if (res.ok) {
       // Mark dispute as resolved in Supabase
-      await fetch(`/api/orders/${dispute.order_id}/dispute`, {
+      await authFetch(getAccessToken, `/api/orders/${dispute.order_id}/dispute`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ disputeId: dispute.id, status: "resolved", actorPrivyId: privyId }),
+        body: JSON.stringify({ disputeId: dispute.id, status: "resolved" }),
       }).catch(() => {})
       toast.success(action === "release" ? "Escrow released to farmer" : "Escrow refunded to buyer")
       onRefresh()

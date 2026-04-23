@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import { X, MapPin, Phone, Calendar, ExternalLink, ShoppingBag, Download } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
 import { CustomSelect } from "@/components/CustomSelect"
+import { authFetch } from "@/lib/authFetch"
 
 const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"]
 
@@ -13,6 +15,7 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
   onClose: () => void; onRefresh: () => void
 }) {
   const { toast, confirm } = useToast()
+  const { getAccessToken } = usePrivy()
   const [status, setStatus] = useState(order.status)
   const [saving, setSaving] = useState(false)
 
@@ -21,10 +24,10 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
     const ok = await confirm({ message: `Change order status to "${status}"?`, confirmLabel: "Update Status" })
     if (!ok) return
     setSaving(true)
-    const res = await fetch(`/api/orders/${order.id}`, {
+    const res = await authFetch(getAccessToken, `/api/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actorPrivyId: privyId, status }),
+      body: JSON.stringify({ status }),
     })
     if (res.ok) { toast.success(`Order status updated to ${status}`); onRefresh(); onClose() }
     else toast.error("Failed to update order status.")
@@ -35,10 +38,10 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
     const ok = await confirm({ title: "Resolve Escrow", message: action === "release" ? "Release payment to the farmer?" : "Refund payment to the buyer?", confirmLabel: action === "release" ? "Release to Farmer" : "Refund Buyer", danger: action === "refund" })
     if (!ok) return
     setSaving(true)
-    const res = await fetch(`/api/orders/${order.id}`, {
+    const res = await authFetch(getAccessToken, `/api/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actorPrivyId: privyId, escrow_status: action === "release" ? "released" : "refunded" }),
+      body: JSON.stringify({ escrow_status: action === "release" ? "released" : "refunded" }),
     })
     if (res.ok) { toast.success(action === "release" ? "Escrow released to farmer" : "Escrow refunded to buyer"); onRefresh(); onClose() }
     else toast.error("Failed to resolve escrow.")

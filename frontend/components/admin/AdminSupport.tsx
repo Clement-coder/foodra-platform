@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import { ChevronDown, ChevronUp, Send, Paperclip, Loader2, CheckCircle } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 export function getUnreadSupportCount(supportMessages: any[]): number {
   const byUser: Record<string, any[]> = {}
@@ -21,6 +23,7 @@ export default function AdminSupport({ data, privyId, onRefresh }: {
   data: AdminData; privyId?: string; onRefresh: () => void
 }) {
   const { toast, confirm } = useToast()
+  const { getAccessToken } = usePrivy()
   const [expanded, setExpanded] = useState<string | null>(null)
   const [replyText, setReplyText] = useState<Record<string, string>>({})
   const [sending, setSending] = useState(false)
@@ -44,7 +47,7 @@ export default function AdminSupport({ data, privyId, onRefresh }: {
     const text = replyText[userId]?.trim()
     if (!text && !imageBase64) return
     setSending(true)
-    await fetch("/api/support", {
+    await authFetch(getAccessToken, "/api/support", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, message: text || "📎 Image", imageBase64: imageBase64 || null, isAdminReply: true }),
@@ -57,10 +60,10 @@ export default function AdminSupport({ data, privyId, onRefresh }: {
   const resolve = async (userId: string) => {
     const ok = await confirm({ title: "Resolve Conversation", message: "Mark as resolved and clear all messages for this user?", confirmLabel: "Resolve", danger: true })
     if (!ok) return
-    const res = await fetch("/api/support", {
+    const res = await authFetch(getAccessToken, "/api/support", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, actorPrivyId: privyId }),
+      body: JSON.stringify({ userId }),
     })
     if (res.ok) { toast.success("Conversation resolved."); setExpanded(null); onRefresh() }
     else toast.error("Failed to resolve conversation.")

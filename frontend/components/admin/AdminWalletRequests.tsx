@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import { Download, Settings } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { CustomSelect } from "@/components/CustomSelect"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 const PAGE_SIZE = 20
 
@@ -28,6 +30,7 @@ function statusBadge(status: string) {
 
 function RateSettingsPanel({ privyId, onSaved }: { privyId?: string; onSaved: () => void }) {
   const { toast } = useToast()
+  const { getAccessToken } = usePrivy()
   const [base, setBase] = useState("")
   const [spread, setSpread] = useState("")
   const [saving, setSaving] = useState(false)
@@ -35,10 +38,10 @@ function RateSettingsPanel({ privyId, onSaved }: { privyId?: string; onSaved: ()
   const save = async () => {
     if (!base || !spread) return
     setSaving(true)
-    const res = await fetch("/api/admin/rate", {
+    const res = await authFetch(getAccessToken, "/api/admin/rate", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actorPrivyId: privyId, base_ngn_per_usdc: Number(base), spread_percent: Number(spread) }),
+      body: JSON.stringify({ base_ngn_per_usdc: Number(base), spread_percent: Number(spread) }),
     })
     setSaving(false)
     if (res.ok) { toast.success("Rate updated"); onSaved() }
@@ -93,6 +96,7 @@ export default function AdminWalletRequests({ data, privyId, onRefresh }: {
   data: AdminData; privyId?: string; onRefresh: () => void
 }) {
   const { toast, confirm } = useToast()
+  const { getAccessToken } = usePrivy()
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
   const [page, setPage] = useState(0)
@@ -118,20 +122,20 @@ export default function AdminWalletRequests({ data, privyId, onRefresh }: {
   const confirm_ = async (id: string) => {
     const ok = await confirm({ message: "Confirm this bank transfer and credit USDC to user?", confirmLabel: "Confirm" })
     if (!ok) return
-    const res = await fetch("/api/wallet/fund-request", {
+    const res = await authFetch(getAccessToken, "/api/wallet/fund-request", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId: id, status: "Confirmed", actorPrivyId: privyId }),
+      body: JSON.stringify({ requestId: id, status: "Confirmed" }),
     })
     if (res.ok) { toast.success("Request confirmed"); onRefresh() }
     else toast.error("Failed to confirm request")
   }
 
   const reject = async (id: string) => {
-    const res = await fetch("/api/wallet/fund-request", {
+    const res = await authFetch(getAccessToken, "/api/wallet/fund-request", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId: id, status: "Rejected", actorPrivyId: privyId, adminNote: rejectNote[id] || "" }),
+      body: JSON.stringify({ requestId: id, status: "Rejected", adminNote: rejectNote[id] || "" }),
     })
     if (res.ok) { toast.success("Request rejected"); setRejectOpen(null); onRefresh() }
     else toast.error("Failed to reject request")
@@ -140,10 +144,10 @@ export default function AdminWalletRequests({ data, privyId, onRefresh }: {
   const expire = async (id: string) => {
     const ok = await confirm({ message: "Mark this request as expired?", confirmLabel: "Expire" })
     if (!ok) return
-    const res = await fetch("/api/wallet/fund-request", {
+    const res = await authFetch(getAccessToken, "/api/wallet/fund-request", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requestId: id, status: "Expired", actorPrivyId: privyId }),
+      body: JSON.stringify({ requestId: id, status: "Expired" }),
     })
     if (res.ok) { toast.success("Request expired"); onRefresh() }
     else toast.error("Failed to expire request")
