@@ -205,23 +205,25 @@ function ProductDetailPage() {
             </Card>
 
             {!isOwnProduct && (
-              <>
-                <Button
-                  onClick={handleAddToCart}
-                  size="lg"
-                  className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 mb-4 shadow-lg shadow-[#118C4C]/20"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  Add to Cart
-                </Button>
-                <WishlistButton
-                  productId={product.id}
-                  productName={product.productName}
-                  image={product.image}
-                  pricePerUnit={product.pricePerUnit}
-                  className="w-full mb-4"
-                />
-              </>
+              <Button
+                onClick={handleAddToCart}
+                size="lg"
+                className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 mb-4 shadow-lg shadow-[#118C4C]/20"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Add to Cart
+              </Button>
+            )}
+
+            {/* Always show wishlist button for non-own products */}
+            {!isOwnProduct && (
+              <WishlistButton
+                productId={product.id}
+                productName={product.productName}
+                image={product.image}
+                pricePerUnit={product.pricePerUnit}
+                className="w-full mb-4"
+              />
             )}
 
             {isOwnProduct && (
