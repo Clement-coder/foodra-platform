@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
+import { AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
 
 export async function GET(request: Request) {
   try {
@@ -62,12 +63,16 @@ export async function POST(request: Request) {
       )
     }
 
+    const auth = await requireAuthenticatedUser(request)
     const body = await request.json()
+    if (auth.user.role !== "farmer" && auth.user.role !== "admin") {
+      return NextResponse.json({ error: "Only farmers can list products" }, { status: 403 })
+    }
     
     const { data, error } = await supabaseAdmin
       .from('products')
       .insert({
-        farmer_id: body.farmerId,
+        farmer_id: auth.user.id,
         name: body.productName,
         category: body.category,
         quantity: body.quantity,
@@ -84,7 +89,7 @@ export async function POST(request: Request) {
 
     // Notify farmer of successful listing
     await createNotification({
-      userId: body.farmerId,
+      userId: auth.user.id,
       type: "system",
       title: "Product Listed Successfully ✅",
       message: `"${body.productName}" is now live on the marketplace.`,
@@ -93,6 +98,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data)
   } catch (error: any) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error('Error creating product:', error)
     const hint =
       error?.code === '42501'

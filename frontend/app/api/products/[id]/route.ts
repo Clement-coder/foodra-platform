@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
+import { AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
+import { notifyWishlistPriceDrop } from '@/lib/wishlistServer'
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -35,67 +37,84 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 // Farmer or admin: update product (toggle availability, edit fields)
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const supabaseAdmin = getSupabaseAdminClient()
-  if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  try {
+    const { id } = await params
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
 
-  const body = await request.json()
-  const { actorPrivyId, ...updates } = body
+    const auth = await requireAuthenticatedUser(request)
+    const body = await request.json()
+    const { actorPrivyId, ...updates } = body
+    void actorPrivyId
 
-  const { data: actor } = await supabaseAdmin.from('users').select('id, role').eq('privy_id', actorPrivyId).single()
-  if (!actor) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const { data: existingProduct } = await supabaseAdmin.from('products').select('farmer_id, price, name').eq('id', id).single()
+    if (!existingProduct) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
-  // Admin can update any product; farmer can only update their own
-  if (actor.role !== 'admin') {
-    const { data: product } = await supabaseAdmin.from('products').select('farmer_id').eq('id', id).single()
-    if (!product || product.farmer_id !== actor.id)
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (auth.user.role !== 'admin') {
+      if (existingProduct.farmer_id !== auth.user.id)
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    // Farmers cannot deactivate if there are locked escrow orders for this product
-    if ('is_available' in updates && !updates.is_available) {
-      const { data: activeItems } = await supabaseAdmin
-        .from('order_items')
-        .select('order_id, orders!inner(escrow_status, status)')
-        .eq('product_id', id)
-        .in('orders.escrow_status', ['locked'])
-      if (activeItems && activeItems.length > 0)
-        return NextResponse.json({ error: 'Cannot deactivate — this product has active escrow orders in progress.' }, { status: 409 })
+      if ('is_available' in updates && !updates.is_available) {
+        const { data: activeItems } = await supabaseAdmin
+          .from('order_items')
+          .select('order_id, orders!inner(escrow_status, status)')
+          .eq('product_id', id)
+          .in('orders.escrow_status', ['locked'])
+        if (activeItems && activeItems.length > 0)
+          return NextResponse.json({ error: 'Cannot deactivate — this product has active escrow orders in progress.' }, { status: 409 })
+      }
     }
-  }
 
-  const { error } = await supabaseAdmin.from('products').update(updates).eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
+    const { error } = await supabaseAdmin.from('products').update(updates).eq('id', id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    const nextPrice = typeof updates.price === "number" ? updates.price : null
+    if (nextPrice !== null && nextPrice < Number(existingProduct.price ?? nextPrice)) {
+      await notifyWishlistPriceDrop({
+        productId: id,
+        productName: String(updates.name || existingProduct.name || "a product"),
+        currentPrice: nextPrice,
+      })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
+  }
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const supabaseAdmin = getSupabaseAdminClient()
-  if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  try {
+    const { id } = await params
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
 
-  const { searchParams } = new URL(request.url)
-  const actorPrivyId = searchParams.get('actorPrivyId')
+    const auth = await requireAuthenticatedUser(request)
 
-  const { data: actor } = await supabaseAdmin.from('users').select('id, role').eq('privy_id', actorPrivyId || '').single()
-  if (!actor) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (auth.user.role !== 'admin') {
+      const { data: product } = await supabaseAdmin.from('products').select('farmer_id').eq('id', id).single()
+      if (!product || product.farmer_id !== auth.user.id)
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  // Admin can delete any; farmer can only delete their own
-  if (actor.role !== 'admin') {
-    const { data: product } = await supabaseAdmin.from('products').select('farmer_id').eq('id', id).single()
-    if (!product || product.farmer_id !== actor.id)
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      const { data: activeItems } = await supabaseAdmin
+        .from('order_items')
+        .select('order_id, orders!inner(status, escrow_status)')
+        .eq('product_id', id)
+        .or('orders.status.in.(Pending,Processing,Shipped),orders.escrow_status.in.(locked)')
+      if (activeItems && activeItems.length > 0)
+        return NextResponse.json({ error: 'Cannot delete — this product has active orders that must be fulfilled first.' }, { status: 409 })
+    }
 
-    // Farmers cannot delete if there are any active orders (Pending/Processing/Shipped or locked escrow)
-    const { data: activeItems } = await supabaseAdmin
-      .from('order_items')
-      .select('order_id, orders!inner(status, escrow_status)')
-      .eq('product_id', id)
-      .or('orders.status.in.(Pending,Processing,Shipped),orders.escrow_status.in.(locked)')
-    if (activeItems && activeItems.length > 0)
-      return NextResponse.json({ error: 'Cannot delete — this product has active orders that must be fulfilled first.' }, { status: 409 })
+    const { error } = await supabaseAdmin.from('products').delete().eq('id', id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
+    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }
-
-  const { error } = await supabaseAdmin.from('products').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
 }
