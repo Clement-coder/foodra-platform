@@ -26,7 +26,10 @@ export async function GET(request: Request) {
     .select("*, users!products_farmer_id_fkey(id, name, avatar_url)")
     .eq("is_available", true)
 
-  if (q) query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%,category.ilike.%${q}%`)
+  if (q) {
+    // Use full-text search index for better performance
+    query = query.textSearch("name,description,category", q, { type: "websearch" })
+  }
   if (category) query = query.eq("category", category)
   if (minPrice) query = query.gte("price", Number(minPrice))
   if (maxPrice) query = query.lte("price", Number(maxPrice))
