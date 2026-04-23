@@ -48,10 +48,13 @@ function ProductDetailPage() {
         const p = await res.json()
         setProduct(p)
         if (p) {
+          console.log("Product loaded:", p)
           // Track product view
           fetch(`/api/products/${id}/views`, { method: "POST" }).catch(() => {})
           // Fetch related products
           fetch(`/api/products/${id}/related`).then(r => r.json()).then(setRelated).catch(() => {})
+        } else {
+          console.log("No product data received")
         }
       } catch (err) {
         setError(`Error loading product: ${err}`)
