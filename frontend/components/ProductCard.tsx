@@ -139,10 +139,11 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
         text={`Check out this product: ${product.productName}`}
         url={typeof window !== "undefined" ? `${window.location.origin}/marketplace/${product.id}` : ""}
       />
-      <Link href={`/marketplace/${product.id}`}>
-      <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
-        <Card className="overflow-hidden flex flex-col border-[#118C4C]/20 hover:border-[#118C4C]/40 hover:shadow-lg hover:shadow-[#118C4C]/10 transition-all cursor-pointer h-80">
-          <div className="relative h-36 w-full bg-muted flex-shrink-0">
+      <div className="relative">
+        <Link href={`/marketplace/${product.id}`}>
+        <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+          <Card className="overflow-hidden flex flex-col border-[#118C4C]/20 hover:border-[#118C4C]/40 hover:shadow-lg hover:shadow-[#118C4C]/10 transition-all cursor-pointer h-80 lg:h-96">
+          <div className="relative h-36 lg:h-48 w-full bg-muted flex-shrink-0">
             {product.image ? (
               <Image
                 src={product.image}
@@ -249,14 +250,26 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                   productName={product.productName}
                   image={product.image}
                   pricePerUnit={product.pricePerUnit}
-                  className="shrink-0"
+                  className="shrink-0 lg:hidden"
                 />
               </>
             )}
           </CardFooter>
         </Card>
-      </motion.div>
-      </Link>
+        </motion.div>
+        </Link>
+        
+        {/* WishlistButton outside card for large screens */}
+        <div className="hidden lg:block absolute top-2 right-2 z-10">
+          <WishlistButton
+            productId={product.id}
+            productName={product.productName}
+            image={product.image}
+            pricePerUnit={product.pricePerUnit}
+            className="bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white"
+          />
+        </div>
+      </div>
     </>
   );
 }
