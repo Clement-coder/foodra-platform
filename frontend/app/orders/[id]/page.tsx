@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { usePrivy } from "@privy-io/react-auth";
 import {
   ArrowLeft, MapPin, Phone, User, Mail, Package,
   Calendar, DollarSign, ExternalLink, Loader2, CheckCircle, AlertTriangle, Download,
@@ -19,19 +20,21 @@ import { useUser } from "@/lib/useUser";
 import { useToast } from "@/lib/toast";
 import { downloadReceiptImage, maskSensitive } from "@/lib/receipt";
 import type { Order } from "@/lib/types";
+import { authFetch } from "@/lib/authFetch";
 
 function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { toast, confirm } = useToast();
   const { currentUser } = useUser();
+  const { getAccessToken } = usePrivy();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const { confirmDelivery, raiseDispute, loading: escrowLoading, error: escrowError } = useEscrow();
 
   const fetchOrder = () =>
-    fetch(`/api/orders/${id}`).then((r) => r.json()).then(setOrder).finally(() => setLoading(false));
+    authFetch(getAccessToken, `/api/orders/${id}`).then((r) => r.json()).then(setOrder).finally(() => setLoading(false));
 
   useEffect(() => { fetchOrder(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -45,7 +48,7 @@ function OrderDetailPage() {
     if (!ok) return;
     const success = await confirmDelivery(escrowOrderId);
     if (success) {
-      await fetch(`/api/orders/${order.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "released" }) });
+      await authFetch(getAccessToken, `/api/orders/${order.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "released" }) });
       toast.success("Delivery confirmed! Payment released to farmer.");
       fetchOrder();
     } else {
@@ -57,8 +60,8 @@ function OrderDetailPage() {
     if (!order || !escrowOrderId) return;
     const success = await raiseDispute(escrowOrderId);
     if (success) {
-      await fetch(`/api/orders/${order.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "disputed" }) });
-      await fetch(`/api/orders/${order.id}/dispute`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason, details, userId: currentUser?.id }) }).catch(() => {});
+      await authFetch(getAccessToken, `/api/orders/${order.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "disputed" }) });
+      await authFetch(getAccessToken, `/api/orders/${order.id}/dispute`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason, details }) }).catch(() => {});
       toast.success("Dispute raised. Our team will review within 3–5 business days.");
       setDisputeOpen(false);
       fetchOrder();
