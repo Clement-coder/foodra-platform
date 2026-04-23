@@ -8,6 +8,7 @@ export interface WishlistItem {
   productName: string
   image: string
   priceAtAdd: number
+  currentPrice?: number
   alertPrice: number | null
   addedAt: string
 }
