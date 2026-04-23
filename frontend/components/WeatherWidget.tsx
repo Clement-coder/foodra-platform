@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 import { Loader2, MapPin, Wind, Droplets, Sun, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
+import { authFetch } from "@/lib/authFetch";
 
 interface DayForecast {
   date: string;
@@ -59,6 +61,7 @@ interface WeatherWidgetProps {
 }
 
 export function WeatherWidget({ userId }: WeatherWidgetProps) {
+  const { getAccessToken } = usePrivy();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -136,7 +139,7 @@ export function WeatherWidget({ userId }: WeatherWidgetProps) {
             const lastNotified = sessionStorage.getItem(EXTREME_NOTIF_KEY);
             if (lastNotified !== label) {
               sessionStorage.setItem(EXTREME_NOTIF_KEY, label);
-              fireExtremeAlert(label, icon, city, userId);
+              fireExtremeAlert(getAccessToken, label, icon, city, userId);
             }
           }
         } catch {
@@ -249,7 +252,7 @@ export function WeatherWidget({ userId }: WeatherWidgetProps) {
 }
 
 // Fire browser notification + store in notification bar via API
-async function fireExtremeAlert(label: string, icon: string, city: string, userId?: string) {
+async function fireExtremeAlert(getAccessToken: (() => Promise<string | null>) | undefined, label: string, icon: string, city: string, userId?: string) {
   const title = `${icon} Weather Alert: ${label}`;
   const body = `Extreme weather (${label}) detected near ${city}. Take precautions.`;
 
@@ -271,7 +274,7 @@ async function fireExtremeAlert(label: string, icon: string, city: string, userI
   // Store in notification bar for logged-in user
   try {
     if (!userId) return;
-    await fetch("/api/notifications", {
+    await authFetch(getAccessToken, "/api/notifications", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
