@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
+import { AuthError, verifyPrivyToken } from "@/lib/serverAuth"
 
 type SyncBody = {
   privyId: string
@@ -10,11 +11,11 @@ type SyncBody = {
 }
 
 type UpdateBody = {
-  privyId: string
   phone?: string
   location?: string
   role?: "farmer" | "buyer" | "admin"
   avatar_url?: string
+  terms_accepted_at?: string | null
 }
 
 const mapUser = (u: any) => ({
@@ -27,6 +28,7 @@ const mapUser = (u: any) => ({
   phone: u.phone || "",
   location: u.location || undefined,
   role: u.role || "buyer",
+  isVerified: !!u.is_verified,
   termsAcceptedAt: u.terms_accepted_at || null,
 })
 
@@ -61,15 +63,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Supabase service role key is not configured" }, { status: 500 })
     }
 
+    const claims = await verifyPrivyToken(request)
     const body = (await request.json()) as SyncBody
-    if (!body?.privyId) {
-      return NextResponse.json({ error: "privyId is required" }, { status: 400 })
-    }
 
     const { data: existingUser } = await supabaseAdmin
       .from("users")
       .select("*")
-      .eq("privy_id", body.privyId)
+      .eq("privy_id", claims.userId)
       .maybeSingle()
 
     const payload: Record<string, any> = existingUser
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
           ...(existingUser.avatar_url ? {} : { avatar_url: body.avatar || null }),
         }
       : {
-          privy_id: body.privyId,
+          privy_id: claims.userId,
           name: body.name || "User",
           email: body.email || null,
           wallet_address: body.wallet || null,
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
 
     const runWrite = async () => {
       const query = existingUser
-        ? supabaseAdmin.from("users").update(payload).eq("privy_id", body.privyId)
+        ? supabaseAdmin.from("users").update(payload).eq("privy_id", claims.userId)
         : supabaseAdmin.from("users").insert(payload)
       return query.select("*").single()
     }
@@ -123,16 +123,23 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Supabase service role key is not configured" }, { status: 500 })
     }
 
+    const { user } = await (async () => {
+      const claims = await verifyPrivyToken(request)
+      const { data } = await supabaseAdmin
+        .from("users")
+        .select("id, privy_id, role")
+        .eq("privy_id", claims.userId)
+        .single()
+      if (!data) throw new AuthError(403, "User account not found")
+      return { user: data }
+    })()
     const body = (await request.json()) as UpdateBody
-    if (!body?.privyId) {
-      return NextResponse.json({ error: "privyId is required" }, { status: 400 })
-    }
 
     const updatePayload: Record<string, string | null> = {}
     if ("phone" in body) updatePayload.phone = body.phone || null
     if ("avatar_url" in body) updatePayload.avatar_url = body.avatar_url || null
     if ("location" in body) updatePayload.location = body.location || null
-    if ("role" in body && body.role) updatePayload.role = body.role
+    if ("role" in body && body.role && user.role === "admin") updatePayload.role = body.role
     if ("terms_accepted_at" in body) updatePayload.terms_accepted_at = typeof body.terms_accepted_at === "string" ? body.terms_accepted_at : null
 
     if (Object.keys(updatePayload).length === 0) {
@@ -143,7 +150,7 @@ export async function PATCH(request: Request) {
       supabaseAdmin
         .from("users")
         .update(updatePayload)
-        .eq("privy_id", body.privyId)
+        .eq("privy_id", user.privy_id)
         .select("*")
         .single()
 
@@ -153,7 +160,7 @@ export async function PATCH(request: Request) {
         const { data: existing, error: fetchError } = await supabaseAdmin
           .from("users")
           .select("*")
-          .eq("privy_id", body.privyId)
+          .eq("privy_id", user.privy_id)
           .single()
         if (fetchError) throw fetchError
         return NextResponse.json(mapUser(existing))

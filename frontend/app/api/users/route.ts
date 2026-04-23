@@ -20,6 +20,7 @@ export async function GET() {
       avatar: u.avatar_url,
       wallet: u.wallet_address,
       role: u.role,
+      isVerified: !!u.is_verified,
       createdAt: u.created_at,
     })) || []
 
