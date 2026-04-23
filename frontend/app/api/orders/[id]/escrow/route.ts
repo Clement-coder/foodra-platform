@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notify";
+import { AuthError, requireAuthenticatedUser } from "@/lib/serverAuth";
 
 export async function PATCH(
   request: Request,
@@ -10,6 +11,17 @@ export async function PATCH(
   try {
     const supabase = getSupabaseAdminClient();
     if (!supabase) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
+    const actor = await requireAuthenticatedUser(request);
+
+    const { data: order } = await supabase
+      .from("orders")
+      .select("id, buyer_id")
+      .eq("id", id)
+      .single();
+    if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    if (actor.role !== "admin" && order.buyer_id !== actor.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const body = await request.json();
     const { escrowTxHash, escrowStatus, usdcAmount, items, deliveryFullName, deliveryPhone, deliveryAddress, deliveryStreet2, deliveryLandmark, deliveryCity, deliveryState, deliveryCountry } = body;
@@ -71,6 +83,9 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Error updating escrow:", error);
     return NextResponse.json({ error: error?.message || "Failed to update escrow" }, { status: 500 });
   }
