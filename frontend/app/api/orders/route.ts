@@ -70,6 +70,12 @@ export async function GET(request: Request) {
       deliveryCity: o.delivery_city || null,
       deliveryState: o.delivery_state || null,
       deliveryCountry: o.delivery_country || null,
+      estimatedDeliveryDate: o.estimated_delivery_date || null,
+      trackingNotes: o.tracking_notes || null,
+      shippedAt: o.shipped_at || null,
+      deliveredAt: o.delivered_at || null,
+      deliveryState: o.delivery_state || null,
+      deliveryCountry: o.delivery_country || null,
     })) || []
 
     return NextResponse.json(formatted)
