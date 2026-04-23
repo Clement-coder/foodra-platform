@@ -28,6 +28,8 @@ import { Modal } from "@/components/Modal"
 import { FormInput } from "@/components/FormInput"
 import { FormSelect } from "@/components/FormSelector"
 import { useToast } from "@/lib/toast"
+import { t } from "@/lib/i18n"
+import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import { profileUpdateSchema, type ProfileUpdateFormData } from "@/lib/schemas"
 import { usePrivy } from "@privy-io/react-auth"
@@ -379,34 +381,40 @@ function ProfilePage() {
                 </div>
 
                 <div className="flex-1 w-full">
-                  <div className="flex items-center gap-2 mb-3">
-                    <h1 className="text-lg sm:text-xl font-bold truncate">{displayName}</h1>
-                    {user.isVerified ? (
-                      <span className="inline-flex items-center rounded-full bg-[#118C4C]/10 text-[#118C4C] p-1 flex-shrink-0" title="Verified farmer">
-                        <BadgeCheck className="h-4 w-4" />
-                      </span>
-                    ) : null}
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg sm:text-xl font-bold truncate">{displayName}</h1>
+                      {user.isVerified ? (
+                        <span className="inline-flex items-center rounded-full bg-[#118C4C]/10 text-[#118C4C] p-1 flex-shrink-0" title="Verified farmer">
+                          <BadgeCheck className="h-4 w-4" />
+                        </span>
+                      ) : null}
+                    </div>
+                    {/* Language switcher for small screens */}
+                    <div className="sm:hidden">
+                      <LanguageSwitcher compact />
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">
-                      <p className="text-xs font-semibold text-sky-700 mb-1">Email</p>
+                      <p className="text-xs font-semibold text-sky-700 mb-1">{t("profile.email")}</p>
                       <p className="text-sm font-medium text-foreground break-all">{userEmail}</p>
                     </div>
                     <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">
-                      <p className="text-xs font-semibold text-emerald-700 mb-1">Location</p>
+                      <p className="text-xs font-semibold text-emerald-700 mb-1">{t("profile.location")}</p>
                       <p className="text-sm font-medium text-foreground">{user.location || "—"}</p>
                     </div>
                     <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">
                       <p className="text-xs font-semibold text-violet-700 mb-1 flex items-center gap-1">
                         <BadgeCheck className="h-3.5 w-3.5" />
-                        Account Type
+                        {t("profile.accountType")}
                       </p>
                       <p className="text-sm font-medium text-foreground">
-                        {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
+                        {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : t("profile.user")}
                       </p>
                     </div>
                     <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">
-                      <p className="text-xs font-semibold text-rose-700 mb-1">Sign Up Method</p>
+                      <p className="text-xs font-semibold text-rose-700 mb-1">{t("profile.signUpMethod")}</p>
                       <p className="text-sm font-medium text-foreground flex items-center gap-2">
                         {getSignUpMethod() === "Google" && (
                           <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
