@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
+import { AuthError, requireAuthenticatedUser } from "@/lib/serverAuth";
 
 export async function GET(request: Request) {
-  const supabase = getSupabaseAdminClient();
-  if (!supabase) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
+  try {
+    const auth = await requireAuthenticatedUser(request)
+    const supabase = getSupabaseAdminClient();
+    if (!supabase) return NextResponse.json({ error: "DB unavailable" }, { status: 500 });
 
-  const { searchParams } = new URL(request.url);
-  const farmerId = searchParams.get("farmerId");
-  if (!farmerId) return NextResponse.json({ error: "farmerId required" }, { status: 400 });
+    const { searchParams } = new URL(request.url);
+    const farmerId = searchParams.get("farmerId") || auth.user.id;
+    if (auth.user.role !== "admin" && farmerId !== auth.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
   const { data, error } = await supabase
     .from("order_items")
@@ -27,7 +32,7 @@ export async function GET(request: Request) {
     .eq("products.farmer_id", farmerId)
     .order("orders(created_at)", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const ordersMap = new Map<string, any>();
   for (const item of data ?? []) {
@@ -81,5 +86,11 @@ export async function GET(request: Request) {
     });
   }
 
-  return NextResponse.json(Array.from(ordersMap.values()));
+    return NextResponse.json(Array.from(ordersMap.values()));
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    return NextResponse.json({ error: "Failed to fetch farmer orders" }, { status: 500 });
+  }
 }
