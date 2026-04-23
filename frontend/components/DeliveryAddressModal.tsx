@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePrivy } from "@privy-io/react-auth";
 import { MapPin, Phone, User, Plus, CheckCircle2, Loader2, Globe } from "lucide-react";
 import { Modal } from "@/components/Modal";
 import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/CustomSelect";
 import type { DeliveryAddress } from "@/lib/types";
+import { authFetch } from "@/lib/authFetch";
 
 interface Country { name: string; code: string; }
 interface Props {
@@ -20,6 +22,7 @@ interface Props {
 const EMPTY_FORM = { fullName: "", phone: "", addressLine: "", streetLine2: "", landmark: "", city: "", state: "", country: "Nigeria", countryCode: "NG", isDefault: false };
 
 export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfirm }: Props) {
+  const { getAccessToken } = usePrivy();
   const [saved, setSaved] = useState<DeliveryAddress[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -68,7 +71,7 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
   useEffect(() => {
     if (!isOpen) return;
     setLoadingAddresses(true);
-    fetch(`/api/delivery-addresses?userId=${userId}`)
+    authFetch(getAccessToken, `/api/delivery-addresses?userId=${userId}`)
       .then((r) => r.json())
       .then((data: DeliveryAddress[]) => {
         setSaved(data);
@@ -105,10 +108,10 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
   const handleSaveNew = async () => {
     if (!validate()) return;
     setSaving(true);
-    const res = await fetch("/api/delivery-addresses", {
+    const res = await authFetch(getAccessToken, "/api/delivery-addresses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, ...form }),
+      body: JSON.stringify(form),
     });
     const newAddr: DeliveryAddress = await res.json();
     setSaved((prev) => [newAddr, ...prev]);

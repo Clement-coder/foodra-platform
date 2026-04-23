@@ -17,11 +17,12 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useUser } from "@/lib/useUser";
 import { calculateProfileCompletion } from "@/lib/profileUtils";
 import type { CartItem, DeliveryAddress } from "@/lib/types";
+import { authFetch } from "@/lib/authFetch";
 
 function ShopPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, totalAmount } = useCart();
   const { createOrder } = useOrders();
-  const { authenticated } = usePrivy();
+  const { authenticated, getAccessToken } = usePrivy();
   const { currentUser } = useUser();
   const router = useRouter();
   const { toast, confirm } = useToast();
@@ -34,7 +35,7 @@ function ShopPage() {
 
   const deletePendingOrder = async (orderId: string) => {
     if (!currentUser) return;
-    await fetch(`/api/orders?orderId=${orderId}&userId=${currentUser.id}`, { method: "DELETE" });
+    await authFetch(getAccessToken, `/api/orders?orderId=${orderId}&userId=${currentUser.id}`, { method: "DELETE" });
   };
 
   const handleProceedToCheckout = async () => {
@@ -85,7 +86,7 @@ function ShopPage() {
 
   const handleEscrowSuccess = async (results: EscrowResult[]) => {
     if (!pendingOrderId) return;
-    await fetch(`/api/orders/${pendingOrderId}/escrow`, {
+    await authFetch(getAccessToken, `/api/orders/${pendingOrderId}/escrow`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
