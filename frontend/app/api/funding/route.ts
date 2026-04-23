@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
 import { rateLimit, getClientIp } from '@/lib/rateLimit'
+import { assertSelfOrAdmin, AuthError, requireAdminUser, requireAuthenticatedUser } from '@/lib/serverAuth'
 
 export async function GET(request: Request) {
   try {
@@ -13,8 +14,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to initialize Supabase admin client' }, { status: 500 })
     }
 
+    const auth = await requireAuthenticatedUser(request)
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
+    if (userId) {
+      assertSelfOrAdmin(auth.user, userId)
+    } else if (auth.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     let query = supabaseAdmin
       .from('funding_applications')
@@ -46,6 +53,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(formatted)
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error('Error fetching applications:', error)
     return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 })
   }
@@ -68,12 +78,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to initialize Supabase admin client' }, { status: 500 })
     }
 
+    const auth = await requireAuthenticatedUser(request)
     const body = await request.json()
     
     const { data, error } = await supabaseAdmin
       .from('funding_applications')
       .insert({
-        user_id: body.userId,
+        user_id: auth.user.id,
         full_name: body.fullName,
         phone_number: body.phoneNumber,
         location: body.location,
@@ -89,9 +100,9 @@ export async function POST(request: Request) {
     if (error) throw error
 
     // Notify applicant of submission
-    await createNotification({
-      userId: body.userId,
-      type: "funding",
+      await createNotification({
+        userId: auth.user.id,
+        type: "funding",
       title: "Funding Application Submitted",
       message: `Your application for ₦${Number(body.amountRequested).toLocaleString()} has been received and is under review. You'll be notified of the decision within 5–7 business days.`,
       link: "/funding",
@@ -99,6 +110,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data)
   } catch (error: any) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error('Error creating application:', error)
     return NextResponse.json(
       { error: error?.message || 'Failed to create application', code: error?.code },
@@ -117,24 +131,15 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Failed to initialize Supabase admin client' }, { status: 500 })
     }
 
+    await requireAdminUser(request)
     const body = await request.json()
-    const { applicationId, status, actorPrivyId } = body as {
+    const { applicationId, status } = body as {
       applicationId?: string
       status?: "Approved" | "Rejected"
-      actorPrivyId?: string
     }
 
-    if (!applicationId || !status || !actorPrivyId) {
-      return NextResponse.json({ error: 'applicationId, status and actorPrivyId are required' }, { status: 400 })
-    }
-
-    const { data: actor, error: actorError } = await supabaseAdmin
-      .from('users')
-      .select('role')
-      .eq('privy_id', actorPrivyId)
-      .single()
-    if (actorError || !actor || actor.role !== 'admin') {
-      return NextResponse.json({ error: 'Only admins can update funding status' }, { status: 403 })
+    if (!applicationId || !status) {
+      return NextResponse.json({ error: 'applicationId and status are required' }, { status: 400 })
     }
 
     const { data, error } = await supabaseAdmin
@@ -161,6 +166,9 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json(data)
   } catch (error: any) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error('Error updating application status:', error)
     return NextResponse.json(
       { error: error?.message || 'Failed to update application status', code: error?.code },
