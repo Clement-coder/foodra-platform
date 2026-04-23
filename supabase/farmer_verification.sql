@@ -1,7 +1,7 @@
 -- Farmer verification requests table
 CREATE TABLE IF NOT EXISTS verification_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   id_type text NOT NULL,           -- NIN, BVN, Passport, Driver's License
   id_number text NOT NULL,
   farm_address text NOT NULL,

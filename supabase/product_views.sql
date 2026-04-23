@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS product_views (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-  user_id text REFERENCES users(id) ON DELETE SET NULL,
+  user_id uuid REFERENCES users(id) ON DELETE SET NULL,
   viewed_at timestamptz DEFAULT now()
 );
 
