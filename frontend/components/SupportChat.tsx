@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { MessageCircle, X, Send, Paperclip, Loader2, Bot } from "lucide-react"
+import { usePrivy } from "@privy-io/react-auth"
 import { useUser } from "@/lib/useUser"
+import { authFetch } from "@/lib/authFetch"
 
 interface SupportMessage {
   id: string
@@ -16,6 +18,7 @@ interface SupportMessage {
 const BTN_SIZE = 56
 
 export function SupportChat() {
+  const { getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<SupportMessage[]>([])
@@ -65,7 +68,7 @@ export function SupportChat() {
 
   const fetchMessages = useCallback(async () => {
     if (!currentUser?.id) return
-    const res = await fetch(`/api/support?userId=${currentUser.id}`)
+    const res = await authFetch(getAccessToken, `/api/support?userId=${currentUser.id}`)
     if (res.ok) setMessages(await res.json())
   }, [currentUser?.id])
 
@@ -95,7 +98,7 @@ export function SupportChat() {
     setMessages(prev => [...prev, optimistic])
     const sentText = text
     setText("")
-    const res = await fetch("/api/support", {
+    const res = await authFetch(getAccessToken, "/api/support", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId: currentUser.id, message: sentText || "📎 Image", imageBase64, isAdminReply: false }),

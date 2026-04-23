@@ -16,6 +16,7 @@ import { WishlistButton } from "@/components/WishlistButton";
 import { formatTimeAgo } from "@/lib/timeUtils";
 import { useToast } from "@/lib/toast";
 import { usePrivy } from "@privy-io/react-auth";
+import { authFetch } from "@/lib/authFetch";
 
 interface ProductCardProps {
   product: Product;
@@ -25,7 +26,7 @@ interface ProductCardProps {
 export function ProductCard({ product, onRefresh }: ProductCardProps) {
   const { addToCart, cart } = useCart();
   const { currentUser } = useUser();
-  const { user: privyUser } = usePrivy();
+  const { user: privyUser, getAccessToken } = usePrivy();
   const { toast, confirm } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -63,10 +64,10 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
     const ok = await confirm({ message: `${isAvailable ? "Deactivate" : "Activate"} this listing?`, confirmLabel: isAvailable ? "Deactivate" : "Activate", danger: isAvailable })
     if (!ok) return
     setActionLoading(true)
-    const res = await fetch(`/api/products/${product.id}`, {
+    const res = await authFetch(getAccessToken, `/api/products/${product.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actorPrivyId: privyUser?.id, is_available: !isAvailable }),
+      body: JSON.stringify({ is_available: !isAvailable }),
     })
     setActionLoading(false)
     if (res.ok) { setIsAvailable(v => !v); toast.success(isAvailable ? "Listing deactivated" : "Listing activated"); onRefresh?.() }
@@ -77,7 +78,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
     const ok = await confirm({ title: "Delete Listing", message: "Permanently delete this product? This cannot be undone.", confirmLabel: "Delete", danger: true })
     if (!ok) return
     setActionLoading(true)
-    const res = await fetch(`/api/products/${product.id}?actorPrivyId=${privyUser?.id}`, { method: "DELETE" })
+    const res = await authFetch(getAccessToken, `/api/products/${product.id}`, { method: "DELETE" })
     setActionLoading(false)
     if (res.ok) { toast.success("Product deleted"); onRefresh?.() }
     else { const e = await res.json().catch(() => ({})); toast.error(e.error || "Failed to delete product.") }
@@ -85,10 +86,10 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
 
   const handleRestock = async () => {
     setActionLoading(true)
-    const res = await fetch(`/api/products/${product.id}`, {
+    const res = await authFetch(getAccessToken, `/api/products/${product.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actorPrivyId: privyUser?.id, quantity: restockQty, price: restockPrice, is_available: restockQty > 0 }),
+      body: JSON.stringify({ quantity: restockQty, price: restockPrice, is_available: restockQty > 0 }),
     })
     setActionLoading(false)
     if (res.ok) {

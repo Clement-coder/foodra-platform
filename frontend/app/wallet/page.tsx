@@ -15,6 +15,7 @@ import { baseSepolia } from "viem/chains"
 import type { Chain } from "viem"
 import { useUser } from "@/lib/useUser"
 import { supabase } from "@/lib/supabase"
+import { authFetch } from "@/lib/authFetch"
 
 interface Transaction {
   hash: string;
@@ -81,7 +82,7 @@ function useCountdown(expiresAt: string | null) {
 }
 
 function WalletPage() {
-  const { user } = usePrivy()
+  const { user, getAccessToken } = usePrivy()
   const { sendTransaction } = useSendTransaction()
   const { fundWallet } = useFundWallet()
   const { currentUser } = useUser()
@@ -187,7 +188,7 @@ function WalletPage() {
 
   const fetchRateSettings = async () => {
     try {
-      const res = await fetch("/api/admin/rate")
+      const res = await authFetch(getAccessToken, "/api/admin/rate")
       if (res.ok) {
         const data = await res.json()
         if (data?.base_ngn_per_usdc) setRateSettings(data)
@@ -205,7 +206,7 @@ function WalletPage() {
     // Auto-expire stale requests first
     await fetch("/api/wallet/expire-requests", { method: "POST" }).catch(() => {})
     try {
-      const res = await fetch(`/api/wallet/fund-request?userId=${currentUser.id}`)
+      const res = await authFetch(getAccessToken, `/api/wallet/fund-request?userId=${currentUser.id}`)
       if (res.ok) {
         const list: FundRequest[] = await res.json()
         setFundRequests(list)
@@ -363,10 +364,10 @@ function WalletPage() {
     if (!currentUser?.id || !ngnAmount || parseFloat(ngnAmount) <= 0) return
     setIsSubmittingFund(true)
     try {
-      const res = await fetch("/api/wallet/fund-request", {
+      const res = await authFetch(getAccessToken, "/api/wallet/fund-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser.id, ngnAmount: parseFloat(ngnAmount) }),
+        body: JSON.stringify({ ngnAmount: parseFloat(ngnAmount) }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))

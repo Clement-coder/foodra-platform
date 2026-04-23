@@ -17,6 +17,7 @@ import withAuth from "@/components/withAuth";
 import { useUser } from "@/lib/useUser";
 import { usePrivy } from "@privy-io/react-auth";
 import { useToast } from "@/lib/toast";
+import { authFetch } from "@/lib/authFetch";
 
 interface SaleOrder {
   id: string;
@@ -88,7 +89,7 @@ function ShareButton({ sale }: { sale: SaleOrder }) {
 
 function SalesPage() {
   const { currentUser } = useUser();
-  const { user: privyUser } = usePrivy();
+  const { user: privyUser, getAccessToken } = usePrivy();
   const router = useRouter();
   const { toast, confirm } = useToast();
   const [sales, setSales] = useState<SaleOrder[]>([]);
@@ -97,7 +98,7 @@ function SalesPage() {
 
   const fetchSales = () => {
     if (!currentUser) return;
-    fetch(`/api/orders/farmer?farmerId=${currentUser.id}`)
+    authFetch(getAccessToken, `/api/orders/farmer?farmerId=${currentUser.id}`)
       .then((r) => r.json())
       .then((data) => setSales(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false));
@@ -109,10 +110,10 @@ function SalesPage() {
     const ok = await confirm({ title: "Mark as Shipped", message: "Confirm you have dispatched this order?", confirmLabel: "Mark Shipped" });
     if (!ok) return;
     setShippingId(orderId);
-    const res = await fetch(`/api/orders/${orderId}`, {
+    const res = await authFetch(getAccessToken, `/api/orders/${orderId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actorPrivyId: privyUser?.id, status: "Shipped" }),
+      body: JSON.stringify({ status: "Shipped" }),
     });
     setShippingId(null);
     if (res.ok) {
