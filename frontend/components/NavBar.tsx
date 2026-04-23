@@ -14,6 +14,7 @@ import { useCart } from "@/lib/useCart";
 import { useUser } from "@/lib/useUser";
 import { useNotifications } from "@/lib/useNotifications";
 import { NotificationSidebar } from "./NotificationSidebar";
+import { t } from "@/lib/i18n";
 import type { Product, User } from "@/lib/types";
 
 type SearchFilter = "all" | "products" | "users";
@@ -234,7 +235,7 @@ export function NavBar() {
             {authenticated && (
               <a href="/wallet" className="p-2 rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5">
                 <Wallet className="h-5 w-5" />
-                <span className="hidden md:inline text-sm font-medium">Wallet</span>
+                <span className="hidden md:inline text-sm font-medium">{t("nav.wallet")}</span>
               </a>
             )}
 
