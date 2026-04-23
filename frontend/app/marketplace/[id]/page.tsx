@@ -42,6 +42,9 @@ function ProductDetailPage() {
         const p = res.ok ? await res.json() : null
         setProduct(p)
         if (p) {
+          // Track product view
+          fetch(`/api/products/${id}/views`, { method: "POST" }).catch(() => {})
+          // Fetch related products
           fetch(`/api/products/${id}/related`).then(r => r.json()).then(setRelated).catch(() => {})
         }
       } catch {
