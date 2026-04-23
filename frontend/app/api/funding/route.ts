@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
+import { computeCreditScore } from '@/lib/creditScore'
 import { rateLimit, getClientIp } from '@/lib/rateLimit'
 import { assertSelfOrAdmin, AuthError, requireAdminUser, requireAuthenticatedUser } from '@/lib/serverAuth'
 
@@ -48,6 +49,10 @@ export async function GET(request: Request) {
       amountRequested: a.amount_requested,
       expectedOutcome: a.expected_outcome,
       status: a.status,
+      creditScore: a.credit_score,
+      creditTier: a.credit_tier,
+      creditRecommendation: a.credit_recommendation,
+      creditScoredAt: a.credit_scored_at,
       submittedAt: a.created_at,
     })) || []
 
@@ -98,6 +103,26 @@ export async function POST(request: Request) {
       .single()
 
     if (error) throw error
+
+    // Compute credit score
+    const creditResult = computeCreditScore({
+      farmSize: body.farmSize,
+      yearsOfExperience: body.yearsOfExperience,
+      amountRequested: body.amountRequested,
+      farmType: body.farmType,
+      location: body.location,
+    })
+
+    // Update application with credit score
+    await supabaseAdmin
+      .from('funding_applications')
+      .update({
+        credit_score: creditResult.score,
+        credit_tier: creditResult.tier,
+        credit_recommendation: creditResult.recommendation,
+        credit_scored_at: new Date().toISOString(),
+      })
+      .eq('id', data.id)
 
     // Notify applicant of submission
       await createNotification({
