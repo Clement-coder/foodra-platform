@@ -6,6 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, Calendar, MapPin, Users, Video, MapPinned, Clock, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
+import { usePrivy } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/Skeleton"
@@ -14,11 +15,13 @@ import withAuth from "../../../components/withAuth"
 import { useUser } from "@/lib/useUser"
 import { format } from "date-fns"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 function TrainingDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const { toast } = useToast()
   const { currentUser } = useUser()
+  const { getAccessToken } = usePrivy()
   const [training, setTraining] = useState<Training | null>(null)
   const [loading, setLoading] = useState(true)
   const [isEnrolled, setIsEnrolled] = useState(false)
@@ -34,7 +37,7 @@ function TrainingDetailPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     if (!currentUser || !params.id) return
-    fetch(`/api/trainings/enroll?userId=${currentUser.id}&trainingId=${params.id}`)
+    authFetch(getAccessToken, `/api/trainings/enroll?userId=${currentUser.id}&trainingId=${params.id}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data?.enrolled) setIsEnrolled(true) })
       .catch(() => {})
@@ -46,10 +49,10 @@ function TrainingDetailPage({ params }: { params: { id: string } }) {
     if (training.capacity - training.enrolled <= 0) { toast.error("This training is full."); return }
 
     try {
-      const res = await fetch("/api/trainings/enroll", {
+      const res = await authFetch(getAccessToken, "/api/trainings/enroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trainingId: training.id, userId: currentUser.id }),
+        body: JSON.stringify({ trainingId: training.id }),
       })
       if (!res.ok) {
         const e = await res.json().catch(() => ({}))
