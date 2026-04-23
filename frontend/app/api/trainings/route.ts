@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
+import { AuthError, requireAdminUser } from '@/lib/serverAuth'
 
 export async function GET() {
   try {
@@ -32,69 +33,79 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabaseAdmin = getSupabaseAdminClient()
-  if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  try {
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    await requireAdminUser(request)
 
-  const body = await request.json()
-  const { actorPrivyId, ...fields } = body
+    const body = await request.json()
+    const { actorPrivyId, ...fields } = body
+    void actorPrivyId
 
-  const { data: actor } = await supabaseAdmin.from('users').select('role').eq('privy_id', actorPrivyId).single()
-  if (!actor || actor.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const { data, error } = await supabaseAdmin.from('trainings').insert({
+      title: fields.title,
+      summary: fields.summary,
+      description: fields.description,
+      date: fields.date,
+      mode: fields.mode,
+      location: fields.location,
+      instructor_name: fields.instructor,
+      capacity: fields.capacity,
+      image_url: fields.image || null,
+    }).select().single()
 
-  const { data, error } = await supabaseAdmin.from('trainings').insert({
-    title: fields.title,
-    summary: fields.summary,
-    description: fields.description,
-    date: fields.date,
-    mode: fields.mode,
-    location: fields.location,
-    instructor_name: fields.instructor,
-    capacity: fields.capacity,
-    image_url: fields.image || null,
-  }).select().single()
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json(data)
+  } catch (error) {
+    if (error instanceof AuthError) return NextResponse.json({ error: error.message }, { status: error.status })
+    return NextResponse.json({ error: 'Failed to create training' }, { status: 500 })
+  }
 }
 
 export async function PATCH(request: Request) {
-  const supabaseAdmin = getSupabaseAdminClient()
-  if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  try {
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    await requireAdminUser(request)
 
-  const body = await request.json()
-  const { actorPrivyId, id, ...fields } = body
+    const body = await request.json()
+    const { actorPrivyId, id, ...fields } = body
+    void actorPrivyId
 
-  const { data: actor } = await supabaseAdmin.from('users').select('role').eq('privy_id', actorPrivyId).single()
-  if (!actor || actor.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const { error } = await supabaseAdmin.from('trainings').update({
+      title: fields.title,
+      summary: fields.summary,
+      description: fields.description,
+      date: fields.date,
+      mode: fields.mode,
+      location: fields.location,
+      instructor_name: fields.instructor,
+      capacity: fields.capacity,
+      image_url: fields.image_url ?? undefined,
+    }).eq('id', id)
 
-  const { error } = await supabaseAdmin.from('trainings').update({
-    title: fields.title,
-    summary: fields.summary,
-    description: fields.description,
-    date: fields.date,
-    mode: fields.mode,
-    location: fields.location,
-    instructor_name: fields.instructor,
-    capacity: fields.capacity,
-    image_url: fields.image_url ?? undefined,
-  }).eq('id', id)
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (error instanceof AuthError) return NextResponse.json({ error: error.message }, { status: error.status })
+    return NextResponse.json({ error: 'Failed to update training' }, { status: 500 })
+  }
 }
 
 export async function DELETE(request: Request) {
-  const supabaseAdmin = getSupabaseAdminClient()
-  if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  try {
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    await requireAdminUser(request)
 
-  const { searchParams } = new URL(request.url)
-  const id = searchParams.get('id')
-  const actorPrivyId = searchParams.get('actorPrivyId')
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
 
-  const { data: actor } = await supabaseAdmin.from('users').select('role').eq('privy_id', actorPrivyId || '').single()
-  if (!actor || actor.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
-  const { error } = await supabaseAdmin.from('trainings').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
+    const { error } = await supabaseAdmin.from('trainings').delete().eq('id', id)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (error instanceof AuthError) return NextResponse.json({ error: error.message }, { status: error.status })
+    return NextResponse.json({ error: 'Failed to delete training' }, { status: 500 })
+  }
 }
