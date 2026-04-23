@@ -273,7 +273,7 @@ async function fireExtremeAlert(getAccessToken: (() => Promise<string | null>) |
 
   // Store in notification bar for logged-in user
   try {
-    if (!userId) return;
+    if (!userId || !getAccessToken) return;
     await authFetch(getAccessToken, "/api/notifications", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

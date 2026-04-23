@@ -10,6 +10,10 @@ export async function POST(
   const supabaseAdmin = getSupabaseAdminClient()
   if (!supabaseAdmin) return NextResponse.json({ ok: false })
 
-  await supabaseAdmin.from("product_views").insert({ product_id: id }).throwOnError().catch(() => {})
+  try {
+    await supabaseAdmin.from("product_views").insert({ product_id: id }).throwOnError()
+  } catch {
+    // Ignore errors (duplicate views, etc.)
+  }
   return NextResponse.json({ ok: true })
 }

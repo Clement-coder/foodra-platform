@@ -477,7 +477,7 @@ export function useTranslation() {
   }
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const { useState, useEffect } = require("react")
-  const [locale, setLocaleState] = useState<Locale>(currentLocale)
+  const [locale, setLocaleState] = useState(currentLocale as Locale)
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -488,7 +488,7 @@ export function useTranslation() {
   }, [])
 
   const translate = (key: string, fallback?: string): string =>
-    translations[locale]?.[key] ?? translations.en[key] ?? fallback ?? key
+    translations[locale as Locale]?.[key] ?? translations.en[key] ?? fallback ?? key
 
   const changeLocale = (l: Locale) => {
     setLocale(l)

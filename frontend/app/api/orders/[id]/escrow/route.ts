@@ -19,7 +19,7 @@ export async function PATCH(
       .eq("id", id)
       .single();
     if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-    if (actor.role !== "admin" && order.buyer_id !== actor.id) {
+    if (actor.user.role !== "admin" && order.buyer_id !== actor.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
