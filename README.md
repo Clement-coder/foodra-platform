@@ -139,6 +139,16 @@ foodra-platform/
 - MetaMask or compatible Web3 wallet
 - Supabase account
 
+### Database Setup (IMPORTANT)
+
+Run SQL scripts in `/supabase` folder in order. **All recent files have been fixed for UUID compatibility**:
+
+1. Core: `schema.sql`, `rls.sql`, `storage.sql`
+2. Features: `cart_management.sql`, `notifications.sql`, `ratings_comments.sql`  
+3. Latest: `credit_score.sql`, `wishlist.sql`, `product_views.sql`, `farmer_verification.sql`
+
+See `SQL_MIGRATION_CHECKLIST.md` for complete setup guide.
+
 ### Frontend Setup
 
 ```bash
