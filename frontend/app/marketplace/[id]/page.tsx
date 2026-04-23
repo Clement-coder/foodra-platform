@@ -111,8 +111,8 @@ function ProductDetailPage() {
       <ShareOptionsModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
-        title={`${product.productName} on Foodra`}
-        text={`Check out this product: ${product.productName}`}
+        title={product ? `${product.productName} on Foodra` : "Product on Foodra"}
+        text={product ? `Check out this product: ${product.productName}` : "Check out this product"}
         url={typeof window !== "undefined" ? window.location.href : ""}
       />
 
