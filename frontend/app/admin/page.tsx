@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { usePrivy } from "@privy-io/react-auth"
 import { useUser } from "@/lib/useUser"
 import withAuth from "@/components/withAuth"
-import { Users, Package, DollarSign, ShoppingBag, MessageSquare, BookOpen, BarChart2, Wallet, AlertTriangle } from "lucide-react"
+import { Users, Package, DollarSign, ShoppingBag, MessageSquare, BookOpen, BarChart2, Wallet, AlertTriangle, ShieldCheck } from "lucide-react"
 import AdminUsers from "@/components/admin/AdminUsers"
 import AdminProducts from "@/components/admin/AdminProducts"
 import AdminFunding from "@/components/admin/AdminFunding"
@@ -14,7 +14,9 @@ import AdminTrainings from "@/components/admin/AdminTrainings"
 import AdminAnalytics from "@/components/admin/AdminAnalytics"
 import AdminWalletRequests from "@/components/admin/AdminWalletRequests"
 import AdminDisputes from "@/components/admin/AdminDisputes"
+import AdminVerification from "@/components/admin/AdminVerification"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 export type AdminData = {
   users: any[]
@@ -26,12 +28,13 @@ export type AdminData = {
   trainings: any[]
   walletRequests: any[]
   disputes: any[]
+  verificationRequests: any[]
 }
 
-type Tab = "users" | "products" | "funding" | "orders" | "disputes" | "support" | "trainings" | "analytics" | "wallet"
+type Tab = "users" | "products" | "funding" | "orders" | "disputes" | "support" | "trainings" | "analytics" | "wallet" | "verification"
 
 function AdminPage() {
-  const { user: privyUser } = usePrivy()
+  const { user: privyUser, getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const { toast } = useToast()
   const [tab, setTab] = useState<Tab>("users")
@@ -40,7 +43,7 @@ function AdminPage() {
 
   const refresh = async () => {
     if (!privyUser?.id) return
-    const res = await fetch(`/api/admin/stats?actorPrivyId=${privyUser.id}`)
+    const res = await authFetch(getAccessToken, `/api/admin/stats`)
     if (res.ok) setData(await res.json())
   }
 
@@ -67,6 +70,7 @@ function AdminPage() {
     { key: "products", label: "Products", icon: Package, count: data.products.length },
     { key: "funding", label: "Funding", icon: DollarSign, count: data.funding.length },
     { key: "orders", label: "Orders", icon: ShoppingBag, count: data.orders.length },
+    { key: "verification", label: "Verification", icon: ShieldCheck, count: (data.verificationRequests || []).filter((r: any) => r.status === "Pending").length, unread: (data.verificationRequests || []).filter((r: any) => r.status === "Pending").length },
     { key: "disputes", label: "Disputes", icon: AlertTriangle, count: (data.disputes || []).filter((d: any) => d.status === "open").length, unread: (data.disputes || []).filter((d: any) => d.status === "open").length },
     { key: "trainings", label: "Trainings", icon: BookOpen, count: data.trainings.length },
     { key: "support", label: "Support", icon: MessageSquare, count: [...new Set(data.supportMessages.map((m: any) => m.user_id))].length, unread: getUnreadSupportCount(data.supportMessages) },
@@ -97,6 +101,7 @@ function AdminPage() {
         {tab === "products" && <AdminProducts data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
         {tab === "funding" && <AdminFunding data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
         {tab === "orders" && <AdminOrders data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
+        {tab === "verification" && <AdminVerification data={data} onRefresh={refresh} />}
         {tab === "disputes" && <AdminDisputes data={data} privyId={privyUser?.id} onRefresh={refresh} />}
         {tab === "trainings" && <AdminTrainings data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
         {tab === "support" && <AdminSupport data={data} privyId={privyUser?.id} onRefresh={refresh} />}

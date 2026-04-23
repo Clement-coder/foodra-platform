@@ -1,9 +1,11 @@
 import { useState } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import { X, Download } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
 import { CustomSelect } from "@/components/CustomSelect"
 import { CreditScoreCard } from "@/components/CreditScoreCard"
+import { authFetch } from "@/lib/authFetch"
 
 const PAGE_SIZE = 20
 
@@ -89,6 +91,7 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
   data: AdminData; privyId?: string; onRefresh: () => void; onNotify: (m: string) => void
 }) {
   const { toast, confirm } = useToast()
+  const { getAccessToken } = usePrivy()
   const [rejectNote, setRejectNote] = useState<Record<string, string>>({})
   const [rejectOpen, setRejectOpen] = useState<string | null>(null)
   const [viewing, setViewing] = useState<any | null>(null)
@@ -99,20 +102,20 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
   const approve = async (id: string) => {
     const ok = await confirm({ message: "Approve this funding application?", confirmLabel: "Approve" })
     if (!ok) return
-    const res = await fetch("/api/funding", {
+    const res = await authFetch(getAccessToken, "/api/funding", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ applicationId: id, status: "Approved", actorPrivyId: privyId }),
+      body: JSON.stringify({ applicationId: id, status: "Approved" }),
     })
     if (res.ok) { toast.success("Application approved"); onRefresh() }
     else toast.error("Failed to approve application.")
   }
 
   const reject = async (id: string) => {
-    const res = await fetch("/api/funding", {
+    const res = await authFetch(getAccessToken, "/api/funding", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ applicationId: id, status: "Rejected", note: rejectNote[id] || "", actorPrivyId: privyId }),
+      body: JSON.stringify({ applicationId: id, status: "Rejected", note: rejectNote[id] || "" }),
     })
     if (res.ok) { toast.success("Application rejected"); setRejectOpen(null); onRefresh() }
     else toast.error("Failed to reject application.")

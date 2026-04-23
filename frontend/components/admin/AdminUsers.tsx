@@ -1,13 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import { X, MapPin, Phone, Mail, Wallet, Package, Calendar, Home, Download, Send } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
 import { CustomSelect } from "@/components/CustomSelect"
+import { authFetch } from "@/lib/authFetch"
 
 function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: AdminData; onClose: () => void; privyId?: string }) {
   const { toast } = useToast()
+  const { getAccessToken } = usePrivy()
   const [addresses, setAddresses] = useState<any[] | null>(null)
   const [loadingAddr, setLoadingAddr] = useState(false)
   const [msgText, setMsgText] = useState("")
@@ -16,7 +19,7 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
   const loadAddresses = async () => {
     if (addresses !== null) return
     setLoadingAddr(true)
-    const res = await fetch(`/api/delivery-addresses?userId=${user.id}`)
+    const res = await authFetch(getAccessToken, `/api/delivery-addresses?userId=${user.id}`)
     setAddresses(res.ok ? await res.json() : [])
     setLoadingAddr(false)
   }
@@ -24,10 +27,10 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
   const sendMessage = async () => {
     if (!msgText.trim()) return
     setSending(true)
-    const res = await fetch("/api/admin/message", {
+    const res = await authFetch(getAccessToken, "/api/admin/message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actorPrivyId: privyId, targetUserId: user.id, message: msgText }),
+      body: JSON.stringify({ targetUserId: user.id, message: msgText }),
     })
     setSending(false)
     if (res.ok) { toast.success("Message sent!"); setMsgText("") }
@@ -238,15 +241,16 @@ function exportCSV(users: any[]) {
 export default function AdminUsers({
   data, privyId, onRefresh, onNotify
 }: { data: AdminData; privyId?: string; onRefresh: () => void; onNotify: (m: string) => void }) {
+  const { getAccessToken } = usePrivy()
   const [selectedUser, setSelectedUser] = useState<any | null>(null)
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(0)
 
   const updateRole = async (userId: string, role: string) => {
-    await fetch("/api/admin/users", {
+    await authFetch(getAccessToken, "/api/admin/users", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ actorPrivyId: privyId, userId, role }),
+      body: JSON.stringify({ userId, role }),
     })
     onNotify("Role updated")
     onRefresh()

@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import { Plus, Pencil, Trash2, X, Users, ImageIcon } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { CustomSelect } from "@/components/CustomSelect"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 const EMPTY = { title: "", summary: "", description: "", date: "", mode: "online", location: "", instructor: "", capacity: 20 }
 
@@ -12,6 +14,7 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
   initial?: any; privyId?: string; onDone: () => void; onNotify: (m: string) => void
 }) {
   const { toast } = useToast()
+  const { getAccessToken } = usePrivy()
   const [form, setForm] = useState(initial ? {
     title: initial.title, summary: initial.summary || "", description: initial.description || "",
     date: initial.date?.slice(0, 16) || "", mode: initial.mode || "online",
@@ -34,7 +37,7 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
       reader.onerror = reject
       reader.readAsDataURL(file)
     })
-    const res = await fetch("/api/storage/product-image", {
+    const res = await authFetch(getAccessToken, "/api/storage/product-image", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ base64, fileName: file.name }),
@@ -53,10 +56,10 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
     if (!form.title || !form.date || !form.capacity) return
     setSaving(true)
     const method = initial ? "PATCH" : "POST"
-    const res = await fetch("/api/trainings", {
+    const res = await authFetch(getAccessToken, "/api/trainings", {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, actorPrivyId: privyId, ...(initial ? { id: initial.id } : {}) }),
+      body: JSON.stringify({ ...form, ...(initial ? { id: initial.id } : {}) }),
     })
     if (res.ok) { toast.success(initial ? "Training updated" : "Training created"); onDone() }
     else toast.error("Failed to save training.")
@@ -132,13 +135,14 @@ export default function AdminTrainings({ data, privyId, onRefresh, onNotify }: {
   data: AdminData; privyId?: string; onRefresh: () => void; onNotify: (m: string) => void
 }) {
   const { toast, confirm } = useToast()
+  const { getAccessToken } = usePrivy()
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<any | null>(null)
 
   const remove = async (id: string) => {
     const ok = await confirm({ title: "Delete Training", message: "Delete this training and all its enrollments?", confirmLabel: "Delete", danger: true })
     if (!ok) return
-    const res = await fetch(`/api/trainings?id=${id}&actorPrivyId=${privyId}`, { method: "DELETE" })
+    const res = await authFetch(getAccessToken, `/api/trainings?id=${id}`, { method: "DELETE" })
     if (res.ok) { toast.success("Training deleted"); onRefresh() }
     else toast.error("Failed to delete training.")
   }
