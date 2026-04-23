@@ -1,34 +1,36 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { createNotification } from "@/lib/notify"
+import { AuthError, requireAdminUser } from "@/lib/serverAuth"
 
 // POST /api/admin/message — admin sends a notification to a specific user
 export async function POST(request: Request) {
-  const supabase = getSupabaseAdminClient()
-  if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
+  try {
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
 
-  const { actorPrivyId, targetUserId, message } = await request.json()
-  if (!actorPrivyId || !targetUserId || !message?.trim())
-    return NextResponse.json({ error: "actorPrivyId, targetUserId, message required" }, { status: 400 })
+    await requireAdminUser(request)
+    const { targetUserId, message } = await request.json()
+    if (!targetUserId || !message?.trim())
+      return NextResponse.json({ error: "targetUserId and message required" }, { status: 400 })
 
-  const { data: actor } = await supabase.from("users").select("role, name").eq("privy_id", actorPrivyId).single()
-  if (!actor || actor.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    await supabase.from("support_messages").insert({
+      user_id: targetUserId,
+      message: message.trim(),
+      is_admin_reply: true,
+    })
 
-  // Save as a support message (is_admin_reply=true) so it appears in the Support tab
-  await supabase.from("support_messages").insert({
-    user_id: targetUserId,
-    message: message.trim(),
-    is_admin_reply: true,
-  })
+    await createNotification({
+      userId: targetUserId,
+      type: "broadcast",
+      title: "Message from Foodra Admin",
+      message: message.trim(),
+      link: undefined,
+    })
 
-  // Also send an in-app notification
-  await createNotification({
-    userId: targetUserId,
-    type: "broadcast",
-    title: "Message from Foodra Admin",
-    message: message.trim(),
-    link: undefined,
-  })
-
-  return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (error instanceof AuthError) return NextResponse.json({ error: error.message }, { status: error.status })
+    return NextResponse.json({ error: "Failed to send admin message" }, { status: 500 })
+  }
 }
