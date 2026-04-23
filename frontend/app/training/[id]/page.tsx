@@ -6,6 +6,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, Calendar, MapPin, Users, Video, MapPinned, Clock, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
+import { usePrivy } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/Skeleton"
@@ -14,6 +15,7 @@ import withAuth from "../../../components/withAuth"
 import { useUser } from "@/lib/useUser"
 import { format } from "date-fns"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 function TrainingDetailPage() {
   const router = useRouter()
@@ -21,6 +23,7 @@ function TrainingDetailPage() {
   const id = params.id as string
   const { toast } = useToast()
   const { currentUser } = useUser()
+  const { getAccessToken } = usePrivy()
   const [training, setTraining] = useState<Training | null>(null)
   const [loading, setLoading] = useState(true)
   const [isEnrolled, setIsEnrolled] = useState(false)
@@ -44,7 +47,7 @@ function TrainingDetailPage() {
   // Check enrollment from Supabase via API
   useEffect(() => {
     if (!currentUser || !id) return
-    fetch(`/api/trainings/enroll?userId=${currentUser.id}&trainingId=${id}`)
+    authFetch(getAccessToken, `/api/trainings/enroll?userId=${currentUser.id}&trainingId=${id}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data?.enrolled) setIsEnrolled(true) })
       .catch(() => {})
@@ -64,10 +67,10 @@ function TrainingDetailPage() {
     }
 
     try {
-      const res = await fetch("/api/trainings/enroll", {
+      const res = await authFetch(getAccessToken, "/api/trainings/enroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trainingId: training.id, userId: currentUser.id }),
+        body: JSON.stringify({ trainingId: training.id }),
       })
       if (!res.ok) {
         const e = await res.json().catch(() => ({}))
