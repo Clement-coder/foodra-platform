@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
+import { assertSelfOrAdmin, AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
 
 export async function GET(request: Request) {
   try {
@@ -12,12 +13,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Failed to initialize Supabase admin client' }, { status: 500 })
     }
 
+    const auth = await requireAuthenticatedUser(request)
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
-
-    if (!userId) {
-      return NextResponse.json({ error: 'userId required' }, { status: 400 })
-    }
+    const requestedUserId = searchParams.get('userId') || auth.user.id
+    assertSelfOrAdmin(auth.user, requestedUserId)
 
     const { data: orders, error } = await supabaseAdmin
       .from('orders')
@@ -26,7 +25,7 @@ export async function GET(request: Request) {
         order_items(*, products(farmer_id, users!products_farmer_id_fkey(id, name, avatar_url))),
         users!orders_buyer_id_fkey(id, name, email, phone, avatar_url, wallet_address)
       `)
-      .eq('buyer_id', userId)
+      .eq('buyer_id', requestedUserId)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -75,6 +74,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(formatted)
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error('Error fetching orders:', error)
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
   }
@@ -90,12 +92,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to initialize Supabase admin client' }, { status: 500 })
     }
 
+    const auth = await requireAuthenticatedUser(request)
     const body = await request.json()
+    const buyerId = auth.user.id
     
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .insert({
-        buyer_id: body.userId,
+        buyer_id: buyerId,
         total_amount: body.totalAmount,
         status: 'Pending',
       })
@@ -139,9 +143,9 @@ export async function POST(request: Request) {
     }
 
     // Notify buyer of order placement
-    if (body.userId) {
+    if (buyerId) {
       await createNotification({
-        userId: body.userId,
+        userId: buyerId,
         type: "order",
         title: "Order Placed Successfully",
         message: `Your order of ₦${Number(body.totalAmount).toLocaleString()} has been placed and is being processed.`,
@@ -151,6 +155,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(order)
   } catch (error: any) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error('Error creating order:', error)
     return NextResponse.json(
       { error: error?.message || 'Failed to create order', code: error?.code },
@@ -164,11 +171,12 @@ export async function DELETE(request: Request) {
     const supabaseAdmin = getSupabaseAdminClient()
     if (!supabaseAdmin) return NextResponse.json({ error: 'DB unavailable' }, { status: 500 })
 
+    const auth = await requireAuthenticatedUser(request)
     const { searchParams } = new URL(request.url)
     const orderId = searchParams.get('orderId')
-    const userId = searchParams.get('userId')
-
-    if (!orderId || !userId) return NextResponse.json({ error: 'orderId and userId required' }, { status: 400 })
+    const userId = searchParams.get('userId') || auth.user.id
+    if (!orderId) return NextResponse.json({ error: 'orderId required' }, { status: 400 })
+    assertSelfOrAdmin(auth.user, userId)
 
     // Only allow deleting own pending orders with no escrow
     const { data: order } = await supabaseAdmin
@@ -207,6 +215,9 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     console.error('Error deleting order:', error)
     return NextResponse.json({ error: 'Failed to delete order' }, { status: 500 })
   }
