@@ -10,14 +10,34 @@
 
 In your Supabase SQL Editor, run the following files in order:
 
+### Core Setup (Required):
 1. `schema.sql` - Creates all tables and indexes
 2. `rls.sql` - Enables Row Level Security policies
 3. `storage.sql` - Sets up storage buckets for images
-4. `seed.sql` - (Optional) Adds sample training data
 
-If your project already has an existing `users` table from an older setup, run:
+### Feature Extensions (Run in Order):
+4. `alter_users_profile_fields.sql` - Adds phone and role to users
+5. `cart_management.sql` - Shopping cart functionality
+6. `escrow_migration.sql` - Blockchain escrow integration
+7. `rls_escrow.sql` - Escrow security policies
+8. `delivery_addresses.sql` - User delivery addresses
+9. `admin_support.sql` - Admin support system
+10. `notifications.sql` - In-app notifications
+11. `wallet_funding.sql` - Wallet funding requests
+12. `ratings_comments.sql` - Product ratings and comments
+13. `add_product_unit.sql` - Product unit field
+14. `order_disputes.sql` - Order dispute system
+15. `terms_acceptance.sql` - Terms acceptance tracking
+16. `push_subscriptions.sql` - PWA push notifications
 
-5. `alter_users_profile_fields.sql` - Adds `phone` and `role` to users for profile completion
+### Latest Features (April 2026):
+17. `credit_score.sql` - AI credit scoring system ✅
+18. `order_tracking.sql` - Enhanced order tracking ✅
+19. `wishlist.sql` - Product wishlist with price alerts ✅
+20. `product_views.sql` - Product analytics tracking ✅
+21. `farmer_verification.sql` - Farmer verification system ✅
+22. `search_indexes.sql` - Search performance optimization ✅
+23. `seed.sql` - Sample data for testing ✅
 
 ## 3. Configure Environment Variables
 
