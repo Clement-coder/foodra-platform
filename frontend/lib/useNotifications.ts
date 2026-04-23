@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import { supabase } from "./supabase"
+import { authFetch } from "./authFetch"
 
 export interface Notification {
   id: string
@@ -15,12 +17,13 @@ export interface Notification {
 }
 
 export function useNotifications(userId: string | undefined) {
+  const { getAccessToken } = usePrivy()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   const fetch = useCallback(async () => {
     if (!userId) return
-    const res = await window.fetch(`/api/notifications?userId=${userId}`)
+    const res = await authFetch(getAccessToken, `/api/notifications?userId=${userId}`)
     if (res.ok) setNotifications(await res.json())
   }, [userId])
 
@@ -59,7 +62,7 @@ export function useNotifications(userId: string | undefined) {
     setNotifications(prev => prev.map(n =>
       !notificationId || n.id === notificationId ? { ...n, is_read: true } : n
     ))
-    await window.fetch("/api/notifications", {
+    await authFetch(getAccessToken, "/api/notifications", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, notificationId }),

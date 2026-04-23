@@ -2,9 +2,11 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react"
 import type { ReactNode } from "react"
+import { usePrivy } from "@privy-io/react-auth"
 import type { CartItem, Order } from "./types"
 import { useUser } from "./useUser"
 import { useToast } from "./toast"
+import { authFetch } from "./authFetch"
 
 type CartContextValue = {
   cart: CartItem[]
@@ -157,6 +159,7 @@ export function useCart() {
 }
 
 export function useOrders() {
+  const { getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -173,7 +176,7 @@ export function useOrders() {
     if (!currentUser) return
 
     try {
-      const res = await fetch(`/api/orders?userId=${currentUser.id}`)
+      const res = await authFetch(getAccessToken, `/api/orders?userId=${currentUser.id}`)
       const data = await res.json()
       setOrders(data)
     } catch (error) {
@@ -187,11 +190,10 @@ export function useOrders() {
     if (!currentUser) return null
 
     try {
-      const res = await fetch('/api/orders', {
+      const res = await authFetch(getAccessToken, '/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: currentUser.id,
           items,
           totalAmount,
         }),
