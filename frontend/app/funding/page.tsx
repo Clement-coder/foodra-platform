@@ -4,15 +4,18 @@ import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { DollarSign, Plus, TrendingUp, Search } from "lucide-react"
 import { motion } from "framer-motion"
+import { usePrivy } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { FundingCard } from "@/components/FundingCard"
 import type { FundingApplication } from "@/lib/types"
 import withAuth from "../../components/withAuth";
 import { useUser } from "@/lib/useUser"
+import { authFetch } from "@/lib/authFetch"
 
 function FundingPage() {
   const { currentUser: user, isLoading } = useUser()
+  const { getAccessToken } = usePrivy()
   const [applications, setApplications] = useState<FundingApplication[]>([])
   const [filter, setFilter] = useState<"all" | "Pending" | "Approved" | "Rejected">("all")
   const [search, setSearch] = useState("")
@@ -30,7 +33,7 @@ function FundingPage() {
     try {
       const endpoint =
         user?.role === "admin" ? "/api/funding" : `/api/funding?userId=${user?.id}`;
-      const res = await fetch(endpoint);
+      const res = await authFetch(getAccessToken, endpoint);
       const data = await res.json();
       setApplications(data);
     } catch (error) {
