@@ -136,9 +136,11 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-3">
                   <h1 className="text-lg sm:text-xl font-bold truncate">{user.name}</h1>
-                  <span className="inline-flex items-center rounded-full bg-[#118C4C]/10 text-[#118C4C] p-1 flex-shrink-0" title="Verified">
-                    <BadgeCheck className="h-4 w-4" />
-                  </span>
+                  {user.isVerified ? (
+                    <span className="inline-flex items-center rounded-full bg-[#118C4C]/10 text-[#118C4C] p-1 flex-shrink-0" title="Verified farmer">
+                      <BadgeCheck className="h-4 w-4" />
+                    </span>
+                  ) : null}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="rounded-xl border border-border bg-muted/50 px-4 py-3">

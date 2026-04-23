@@ -30,6 +30,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
     phone: rawUser.phone || "",
     location: rawUser.location || undefined,
     role: rawUser.role || "buyer",
+    isVerified: !!rawUser.is_verified,
   }
 
   const { data: products, error: productsError } = await supabase
