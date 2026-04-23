@@ -10,6 +10,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { GridLayout } from "@/components/GridLayout";
 import { Skeleton } from "@/components/Skeleton";
 import { AdvancedSearchFilters, DEFAULT_FILTERS, type SearchFilters } from "@/components/AdvancedSearchFilters";
+import { t } from "@/lib/i18n";
 import type { Product } from "@/lib/types";
 import { usePrivy } from "@privy-io/react-auth";
 import { WeatherWidget } from "@/components/WeatherWidget";
@@ -98,12 +99,12 @@ function MarketplacePage() {
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
             <div className="h-2 w-12 bg-[#118C4C] rounded"></div>
-            Marketplace
+            {t("marketplace.title")}
           </h1>
           <p className="text-muted-foreground">
             {searchQuery
-              ? `Search results for "${searchQuery}"`
-              : "Browse fresh products from local farmers"}
+              ? `${t("marketplace.searchResults")} "${searchQuery}"`
+              : t("marketplace.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">

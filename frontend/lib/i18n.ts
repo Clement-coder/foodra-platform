@@ -26,6 +26,7 @@ const translations: Record<Locale, Record<string, string>> = {
     // Marketplace
     "marketplace.title": "Marketplace",
     "marketplace.subtitle": "Browse fresh products from local farmers",
+    "marketplace.searchResults": "Search results for",
     "marketplace.listProduct": "List Product",
     "marketplace.viewOrders": "View My Orders",
     "marketplace.filterBy": "Filter by category:",
@@ -133,6 +134,7 @@ const translations: Record<Locale, Record<string, string>> = {
     // Marketplace
     "marketplace.title": "Ọjà",
     "marketplace.subtitle": "Wo àwọn ọjà tuntun láti ọwọ́ àwọn àgbẹ̀ àdúgbò",
+    "marketplace.searchResults": "Àwọn èsì ìwádìí fún",
     "marketplace.listProduct": "Ṣe Àkójọ Ọjà",
     "marketplace.viewOrders": "Wo Àwọn Àṣẹ Mi",
     "marketplace.filterBy": "Ṣe àlẹ̀mọ́ nípa ẹ̀ka:",
