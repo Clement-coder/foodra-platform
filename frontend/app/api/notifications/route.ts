@@ -1,84 +1,105 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
+import { assertSelfOrAdmin, AuthError, requireAdminUser, requireAuthenticatedUser } from "@/lib/serverAuth"
 
 // GET /api/notifications?userId=xxx  — fetch user's notifications
 // GET /api/notifications?broadcast=true&actorPrivyId=xxx — admin: get all users for broadcast
 export async function GET(request: Request) {
-  const supabase = getSupabaseAdminClient()
-  if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
+  try {
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
 
-  const { searchParams } = new URL(request.url)
-  const userId = searchParams.get("userId")
+    const auth = await requireAuthenticatedUser(request)
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get("userId") || auth.user.id
+    assertSelfOrAdmin(auth.user, userId)
 
-  if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 })
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(50)
 
-  const { data, error } = await supabase
-    .from("notifications")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(50)
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data || [])
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json(data || [])
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
+    return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 })
+  }
 }
 
 // POST /api/notifications — create notification(s)
 // Body: { userId, type, title, message, link? }  — single user
 // Body: { broadcast: true, actorPrivyId, type, title, message, link? } — all users (admin only)
 export async function POST(request: Request) {
-  const supabase = getSupabaseAdminClient()
-  if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
+  try {
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
 
-  const body = await request.json()
+    const body = await request.json()
 
-  if (body.broadcast) {
-    // Admin broadcast
-    const { data: actor } = await supabase.from("users").select("role").eq("privy_id", body.actorPrivyId).single()
-    if (!actor || actor.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (body.broadcast) {
+      await requireAdminUser(request)
+      const { data: users } = await supabase.from("users").select("id")
+      if (!users?.length) return NextResponse.json({ success: true })
 
-    const { data: users } = await supabase.from("users").select("id")
-    if (!users?.length) return NextResponse.json({ success: true })
+      const rows = users.map((u: any) => ({
+        user_id: u.id,
+        type: body.type || "broadcast",
+        title: body.title,
+        message: body.message,
+        link: body.link || null,
+      }))
 
-    const rows = users.map((u: any) => ({
-      user_id: u.id,
-      type: body.type || "broadcast",
+      const { error } = await supabase.from("notifications").insert(rows)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ success: true, count: rows.length })
+    }
+
+    await requireAdminUser(request)
+    const { data, error } = await supabase.from("notifications").insert({
+      user_id: body.userId,
+      type: body.type || "system",
       title: body.title,
       message: body.message,
       link: body.link || null,
-    }))
+    }).select().single()
 
-    const { error } = await supabase.from("notifications").insert(rows)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ success: true, count: rows.length })
+    return NextResponse.json(data)
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
+    return NextResponse.json({ error: "Failed to create notification" }, { status: 500 })
   }
-
-  // Single user notification
-  const { data, error } = await supabase.from("notifications").insert({
-    user_id: body.userId,
-    type: body.type || "system",
-    title: body.title,
-    message: body.message,
-    link: body.link || null,
-  }).select().single()
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
 }
 
 // PATCH /api/notifications — mark as read
 // Body: { userId, notificationId? } — if no notificationId, marks ALL as read
 export async function PATCH(request: Request) {
-  const supabase = getSupabaseAdminClient()
-  if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
+  try {
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) return NextResponse.json({ error: "Server error" }, { status: 500 })
 
-  const { userId, notificationId } = await request.json()
-  if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 })
+    const auth = await requireAuthenticatedUser(request)
+    const { userId, notificationId } = await request.json()
+    const targetUserId = userId || auth.user.id
+    assertSelfOrAdmin(auth.user, targetUserId)
 
-  let query = supabase.from("notifications").update({ is_read: true }).eq("user_id", userId)
-  if (notificationId) query = query.eq("id", notificationId)
+    let query = supabase.from("notifications").update({ is_read: true }).eq("user_id", targetUserId)
+    if (notificationId) query = query.eq("id", notificationId)
 
-  const { error } = await query
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
+    const { error } = await query
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
+    return NextResponse.json({ error: "Failed to update notifications" }, { status: 500 })
+  }
 }
