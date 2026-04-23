@@ -17,10 +17,11 @@ import withAuth from "../../../components/withAuth"
 import { usePrivy } from "@privy-io/react-auth"
 import { useUser } from "@/lib/useUser"
 import { useToast } from "@/lib/toast"
+import { authFetch } from "@/lib/authFetch"
 
 function NewListingPage() {
   const router = useRouter()
-  const { user: privyUser } = usePrivy()
+  const { user: privyUser, getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const { toast } = useToast()
   const [imageBase64, setImageBase64] = useState("")
@@ -44,11 +45,9 @@ function NewListingPage() {
         throw new Error("User session not found. Please sign in again.")
       }
 
-      const farmerId = currentUser.id
-
       let imageUrl = imageBase64 || data.image
       if (imageBase64?.startsWith("data:image/")) {
-        const uploadResponse = await fetch('/api/storage/product-image', {
+        const uploadResponse = await authFetch(getAccessToken, '/api/storage/product-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ base64: imageBase64, fileName: data.productName }),
@@ -62,11 +61,10 @@ function NewListingPage() {
       }
 
       // Create product in Supabase
-      const response = await fetch('/api/products', {
+      const response = await authFetch(getAccessToken, '/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          farmerId,
           productName: data.productName,
           category: data.category,
           quantity: data.quantity,
