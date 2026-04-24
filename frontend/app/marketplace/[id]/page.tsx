@@ -193,9 +193,18 @@ function ProductDetailPage() {
               </div>
             )}
 
-            <div className="flex items-baseline gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-6">
               <span className="text-4xl font-bold text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
               <span className="text-muted-foreground">per {product.unit || 'unit'}</span>
+              {!isOwnProduct && (
+                <WishlistButton
+                  productId={product.id}
+                  productName={product.productName}
+                  image={product.image}
+                  pricePerUnit={product.pricePerUnit}
+                  className="ml-auto h-10 w-10 rounded-xl border border-input"
+                />
+              )}
             </div>
 
             <Card className="mb-6 border-[#118C4C]/20">
@@ -222,23 +231,14 @@ function ProductDetailPage() {
             </Card>
 
             {!isOwnProduct && (
-              <div className="flex gap-3 mb-4">
-                <Button
-                  onClick={handleAddToCart}
-                  size="lg"
-                  className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20"
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  Add to Cart
-                </Button>
-                <WishlistButton
-                  productId={product.id}
-                  productName={product.productName}
-                  image={product.image}
-                  pricePerUnit={product.pricePerUnit}
-                  className="h-12 w-12 rounded-xl border border-input flex items-center justify-center"
-                />
-              </div>
+              <Button
+                onClick={handleAddToCart}
+                size="lg"
+                className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 mb-4 shadow-lg shadow-[#118C4C]/20"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Add to Cart
+              </Button>
             )}
 
             {isOwnProduct && (
