@@ -201,7 +201,16 @@ function ShopPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                            onClick={async () => {
+                              // Cap at available stock
+                              const res = await fetch(`/api/products/${item.productId}`);
+                              const prod = res.ok ? await res.json() : null;
+                              const max = prod?.quantity ?? item.quantity;
+                              if (item.quantity >= max) {
+                                return;
+                              }
+                              updateQuantity(item.productId, item.quantity + 1);
+                            }}
                             className="h-9 w-9 p-0 hover:bg-[#118C4C]/20 flex items-center justify-center"
                             aria-label="Increase quantity"
                           >
