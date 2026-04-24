@@ -178,8 +178,7 @@ function WalletPage() {
       } else {
         setTransactions([])
       }
-    } catch (error) {
-      console.error("Error fetching wallet data:", error)
+    } catch {
       toast.error("Could not fetch wallet data. Check your connection.")
     } finally {
       setIsRefreshingBalance(false)
