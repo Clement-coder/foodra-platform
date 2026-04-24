@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Heart, Trash2, Bell, BellOff, ShoppingCart } from "lucide-react"
+import { Heart, Trash2, Bell, BellOff, ShoppingCart, Check, X } from "lucide-react"
 import { usePrivy } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -17,6 +17,8 @@ export default function WishlistPage() {
   const { getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const [items, setItems] = useState<WishlistItem[]>([])
+  const [alertInputId, setAlertInputId] = useState<string | null>(null)
+  const [alertInputValue, setAlertInputValue] = useState("")
   const { addToCart } = useCart()
   const { toast } = useToast()
 
@@ -36,7 +38,8 @@ export default function WishlistPage() {
     const handler = () => { void refresh() }
     window.addEventListener("wishlistchange", handler)
     return () => window.removeEventListener("wishlistchange", handler)
-  }, [currentUser?.id, getAccessToken])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.id])
 
   const handleRemove = async (productId: string) => {
     if (currentUser?.id) {
@@ -48,33 +51,28 @@ export default function WishlistPage() {
     await refresh()
   }
 
-  const handleAlertToggle = async (item: WishlistItem) => {
-    if (item.alertPrice !== null) {
-      if (currentUser?.id) {
-        await authFetch(getAccessToken, "/api/wishlist", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ productId: item.productId, alertPrice: null }),
-        })
-      } else {
-        setAlertPrice(item.productId, null)
-      }
-      toast.success("Price alert removed")
-    } else {
-      const price = prompt(`Set alert price for ${item.productName} (₦):`, String(item.priceAtAdd))
-      if (price && !isNaN(Number(price))) {
-        if (currentUser?.id) {
-          await authFetch(getAccessToken, "/api/wishlist", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ productId: item.productId, alertPrice: Number(price) }),
-          })
-        } else {
-          setAlertPrice(item.productId, Number(price))
-        }
-        toast.success(`Alert set at ₦${Number(price).toLocaleString()}`)
-      }
+  const openAlertInput = (item: WishlistItem) => {
+    setAlertInputId(item.productId)
+    setAlertInputValue(item.alertPrice !== null ? String(item.alertPrice) : "")
+  }
+
+  const saveAlert = async (productId: string, remove = false) => {
+    const price = remove ? null : Number(alertInputValue)
+    if (!remove && (isNaN(price!) || price! <= 0)) {
+      toast.error("Enter a valid price")
+      return
     }
+    if (currentUser?.id) {
+      await authFetch(getAccessToken, "/api/wishlist", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, alertPrice: price }),
+      })
+    } else {
+      setAlertPrice(productId, price)
+    }
+    toast.success(remove ? "Price alert removed" : `Alert set at ₦${price!.toLocaleString()}`)
+    setAlertInputId(null)
     await refresh()
   }
 
@@ -99,7 +97,7 @@ export default function WishlistPage() {
         <div className="space-y-4">
           {items.map((item) => (
             <Card key={item.productId} className="border-[#118C4C]/20">
-              <CardContent className="p-4 flex gap-4 items-center">
+              <CardContent className="p-4 flex gap-4 items-start">
                 <Link href={`/marketplace/${item.productId}`} className="relative w-20 h-20 rounded-xl overflow-hidden bg-muted flex-shrink-0">
                   {item.image ? (
                     <Image src={item.image} alt={item.productName} fill className="object-cover" unoptimized />
@@ -107,28 +105,73 @@ export default function WishlistPage() {
                     <div className="w-full h-full bg-muted" />
                   )}
                 </Link>
+
                 <div className="flex-1 min-w-0">
                   <Link href={`/marketplace/${item.productId}`}>
                     <h3 className="font-semibold text-foreground truncate hover:text-[#118C4C]">{item.productName}</h3>
                   </Link>
                   <p className="text-[#118C4C] font-bold">₦{Number(item.currentPrice ?? item.priceAtAdd).toLocaleString()}</p>
-                  {item.alertPrice !== null && (
-                    <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1 mt-0.5">
+
+                  {/* Alert display */}
+                  {item.alertPrice !== null && alertInputId !== item.productId && (
+                    <p className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1 mt-1">
                       <Bell className="h-3 w-3" />
-                      Alert at ₦{item.alertPrice.toLocaleString()}
+                      Alert when price drops to ₦{item.alertPrice.toLocaleString()}
                     </p>
                   )}
+
+                  {/* Inline alert input */}
+                  {alertInputId === item.productId && (
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <span className="text-xs text-muted-foreground">₦</span>
+                      <input
+                        type="number"
+                        min="1"
+                        autoFocus
+                        value={alertInputValue}
+                        onChange={(e) => setAlertInputValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") saveAlert(item.productId); if (e.key === "Escape") setAlertInputId(null); }}
+                        placeholder="Alert price"
+                        className="w-28 px-2 py-1 text-xs rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-[#118C4C]"
+                      />
+                      <button onClick={() => saveAlert(item.productId)} className="p-1 rounded-lg bg-[#118C4C] text-white hover:bg-[#0d6d3a]">
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => setAlertInputId(null)} className="p-1 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                      {item.alertPrice !== null && (
+                        <button onClick={() => saveAlert(item.productId, true)} className="text-xs text-red-500 hover:underline ml-1">
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
-                  <Button size="icon" variant="ghost" onClick={() => handleAlertToggle(item)}
-                    className={item.alertPrice !== null ? "text-orange-500" : "text-muted-foreground"}>
+
+                <div className="flex gap-1.5 flex-shrink-0">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => openAlertInput(item)}
+                    title={item.alertPrice !== null ? "Edit price alert" : "Set price alert"}
+                    className={item.alertPrice !== null ? "text-orange-500" : "text-muted-foreground hover:text-orange-500"}
+                  >
                     {item.alertPrice !== null ? <Bell className="h-4 w-4 fill-current" /> : <BellOff className="h-4 w-4" />}
                   </Button>
-                  <Button size="icon" variant="ghost" className="text-[#118C4C]"
-                    onClick={() => { addToCart({ productId: item.productId, productName: item.productName, pricePerUnit: item.priceAtAdd, quantity: 1, image: item.image }); toast.success("Added to cart") }}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-[#118C4C]"
+                    title="Add to cart"
+                    onClick={() => {
+                      addToCart({ productId: item.productId, productName: item.productName, pricePerUnit: item.priceAtAdd, quantity: 1, image: item.image })
+                      toast.success("Added to cart")
+                    }}
+                  >
                     <ShoppingCart className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="text-red-500" onClick={() => handleRemove(item.productId)}>
+                  <Button size="icon" variant="ghost" className="text-red-500" title="Remove" onClick={() => handleRemove(item.productId)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
