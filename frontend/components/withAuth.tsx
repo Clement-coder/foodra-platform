@@ -119,7 +119,7 @@ const withAuth = <P extends object>(
 
     const handleCloseAuthModal = () => {
       setAuthModalOpen(false);
-      router.push("/");
+      router.push(`/?redirect=${encodeURIComponent(pathname)}`);
     };
 
     // Privy is not ready yet
