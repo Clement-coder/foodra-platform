@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, MapPin, Share2, ShoppingCart, UserIcon, X } from "lucide-react"
+import { ArrowLeft, MapPin, Share2, ShoppingCart, UserIcon, X, Eye } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -175,6 +175,13 @@ function ProductDetailPage() {
 
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{product.productName}</h1>
 
+            {product.viewCount != null && product.viewCount > 0 && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
+                <Eye className="h-3.5 w-3.5" />
+                <span>{product.viewCount.toLocaleString()} view{product.viewCount !== 1 ? "s" : ""}</span>
+              </div>
+            )}
+
             <div className="flex items-baseline gap-3 mb-6">
               <span className="text-4xl font-bold text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
               <span className="text-muted-foreground">per {product.unit || 'unit'}</span>
@@ -317,7 +324,9 @@ function ProductDetailPage() {
                   />
                   <div>
                     <p className="font-medium text-foreground">{product.farmerName}</p>
-                    <p className="text-[#118C4C] text-xs font-medium">✓ Verified Farmer</p>
+                    {product.farmerIsVerified && (
+                      <p className="text-[#118C4C] text-xs font-medium">✓ Verified Farmer</p>
+                    )}
                     <div className="mt-1"><RatingSummary farmerId={product.farmerId} /></div>
                   </div>
                 </div>
