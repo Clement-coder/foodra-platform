@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { Heart, Trash2, Bell, BellOff, ShoppingCart, Check, X } from "lucide-react"
+import { Heart, Trash2, Bell, BellOff, ShoppingCart, Check, X, ArrowLeft } from "lucide-react"
 import { usePrivy } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -16,6 +17,7 @@ import { getWishlist, removeFromWishlist, setAlertPrice, type WishlistItem } fro
 export default function WishlistPage() {
   const { getAccessToken } = usePrivy()
   const { currentUser } = useUser()
+  const router = useRouter()
   const [items, setItems] = useState<WishlistItem[]>([])
   const [alertInputId, setAlertInputId] = useState<string | null>(null)
   const [alertInputValue, setAlertInputValue] = useState("")
@@ -78,6 +80,10 @@ export default function WishlistPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
       <div className="flex items-center gap-3 mb-8">
         <Heart className="h-7 w-7 text-red-500 fill-current" />
         <h1 className="text-3xl font-bold text-foreground">Wishlist</h1>
