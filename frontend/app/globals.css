@@ -133,9 +133,11 @@ html, body {
     padding-right: env(safe-area-inset-right);
     overscroll-behavior-y: contain;
   }
-  /* Prevent iOS zoom on input focus */
-  input, textarea, select {
-    font-size: 16px !important;
+  /* Prevent iOS zoom on input focus — only on mobile */
+  @media (max-width: 768px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
   }
 }
 
