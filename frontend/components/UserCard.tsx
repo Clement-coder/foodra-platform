@@ -31,10 +31,16 @@ export function UserCard({ user }: UserCardProps) {
       className="group cursor-pointer rounded-2xl border border-[#118C4C]/15 bg-card p-5 shadow-sm hover:shadow-xl hover:border-[#118C4C]/35 transition-all duration-300"
     >
       <div className="flex items-start justify-between mb-4">
-        <span className="inline-flex items-center gap-1 rounded-full bg-[#118C4C]/10 text-[#118C4C] text-[11px] px-2.5 py-1 font-semibold">
-          <BadgeCheck className="h-3.5 w-3.5" />
-          Verified
-        </span>
+        {user.isVerified ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#118C4C]/10 text-[#118C4C] text-[11px] px-2.5 py-1 font-semibold">
+            <BadgeCheck className="h-3.5 w-3.5" />
+            Verified
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted text-muted-foreground text-[11px] px-2.5 py-1 font-semibold">
+            {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
+          </span>
+        )}
         <ArrowUpRight className="h-4 w-4 text-[#118C4C] opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
 
