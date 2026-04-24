@@ -19,8 +19,7 @@ export default function UsersPage() {
         const data = await res.json()
         setUsers(data)
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Failed to load users"
-        setError(msg)
+        setError(err instanceof Error ? err.message : "Failed to load users")
       } finally {
         setIsLoading(false)
       }
