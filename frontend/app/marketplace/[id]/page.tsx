@@ -203,6 +203,7 @@ function ProductDetailPage() {
                   image={product.image}
                   pricePerUnit={product.pricePerUnit}
                   className="ml-auto h-10 w-10 rounded-xl border border-input"
+                  iconSize="h-6 w-6"
                 />
               )}
             </div>
