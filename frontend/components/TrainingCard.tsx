@@ -105,6 +105,11 @@ export function TrainingCard({ training }: TrainingCardProps) {
               <span className="font-medium text-foreground">{training.instructor}</span>
               {" · Instructor"}
             </span>
+            {training.price != null && (
+              <span className="ml-auto text-xs font-bold text-[#118C4C] flex-shrink-0">
+                {training.price === 0 ? "Free" : `₦${training.price.toLocaleString()}`}
+              </span>
+            )}
           </div>
         </CardContent>
 
