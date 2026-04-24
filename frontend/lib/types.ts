@@ -43,6 +43,7 @@ export interface Training {
   capacity: number
   enrolled: number
   image: string
+  price?: number | null
 }
 
 export interface FundingApplication {
