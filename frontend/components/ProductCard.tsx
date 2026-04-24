@@ -274,6 +274,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                   productName={product.productName}
                   image={product.image}
                   pricePerUnit={product.pricePerUnit}
+                  iconSize="h-5 w-5"
                 />
               </div>
             )}
