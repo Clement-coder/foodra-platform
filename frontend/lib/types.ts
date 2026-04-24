@@ -26,6 +26,8 @@ export interface Product {
   farmerId: string
   farmerName: string
   farmerAvatar: string
+  farmerIsVerified?: boolean
+  viewCount?: number
   createdAt: string
 }
 
