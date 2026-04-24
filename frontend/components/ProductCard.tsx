@@ -315,6 +315,11 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
             </>
           ) : (
             <>
+              <Link href={`/marketplace/${product.id}`} className="flex-1" onClick={(e) => e.stopPropagation()}>
+                <button className="w-full border border-[#118C4C]/50 hover:bg-[#118C4C] hover:text-white duration-200 rounded-xl text-[#118C4C] text-center py-1.5 sm:py-2 bg-transparent font-medium text-[10px] sm:text-xs">
+                  View
+                </button>
+              </Link>
               <Button
                 onClick={(e) => { e.stopPropagation(); handleAddToCart(); }}
                 disabled={isAdding || isOutOfStock}
@@ -322,7 +327,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                 className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-sm disabled:opacity-50 text-[10px] sm:text-xs px-1"
               >
                 {isAdding ? <Check className="h-3 w-3" /> : <ShoppingCart className="h-3 w-3" />}
-                <span className="ml-0.5 hidden sm:inline">{isOutOfStock ? "Sold Out" : isAdding ? "Added!" : "Add to Cart"}</span>
+                <span className="ml-0.5 hidden sm:inline">{isOutOfStock ? "Sold Out" : isAdding ? "Added!" : "Add"}</span>
               </Button>
               <Button
                 type="button"
