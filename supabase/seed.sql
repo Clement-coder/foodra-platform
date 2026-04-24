@@ -9,3 +9,4 @@ VALUES
   ('Poultry Business Fundamentals', 'Start and scale a profitable poultry operation', 'From day-old chicks to market — this training covers housing, feeding, disease prevention, record keeping, and marketing strategies for poultry farmers in Nigeria.', NOW() + INTERVAL '7 days', 'online', NULL, 'Mrs. Chidinma Eze', 200, 'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=800'),
   ('Organic Farming Certification', 'Get certified and access premium organic markets', 'Learn the principles of organic farming, certification requirements, record keeping, and how to access premium buyers. Includes practical sessions on composting and natural pest control.', NOW() + INTERVAL '30 days', 'offline', 'Abuja, FCT', 'Prof. Taiwo Adeyemi', 50, 'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800')
 ON CONFLICT DO NOTHING;
+kiro
