@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, MapPin, User } from "lucide-react"
+import { Calendar, MapPin, User, ChevronDown, ChevronUp } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
@@ -10,6 +10,7 @@ import { useState } from "react"
 import { useUser } from "@/lib/useUser"
 import { usePrivy } from "@privy-io/react-auth"
 import { authFetch } from "@/lib/authFetch"
+import { CreditScoreCard } from "@/components/CreditScoreCard"
 
 interface FundingCardProps {
   application: FundingApplication
@@ -20,6 +21,7 @@ export function FundingCard({ application, onStatusChange }: FundingCardProps) {
   const { currentUser } = useUser()
   const { getAccessToken } = usePrivy()
   const [isUpdating, setIsUpdating] = useState(false)
+  const [showScore, setShowScore] = useState(false)
   const isAdmin = currentUser?.role === "admin"
 
   const handleStatusChange = async (newStatus: "Approved" | "Rejected") => {
@@ -28,10 +30,7 @@ export function FundingCard({ application, onStatusChange }: FundingCardProps) {
       const response = await authFetch(getAccessToken, "/api/funding", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          applicationId: application.id,
-          status: newStatus,
-        }),
+        body: JSON.stringify({ applicationId: application.id, status: newStatus }),
       })
       if (!response.ok) {
         const errorBody = await response.json().catch(() => ({}))
@@ -73,14 +72,12 @@ export function FundingCard({ application, onStatusChange }: FundingCardProps) {
               <MapPin className="h-4 w-4 flex-shrink-0" />
               <span>{application.location}</span>
             </div>
-
             <div className="flex items-center gap-2 text-muted-foreground">
               <User className="h-4 w-4 flex-shrink-0" />
               <span>
                 {application.farmType} • {application.farmSize} hectares • {application.yearsOfExperience} years exp.
               </span>
             </div>
-
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4 flex-shrink-0" />
               <span>Submitted {format(new Date(application.submittedAt), "PP")}</span>
@@ -91,6 +88,20 @@ export function FundingCard({ application, onStatusChange }: FundingCardProps) {
             <p className="text-xs font-medium text-muted-foreground mb-1">Expected Outcome:</p>
             <p className="text-sm line-clamp-2">{application.expectedOutcome}</p>
           </div>
+
+          {/* Credit Score toggle */}
+          <button
+            onClick={() => setShowScore((v) => !v)}
+            className="mt-4 w-full flex items-center justify-between text-xs font-medium text-[#118C4C] hover:text-[#0d6d3a] transition-colors"
+          >
+            <span>AI Credit Score</span>
+            {showScore ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+          {showScore && (
+            <div className="mt-3">
+              <CreditScoreCard application={application} />
+            </div>
+          )}
         </CardContent>
 
         {isAdmin && application.status === "Pending" && (
@@ -102,7 +113,12 @@ export function FundingCard({ application, onStatusChange }: FundingCardProps) {
             >
               Approve
             </Button>
-            <Button onClick={() => handleStatusChange("Rejected")} disabled={isUpdating} className="flex-1">
+            <Button
+              onClick={() => handleStatusChange("Rejected")}
+              disabled={isUpdating}
+              variant="destructive"
+              className="flex-1"
+            >
               Reject
             </Button>
           </CardFooter>
