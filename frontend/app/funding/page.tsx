@@ -27,7 +27,8 @@ function FundingPage() {
     } else if (!isLoading) {
       setLoading(false)
     }
-  }, [isLoading, user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, user?.id])
 
   const loadData = async () => {
     try {
