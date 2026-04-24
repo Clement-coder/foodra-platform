@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { GridLayout } from "@/components/GridLayout";
-import { Skeleton } from "@/components/Skeleton";
+import { Skeleton, ProductCardSkeleton } from "@/components/Skeleton";
 import { AdvancedSearchFilters, DEFAULT_FILTERS, type SearchFilters } from "@/components/AdvancedSearchFilters";
 import { t } from "@/lib/i18n";
 import type { Product } from "@/lib/types";
@@ -175,7 +175,7 @@ function MarketplacePage() {
       {loading ? (
         <GridLayout>
           {[...Array(PAGE_SIZE)].map((_, i) => (
-            <Skeleton key={i} className="h-96" />
+            <ProductCardSkeleton key={i} />
           ))}
         </GridLayout>
       ) : filteredProducts.length === 0 ? (
