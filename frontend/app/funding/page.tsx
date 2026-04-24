@@ -167,24 +167,27 @@ function FundingPage() {
           </Link>
         </Card>
       ) : filteredApplications.length === 0 ? (
-        <Card className="p-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-            <DollarSign className="h-8 w-8 text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#118C4C]/10 mb-5">
+            <DollarSign className="h-10 w-10 text-[#118C4C]" />
           </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">
+          <h2 className="text-2xl font-bold text-foreground mb-2">
             {filter === "all" ? "No Applications Yet" : `No ${filter} Applications`}
           </h2>
-          <p className="text-muted-foreground mb-6">
+          <p className="text-muted-foreground mb-8 max-w-sm">
             {filter === "all"
-              ? "Start by applying for funding to grow your farming business"
+              ? "Apply for funding to grow your farming business and unlock new opportunities."
               : "Try changing the filter to see other applications"}
           </p>
           {filter === "all" && (
             <Link href="/funding/apply">
-              <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white">Apply for Funding</Button>
+              <Button size="lg" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20 px-8">
+                <Plus className="h-5 w-5" />
+                Apply for Funding
+              </Button>
             </Link>
           )}
-        </Card>
+        </div>
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
