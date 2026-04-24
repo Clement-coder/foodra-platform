@@ -62,7 +62,6 @@ function ProfilePage() {
   const { currentUser: user, isLoading, updateUser } = useUser()
   const { logout, user: privyUser, getAccessToken } = usePrivy()
   const { toast } = useToast()
-  const privyUserAny = privyUser as any
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSignOutModalOpen, setIsSignOutModalOpen] = useState(false)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
@@ -148,8 +147,9 @@ function ProfilePage() {
 
   const getUserDisplayName = () => {
     if (!privyUser && !user) return "User"
+    const linked = privyUser?.linkedAccounts?.find((a: { type: string }) => a.type === "google_oauth") as { name?: string } | undefined
     return (
-      privyUserAny?.google?.name ||
+      linked?.name ||
       privyUser?.email?.address?.split("@")[0] ||
       user?.name ||
       "User"
@@ -157,8 +157,9 @@ function ProfilePage() {
   }
 
   const getUserEmail = () => {
+    const linked = privyUser?.linkedAccounts?.find((a: { type: string }) => a.type === "google_oauth") as { email?: string } | undefined
     return (
-      privyUserAny?.google?.email ||
+      linked?.email ||
       privyUser?.email?.address ||
       user?.email ||
       "N/A"
@@ -166,9 +167,10 @@ function ProfilePage() {
   }
 
   const getSignUpMethod = () => {
-    if (privyUserAny?.google) return "Google"
+    const hasGoogle = privyUser?.linkedAccounts?.some((a: { type: string }) => a.type === "google_oauth")
+    if (hasGoogle) return "Google"
     if (privyUser?.email) return "Email"
-    return "Unknown"
+    return "Wallet"
   }
 
   useEffect(() => {
@@ -190,8 +192,6 @@ function ProfilePage() {
           .select("*")
           .eq("farmer_id", user.id)
           .order("created_at", { ascending: false })
-
-        console.log('Profile products fetch:', { userId: user.id, data, error });
 
         if (!error && data) {
           setUserProducts(
