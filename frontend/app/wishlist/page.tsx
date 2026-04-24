@@ -82,6 +82,12 @@ export default function WishlistPage() {
         <Heart className="h-7 w-7 text-red-500 fill-current" />
         <h1 className="text-3xl font-bold text-foreground">Wishlist</h1>
         <span className="ml-auto text-sm text-muted-foreground">{items.length} item{items.length !== 1 ? "s" : ""}</span>
+        <Link href="/orders">
+          <button className="text-xs border border-[#118C4C]/40 text-[#118C4C] px-3 py-1.5 rounded-lg hover:bg-[#118C4C]/10 transition-colors">View Orders</button>
+        </Link>
+        <Link href="/listing/new">
+          <button className="text-xs bg-[#118C4C] text-white px-3 py-1.5 rounded-lg hover:bg-[#0d6d3a] transition-colors">+ List Product</button>
+        </Link>
       </div>
 
       {items.length === 0 ? (
