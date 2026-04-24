@@ -45,21 +45,12 @@ const GetInTouch = () => {
     setMessage("")
 
     try {
-      const result = await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_ID,
-        {
-          user_email: email, // ✅ MUST MATCH TEMPLATE
-        }
-      )
-
-      console.log("EmailJS success:", result)
-
+      const result = await emailjs.send(SERVICE_ID, TEMPLATE_ID, { user_email: email })
+      if (result.status !== 200) throw new Error("Send failed")
       setStatus("success")
       setMessage("Thank you! You've been added to our mailing list.")
       setEmail("")
-    } catch (error) {
-      console.error("EmailJS error:", error)
+    } catch {
       setStatus("error")
       setMessage("Something went wrong. Please try again later.")
     }
