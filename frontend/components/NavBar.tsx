@@ -87,7 +87,7 @@ export function NavBar() {
   };
 
   useEffect(() => {
-    if (!isSearchOpen || hasLoadedSuggestions) return;
+    if (!isSearchOpen || hasLoadedSuggestions || searchQuery.trim().length < 2) return;
 
     const fetchSuggestionsData = async () => {
       setIsSuggestionsLoading(true);
@@ -106,7 +106,7 @@ export function NavBar() {
     };
 
     fetchSuggestionsData();
-  }, [isSearchOpen, hasLoadedSuggestions]);
+  }, [isSearchOpen, hasLoadedSuggestions, searchQuery]);
 
   const filteredSuggestions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
