@@ -161,7 +161,13 @@ function OrdersPage() {
                     <div className="space-y-2">
                       {order.items.map((item) => (
                         <div key={item.productId} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 border border-[#118C4C]/10">
-                          <Image src={item.image} alt={item.productName} width={52} height={52} className="rounded-md object-cover flex-shrink-0 border border-[#118C4C]/20" unoptimized />
+                          {item.image ? (
+                            <Image src={item.image} alt={item.productName} width={52} height={52} className="rounded-md object-cover flex-shrink-0 border border-[#118C4C]/20" unoptimized />
+                          ) : (
+                            <div className="w-[52px] h-[52px] rounded-md bg-muted flex-shrink-0 border border-[#118C4C]/20 flex items-center justify-center">
+                              <span className="text-[10px] text-muted-foreground">No img</span>
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate">{item.productName}</p>
                             <p className="text-xs text-muted-foreground">{item.quantity} × ₦{item.pricePerUnit.toLocaleString()}</p>
