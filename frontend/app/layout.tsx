@@ -14,27 +14,6 @@ import { SupportChat } from "@/components/SupportChat"
 import { ToastProvider } from "@/lib/toast"
 import { OfflineBanner } from "@/components/OfflineBanner"
 
-// ---- LOCAL FONTS ----
-
-// Geist (download and put in public/fonts/Geist/)
-// Geist
-// const geist = localFont({
-//   src: [
-//     {
-//       path: "../public/fonts/Geist/Geist-Regular.ttf", // ✅ correct
-//       weight: "400",
-//       style: "normal",
-//     },
-//     {
-//       path: "../public/fonts/Geist/Geist-Bold.ttf",
-//       weight: "700",
-//       style: "normal",
-//     },
-//   ],
-//   variable: "--font-geist-sans",
-// })
-
-// Geist Mono
 const geistMono = localFont({
   src: [
     {
