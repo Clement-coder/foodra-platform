@@ -221,11 +221,11 @@ export function NavBar() {
             </button>
 
             {/* Cart */}
-            <a href="/shop" className="relative p-2 rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5" aria-label="Shop">
+            <a href="/shop" className="relative p-2 rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5" aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}>
               <ShoppingCart className="h-5 w-5 text-foreground" />
               <span className="hidden md:inline text-sm font-medium">Shop</span>
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-[#118C4C] text-white text-[10px] flex items-center justify-center font-bold">
+                <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-[#118C4C] text-white text-[10px] flex items-center justify-center font-bold" aria-hidden="true">
                   {cartCount}
                 </span>
               )}
