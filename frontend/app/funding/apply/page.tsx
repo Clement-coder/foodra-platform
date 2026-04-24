@@ -37,24 +37,15 @@ function ApplyFundingPage() {
   useEffect(() => {
     if (!privyUser) {
       router.push("/")
-      return;
+      return
     }
-
-    // Pre-fill form with user data
-    // Full Name from Privy user
-    const getUserDisplayName = () => {
-      if (!privyUser) return ""
-      return (
-        privyUser.google?.name ||
-        privyUser.github?.name ||
-        privyUser.twitter?.name ||
-        privyUser.email?.address?.split("@")[0] ||
-        ""
-      )
-    }
-    setValue("fullName", getUserDisplayName())
-
-    setValue("phoneNumber", currentUser?.phone || privyUser.phone?.number || "")
+    const linked = privyUser.linkedAccounts?.find((a: { type: string }) => a.type === "google_oauth") as { name?: string } | undefined
+    const displayName =
+      linked?.name ||
+      privyUser.email?.address?.split("@")[0] ||
+      ""
+    setValue("fullName", displayName)
+    setValue("phoneNumber", currentUser?.phone || "")
     setValue("location", currentUser?.location || "")
   }, [router, setValue, privyUser, currentUser])
 
