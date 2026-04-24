@@ -72,9 +72,17 @@ function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-96 mb-8" />
-        <Skeleton className="h-32" />
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <Skeleton className="h-[500px] rounded-2xl" />
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-1/3" />
+            <Skeleton className="h-12 w-2/3" />
+            <Skeleton className="h-6 w-1/4" />
+            <Skeleton className="h-32" />
+            <Skeleton className="h-12" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -82,8 +90,11 @@ function ProductDetailPage() {
   if (!product) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold text-foreground mb-4">Product Not Found</h1>
-        <p className="text-muted-foreground mb-4">{error || "The product you're looking for doesn't exist."}</p>
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
+          <span className="text-3xl">📦</span>
+        </div>
+        <h1 className="text-2xl font-bold text-foreground mb-3">Product Not Found</h1>
+        <p className="text-muted-foreground mb-6">{error || "The product you're looking for doesn't exist or has been removed."}</p>
         <Link href="/marketplace">
           <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white">Back to Marketplace</Button>
         </Link>
