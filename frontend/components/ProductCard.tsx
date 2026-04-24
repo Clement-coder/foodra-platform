@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Share2, ShoppingCart, EyeOff, Eye, Trash2, Check, PackagePlus, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onRefresh }: ProductCardProps) {
+  const router = useRouter();
   const { addToCart, cart } = useCart();
   const { currentUser } = useUser();
   const { authenticated, getAccessToken } = usePrivy();
@@ -191,11 +193,13 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
         url={typeof window !== "undefined" ? `${window.location.origin}/marketplace/${product.id}` : ""}
       />
 
-      {/* Card — no wrapping Link; navigation handled by the View button */}
+      {/* Card — clicking the card body navigates to detail for non-own products */}
       <motion.div
         whileHover={{ y: -4 }}
         transition={{ duration: 0.2 }}
         className="relative group rounded-2xl overflow-hidden border border-[#118C4C]/20 hover:border-[#118C4C]/50 hover:shadow-xl hover:shadow-[#118C4C]/10 transition-all bg-card flex flex-col"
+        onClick={() => { if (!isOwnProduct) router.push(`/marketplace/${product.id}`); }}
+        style={{ cursor: isOwnProduct ? "default" : "pointer" }}
       >
         {/* Image */}
         <div className="relative h-32 sm:h-44 w-full bg-muted flex-shrink-0 overflow-hidden">
@@ -236,19 +240,6 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
               </span>
             </div>
           )}
-
-          {/* Wishlist button — always visible */}
-          {!isOwnProduct && (
-            <div className="absolute top-1.5 right-1.5 z-10">
-              <WishlistButton
-                productId={product.id}
-                productName={product.productName}
-                image={product.image}
-                pricePerUnit={product.pricePerUnit}
-                className="bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white h-7 w-7 p-0"
-              />
-            </div>
-          )}
         </div>
 
         {/* Content */}
@@ -270,10 +261,22 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
             <span className="text-[10px] sm:text-xs text-muted-foreground truncate">{product.farmerName}</span>
           </div>
 
-          {/* Price */}
-          <div className="flex items-baseline gap-1 mt-auto">
-            <span className="text-sm sm:text-lg font-bold text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
-            <span className="text-[10px] sm:text-xs text-muted-foreground">/{product.unit || "unit"}</span>
+          {/* Price + Wishlist side by side */}
+          <div className="flex items-center justify-between mt-auto">
+            <div className="flex items-baseline gap-1">
+              <span className="text-sm sm:text-lg font-bold text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground">/{product.unit || "unit"}</span>
+            </div>
+            {!isOwnProduct && (
+              <div onClick={(e) => e.stopPropagation()}>
+                <WishlistButton
+                  productId={product.id}
+                  productName={product.productName}
+                  image={product.image}
+                  pricePerUnit={product.pricePerUnit}
+                />
+              </div>
+            )}
           </div>
           <span className="text-[10px] text-muted-foreground">{availableQuantity} avail.</span>
         </div>
@@ -312,26 +315,21 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
             </>
           ) : (
             <>
-              <Link href={`/marketplace/${product.id}`} className="flex-1">
-                <button className="w-full border border-[#118C4C]/50 hover:bg-[#118C4C] hover:text-white duration-200 rounded-xl text-[#118C4C] text-center py-1.5 sm:py-2 bg-transparent font-medium text-[10px] sm:text-xs">
-                  View
-                </button>
-              </Link>
               <Button
-                onClick={handleAddToCart}
+                onClick={(e) => { e.stopPropagation(); handleAddToCart(); }}
                 disabled={isAdding || isOutOfStock}
                 size="sm"
                 className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-sm disabled:opacity-50 text-[10px] sm:text-xs px-1"
               >
                 {isAdding ? <Check className="h-3 w-3" /> : <ShoppingCart className="h-3 w-3" />}
-                <span className="ml-0.5 hidden sm:inline">{isOutOfStock ? "Sold Out" : isAdding ? "Added!" : "Add"}</span>
+                <span className="ml-0.5 hidden sm:inline">{isOutOfStock ? "Sold Out" : isAdding ? "Added!" : "Add to Cart"}</span>
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 className="shrink-0 border-[#118C4C]/30 hover:bg-[#118C4C]/10 px-1.5"
-                onClick={() => setIsShareModalOpen(true)}
+                onClick={(e) => { e.stopPropagation(); setIsShareModalOpen(true); }}
                 aria-label="Share"
               >
                 <Share2 className="h-3 w-3 text-[#118C4C]" />
