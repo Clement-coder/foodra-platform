@@ -112,15 +112,11 @@ function ShopPage() {
     return (
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto text-center">
-          <div className="bg-muted rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
-            <ShoppingBag className="h-12 w-12 text-muted-foreground" />
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-muted mb-6">
+            <ShoppingBag className="h-10 w-10 text-muted-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-3">
-            Your cart is empty
-          </h1>
-          <p className="text-muted-foreground mb-8">
-            Browse the marketplace and add products to your cart
-          </p>
+          <h1 className="text-2xl font-bold text-foreground mb-3">Your cart is empty</h1>
+          <p className="text-muted-foreground mb-8">Browse the marketplace and add products to your cart</p>
           <Link href="/marketplace">
             <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
               Browse Marketplace
@@ -129,7 +125,7 @@ function ShopPage() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
   return (
