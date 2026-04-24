@@ -2,7 +2,7 @@
 
 import { usePrivy } from "@privy-io/react-auth";
 import type React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Loader2, ShoppingCart, Search, Wallet, Users, Bell } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -31,6 +31,7 @@ export function NavBar() {
   const RECENT_SEARCHES_KEY = "foodra_recent_searches";
   const MAX_RECENT_SEARCHES = 6;
   const router = useRouter();
+  const pathname = usePathname();
   const { authenticated } = usePrivy();
   const { currentUser, isLoading } = useUser();
   const { cartCount } = useCart();
@@ -192,6 +193,16 @@ export function NavBar() {
             <img src="/foodra_logo.jpeg" alt="Foodra" className="h-8 w-8 rounded-lg rounded-bl-xl rounded-tr-2xl object-cover" />
             <span className="font-bold text-[#118C4C] text-base tracking-tight hidden sm:block">FOODRA</span>
           </a>
+
+          {/* Desktop nav links */}
+          <div className="hidden lg:flex items-center gap-1 mx-4">
+            {([["Marketplace", "/marketplace"], ["Training", "/training"], ["Funding", "/funding"]] as [string, string][]).map(([label, href]) => (
+              <a key={href} href={href}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${pathname.startsWith(href) ? "bg-[#118C4C]/10 text-[#118C4C]" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}>
+                {label}
+              </a>
+            ))}
+          </div>
 
           {/* Desktop search */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-sm mx-6">
