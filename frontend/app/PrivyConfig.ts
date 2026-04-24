@@ -10,9 +10,9 @@ export const privyConfig: PrivyClientConfig = {
   },
   defaultChain: baseSepolia,
   supportedChains: [baseSepolia],
-  loginMethods: ['email', 'google', 'wallet'],
+  loginMethods: ['email', 'google'],
   appearance: {
-    showWalletLoginFirst: true,
+    showWalletLoginFirst: false,
     logo: '/foodra_logo.jpeg',
   },
 };

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, Share2, ShoppingCart, EyeOff, Eye, Trash2, Check, PackagePlus, X, Heart } from "lucide-react";
+import { Share2, ShoppingCart, EyeOff, Eye, Trash2, Check, PackagePlus, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/lib/types";
@@ -198,7 +198,7 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
         className="relative group rounded-2xl overflow-hidden border border-[#118C4C]/20 hover:border-[#118C4C]/50 hover:shadow-xl hover:shadow-[#118C4C]/10 transition-all bg-card flex flex-col"
       >
         {/* Image */}
-        <div className="relative h-44 w-full bg-muted flex-shrink-0 overflow-hidden">
+        <div className="relative h-32 sm:h-44 w-full bg-muted flex-shrink-0 overflow-hidden">
           {product.image ? (
             <Image
               src={product.image}
@@ -239,51 +239,47 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
 
           {/* Wishlist button — always visible */}
           {!isOwnProduct && (
-            <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity sm:opacity-100">
+            <div className="absolute top-1.5 right-1.5 z-10">
               <WishlistButton
                 productId={product.id}
                 productName={product.productName}
                 image={product.image}
                 pricePerUnit={product.pricePerUnit}
-                className="bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white h-8 w-8 p-0"
+                className="bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white h-7 w-7 p-0"
               />
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-3 flex flex-col gap-2">
+        <div className="flex-1 p-2 sm:p-3 flex flex-col gap-1.5">
           <div>
-            <h3 className="font-semibold text-sm line-clamp-1 text-foreground">{product.productName}</h3>
-            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{product.description}</p>
+            <h3 className="font-semibold text-xs sm:text-sm line-clamp-1 text-foreground">{product.productName}</h3>
+            <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2 mt-0.5">{product.description}</p>
           </div>
 
           {/* Farmer */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={product.farmerAvatar || generateAvatarUrl(product.farmerId)}
               alt={product.farmerName}
-              className="h-5 w-5 rounded-full object-cover border border-[#118C4C]/30 flex-shrink-0"
+              className="h-4 w-4 sm:h-5 sm:w-5 rounded-full object-cover border border-[#118C4C]/30 flex-shrink-0"
               referrerPolicy="no-referrer"
             />
-            <span className="text-xs text-muted-foreground truncate">{product.farmerName}</span>
-            <div className="flex items-center gap-0.5 ml-auto flex-shrink-0">
-              <MapPin className="h-3 w-3 text-[#118C4C]" />
-              <span className="text-[10px] text-muted-foreground truncate max-w-[60px]">{product.location}</span>
-            </div>
+            <span className="text-[10px] sm:text-xs text-muted-foreground truncate">{product.farmerName}</span>
           </div>
 
           {/* Price */}
           <div className="flex items-baseline gap-1 mt-auto">
-            <span className="text-lg font-bold text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
-            <span className="text-xs text-muted-foreground">/ {product.unit || "unit"}</span>
-            <span className="ml-auto text-[10px] text-muted-foreground">{availableQuantity} avail.</span>
+            <span className="text-sm sm:text-lg font-bold text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground">/{product.unit || "unit"}</span>
           </div>
+          <span className="text-[10px] text-muted-foreground">{availableQuantity} avail.</span>
         </div>
 
         {/* Actions */}
-        <div className="px-3 pb-3 flex gap-1.5">
+        <div className="px-2 sm:px-3 pb-2 sm:pb-3 flex gap-1">
           {isOwnProduct ? (
             <>
               <Button
@@ -291,33 +287,33 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                 disabled={actionLoading}
                 size="sm"
                 variant="ghost"
-                className="flex-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100 dark:bg-blue-950/20 dark:border-blue-900"
+                className="flex-1 text-[10px] sm:text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100 dark:bg-blue-950/20 dark:border-blue-900 px-1"
               >
-                <PackagePlus className="h-3.5 w-3.5 mr-1" />Edit
+                <PackagePlus className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">Edit</span>
               </Button>
               <Button
                 onClick={handleToggle}
                 disabled={actionLoading}
                 size="sm"
                 variant="ghost"
-                className={`flex-1 text-xs border ${isAvailable ? "bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-900" : "bg-green-50 text-green-700 hover:bg-green-100 border-green-200 dark:bg-green-950/20 dark:border-green-900"}`}
+                className={`flex-1 text-[10px] sm:text-xs border px-1 ${isAvailable ? "bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-900" : "bg-green-50 text-green-700 hover:bg-green-100 border-green-200 dark:bg-green-950/20 dark:border-green-900"}`}
               >
-                {isAvailable ? <><EyeOff className="h-3.5 w-3.5 mr-1" />Hide</> : <><Eye className="h-3.5 w-3.5 mr-1" />Show</>}
+                {isAvailable ? <><EyeOff className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">Hide</span></> : <><Eye className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">Show</span></>}
               </Button>
               <Button
                 onClick={handleDelete}
                 disabled={actionLoading}
                 size="sm"
                 variant="ghost"
-                className="flex-1 text-xs bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 dark:bg-red-950/20 dark:border-red-900"
+                className="flex-1 text-[10px] sm:text-xs bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 dark:bg-red-950/20 dark:border-red-900 px-1"
               >
-                <Trash2 className="h-3.5 w-3.5 mr-1" />Delete
+                <Trash2 className="h-3 w-3 sm:mr-1" /><span className="hidden sm:inline">Delete</span>
               </Button>
             </>
           ) : (
             <>
               <Link href={`/marketplace/${product.id}`} className="flex-1">
-                <button className="w-full border border-[#118C4C]/50 hover:bg-[#118C4C] hover:text-white duration-200 rounded-xl text-[#118C4C] text-center py-2 bg-transparent font-medium text-xs">
+                <button className="w-full border border-[#118C4C]/50 hover:bg-[#118C4C] hover:text-white duration-200 rounded-xl text-[#118C4C] text-center py-1.5 sm:py-2 bg-transparent font-medium text-[10px] sm:text-xs">
                   View
                 </button>
               </Link>
@@ -325,20 +321,20 @@ export function ProductCard({ product, onRefresh }: ProductCardProps) {
                 onClick={handleAddToCart}
                 disabled={isAdding || isOutOfStock}
                 size="sm"
-                className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-sm disabled:opacity-50 text-xs"
+                className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-sm disabled:opacity-50 text-[10px] sm:text-xs px-1"
               >
-                {isAdding ? <Check className="h-3.5 w-3.5 mr-1" /> : <ShoppingCart className="h-3.5 w-3.5 mr-1" />}
-                {isOutOfStock ? "Sold Out" : isAdding ? "Added!" : "Add"}
+                {isAdding ? <Check className="h-3 w-3" /> : <ShoppingCart className="h-3 w-3" />}
+                <span className="ml-0.5 hidden sm:inline">{isOutOfStock ? "Sold Out" : isAdding ? "Added!" : "Add"}</span>
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="shrink-0 border-[#118C4C]/30 hover:bg-[#118C4C]/10 px-2"
+                className="shrink-0 border-[#118C4C]/30 hover:bg-[#118C4C]/10 px-1.5"
                 onClick={() => setIsShareModalOpen(true)}
                 aria-label="Share"
               >
-                <Share2 className="h-3.5 w-3.5 text-[#118C4C]" />
+                <Share2 className="h-3 w-3 text-[#118C4C]" />
               </Button>
             </>
           )}
