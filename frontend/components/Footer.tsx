@@ -27,37 +27,52 @@ const XIcon = () => (
 
 const Footer = () => {
   return (
-    <footer className="bg-card border-t border-border shadow-sm mt-10">
-      <div className="container mx-auto px-4 py-6 text-muted-foreground text-sm">
-        {/* Row 1: logo + copyright */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Image src="/foodra_logo.jpeg" alt="Foodra Logo" width={44} height={34} className="rounded-bl-2xl rounded-tr-2xl" />
-            <p className="text-center sm:text-left">&copy; {new Date().getFullYear()} Foodra Platform. All rights reserved.</p>
+    <footer className="bg-card border-t border-border mt-10">
+      <div className="container mx-auto px-4 py-8 text-muted-foreground text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8">
+          {/* Brand */}
+          <div className="col-span-2 sm:col-span-1">
+            <div className="flex items-center gap-2 mb-3">
+              <Image src="/foodra_logo.jpeg" alt="Foodra Logo" width={36} height={36} className="rounded-bl-xl rounded-tr-xl" />
+              <span className="font-bold text-foreground text-base">FOODRA</span>
+            </div>
+            <p className="text-xs leading-relaxed">Africa's blockchain-powered AgriTech platform connecting farmers with markets, training, and funding.</p>
           </div>
-
-          {/* Nav links + social */}
-          <div className="flex flex-col items-center sm:items-end gap-3">
-            {/* Nav links — wrap on small screens */}
-            <div className="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-1">
-              <Link href="/how-it-works" className="hover:text-foreground transition-colors whitespace-nowrap">How It Works</Link>
-              <Link href="/about" className="hover:text-foreground transition-colors whitespace-nowrap">About</Link>
-              <Link href="/contact" className="hover:text-foreground transition-colors whitespace-nowrap">Contact</Link>
-              <Link href="/privacy" className="hover:text-foreground transition-colors whitespace-nowrap">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-foreground transition-colors whitespace-nowrap">Terms of Service</Link>
-            </div>
-            {/* Social icons */}
-            <div className="flex items-center gap-4">
-              <Link href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-foreground transition-colors">
-                <LinkedInIcon />
-              </Link>
-              <Link href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-foreground transition-colors">
-                <FacebookIcon />
-              </Link>
-              <Link href={SOCIAL_LINKS.x} target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" className="hover:text-foreground transition-colors">
-                <XIcon />
-              </Link>
-            </div>
+          {/* Platform */}
+          <div>
+            <p className="font-semibold text-foreground mb-3 text-xs uppercase tracking-wide">Platform</p>
+            <ul className="space-y-2">
+              {([["Marketplace", "/marketplace"], ["Training", "/training"], ["Funding", "/funding"], ["Wallet", "/wallet"]] as [string, string][]).map(([label, href]) => (
+                <li key={href}><Link href={href} className="hover:text-foreground transition-colors">{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+          {/* Company */}
+          <div>
+            <p className="font-semibold text-foreground mb-3 text-xs uppercase tracking-wide">Company</p>
+            <ul className="space-y-2">
+              {([["About", "/about"], ["How It Works", "/how-it-works"], ["Contact", "/contact"]] as [string, string][]).map(([label, href]) => (
+                <li key={href}><Link href={href} className="hover:text-foreground transition-colors">{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+          {/* Legal */}
+          <div>
+            <p className="font-semibold text-foreground mb-3 text-xs uppercase tracking-wide">Legal</p>
+            <ul className="space-y-2">
+              {([["Privacy Policy", "/privacy"], ["Terms of Service", "/terms"]] as [string, string][]).map(([label, href]) => (
+                <li key={href}><Link href={href} className="hover:text-foreground transition-colors">{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        {/* Bottom bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-border">
+          <p>&copy; {new Date().getFullYear()} Foodra Platform. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <Link href={SOCIAL_LINKS.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-foreground transition-colors"><LinkedInIcon /></Link>
+            <Link href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-foreground transition-colors"><FacebookIcon /></Link>
+            <Link href={SOCIAL_LINKS.x} target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" className="hover:text-foreground transition-colors"><XIcon /></Link>
           </div>
         </div>
       </div>
