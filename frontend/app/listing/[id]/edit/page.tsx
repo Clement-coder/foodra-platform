@@ -32,6 +32,7 @@ function EditListingPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
+  const [descLength, setDescLength] = useState(0)
 
   const {
     register,
@@ -58,6 +59,7 @@ function EditListingPage() {
           description: p.description,
           image: p.image,
         })
+        setDescLength(p.description?.length || 0)
       })
       .catch(() => toast.error("Failed to load product"))
       .finally(() => setLoading(false))
@@ -238,12 +240,20 @@ function EditListingPage() {
               />
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-foreground">
-                  Description <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-foreground">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <span className={`text-xs ${descLength > 500 ? "text-red-500" : "text-muted-foreground"}`}>
+                    {descLength}/500
+                  </span>
+                </div>
                 <textarea
-                  {...register("description")}
+                  {...register("description", {
+                    onChange: (e) => setDescLength(e.target.value.length),
+                  })}
                   rows={4}
+                  maxLength={500}
                   className={`w-full px-4 py-2 rounded-lg border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#118C4C] ${errors.description ? "border-red-500" : "border-input"}`}
                   placeholder="Describe your product..."
                 />
