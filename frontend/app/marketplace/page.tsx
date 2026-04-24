@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Filter, PackageOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Filter, PackageOpen, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
@@ -108,6 +108,11 @@ function MarketplacePage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/wishlist" aria-label="Wishlist">
+            <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20">
+              <Heart className="h-5 w-5" />
+            </Button>
+          </Link>
           {authenticated && (
             <Link href="/orders">
               <Button variant="outline" className="gap-2 flex items-center border-[#118C4C]/30 hover:bg-[#118C4C]/5">
