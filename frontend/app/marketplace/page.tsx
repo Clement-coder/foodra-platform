@@ -127,8 +127,17 @@ function MarketplacePage() {
         </div>
       </div>
 
-      {/* Weather Widget */}
-      <WeatherWidget userId={currentUser?.id} />
+      {/* Weather Widget — collapsible */}
+      <details className="mb-6 group">
+        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 list-none select-none w-fit">
+          <span className="group-open:hidden">▶</span>
+          <span className="hidden group-open:inline">▼</span>
+          Weather & Crop Advisory
+        </summary>
+        <div className="mt-3">
+          <WeatherWidget userId={currentUser?.id} />
+        </div>
+      </details>
 
       {/* Category Filter */}
       <div className="mb-8">
