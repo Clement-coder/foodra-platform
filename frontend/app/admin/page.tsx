@@ -62,7 +62,13 @@ function AdminPage() {
   )
 
   if (!data || currentUser?.role !== "admin") return (
-    <div className="min-h-screen flex items-center justify-center text-gray-500">Access denied</div>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center p-8">
+        <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+        <h2 className="text-xl font-bold text-foreground mb-2">Access Denied</h2>
+        <p className="text-muted-foreground">You don't have permission to view this page.</p>
+      </div>
+    </div>
   )
 
   const tabs: { key: Tab; label: string; icon: any; count: number | string; unread?: number }[] = [
