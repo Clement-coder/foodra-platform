@@ -66,8 +66,19 @@ function TrainingPage() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-3 sm:p-6">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-96" />)}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden animate-pulse">
+              <div className="h-48 bg-muted" />
+              <div className="p-4 space-y-3">
+                <div className="h-5 bg-muted rounded w-3/4" />
+                <div className="h-4 bg-muted rounded w-full" />
+                <div className="h-4 bg-muted rounded w-2/3" />
+                <div className="h-2 bg-muted rounded-full w-full mt-2" />
+                <div className="h-10 bg-muted rounded-lg mt-2" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredTrainings.length === 0 ? (
         <div className="text-center py-16">
@@ -75,7 +86,7 @@ function TrainingPage() {
         </div>
       ) : (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-3 sm:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredTrainings.map((training) => (
               <TrainingCard key={training.id} training={training} />
             ))}
