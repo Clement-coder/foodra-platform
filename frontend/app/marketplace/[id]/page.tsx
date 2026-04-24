@@ -82,7 +82,7 @@ function ProductDetailPage() {
     )
   }
 
-  if (!product && !loading) {
+  if (!product) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold text-foreground mb-4">Product Not Found</h1>
@@ -117,7 +117,7 @@ function ProductDetailPage() {
       />
 
       {/* Full Screen Image Modal */}
-      {isImageFullScreen && product.image && (
+      {isImageFullScreen && product?.image && (
         <div 
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
           onClick={() => setIsImageFullScreen(false)}
