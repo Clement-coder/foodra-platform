@@ -27,6 +27,7 @@ function NewListingPage() {
   const [imageBase64, setImageBase64] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [confirmed, setConfirmed] = useState(false)
+  const [descLength, setDescLength] = useState(0)
 
   const {
     register,
@@ -169,14 +170,21 @@ function NewListingPage() {
                 />
 
               <div className="space-y-2">
-                <label htmlFor="description" className="block text-sm font-medium text-foreground">
-                  Description
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="description" className="block text-sm font-medium text-foreground">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <span className={`text-xs ${descLength > 500 ? "text-red-500" : "text-muted-foreground"}`}>
+                    {descLength}/500
+                  </span>
+                </div>
                 <textarea
                   id="description"
-                  {...register("description")}
+                  {...register("description", {
+                    onChange: (e) => setDescLength(e.target.value.length),
+                  })}
                   rows={4}
+                  maxLength={500}
                   className={`w-full px-4 py-2 rounded-lg border bg-background text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-[#118C4C] focus:border-transparent ${
                     errors.description ? "border-red-500" : "border-input"
                   }`}
