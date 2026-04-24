@@ -285,8 +285,6 @@ function WalletPage() {
       setRecipientError(null)
     }
 
-    
-
     // Real-time validation for withdrawal amount
     if (withdrawAmount) {
       if (parseFloat(withdrawAmount) <= 0) {
