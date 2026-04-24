@@ -58,7 +58,7 @@ export default function LandingHero() {
   }
 
   return (
-    <section className="relative h-[750px] md:h-[700px] lg:h-[735px] overflow-hidden">
+    <section className="relative h-[520px] sm:h-[600px] md:h-[680px] lg:h-[720px] overflow-hidden">
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={current}
@@ -86,10 +86,18 @@ export default function LandingHero() {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.15, duration: 0.4 }}
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white max-w-5xl"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white max-w-5xl leading-tight"
             >
               {slides[current].text}
             </motion.h1>
+            <motion.p
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="text-white/80 text-sm sm:text-base md:text-lg mt-3 max-w-xl"
+            >
+              Africa's blockchain-powered marketplace for farmers and buyers.
+            </motion.p>
             <motion.div
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
