@@ -36,13 +36,28 @@ export function RatingSummary({ farmerId, detail = false }: RatingSummaryProps) 
   }, [farmerId, detail])
 
   if (!data || data.total === 0) return (
-    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+    <div className="flex items-center gap-1 text-xs text-muted-foreground">
       <Stars value={0} />
       <span>No ratings yet</span>
     </div>
   )
 
   const isDefaulter = data.avg < 2 && data.total >= 5
+
+  if (!detail) {
+    return (
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <Stars value={data.avg} />
+        <span className="text-sm font-semibold">{data.avg}</span>
+        <span className="text-xs text-muted-foreground">({data.total})</span>
+        {isDefaulter && (
+          <span className="flex items-center gap-1 text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-semibold">
+            <AlertTriangle className="h-3 w-3" /> Poor Seller
+          </span>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-3">
