@@ -192,9 +192,9 @@ function MarketplacePage() {
             </GridLayout>
           </motion.div>
 
-          {/* Pagination */}
+          {/* Pagination with ellipsis */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-10">
+            <div className="flex items-center justify-center gap-1.5 mt-10 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
@@ -204,17 +204,33 @@ function MarketplacePage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <Button
-                  key={p}
-                  variant={p === page ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPage(p)}
-                  className={p === page ? "bg-[#118C4C] text-white" : "border-[#118C4C]/30"}
-                >
-                  {p}
-                </Button>
-              ))}
+              {(() => {
+                const pages: (number | "...")[] = [];
+                if (totalPages <= 7) {
+                  for (let i = 1; i <= totalPages; i++) pages.push(i);
+                } else {
+                  pages.push(1);
+                  if (page > 3) pages.push("...");
+                  for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
+                  if (page < totalPages - 2) pages.push("...");
+                  pages.push(totalPages);
+                }
+                return pages.map((p, i) =>
+                  p === "..." ? (
+                    <span key={`ellipsis-${i}`} className="px-1 text-muted-foreground text-sm">…</span>
+                  ) : (
+                    <Button
+                      key={p}
+                      variant={p === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPage(p as number)}
+                      className={p === page ? "bg-[#118C4C] text-white" : "border-[#118C4C]/30"}
+                    >
+                      {p}
+                    </Button>
+                  )
+                );
+              })()}
               <Button
                 variant="outline"
                 size="sm"
