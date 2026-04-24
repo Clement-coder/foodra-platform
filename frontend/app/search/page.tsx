@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/ProductCard"
 import { TrainingCard } from "@/components/TrainingCard"
 import { UserCard } from "@/components/UserCard"
 import { GridLayout } from "@/components/GridLayout"
+import { ProductCardSkeleton } from "@/components/Skeleton"
 import { Button } from "@/components/ui/button"
 import type { Product, Training, User } from "@/lib/types"
 
@@ -93,7 +94,14 @@ export default function SearchPage() {
       {query && <p className="text-muted-foreground mb-8">Showing {totalResults} results for "{query}"</p>}
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="space-y-12">
+          <section>
+            <div className="h-7 w-32 bg-muted rounded animate-pulse mb-4" />
+            <GridLayout>
+              {[...Array(6)].map((_, i) => <ProductCardSkeleton key={i} />)}
+            </GridLayout>
+          </section>
+        </div>
       ) : (
         <div className="space-y-12">
           {totalResults > 0 ? (
