@@ -184,7 +184,7 @@ function MarketplacePage() {
           ))}
         </GridLayout>
       ) : filteredProducts.length === 0 ? (
-        <div className="text-center py-20">
+        <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-[#118C4C]/10 mb-6">
             <svg viewBox="0 0 64 64" className="w-12 h-12 text-[#118C4C]" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M32 8 C20 8 12 18 12 28 C12 42 32 56 32 56 C32 56 52 42 52 28 C52 18 44 8 32 8Z" strokeLinecap="round" strokeLinejoin="round"/>
@@ -192,17 +192,18 @@ function MarketplacePage() {
               <path d="M20 36 Q32 44 44 36" strokeLinecap="round"/>
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">
+          <h2 className="text-2xl font-bold text-foreground mb-2">
             {searchQuery ? `No results for "${searchQuery}"` : "No products yet"}
           </h2>
-          <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+          <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
             {searchQuery
               ? "Try a different search term or clear your filters."
-              : "Be the first to list a product on the marketplace."}
+              : "Be the first to list a product and reach buyers across Africa."}
           </p>
-          {authenticated && (
+          {authenticated && !searchQuery && (
             <Link href="/listing/new">
-              <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+              <Button size="lg" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20 px-8">
+                <Plus className="h-5 w-5" />
                 List Your First Product
               </Button>
             </Link>
