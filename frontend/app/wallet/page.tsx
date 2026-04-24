@@ -488,8 +488,8 @@ function WalletPage() {
               {/* address + network row */}
               <div className="flex items-center justify-between mt-5 pt-4 border-t border-white/10">
                 <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-sm text-white/60 font-medium">Base Sepolia</span>
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse" />
+                  <span className="text-sm text-white/60 font-medium">Base Sepolia (Testnet)</span>
                 </div>
                 {user?.wallet?.address && (
                   <button onClick={copyToClipboard} className="flex items-center gap-1.5 text-sm text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full font-mono">
@@ -497,6 +497,11 @@ function WalletPage() {
                     {shortAddress}
                   </button>
                 )}
+              </div>
+              {/* Testnet notice */}
+              <div className="mt-3 flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 rounded-xl px-3 py-2">
+                <span className="text-yellow-300 text-xs font-semibold">⚠ Testnet</span>
+                <span className="text-white/50 text-xs">This wallet uses Base Sepolia. Funds are not real.</span>
               </div>
 
               {/* gas balance */}
