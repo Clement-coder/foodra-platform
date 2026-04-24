@@ -31,15 +31,15 @@ const contactItems = [
 export default function ContactPage() {
   return (
     <div className="container mx-auto max-w-5xl px-4 py-8 md:py-12">
-      <div className="relative overflow-hidden rounded-3xl border border-[#118C4C]/20 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-6 md:p-10 mb-8">
+      <div className="relative overflow-hidden rounded-3xl border border-[#118C4C]/20 bg-gradient-to-br from-emerald-50 via-white to-lime-50 dark:from-[#118C4C]/10 dark:via-card dark:to-card p-6 md:p-10 mb-8">
         <div className="absolute -right-10 -top-8 h-36 w-36 rounded-full bg-[#118C4C]/10 blur-2xl" />
         <div className="absolute -left-8 -bottom-10 h-36 w-36 rounded-full bg-lime-100/60 blur-2xl" />
         <div className="relative">
           <p className="inline-flex items-center rounded-full bg-[#118C4C]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#118C4C] mb-4">
             Contact
           </p>
-          <h1 className="text-3xl md:text-5xl font-bold text-slate-900">Get In Touch</h1>
-          <p className="text-slate-600 mt-3 max-w-2xl">
+          <h1 className="text-3xl md:text-5xl font-bold text-foreground">Get In Touch</h1>
+          <p className="text-muted-foreground mt-3 max-w-2xl">
             Reach out for platform support, partnerships, product feedback, or general inquiries.
           </p>
         </div>
