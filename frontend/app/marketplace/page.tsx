@@ -179,9 +179,21 @@ function MarketplacePage() {
           ))}
         </GridLayout>
       ) : filteredProducts.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-muted-foreground mb-4">
-            {searchQuery ? "No products found matching your search." : "No products available yet."}
+        <div className="text-center py-20">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-[#118C4C]/10 mb-6">
+            <svg viewBox="0 0 64 64" className="w-12 h-12 text-[#118C4C]" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M32 8 C20 8 12 18 12 28 C12 42 32 56 32 56 C32 56 52 42 52 28 C52 18 44 8 32 8Z" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M24 28 C24 24 27.6 20 32 20 C36.4 20 40 24 40 28" strokeLinecap="round"/>
+              <path d="M20 36 Q32 44 44 36" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            {searchQuery ? `No results for "${searchQuery}"` : "No products yet"}
+          </h2>
+          <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+            {searchQuery
+              ? "Try a different search term or clear your filters."
+              : "Be the first to list a product on the marketplace."}
           </p>
           {authenticated && (
             <Link href="/listing/new">
