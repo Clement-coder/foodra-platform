@@ -14,10 +14,6 @@ import SignupButton from "@/components/SignupButton"
 import GetInTouch from "@/components/GetInTouch"
 
 export default function LandingPage() {
-  useEffect(() => {
-    
-   }, [])
-
   const [communityUsers, setCommunityUsers] = useState<User[]>([])
   const carouselRef = useRef<HTMLDivElement>(null)
 
