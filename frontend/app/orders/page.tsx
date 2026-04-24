@@ -105,12 +105,12 @@ function OrdersPage() {
 
       {orders.length === 0 ? (
         <div className="text-center py-24">
-          <div className="inline-block bg-[#118C4C]/10 p-8 rounded-full mb-6 border-2 border-[#118C4C]/20">
-            <PackageOpen className="h-20 w-20 text-[#118C4C]" />
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-[#118C4C]/10 mb-6 border-2 border-[#118C4C]/20">
+            <PackageOpen className="h-12 w-12 text-[#118C4C]" />
           </div>
-          <h2 className="text-3xl font-semibold mb-3">No Orders Yet</h2>
-          <p className="text-muted-foreground text-lg max-w-md mx-auto mb-6">
-            It looks like you haven't placed any orders. Head over to the marketplace to find fresh products.
+          <h2 className="text-2xl font-semibold mb-3">No Orders Yet</h2>
+          <p className="text-muted-foreground text-base max-w-sm mx-auto mb-6">
+            You haven't placed any orders. Head to the marketplace to find fresh products.
           </p>
           <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white" onClick={() => router.push("/marketplace")}>
             Browse Marketplace
