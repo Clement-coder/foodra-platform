@@ -179,7 +179,9 @@ function TrainingDetailPage() {
               <CardContent className="p-6">
                 <div className="text-center mb-6">
                   <p className="text-sm text-muted-foreground mb-2">Price</p>
-                  <p className="text-3xl font-bold text-[#118C4C]">Free</p>
+                  <p className="text-3xl font-bold text-[#118C4C]">
+                    {training.price == null || training.price === 0 ? "Free" : `₦${training.price.toLocaleString()}`}
+                  </p>
                 </div>
 
                 {isAlmostFull && !isFull && (
