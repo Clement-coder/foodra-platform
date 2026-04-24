@@ -168,7 +168,9 @@ function FundingPage() {
         </Card>
       ) : filteredApplications.length === 0 ? (
         <Card className="p-8 text-center">
-          <DollarSign className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+            <DollarSign className="h-8 w-8 text-muted-foreground" />
+          </div>
           <h2 className="text-xl font-semibold text-foreground mb-2">
             {filter === "all" ? "No Applications Yet" : `No ${filter} Applications`}
           </h2>
