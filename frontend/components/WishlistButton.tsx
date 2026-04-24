@@ -14,9 +14,10 @@ interface Props {
   image: string
   pricePerUnit: number
   className?: string
+  iconSize?: string
 }
 
-export function WishlistButton({ productId, productName, image, pricePerUnit, className = "" }: Props) {
+export function WishlistButton({ productId, productName, image, pricePerUnit, className = "", iconSize = "h-4 w-4" }: Props) {
   const { getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const { toast } = useToast()
@@ -75,7 +76,7 @@ export function WishlistButton({ productId, productName, image, pricePerUnit, cl
       aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
       className={`p-1.5 rounded-full transition-all ${saved ? "text-red-500 bg-red-50 dark:bg-red-950/30 scale-110" : "text-muted-foreground hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20"} ${className}`}
     >
-      <Heart className={`h-4 w-4 transition-transform ${saved ? "fill-current scale-110" : ""}`} />
+      <Heart className={`${iconSize} transition-transform ${saved ? "fill-current scale-110" : ""}`} />
     </button>
   )
 }
