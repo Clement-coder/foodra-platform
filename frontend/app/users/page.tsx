@@ -18,9 +18,9 @@ export default function UsersPage() {
         if (!res.ok) throw new Error(`Error ${res.status}: Failed to fetch users`)
         const data = await res.json()
         setUsers(data)
-      } catch (err: any) {
-        console.error(err)
-        setError(err.message || "Failed to load users")
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Failed to load users"
+        setError(msg)
       } finally {
         setIsLoading(false)
       }
@@ -66,13 +66,21 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Loading */}
+      {/* Loading — skeleton grid */}
       {isLoading && (
-        <div className="flex justify-center items-center min-h-[50vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#118C4C] mx-auto mb-4"></div>
-            <p className="text-muted-foreground text-lg">Fetching users… please wait</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-5 space-y-4 animate-pulse">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-muted" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                </div>
+              </div>
+              <div className="h-10 bg-muted rounded-xl" />
+            </div>
+          ))}
         </div>
       )}
 
