@@ -126,18 +126,6 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
   };
 
   const inputCls = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#118C4C] focus:ring-offset-2 disabled:opacity-50 placeholder:text-muted-foreground";
-  const selectCls = `${inputCls} appearance-none`;
-
-  const Field = ({ id, label, placeholder, type = "text", optional = false }: { id: keyof typeof form; label: string; placeholder: string; type?: string; optional?: boolean }) => (
-    <div className="space-y-1">
-      <label htmlFor={id} className="text-sm font-medium block">
-        {label} {optional && <span className="text-muted-foreground font-normal">(optional)</span>}
-        {!optional && <span className="text-red-500 ml-0.5">*</span>}
-      </label>
-      <input id={id} type={type} value={form[id] as string} onChange={(e) => set(id, e.target.value)} placeholder={placeholder} disabled={saving} className={inputCls} />
-      {errors[id] && <p className="text-xs text-red-500">{errors[id]}</p>}
-    </div>
-  );
 
   return (
     <Modal isOpen={isOpen} onClose={saving ? () => {} : onClose} title="Delivery Address">
@@ -207,8 +195,16 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
                   <button onClick={() => setShowForm(false)} className="text-sm text-[#118C4C] hover:underline">← Back to saved addresses</button>
                 )}
 
-                <Field id="fullName" label="Full Name" placeholder="John Doe" />
-                <Field id="phone" label="Phone Number" placeholder="+234 801 234 5678" type="tel" />
+                <div className="space-y-1">
+                  <label htmlFor="fullName" className="text-sm font-medium block">Full Name <span className="text-red-500">*</span></label>
+                  <input id="fullName" type="text" value={form.fullName} onChange={(e) => set("fullName", e.target.value)} placeholder="John Doe" disabled={saving} className={inputCls} />
+                  {errors.fullName && <p className="text-xs text-red-500">{errors.fullName}</p>}
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="phone" className="text-sm font-medium block">Phone Number <span className="text-red-500">*</span></label>
+                  <input id="phone" type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+234 801 234 5678" disabled={saving} className={inputCls} />
+                  {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+                </div>
 
                 {/* Country */}
                 <div className="space-y-1">
@@ -229,12 +225,26 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
                   {errors.country && <p className="text-xs text-red-500">{errors.country}</p>}
                 </div>
 
-                <Field id="addressLine" label="Street Address" placeholder="12 Farm Road" />
-                <Field id="streetLine2" label="Apartment / Suite / Floor" placeholder="Flat 3B, Block A" optional />
-                <Field id="landmark" label="Landmark" placeholder="Near Shoprite, opposite Total filling station" optional />
+                <div className="space-y-1">
+                  <label htmlFor="addressLine" className="text-sm font-medium block">Street Address <span className="text-red-500">*</span></label>
+                  <input id="addressLine" type="text" value={form.addressLine} onChange={(e) => set("addressLine", e.target.value)} placeholder="12 Farm Road" disabled={saving} className={inputCls} />
+                  {errors.addressLine && <p className="text-xs text-red-500">{errors.addressLine}</p>}
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="streetLine2" className="text-sm font-medium block">Apartment / Suite / Floor <span className="text-muted-foreground font-normal">(optional)</span></label>
+                  <input id="streetLine2" type="text" value={form.streetLine2} onChange={(e) => set("streetLine2", e.target.value)} placeholder="Flat 3B, Block A" disabled={saving} className={inputCls} />
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="landmark" className="text-sm font-medium block">Landmark <span className="text-muted-foreground font-normal">(optional)</span></label>
+                  <input id="landmark" type="text" value={form.landmark} onChange={(e) => set("landmark", e.target.value)} placeholder="Near Shoprite, opposite Total filling station" disabled={saving} className={inputCls} />
+                </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Field id="city" label="City / Town" placeholder="Lagos" />
+                  <div className="space-y-1">
+                    <label htmlFor="city" className="text-sm font-medium block">City / Town <span className="text-red-500">*</span></label>
+                    <input id="city" type="text" value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="Lagos" disabled={saving} className={inputCls} />
+                    {errors.city && <p className="text-xs text-red-500">{errors.city}</p>}
+                  </div>
                   {/* State */}
                   <div className="space-y-1">
                     <label className="text-sm font-medium block">State / Region <span className="text-red-500">*</span></label>
