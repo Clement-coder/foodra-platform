@@ -269,31 +269,29 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl">
-          <Card className="bg-gradient-to-br from-[#118C4C] to-[#0d6d3a] text-white border-0">
-            <CardContent className="p-8 md:p-12 text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Farm?</h2>
-              <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-                Join thousands of farmers already growing their business with Foodra
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/marketplace" className="w-full sm:w-auto">
-                  <Button size="lg" className="bg-white text-[#118C4C] hover:bg-white/90 w-full gap-2">
-                    Explore Marketplace
-                    <ArrowRight className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <Link href="/how-it-works" className="w-full sm:w-auto">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="border-white text-white hover:bg-white/10 bg-transparent w-full"
-                  >
-                    How It Works
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl bg-gradient-to-br from-[#118C4C] to-[#0d6d3a] p-8 md:p-12 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to Transform Your Farm?</h2>
+            <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
+              Join thousands of farmers already growing their business with Foodra
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/marketplace" className="w-full sm:w-auto">
+                <Button size="lg" className="bg-white text-[#118C4C] hover:bg-white/90 w-full gap-2 font-semibold">
+                  Explore Marketplace
+                  <ArrowRight className="h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="/how-it-works" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-white hover:bg-white/10 bg-transparent w-full"
+                >
+                  How It Works
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>

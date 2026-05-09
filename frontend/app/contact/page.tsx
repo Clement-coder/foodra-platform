@@ -4,9 +4,9 @@ import GetInTouch from "@/components/GetInTouch"
 const contactItems = [
   {
     title: "Email",
-    value: "support@foodra.app",
+    value: "support@foodramarket.com",
     icon: Mail,
-    href: "mailto:support@foodra.app",
+    href: "mailto:support@foodramarket.com",
   },
   {
     title: "Phone",
@@ -66,8 +66,8 @@ export default function ContactPage() {
         <Shield className="h-5 w-5 text-[#118C4C] shrink-0 mt-0.5" />
         <p>
           Foodra is a registered technology company operating in Nigeria. We handle financial transactions through blockchain-based escrow and are committed to transparent, secure operations. For disputes or urgent financial concerns, email{" "}
-          <a href="mailto:support@foodra.app" className="text-[#118C4C] font-medium hover:underline">
-            support@foodra.app
+          <a href="mailto:support@foodramarket.com" className="text-[#118C4C] font-medium hover:underline">
+            support@foodramarket.com
           </a>{" "}
           with your order reference.
         </p>

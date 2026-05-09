@@ -276,7 +276,7 @@ export async function downloadReceiptImage({ title, subtitle, lines, filename }:
   ctx.font = "10px sans-serif"
   ctx.fillStyle = "#9ca3af"
   ctx.textAlign = "center"
-  ctx.fillText("foodra.app  •  Verified Foodra Receipt", W / 2, tearY + 72)
+  ctx.fillText("foodramarket.com  •  Verified Foodra Receipt", W / 2, tearY + 72)
 
   canvas.toBlob((blob) => {
     if (!blob) return

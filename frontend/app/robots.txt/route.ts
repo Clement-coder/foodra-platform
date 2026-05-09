@@ -10,7 +10,7 @@ Disallow: /orders
 Disallow: /sales
 Disallow: /shop
 
-Sitemap: https://foodra.app/sitemap.xml
+Sitemap: https://foodramarket.com/sitemap.xml
 `,
     { headers: { "Content-Type": "text/plain" } }
   );

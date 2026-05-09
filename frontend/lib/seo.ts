@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-const BASE_URL = "https://foodra.app"
+const BASE_URL = "https://foodramarket.com"
 const DEFAULT_IMAGE = `${BASE_URL}/foodra.png`
 
 export function buildMetadata({

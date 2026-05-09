@@ -60,7 +60,7 @@ ${items}
 ORDER VALUE: ₦${sale.totalAmount.toLocaleString()}${sale.usdcAmount ? ` (${sale.usdcAmount.toFixed(2)} USDC)` : ""}
 PAYMENT STATUS: ${STATUS_LABELS[sale.escrowStatus] ?? sale.escrowStatus}
 
-Powered by Foodra — foodra.app`;
+Powered by Foodra — foodramarket.com`;
 }
 
 function ShareButton({ sale }: { sale: SaleOrder }) {

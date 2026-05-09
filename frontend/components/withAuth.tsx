@@ -3,13 +3,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useRouter, usePathname } from "next/navigation";
-import AuthModal from "./AuthModal";
 import { useUser } from "@/lib/useUser";
 import { calculateProfileCompletion } from "@/lib/profileUtils";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { NotificationDiv } from "./NotificationDiv";
 import { useToast } from "@/lib/toast";
+import ThemeToggle from "./ThemeToggle";
+import SignupButton from "./SignupButton";
 
 // Beautiful Loading Component
 const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => {
@@ -82,7 +83,6 @@ const withAuth = <P extends object>(
     const router = useRouter();
     const pathname = usePathname();
     const { toast } = useToast();
-    const [authModalOpen, setAuthModalOpen] = useState(false);
     const [showProfileToast, setShowProfileToast] = useState(false);
     const prevAuthRef = useRef<boolean | null>(null);
 
@@ -90,7 +90,6 @@ const withAuth = <P extends object>(
       if (!ready || isLoading) return;
 
       if (!authenticated) {
-        setAuthModalOpen(true);
         prevAuthRef.current = false;
         return;
       }
@@ -101,12 +100,9 @@ const withAuth = <P extends object>(
       }
       prevAuthRef.current = authenticated;
 
-      setAuthModalOpen(false);
-
       // Check profile completion and show toast if incomplete
       if (authenticated && currentUser) {
         const completion = calculateProfileCompletion(currentUser);
-        
         if (completion < 100 && pathname !== "/profile") {
           setShowProfileToast(true);
           const timer = setTimeout(() => setShowProfileToast(false), 10000);
@@ -117,11 +113,6 @@ const withAuth = <P extends object>(
       }
     }, [ready, authenticated, currentUser, isLoading, pathname]);
 
-    const handleCloseAuthModal = () => {
-      setAuthModalOpen(false);
-      router.push(`/?redirect=${encodeURIComponent(pathname)}`);
-    };
-
     // Privy is not ready yet
     if (!ready) {
       return <LoadingScreen message="Initializing..." />;
@@ -131,6 +122,9 @@ const withAuth = <P extends object>(
     if (!authenticated) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="absolute top-4 right-4">
+            <ThemeToggle />
+          </div>
           <div className="text-center p-8 max-w-sm">
             <div className="w-16 h-16 bg-[#118C4C]/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#118C4C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -139,7 +133,7 @@ const withAuth = <P extends object>(
             </div>
             <h2 className="text-xl font-bold text-foreground mb-2">Sign in required</h2>
             <p className="text-muted-foreground text-sm mb-6">You need to be signed in to access this page.</p>
-            <AuthModal isOpen={authModalOpen} onClose={handleCloseAuthModal} />
+            <SignupButton />
           </div>
         </div>
       );

@@ -1,4 +1,4 @@
-const BASE_URL = "https://foodra.app";
+const BASE_URL = "https://foodramarket.com";
 
 const staticRoutes = [
   { path: "/", priority: "1.0", changefreq: "weekly" },
