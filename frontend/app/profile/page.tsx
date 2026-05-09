@@ -47,16 +47,6 @@ import { formatTimeAgo } from "@/lib/timeUtils"
 import ThemeToggle from "@/components/ThemeToggle"
 import { authFetch } from "@/lib/authFetch"
 
-type VerificationRequest = {
-  id: string
-  id_type: string
-  id_number: string
-  farm_address: string
-  farm_size: number
-  status: "Pending" | "Approved" | "Rejected"
-  admin_note?: string | null
-  submitted_at: string
-}
 
 function ProfilePage() {
   const { currentUser: user, isLoading, updateUser } = useUser()
@@ -108,15 +98,7 @@ function ProfilePage() {
   const [userProducts, setUserProducts] = useState<Product[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [selectedCountry, setSelectedCountry] = useState("")
-  const [verificationRequest, setVerificationRequest] = useState<VerificationRequest | null>(null)
-  const [verificationLoading, setVerificationLoading] = useState(false)
-  const [verificationSubmitting, setVerificationSubmitting] = useState(false)
-  const [verificationForm, setVerificationForm] = useState({
-    idType: "NIN",
-    idNumber: "",
-    farmAddress: "",
-    farmSize: "",
-  })
+
 
   const {
     register,
@@ -221,23 +203,7 @@ function ProfilePage() {
     fetchProducts()
   }, [user])
 
-  useEffect(() => {
-    const loadVerification = async () => {
-      if (!user?.id) return
-      setVerificationLoading(true)
-      try {
-        const res = await authFetch(getAccessToken, "/api/verification?mine=1")
-        if (res.ok) {
-          const data = await res.json()
-          setVerificationRequest(data || null)
-        }
-      } finally {
-        setVerificationLoading(false)
-      }
-    }
 
-    void loadVerification()
-  }, [user?.id, getAccessToken])
 
   const handleSignOut = () => setIsSignOutModalOpen(true)
 
@@ -279,34 +245,7 @@ function ProfilePage() {
     }
   }
 
-  const submitVerification = async () => {
-    if (!verificationForm.idNumber.trim() || !verificationForm.farmAddress.trim() || !verificationForm.farmSize) {
-      toast.error("Complete all verification fields.")
-      return
-    }
 
-    setVerificationSubmitting(true)
-    try {
-      const res = await authFetch(getAccessToken, "/api/verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idType: verificationForm.idType,
-          idNumber: verificationForm.idNumber.trim(),
-          farmAddress: verificationForm.farmAddress.trim(),
-          farmSize: Number(verificationForm.farmSize),
-        }),
-      })
-      const body = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(body.error || "Failed to submit verification request")
-      setVerificationRequest(body)
-      toast.success("Verification request submitted.")
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to submit verification request")
-    } finally {
-      setVerificationSubmitting(false)
-    }
-  }
 
   if (isLoading || !user) {
     return (
@@ -482,79 +421,7 @@ function ProfilePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            {(user.role === "farmer" || user.role === "admin") && (
-              <Card className="mb-6 border-[#118C4C]/20">
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h2 className="text-lg font-semibold flex items-center gap-2">
-                        <ShieldCheck className="h-4 w-4 text-[#118C4C]" />
-                        Farmer Verification
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Submit your farm details to earn a verified badge.
-                      </p>
-                    </div>
-                    {user.isVerified ? (
-                      <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold">Verified</span>
-                    ) : null}
-                  </div>
 
-                  {verificationLoading ? (
-                    <p className="text-sm text-muted-foreground">Loading verification status...</p>
-                  ) : verificationRequest ? (
-                    <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold">Status: {verificationRequest.status}</p>
-                        <p className="text-xs text-muted-foreground">Submitted {formatTimeAgo(verificationRequest.submitted_at)}</p>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{verificationRequest.id_type}: {verificationRequest.id_number}</p>
-                      <p className="text-sm text-muted-foreground">Farm size: {verificationRequest.farm_size} hectares</p>
-                      <p className="text-sm text-muted-foreground">Farm address: {verificationRequest.farm_address}</p>
-                      {verificationRequest.admin_note ? <p className="text-sm text-red-600">Admin note: {verificationRequest.admin_note}</p> : null}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <FormSelect
-                        label="ID Type"
-                        value={verificationForm.idType}
-                        onChange={(e) => setVerificationForm((prev) => ({ ...prev, idType: e.target.value }))}
-                        options={[
-                          { value: "NIN", label: "NIN" },
-                          { value: "BVN", label: "BVN" },
-                          { value: "Passport", label: "Passport" },
-                          { value: "Driver's License", label: "Driver's License" },
-                        ]}
-                      />
-                      <FormInput
-                        label="ID Number"
-                        value={verificationForm.idNumber}
-                        onChange={(e) => setVerificationForm((prev) => ({ ...prev, idNumber: e.target.value }))}
-                        placeholder="Enter document number"
-                      />
-                      <FormInput
-                        label="Farm Address"
-                        value={verificationForm.farmAddress}
-                        onChange={(e) => setVerificationForm((prev) => ({ ...prev, farmAddress: e.target.value }))}
-                        placeholder="Farm location"
-                      />
-                      <FormInput
-                        label="Farm Size (hectares)"
-                        value={verificationForm.farmSize}
-                        onChange={(e) => setVerificationForm((prev) => ({ ...prev, farmSize: e.target.value }))}
-                        placeholder="e.g. 12"
-                        type="number"
-                      />
-                      <div className="sm:col-span-2">
-                        <Button type="button" onClick={submitVerification} disabled={verificationSubmitting} className="bg-[#118C4C] hover:bg-[#0d6b3a] text-white">
-                          {verificationSubmitting ? "Submitting..." : "Submit Verification"}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
 
             <h2 className="text-xl font-semibold mb-4 flex gap-2">
               <ShoppingBag /> Products
