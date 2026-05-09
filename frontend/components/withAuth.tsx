@@ -11,7 +11,6 @@ import { NotificationDiv } from "./NotificationDiv";
 import { useToast } from "@/lib/toast";
 import ThemeToggle from "./ThemeToggle";
 import SignupButton from "./SignupButton";
-import TermsAndVerificationModal from "./TermsAndVerificationModal";
 
 const perks = [
   { icon: Leaf, text: "Buy & sell fresh farm produce directly" },
@@ -184,7 +183,6 @@ const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
     if (authenticated && currentUser) {
       return (
         <>
-          <TermsAndVerificationModal />
           <WrappedComponent {...props} />
           <AnimatePresence>
             {showProfileToast && (
