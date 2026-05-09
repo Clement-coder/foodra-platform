@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     "fresh vegetables online Nigeria", "buy rice Nigeria", "buy yam online",
     "buy tomatoes Nigeria", "buy cassava Nigeria", "buy maize Nigeria",
     "buy groundnut Nigeria", "buy palm oil Nigeria", "buy plantain Nigeria",
-    "Nigerian farm market", "Lagos farm produce", "Abuja farm market",
+    "Nigerian farm market", "Benue State farm produce", "Abuja farm market",
     "smallholder farmer platform Nigeria", "farmer empowerment Africa",
     "agribusiness Nigeria", "AgriTech Nigeria", "AgriTech Africa",
     "agricultural training Nigeria", "farming courses online Nigeria",

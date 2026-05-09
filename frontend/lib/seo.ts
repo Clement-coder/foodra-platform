@@ -32,7 +32,7 @@ export const SITE_KEYWORDS = [
   "food security Nigeria", "food security Africa",
   "African food supply chain", "Nigerian food market",
   // Location
-  "Lagos farm produce", "Abuja farm market", "Nigerian farmers online",
+  "Benue State farm produce", "Benue farmer marketplace", "Abuja farm market", "Nigerian farmers online",
   "African farmers marketplace",
 ]
 
@@ -115,7 +115,7 @@ export function organizationJsonLd() {
     url: BASE_URL,
     logo: `${BASE_URL}/foodra_logo.jpeg`,
     description: "Nigeria's leading blockchain-powered AgriTech marketplace connecting smallholder farmers with buyers, training programs, and agricultural funding across Africa.",
-    foundingLocation: { "@type": "Place", name: "Lagos, Nigeria" },
+    foundingLocation: { "@type": "Place", name: "Benue State, Nigeria" },
     areaServed: ["Nigeria", "Africa"],
     email: "support@foodramarket.com",
     sameAs: ["https://twitter.com/foodraapp"],

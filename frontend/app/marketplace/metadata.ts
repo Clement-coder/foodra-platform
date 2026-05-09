@@ -12,7 +12,7 @@ export const metadata = buildMetadata({
     "buy pepper Nigeria", "buy onions Nigeria", "buy garlic Nigeria",
     "Nigerian farm market online", "direct from farmer Nigeria",
     "farm to table Nigeria", "organic produce Nigeria",
-    "Lagos farm market", "Abuja farm produce", "Kano farm market",
+    "Benue State farm market", "Abuja farm produce", "Kano farm market",
     "agricultural marketplace Nigeria", "Foodra marketplace",
   ],
 })

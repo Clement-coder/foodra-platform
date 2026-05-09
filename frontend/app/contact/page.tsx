@@ -4,7 +4,7 @@ import GetInTouch from "@/components/GetInTouch"
 
 export const metadata: Metadata = {
   title: "Contact Foodra — Support, Partnerships & Enquiries",
-  description: "Contact Foodra for platform support, partnerships, product feedback, or general enquiries. Email us at support@foodramarket.com. We're available Monday to Friday, 9am–6pm WAT. Based in Lagos, Nigeria.",
+  description: "Contact Foodra for platform support, partnerships, product feedback, or general enquiries. Email us at support@foodramarket.com. We're available Monday to Friday, 9am–6pm WAT. Based in Benue State, Nigeria.",
   alternates: { canonical: "https://foodramarket.com/contact" },
   openGraph: {
     title: "Contact Foodra — Support & Partnerships",
@@ -32,7 +32,7 @@ const contactItems = [
   },
   {
     title: "Office Address",
-    value: "Lagos, Nigeria",
+    value: "Benue State, Nigeria",
     icon: MapPin,
     href: null,
   },

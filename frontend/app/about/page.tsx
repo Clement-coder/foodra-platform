@@ -109,7 +109,7 @@ export default function AboutPage() {
             <MapPin className="h-4 w-4 text-[#118C4C] mt-0.5 shrink-0" />
             <div>
               <p className="font-medium text-foreground">Registered Address</p>
-              <p className="text-muted-foreground">Lagos, Nigeria</p>
+              <p className="text-muted-foreground">Benue State, Nigeria</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
