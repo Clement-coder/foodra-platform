@@ -154,16 +154,16 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
         {statCards.map(({ label, value, color }) => (
           <div key={label} className={`p-4 rounded-xl bg-${color}-50 dark:bg-${color}-900/20 border border-${color}-100 dark:border-${color}-800`}>
             <p className={`text-2xl font-bold text-${color}-600 dark:text-${color}-400`}>{value}</p>
-            <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">{label}</p>
+            <p className="text-xs text-muted-foreground mt-1">{label}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Revenue over time */}
-        <div className="bg-muted bg-card rounded-xl p-5">
+        <div className="bg-card rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-foreground text-foreground">Revenue (Last {range} Months)</h3>
+            <h3 className="text-sm font-semibold text-foreground">Revenue (Last {range} Months)</h3>
             <RangeSelector />
           </div>
           <div className="flex items-end gap-2 h-32">
@@ -178,9 +178,9 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
         </div>
 
         {/* New users per month */}
-        <div className="bg-muted bg-card rounded-xl p-5">
+        <div className="bg-card rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-foreground text-foreground">New Users (Last {range} Months)</h3>
+            <h3 className="text-sm font-semibold text-foreground">New Users (Last {range} Months)</h3>
             <RangeSelector />
           </div>
           <div className="flex items-end gap-2 h-32">
@@ -195,14 +195,14 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
         </div>
 
         {/* Top product categories */}
-        <div className="bg-muted bg-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-foreground text-foreground mb-4">Top Product Categories</h3>
+        <div className="bg-card rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Top Product Categories</h3>
           <div className="space-y-3">
             {topCategories.map(([cat, count]) => (
               <div key={cat}>
                 <div className="flex justify-between text-xs mb-1">
-                  <span className="text-muted-foreground dark:text-muted-foreground">{cat}</span>
-                  <span className="font-medium text-foreground text-foreground">{count}</span>
+                  <span className="text-muted-foreground">{cat}</span>
+                  <span className="font-medium text-foreground">{count}</span>
                 </div>
                 <div className="h-2 bg-gray-200 bg-card rounded-full overflow-hidden">
                   <div className="h-full bg-green-500 rounded-full" style={{ width: `${(count / maxCat) * 100}%` }} />
@@ -213,8 +213,8 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
         </div>
 
         {/* Order status breakdown */}
-        <div className="bg-muted bg-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-foreground text-foreground mb-4">Order Status Breakdown</h3>
+        <div className="bg-card rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Order Status Breakdown</h3>
           <div className="space-y-2">
             {Object.entries(statusCount).map(([status, count]) => (
               <div key={status} className="flex items-center justify-between p-2 bg-card dark:bg-card rounded-lg">
@@ -223,15 +223,15 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
                   : status === "Cancelled" ? "bg-red-100 text-red-700"
                   : status === "Shipped" ? "bg-purple-100 text-purple-700"
                   : "bg-blue-100 text-blue-700"}`}>{status}</span>
-                <span className="text-sm font-bold text-foreground text-foreground">{count}</span>
+                <span className="text-sm font-bold text-foreground">{count}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Funding breakdown */}
-        <div className="bg-muted bg-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-foreground text-foreground mb-4">Funding Applications</h3>
+        <div className="bg-card rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4">Funding Applications</h3>
           <div className="space-y-2">
             {[
               { label: "Pending", count: pendingFunding, color: "yellow" },
@@ -240,7 +240,7 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
             ].map(({ label, count, color }) => (
               <div key={label} className="flex items-center justify-between p-2 bg-card dark:bg-card rounded-lg">
                 <span className={`text-xs px-2 py-1 rounded-full font-medium bg-${color}-100 text-${color}-700`}>{label}</span>
-                <span className="text-sm font-bold text-foreground text-foreground">{count}</span>
+                <span className="text-sm font-bold text-foreground">{count}</span>
               </div>
             ))}
           </div>

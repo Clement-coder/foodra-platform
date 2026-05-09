@@ -124,7 +124,7 @@ export default function AdminSupport({ data, privyId, onRefresh }: {
               </button>
 
               {isOpen && (
-                <div className="border-t border-border dark:border-border bg-muted bg-card/30">
+                <div className="border-t border-border bg-card/30">
                   <div className="px-5 py-4 space-y-3 max-h-80 overflow-y-auto">
                     {messages.map((msg: any) => (
                       <div key={msg.id} className={`flex items-end gap-2 ${msg.is_admin_reply ? "flex-row-reverse" : "flex-row"}`}>
@@ -134,7 +134,7 @@ export default function AdminSupport({ data, privyId, onRefresh }: {
                             : <div className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mb-1">{(user?.name || "U")[0].toUpperCase()}</div>
                         )}
                         <div className={`max-w-[75%] flex flex-col ${msg.is_admin_reply ? "items-end" : "items-start"}`}>
-                          <div className={`rounded-2xl px-4 py-2.5 text-sm ${msg.is_admin_reply ? "bg-green-600 text-white rounded-br-sm" : "bg-card bg-card text-foreground text-foreground border border-border dark:border-border rounded-bl-sm shadow-sm"}`}>
+                          <div className={`rounded-2xl px-4 py-2.5 text-sm ${msg.is_admin_reply ? "bg-green-600 text-white rounded-br-sm" : "bg-card bg-card text-foreground border border-border rounded-bl-sm shadow-sm"}`}>
                             {msg.image_url && <a href={msg.image_url} target="_blank" rel="noopener noreferrer"><img src={msg.image_url} alt="attachment" className="rounded-xl mb-2 max-w-full max-h-48 object-cover" /></a>}
                             {msg.message !== "📎 Image" && <p>{msg.message}</p>}
                           </div>
@@ -145,13 +145,13 @@ export default function AdminSupport({ data, privyId, onRefresh }: {
                   </div>
                   <div className="px-5 pb-3 flex items-center gap-2">
                     <button onClick={() => { activeUserId.current = userId; fileRef.current?.click() }} disabled={uploading}
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-card bg-card border border-border dark:border-border text-muted-foreground hover:text-green-600 transition-colors flex-shrink-0">
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-card bg-card border border-border text-muted-foreground hover:text-green-600 transition-colors flex-shrink-0">
                       {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
                     </button>
                     <input value={replyText[userId] || ""} onChange={e => setReplyText(prev => ({ ...prev, [userId]: e.target.value }))}
                       onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendReply(userId)}
                       placeholder="Reply to user…"
-                      className="flex-1 text-sm bg-card bg-card border border-border dark:border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                      className="flex-1 text-sm bg-card bg-card border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500" />
                     <button onClick={() => sendReply(userId)} disabled={sending || !replyText[userId]?.trim()}
                       className="w-9 h-9 bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white rounded-xl flex items-center justify-center flex-shrink-0 transition-colors">
                       {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

@@ -13,14 +13,14 @@ function FundingDetailModal({ f, onClose }: { f: any; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-card dark:bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="sticky top-0 bg-card dark:bg-card border-b border-border dark:border-border px-6 py-4 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-card dark:bg-card border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg font-bold">Funding Application</h2>
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
         <div className="p-6 space-y-4 text-sm">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-lg">{f.full_name}</span>
-            <span className={`text-xs px-2 py-1 rounded-full font-medium ${f.status === "Approved" ? "bg-green-100 text-green-700" : f.status === "Rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>{f.status}</span>
+            <span className={`text-xs px-2 py-1 rounded-full font-medium ${f.status === "Approved" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : f.status === "Rejected" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"}`}>{f.status}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
@@ -32,16 +32,16 @@ function FundingDetailModal({ f, onClose }: { f: any; onClose: () => void }) {
               { label: "Amount Requested", value: `₦${Number(f.amount_requested).toLocaleString()}` },
               { label: "Submitted", value: new Date(f.created_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) },
             ].map(({ label, value }) => (
-              <div key={label} className="p-3 bg-muted bg-card rounded-xl">
+              <div key={label} className="p-3 bg-card rounded-xl">
                 <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
                 <p className="font-medium text-foreground dark:text-white">{value || "—"}</p>
               </div>
             ))}
           </div>
           {f.expected_outcome && (
-            <div className="p-3 bg-muted bg-card rounded-xl">
+            <div className="p-3 bg-card rounded-xl">
               <p className="text-xs text-muted-foreground mb-1">Expected Outcome</p>
-              <p className="text-foreground text-foreground leading-relaxed">{f.expected_outcome}</p>
+              <p className="text-foreground leading-relaxed">{f.expected_outcome}</p>
             </div>
           )}
           {f.rejection_note && (
@@ -133,10 +133,10 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
   return (
     <>
       {viewing && <FundingDetailModal f={viewing} onClose={() => setViewing(null)} />}
-      <div className="px-4 py-3 border-b border-border dark:border-border flex flex-wrap items-center gap-3">
+      <div className="px-4 py-3 border-b border-border flex flex-wrap items-center gap-3">
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
           placeholder="Search by name, location, farm type…"
-          className="flex-1 min-w-[180px] text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
+          className="flex-1 min-w-[180px] text-sm border border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
         <CustomSelect
           value={statusFilter}
           onChange={(v) => { setStatusFilter(v); setPage(0) }}
@@ -149,14 +149,14 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
           className="w-36"
         />
         <button onClick={() => exportCSV(filtered)}
-          className="flex items-center gap-1.5 text-sm bg-muted bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground text-foreground px-3 py-2 rounded-xl transition-colors">
+          className="flex items-center gap-1.5 text-sm bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground px-3 py-2 rounded-xl transition-colors">
           <Download className="w-4 h-4" />Export
         </button>
         <span className="text-xs text-muted-foreground whitespace-nowrap">{filtered.length} applications</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted bg-card text-muted-foreground dark:text-muted-foreground">
+          <thead className="bg-card text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left">Applicant</th>
               <th className="px-4 py-3 text-left hidden sm:table-cell">Farm Type</th>
@@ -181,13 +181,13 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
                   <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{f.years_of_experience}yr</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      f.status === "Approved" ? "bg-green-100 text-green-700"
-                      : f.status === "Rejected" ? "bg-red-100 text-red-700"
-                      : "bg-yellow-100 text-yellow-700"}`}>{f.status}</span>
+                      f.status === "Approved" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      : f.status === "Rejected" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"}`}>{f.status}</span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">
-                      <button onClick={() => setViewing(f)} className="text-xs bg-muted bg-card hover:bg-blue-100 dark:hover:bg-blue-900/30 text-foreground hover:text-blue-700 px-2 py-1 rounded-lg">View</button>
+                      <button onClick={() => setViewing(f)} className="text-xs bg-card hover:bg-blue-100 dark:hover:bg-blue-900/30 text-foreground hover:text-blue-700 px-2 py-1 rounded-lg">View</button>
                       {f.status === "Pending" && (
                         <>
                           <button onClick={() => approve(f.id)} className="text-xs bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700">Approve</button>
@@ -211,7 +211,7 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
                         />
                         <div className="flex gap-2">
                           <button onClick={() => reject(f.id)} className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700">Confirm Reject</button>
-                          <button onClick={() => setRejectOpen(null)} className="text-xs bg-gray-200 bg-card text-foreground text-foreground px-3 py-1.5 rounded-lg hover:bg-gray-300">Cancel</button>
+                          <button onClick={() => setRejectOpen(null)} className="text-xs bg-muted text-foreground px-3 py-1.5 rounded-lg hover:bg-muted/80">Cancel</button>
                         </div>
                       </div>
                     </td>
@@ -223,11 +223,11 @@ export default function AdminFunding({ data, privyId, onRefresh, onNotify }: {
         </table>
       </div>
       {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-border dark:border-border flex items-center justify-between text-xs text-muted-foreground">
+        <div className="px-4 py-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
           <span>Page {page + 1} of {totalPages}</span>
           <div className="flex gap-2">
-            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
-            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
           </div>
         </div>
       )}

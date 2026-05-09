@@ -74,11 +74,11 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
         <label className="text-xs text-muted-foreground mb-1 block">Training Image</label>
         <div className="flex items-center gap-3">
           {form.image_url
-            ? <img src={form.image_url} alt="" className="w-20 h-14 rounded-xl object-cover border border-border dark:border-border" />
-            : <div className="w-20 h-14 rounded-xl bg-muted bg-card flex items-center justify-center border border-border dark:border-border"><ImageIcon className="w-5 h-5 text-muted-foreground" /></div>
+            ? <img src={form.image_url} alt="" className="w-20 h-14 rounded-xl object-cover border border-border" />
+            : <div className="w-20 h-14 rounded-xl bg-card flex items-center justify-center border border-border"><ImageIcon className="w-5 h-5 text-muted-foreground" /></div>
           }
           <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-            className="text-sm px-3 py-1.5 rounded-xl bg-muted bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground text-foreground transition-colors disabled:opacity-50">
+            className="text-sm px-3 py-1.5 rounded-xl bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground transition-colors disabled:opacity-50">
             {uploading ? "Uploading…" : form.image_url ? "Change Image" : "Upload Image"}
           </button>
           {form.image_url && (
@@ -97,7 +97,7 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
           <div key={key}>
             <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
             <input type={type} value={(form as any)[key]} onChange={e => set(key, type === "number" ? Number(e.target.value) : e.target.value)}
-              className="w-full text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
+              className="w-full text-sm border border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
           </div>
         ))}
         <div>
@@ -113,19 +113,19 @@ function TrainingForm({ initial, privyId, onDone, onNotify }: {
       <div>
         <label className="text-xs text-muted-foreground mb-1 block">Summary</label>
         <input type="text" value={form.summary} onChange={e => set("summary", e.target.value)}
-          className="w-full text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
+          className="w-full text-sm border border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
       </div>
       <div>
         <label className="text-xs text-muted-foreground mb-1 block">Description</label>
         <textarea rows={3} value={form.description} onChange={e => set("description", e.target.value)}
-          className="w-full text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
+          className="w-full text-sm border border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500 resize-none" />
       </div>
       <div className="flex gap-2 pt-1">
         <button onClick={save} disabled={saving || !form.title || !form.date}
           className="flex-1 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white rounded-xl text-sm font-medium transition-colors">
           {saving ? "Saving…" : initial ? "Update Training" : "Create Training"}
         </button>
-        <button onClick={onDone} className="px-4 py-2 bg-muted bg-card text-foreground text-foreground rounded-xl text-sm hover:bg-gray-200 transition-colors">Cancel</button>
+        <button onClick={onDone} className="px-4 py-2 bg-muted text-foreground rounded-xl text-sm hover:bg-muted/80 transition-colors">Cancel</button>
       </div>
     </div>
   )
@@ -151,7 +151,7 @@ export default function AdminTrainings({ data, privyId, onRefresh, onNotify }: {
 
   return (
     <div>
-      <div className="px-5 py-4 border-b border-border dark:border-border flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
         <h3 className="font-semibold text-foreground dark:text-white">Training Programs</h3>
         <button onClick={() => { setCreating(true); setEditing(null) }}
           className="flex items-center gap-1.5 text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg transition-colors">
@@ -160,7 +160,7 @@ export default function AdminTrainings({ data, privyId, onRefresh, onNotify }: {
       </div>
 
       {creating && (
-        <div className="border-b border-border dark:border-border bg-green-50 dark:bg-green-900/10">
+        <div className="border-b border-border bg-green-50 dark:bg-green-900/10">
           <TrainingForm privyId={privyId} onDone={() => { setCreating(false); onRefresh() }} onNotify={onNotify} />
         </div>
       )}
@@ -185,11 +185,11 @@ export default function AdminTrainings({ data, privyId, onRefresh, onNotify }: {
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
                     <button onClick={() => { setEditing(editing?.id === t.id ? null : t); setCreating(false) }}
-                      className="p-1.5 rounded-lg bg-muted bg-card hover:bg-blue-100 dark:hover:bg-blue-900/30 text-muted-foreground hover:text-blue-600 transition-colors">
+                      className="p-1.5 rounded-lg bg-card hover:bg-blue-100 dark:hover:bg-blue-900/30 text-muted-foreground hover:text-blue-600 transition-colors">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button onClick={() => remove(t.id)}
-                      className="p-1.5 rounded-lg bg-muted bg-card hover:bg-red-100 dark:hover:bg-red-900/30 text-muted-foreground hover:text-red-600 transition-colors">
+                      className="p-1.5 rounded-lg bg-card hover:bg-red-100 dark:hover:bg-red-900/30 text-muted-foreground hover:text-red-600 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -197,7 +197,7 @@ export default function AdminTrainings({ data, privyId, onRefresh, onNotify }: {
               </div>
             </div>
             {editing?.id === t.id && (
-              <div className="border-t border-border dark:border-border bg-blue-50 dark:bg-blue-900/10">
+              <div className="border-t border-border bg-blue-50 dark:bg-blue-900/10">
                 <TrainingForm initial={t} privyId={privyId} onDone={() => { setEditing(null); onRefresh() }} onNotify={onNotify} />
               </div>
             )}

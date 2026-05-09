@@ -121,7 +121,7 @@ export default function PWAManager() {
         <div className="fixed top-16 left-3 right-3 z-[200] bg-[#118C4C] text-white rounded-2xl shadow-xl p-3 flex items-center gap-3">
           <RefreshCw className="h-5 w-5 flex-shrink-0" />
           <p className="text-sm font-medium flex-1">New version available!</p>
-          <button onClick={handleUpdate} className="px-3 py-1.5 rounded-lg bg-white text-[#118C4C] text-xs font-bold">Update</button>
+          <button onClick={handleUpdate} className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#118C4C] text-[#118C4C] dark:text-white text-xs font-bold">Update</button>
           <button onClick={() => setShowUpdate(false)} className="p-1"><X className="h-4 w-4" /></button>
         </div>
       )}

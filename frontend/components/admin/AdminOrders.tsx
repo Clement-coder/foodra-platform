@@ -51,7 +51,7 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-card dark:bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="sticky top-0 bg-card dark:bg-card border-b border-border dark:border-border px-6 py-4 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-card dark:bg-card border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg font-bold">Order Details</h2>
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
@@ -70,7 +70,7 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
           </div>
 
           {/* Status update */}
-          <div className="p-4 bg-muted bg-card rounded-xl space-y-3">
+          <div className="p-4 bg-card rounded-xl space-y-3">
             <p className="text-xs font-semibold text-muted-foreground">Update Order Status</p>
             <div className="flex flex-wrap gap-2">
               {ORDER_STATUSES.map(s => (
@@ -105,7 +105,7 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
 
           {/* Escrow tx */}
           {order.escrow_tx_hash && (
-            <div className="p-3 bg-muted bg-card rounded-xl">
+            <div className="p-3 bg-card rounded-xl">
               <p className="text-xs text-muted-foreground mb-1">Escrow Tx</p>
               <a href={`https://sepolia.basescan.org/tx/${order.escrow_tx_hash}`} target="_blank" rel="noopener noreferrer"
                 className="text-xs text-green-600 underline flex items-center gap-1 break-all">
@@ -116,7 +116,7 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
 
           {/* Buyer */}
           {buyer && (
-            <div className="border-t border-border dark:border-border pt-4">
+            <div className="border-t border-border pt-4">
               <p className="text-xs font-semibold text-muted-foreground mb-3">Buyer</p>
               <div className="flex items-center gap-3">
                 {buyer.avatar_url
@@ -134,7 +134,7 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
 
           {/* Delivery */}
           {order.delivery_address && (
-            <div className="p-3 bg-muted bg-card rounded-xl space-y-1">
+            <div className="p-3 bg-card rounded-xl space-y-1">
               <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1 mb-2"><MapPin className="w-3.5 h-3.5" />Delivery Address</p>
               <p className="text-sm font-medium">{order.delivery_full_name}</p>
               <p className="text-xs text-muted-foreground">{order.delivery_address}, {order.delivery_city}, {order.delivery_state}</p>
@@ -148,9 +148,9 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
               <p className="text-xs font-semibold text-muted-foreground mb-3 flex items-center gap-1"><ShoppingBag className="w-3.5 h-3.5" />Items ({order.order_items.length})</p>
               <div className="space-y-2">
                 {order.order_items.map((item: any) => (
-                  <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl border border-border dark:border-border">
+                  <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl border border-border">
                     {item.image_url ? <img src={item.image_url} alt={item.product_name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
-                      : <div className="w-12 h-12 rounded-lg bg-muted bg-card flex-shrink-0" />}
+                      : <div className="w-12 h-12 rounded-lg bg-card flex-shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{item.product_name}</p>
                       <p className="text-xs text-muted-foreground">{item.quantity} × ₦{Number(item.price).toLocaleString()}</p>
@@ -206,10 +206,10 @@ export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
   return (
     <>
       {selected && <OrderModal order={selected} buyer={getBuyer(selected.buyer_id)} privyId={privyId} onClose={() => setSelected(null)} onRefresh={onRefresh} />}
-      <div className="px-4 py-3 border-b border-border dark:border-border flex flex-wrap items-center gap-3">
+      <div className="px-4 py-3 border-b border-border flex flex-wrap items-center gap-3">
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
           placeholder="Search by order ID or buyer name…"
-          className="flex-1 min-w-[180px] text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
+          className="flex-1 min-w-[180px] text-sm border border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
         <CustomSelect
           value={statusFilter}
           onChange={(v) => { setStatusFilter(v); setPage(0) }}
@@ -217,14 +217,14 @@ export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
           className="w-40"
         />
         <button onClick={() => exportCSV(filtered, data.users)}
-          className="flex items-center gap-1.5 text-sm bg-muted bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground text-foreground px-3 py-2 rounded-xl transition-colors">
+          className="flex items-center gap-1.5 text-sm bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground px-3 py-2 rounded-xl transition-colors">
           <Download className="w-4 h-4" />Export
         </button>
         <span className="text-xs text-muted-foreground whitespace-nowrap">{filtered.length} orders</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted bg-card text-muted-foreground dark:text-muted-foreground">
+          <thead className="bg-card text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left">Order ID</th>
               <th className="px-4 py-3 text-left hidden md:table-cell">Buyer</th>
@@ -262,7 +262,7 @@ export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs hidden sm:table-cell">{new Date(o.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3">
-                    <button onClick={() => setSelected(o)} className="text-xs bg-muted bg-card hover:bg-green-100 dark:hover:bg-green-900/30 text-foreground hover:text-green-700 px-3 py-1.5 rounded-lg transition-colors font-medium">View</button>
+                    <button onClick={() => setSelected(o)} className="text-xs bg-card hover:bg-green-100 dark:hover:bg-green-900/30 text-foreground hover:text-green-700 px-3 py-1.5 rounded-lg transition-colors font-medium">View</button>
                   </td>
                 </tr>
               )
@@ -271,11 +271,11 @@ export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
         </table>
       </div>
       {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-border dark:border-border flex items-center justify-between text-xs text-muted-foreground">
+        <div className="px-4 py-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
           <span>Page {page + 1} of {totalPages}</span>
           <div className="flex gap-2">
-            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
-            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
           </div>
         </div>
       )}

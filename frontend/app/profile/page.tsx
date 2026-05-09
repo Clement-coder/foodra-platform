@@ -453,14 +453,14 @@ function ProfilePage() {
                   <Wallet className="h-3.5 w-3.5 sm:mr-1.5" />
                   <span className="hidden sm:inline">{showWallet ? "Hide" : "Show"}</span>
                 </Button>
-                <Button onClick={handleSignOut} variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                <Button onClick={handleSignOut} variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30">
                   <LogOut className="h-3.5 w-3.5 sm:mr-1.5" />
                   <span className="hidden sm:inline">Sign Out</span>
                 </Button>
                 <ThemeToggle />
                 {user.role === "admin" && (
                   <a href="/admin">
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white">
                       <ShieldCheck className="h-3.5 w-3.5 sm:mr-1.5" />
                       <span className="hidden sm:inline">Admin Panel</span>
                     </Button>

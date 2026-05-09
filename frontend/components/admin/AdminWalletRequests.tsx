@@ -20,9 +20,9 @@ function isSuspicious(r: any, all: any[]): boolean {
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {
-    Pending: "bg-yellow-100 text-yellow-700",
-    Confirmed: "bg-green-100 text-green-700",
-    Rejected: "bg-red-100 text-red-700",
+    Pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    Confirmed: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    Rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
     Expired: "bg-muted text-muted-foreground",
   }
   return `text-xs px-2 py-1 rounded-full font-medium ${map[status] ?? "bg-muted text-muted-foreground"}`
@@ -57,12 +57,12 @@ function RateSettingsPanel({ privyId, onSaved }: { privyId?: string; onSaved: ()
         <div>
           <label className="text-xs text-muted-foreground block mb-1">Base rate (₦ per 1 USDC)</label>
           <input type="number" value={base} onChange={e => setBase(e.target.value)} placeholder="e.g. 1600"
-            className="text-sm border border-border dark:border-border rounded-lg px-3 py-2 w-36 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="text-sm border border-border rounded-lg px-3 py-2 w-36 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <div>
           <label className="text-xs text-muted-foreground block mb-1">Spread / margin (%)</label>
           <input type="number" value={spread} onChange={e => setSpread(e.target.value)} placeholder="e.g. 2.5"
-            className="text-sm border border-border dark:border-border rounded-lg px-3 py-2 w-28 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="text-sm border border-border rounded-lg px-3 py-2 w-28 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         {base && spread && (
           <p className="text-xs text-muted-foreground self-end pb-2">
@@ -168,10 +168,10 @@ export default function AdminWalletRequests({ data, privyId, onRefresh }: {
       </div>
 
       {/* Filters */}
-      <div className="px-4 py-3 border-b border-border dark:border-border flex flex-wrap items-center gap-3">
+      <div className="px-4 py-3 border-b border-border flex flex-wrap items-center gap-3">
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
           placeholder="Search by reference, user name or email…"
-          className="flex-1 min-w-[200px] text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
+          className="flex-1 min-w-[200px] text-sm border border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
         <CustomSelect
           value={statusFilter}
           onChange={(v) => { setStatusFilter(v); setPage(0) }}
@@ -179,7 +179,7 @@ export default function AdminWalletRequests({ data, privyId, onRefresh }: {
           className="w-36"
         />
         <button onClick={() => exportCSV(filtered)}
-          className="flex items-center gap-1.5 text-sm bg-muted bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground text-foreground px-3 py-2 rounded-xl transition-colors">
+          className="flex items-center gap-1.5 text-sm bg-card hover:bg-gray-200 dark:hover:bg-gray-700 text-foreground px-3 py-2 rounded-xl transition-colors">
           <Download className="w-4 h-4" /> Export
         </button>
         <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -190,7 +190,7 @@ export default function AdminWalletRequests({ data, privyId, onRefresh }: {
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted bg-card text-muted-foreground dark:text-muted-foreground">
+          <thead className="bg-card text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left">Reference</th>
               <th className="px-4 py-3 text-left hidden sm:table-cell">User</th>
@@ -250,7 +250,7 @@ export default function AdminWalletRequests({ data, privyId, onRefresh }: {
                             </button>
                             {isExpiredNow && (
                               <button onClick={() => expire(r.id)}
-                                className="text-xs bg-gray-400 text-white px-2 py-1 rounded-lg hover:bg-gray-500">
+                                className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-lg hover:bg-muted/80">
                                 Expire
                               </button>
                             )}
@@ -273,7 +273,7 @@ export default function AdminWalletRequests({ data, privyId, onRefresh }: {
                           />
                           <div className="flex gap-2">
                             <button onClick={() => reject(r.id)} className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg hover:bg-red-700">Confirm Reject</button>
-                            <button onClick={() => setRejectOpen(null)} className="text-xs bg-gray-200 bg-card text-foreground text-foreground px-3 py-1.5 rounded-lg hover:bg-gray-300">Cancel</button>
+                            <button onClick={() => setRejectOpen(null)} className="text-xs bg-muted text-foreground px-3 py-1.5 rounded-lg hover:bg-muted/80">Cancel</button>
                           </div>
                         </div>
                       </td>
@@ -287,13 +287,13 @@ export default function AdminWalletRequests({ data, privyId, onRefresh }: {
       </div>
 
       {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-border dark:border-border flex items-center justify-between text-xs text-muted-foreground">
+        <div className="px-4 py-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
           <span>Page {page + 1} of {totalPages}</span>
           <div className="flex gap-2">
             <button onClick={() => setPage(p => p - 1)} disabled={page === 0}
-              className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
+              className="px-3 py-1.5 rounded-lg bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
             <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}
-              className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
+              className="px-3 py-1.5 rounded-lg bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
           </div>
         </div>
       )}

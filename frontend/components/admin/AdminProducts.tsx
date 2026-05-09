@@ -42,27 +42,27 @@ function ProductModal({ product, farmer, privyId, onClose, onRefresh }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-card dark:bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="sticky top-0 bg-card dark:bg-card border-b border-border dark:border-border px-6 py-4 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-card dark:bg-card border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg font-bold">Product Details</h2>
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
         <div className="p-6 space-y-5">
           {product.image_url
             ? <img src={product.image_url} alt={product.name} className="w-full h-52 object-cover rounded-xl" />
-            : <div className="w-full h-52 bg-muted bg-card rounded-xl flex items-center justify-center"><ImageIcon className="w-10 h-10 text-muted-foreground" /></div>
+            : <div className="w-full h-52 bg-card rounded-xl flex items-center justify-center"><ImageIcon className="w-10 h-10 text-muted-foreground" /></div>
           }
           <div>
             <h3 className="text-xl font-bold">{product.name}</h3>
             <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">{product.category}</span>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-muted bg-card rounded-xl"><p className="text-xs text-muted-foreground">Price</p><p className="text-sm font-bold">₦{Number(product.price).toLocaleString()}</p></div>
-            <div className="p-3 bg-muted bg-card rounded-xl"><p className="text-xs text-muted-foreground">Quantity</p><p className="text-sm font-bold">{product.quantity} units</p></div>
-            <div className="p-3 bg-muted bg-card rounded-xl flex items-center gap-2"><MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" /><div><p className="text-xs text-muted-foreground">Location</p><p className="text-sm font-medium">{product.location || "—"}</p></div></div>
-            <div className="p-3 bg-muted bg-card rounded-xl flex items-center gap-2"><Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" /><div><p className="text-xs text-muted-foreground">Listed</p><p className="text-sm font-medium">{new Date(product.created_at).toLocaleDateString()}</p></div></div>
+            <div className="p-3 bg-card rounded-xl"><p className="text-xs text-muted-foreground">Price</p><p className="text-sm font-bold">₦{Number(product.price).toLocaleString()}</p></div>
+            <div className="p-3 bg-card rounded-xl"><p className="text-xs text-muted-foreground">Quantity</p><p className="text-sm font-bold">{product.quantity} units</p></div>
+            <div className="p-3 bg-card rounded-xl flex items-center gap-2"><MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" /><div><p className="text-xs text-muted-foreground">Location</p><p className="text-sm font-medium">{product.location || "—"}</p></div></div>
+            <div className="p-3 bg-card rounded-xl flex items-center gap-2"><Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" /><div><p className="text-xs text-muted-foreground">Listed</p><p className="text-sm font-medium">{new Date(product.created_at).toLocaleDateString()}</p></div></div>
           </div>
           {farmer && (
-            <div className="border-t border-border dark:border-border pt-4">
+            <div className="border-t border-border pt-4">
               <p className="text-xs font-semibold text-muted-foreground mb-3">Farmer</p>
               <div className="flex items-center gap-3">
                 {farmer.avatar_url ? <img src={farmer.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-green-500" /> : <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold">{(farmer.name || "F")[0].toUpperCase()}</div>}
@@ -71,10 +71,10 @@ function ProductModal({ product, farmer, privyId, onClose, onRefresh }: {
             </div>
           )}
           <div className="flex gap-2 pt-2">
-            <button onClick={toggle} disabled={loading} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 ${product.is_available ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200" : "bg-green-100 text-green-700 hover:bg-green-200"}`}>
+            <button onClick={toggle} disabled={loading} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 ${product.is_available ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:hover:bg-yellow-900/50" : "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"}`}>
               {product.is_available ? <><EyeOff className="w-4 h-4" />Deactivate</> : <><Eye className="w-4 h-4" />Activate</>}
             </button>
-            <button onClick={remove} disabled={loading} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors disabled:opacity-50">
+            <button onClick={remove} disabled={loading} className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors disabled:opacity-50">
               <Trash2 className="w-4 h-4" />Delete
             </button>
           </div>
@@ -104,15 +104,15 @@ export default function AdminProducts({ data, privyId, onRefresh, onNotify }: {
   return (
     <>
       {selected && <ProductModal product={selected} farmer={getFarmer(selected.farmer_id)} privyId={privyId} onClose={() => setSelected(null)} onRefresh={onRefresh} />}
-      <div className="px-4 py-3 border-b border-border dark:border-border flex items-center gap-3">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-3">
         <input value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
           placeholder="Search by name, category, location…"
-          className="flex-1 text-sm border border-border dark:border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
+          className="flex-1 text-sm border border-border rounded-xl px-3 py-2 bg-card bg-card focus:outline-none focus:ring-2 focus:ring-green-500" />
         <span className="text-xs text-muted-foreground whitespace-nowrap">{filtered.length} products</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted bg-card text-muted-foreground dark:text-muted-foreground">
+          <thead className="bg-card text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left">Product</th>
               <th className="px-4 py-3 text-left hidden sm:table-cell">Category</th>
@@ -126,24 +126,24 @@ export default function AdminProducts({ data, privyId, onRefresh, onNotify }: {
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {paged.map((p: any) => (
               <tr key={p.id} className="hover:bg-muted dark:hover:bg-gray-800/50">
-                <td className="px-4 py-3"><div className="flex items-center gap-2">{p.image_url ? <img src={p.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-muted bg-card flex items-center justify-center flex-shrink-0"><ImageIcon className="w-4 h-4 text-muted-foreground" /></div>}<span className="font-medium truncate max-w-[120px]">{p.name}</span></div></td>
+                <td className="px-4 py-3"><div className="flex items-center gap-2">{p.image_url ? <img src={p.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-card flex items-center justify-center flex-shrink-0"><ImageIcon className="w-4 h-4 text-muted-foreground" /></div>}<span className="font-medium truncate max-w-[120px]">{p.name}</span></div></td>
                 <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{p.category}</td>
                 <td className="px-4 py-3 font-medium">₦{Number(p.price).toLocaleString()}</td>
                 <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{p.quantity}</td>
                 <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{p.location || "—"}</td>
-                <td className="px-4 py-3"><span className={`text-xs px-2 py-1 rounded-full font-medium ${p.is_available ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{p.is_available ? "Active" : "Inactive"}</span></td>
-                <td className="px-4 py-3"><button onClick={() => setSelected(p)} className="text-xs bg-muted bg-card hover:bg-green-100 dark:hover:bg-green-900/30 text-foreground hover:text-green-700 px-3 py-1.5 rounded-lg transition-colors font-medium">View</button></td>
+                <td className="px-4 py-3"><span className={`text-xs px-2 py-1 rounded-full font-medium ${p.is_available ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>{p.is_available ? "Active" : "Inactive"}</span></td>
+                <td className="px-4 py-3"><button onClick={() => setSelected(p)} className="text-xs bg-card hover:bg-green-100 dark:hover:bg-green-900/30 text-foreground hover:text-green-700 px-3 py-1.5 rounded-lg transition-colors font-medium">View</button></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-border dark:border-border flex items-center justify-between text-xs text-muted-foreground">
+        <div className="px-4 py-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
           <span>Page {page + 1} of {totalPages}</span>
           <div className="flex gap-2">
-            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
-            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-muted bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 0} className="px-3 py-1.5 rounded-lg bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Prev</button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1} className="px-3 py-1.5 rounded-lg bg-card disabled:opacity-40 hover:bg-gray-200 dark:hover:bg-gray-700">Next</button>
           </div>
         </div>
       )}

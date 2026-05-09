@@ -50,7 +50,7 @@ function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-card dark:bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="sticky top-0 bg-card dark:bg-card border-b border-border dark:border-border px-6 py-4 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-card dark:bg-card border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg font-bold flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-red-500" />Dispute Details</h2>
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
@@ -62,16 +62,16 @@ function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
               <p className="text-red-800 dark:text-red-300 font-medium">{dispute.reason}</p>
             </div>
             {dispute.details && (
-              <div className="p-3 bg-muted bg-card rounded-xl">
+              <div className="p-3 bg-card rounded-xl">
                 <p className="text-xs text-muted-foreground mb-1">Details</p>
-                <p className="text-foreground text-foreground leading-relaxed">{dispute.details}</p>
+                <p className="text-foreground leading-relaxed">{dispute.details}</p>
               </div>
             )}
           </div>
 
           {/* Buyer */}
           {dispute.users && (
-            <div className="p-3 bg-muted bg-card rounded-xl">
+            <div className="p-3 bg-card rounded-xl">
               <p className="text-xs text-muted-foreground mb-2">Raised by</p>
               <p className="font-medium">{dispute.users.name || "—"}</p>
               <p className="text-xs text-muted-foreground">{dispute.users.email || "—"}</p>
@@ -80,7 +80,7 @@ function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
 
           {/* Order summary */}
           {order && (
-            <div className="p-3 bg-muted bg-card rounded-xl space-y-1">
+            <div className="p-3 bg-card rounded-xl space-y-1">
               <p className="text-xs text-muted-foreground mb-1">Order</p>
               <p className="font-mono text-xs">#{order.id.slice(-6).toUpperCase()}</p>
               <p className="font-bold">₦{Number(order.total_amount).toLocaleString()}</p>
@@ -143,11 +143,11 @@ export default function AdminDisputes({ data, privyId, onRefresh }: {
         />
       )}
 
-      <div className="px-4 py-3 border-b border-border dark:border-border flex items-center gap-3">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-3">
         <div className="flex gap-1">
           {(["open", "resolved", "all"] as const).map((f) => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium capitalize transition-colors ${filter === f ? "bg-red-600 text-white" : "bg-muted bg-card text-muted-foreground text-foreground hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium capitalize transition-colors ${filter === f ? "bg-red-600 text-white" : "bg-card text-muted-foreground text-foreground hover:bg-gray-200 dark:hover:bg-gray-700"}`}>
               {f}
             </button>
           ))}
@@ -174,7 +174,7 @@ export default function AdminDisputes({ data, privyId, onRefresh }: {
                     <span className="font-medium text-sm">{d.users?.name || "Unknown user"}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${d.status === "open" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{d.status}</span>
                   </div>
-                  <p className="text-sm text-foreground text-foreground font-medium">{d.reason}</p>
+                  <p className="text-sm text-foreground font-medium">{d.reason}</p>
                   {d.details && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{d.details}</p>}
                   <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                     {order && <span>Order #{order.id.slice(-6).toUpperCase()} · ₦{Number(order.total_amount).toLocaleString()}</span>}
@@ -182,7 +182,7 @@ export default function AdminDisputes({ data, privyId, onRefresh }: {
                   </div>
                 </div>
                 <button onClick={() => setSelected(d)}
-                  className="text-xs bg-muted bg-card hover:bg-red-100 dark:hover:bg-red-900/30 text-foreground hover:text-red-700 px-3 py-1.5 rounded-lg transition-colors font-medium flex-shrink-0">
+                  className="text-xs bg-card hover:bg-red-100 dark:hover:bg-red-900/30 text-foreground hover:text-red-700 px-3 py-1.5 rounded-lg transition-colors font-medium flex-shrink-0">
                   {d.status === "open" ? "Resolve" : "View"}
                 </button>
               </div>
