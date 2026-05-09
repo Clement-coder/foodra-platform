@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "./ui/button";
+import { LogIn } from "lucide-react";
 
 function SignupButtonInner() {
   const { ready, authenticated, login } = usePrivy();
@@ -11,29 +11,29 @@ function SignupButtonInner() {
   useEffect(() => {
     if (authenticated) {
       const redirect = searchParams.get("redirect");
-      if (redirect) {
-        router.replace(redirect);
-      }
+      if (redirect) router.replace(redirect);
     }
   }, [authenticated, searchParams, router]);
 
   return (
-    <Button
+    <button
       onClick={() => login()}
       disabled={!ready || authenticated}
-      className="px-4 py-2 bg-[#118C4C] hover:bg-[#0d6d3a] text-white rounded-lg text-sm font-medium"
+      className="w-full flex items-center justify-center gap-2 bg-[#118C4C] hover:bg-[#0d6d3a] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors"
     >
-      {authenticated ? "Signed In" : "Sign In"}
-    </Button>
+      <LogIn className="h-4 w-4" />
+      {authenticated ? "Signed In" : "Sign In to Foodra"}
+    </button>
   );
 }
 
 export default function SignupButton() {
   return (
     <Suspense fallback={
-      <Button disabled className="px-4 py-2 bg-[#118C4C] text-white rounded-lg text-sm font-medium opacity-70">
-        Sign In
-      </Button>
+      <button disabled className="w-full flex items-center justify-center gap-2 bg-[#118C4C] opacity-60 text-white font-semibold px-6 py-3 rounded-xl text-sm">
+        <LogIn className="h-4 w-4" />
+        Sign In to Foodra
+      </button>
     }>
       <SignupButtonInner />
     </Suspense>

@@ -2,81 +2,47 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useUser } from "@/lib/useUser";
 import { calculateProfileCompletion } from "@/lib/profileUtils";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Leaf, ShieldCheck, TrendingUp, Wallet } from "lucide-react";
 import { NotificationDiv } from "./NotificationDiv";
 import { useToast } from "@/lib/toast";
 import ThemeToggle from "./ThemeToggle";
 import SignupButton from "./SignupButton";
+import { useRouter } from "next/navigation";
 
-// Beautiful Loading Component
-const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        className="text-center"
-      >
-        <div className="relative mb-8">
-          {/* Outer rotating ring */}
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-20 h-20 mx-auto"
-          >
-            <div className="w-full h-full rounded-full border-4 border-transparent border-t-[#118C4C] border-r-[#118C4C]"></div>
-          </motion.div>
-          
-          {/* Inner pulsing circle */}
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-[#118C4C] rounded-full opacity-20"
-          ></motion.div>
-          
-          {/* Center icon */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <Loader2 className="h-6 w-6 text-[#118C4C] animate-spin" />
-          </div>
-        </div>
+const perks = [
+  { icon: Leaf, text: "Buy & sell fresh farm produce directly" },
+  { icon: TrendingUp, text: "Apply for funding and grow your farm" },
+  { icon: Wallet, text: "Blockchain-powered secure payments" },
+  { icon: ShieldCheck, text: "Verified farmers and trusted buyers" },
+];
 
+const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col items-center gap-4"
+    >
+      <div className="relative w-16 h-16">
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <h2 className="text-xl font-semibold text-foreground mb-2">{message}</h2>
-          <div className="flex gap-1 justify-center">
-            <motion.div
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
-              className="w-2 h-2 bg-[#118C4C] rounded-full"
-            ></motion.div>
-            <motion.div
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
-              className="w-2 h-2 bg-[#118C4C] rounded-full"
-            ></motion.div>
-            <motion.div
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: 0.4 }}
-              className="w-2 h-2 bg-[#118C4C] rounded-full"
-            ></motion.div>
-          </div>
-        </motion.div>
-      </motion.div>
-    </div>
-  );
-};
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#118C4C] border-r-[#118C4C]/40"
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Leaf className="h-6 w-6 text-[#118C4C]" />
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground font-medium">{message}</p>
+    </motion.div>
+  </div>
+);
 
-const withAuth = <P extends object>(
-  WrappedComponent: React.ComponentType<P>
-) => {
+const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) => {
   const ComponentWithAuth = (props: P) => {
     const { ready, authenticated } = usePrivy();
     const { currentUser, isLoading } = useUser();
@@ -88,19 +54,11 @@ const withAuth = <P extends object>(
 
     useEffect(() => {
       if (!ready || isLoading) return;
-
-      if (!authenticated) {
-        prevAuthRef.current = false;
-        return;
-      }
-
-      // Fire login toast only on transition from unauthenticated → authenticated
+      if (!authenticated) { prevAuthRef.current = false; return; }
       if (prevAuthRef.current === false && authenticated && currentUser) {
         toast.success(`Welcome back, ${currentUser.name || "Farmer"}! 👋`);
       }
       prevAuthRef.current = authenticated;
-
-      // Check profile completion and show toast if incomplete
       if (authenticated && currentUser) {
         const completion = calculateProfileCompletion(currentUser);
         if (completion < 100 && pathname !== "/profile") {
@@ -113,44 +71,116 @@ const withAuth = <P extends object>(
       }
     }, [ready, authenticated, currentUser, isLoading, pathname]);
 
-    // Privy is not ready yet
-    if (!ready) {
-      return <LoadingScreen message="Initializing..." />;
-    }
+    if (!ready) return <LoadingScreen message="Starting up..." />;
 
-    // User is not authenticated
     if (!authenticated) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="absolute top-4 right-4">
+        <div className="min-h-screen bg-background flex flex-col">
+          <div className="absolute top-4 right-4 z-10">
             <ThemeToggle />
           </div>
-          <div className="text-center p-8 max-w-sm">
-            <div className="w-16 h-16 bg-[#118C4C]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#118C4C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+
+          <div className="flex flex-1 flex-col lg:flex-row">
+            {/* Left — branding panel */}
+            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#118C4C] via-[#0d7a40] to-[#0a5c30] flex-col justify-between p-12">
+              {/* Background texture */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-10 left-10 w-64 h-64 rounded-full bg-white blur-3xl" />
+                <div className="absolute bottom-20 right-10 w-48 h-48 rounded-full bg-lime-300 blur-3xl" />
+              </div>
+
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
+                    <Leaf className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="text-white font-bold text-xl tracking-tight">Foodra</span>
+                </div>
+                <p className="text-white/60 text-sm">Nigeria's Farm Marketplace</p>
+              </div>
+
+              <div className="relative">
+                <h2 className="text-4xl font-bold text-white leading-tight mb-4">
+                  Empowering<br />African Farmers
+                </h2>
+                <p className="text-white/70 text-base leading-relaxed mb-10">
+                  Connect directly with buyers, access funding, and grow your farm with blockchain-powered tools built for Africa.
+                </p>
+                <div className="space-y-4">
+                  {perks.map(({ icon: Icon, text }) => (
+                    <div key={text} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                        <Icon className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-white/80 text-sm">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <p className="relative text-white/40 text-xs">© 2026 Foodra Technologies Ltd · Benue State, Nigeria</p>
             </div>
-            <h2 className="text-xl font-bold text-foreground mb-2">Sign in required</h2>
-            <p className="text-muted-foreground text-sm mb-6">You need to be signed in to access this page.</p>
-            <SignupButton />
+
+            {/* Right — sign in panel */}
+            <div className="flex flex-1 items-center justify-center px-6 py-16 lg:py-0">
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="w-full max-w-sm"
+              >
+                {/* Mobile logo */}
+                <div className="flex lg:hidden items-center gap-2 mb-8">
+                  <div className="w-9 h-9 rounded-xl bg-[#118C4C]/10 flex items-center justify-center">
+                    <Leaf className="h-5 w-5 text-[#118C4C]" />
+                  </div>
+                  <span className="text-foreground font-bold text-xl tracking-tight">Foodra</span>
+                </div>
+
+                <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back</h1>
+                <p className="text-muted-foreground text-sm mb-8">
+                  Sign in to your Foodra account to continue.
+                </p>
+
+                <div className="mb-6">
+                  <SignupButton />
+                </div>
+
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs text-muted-foreground">New to Foodra?</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+
+                <p className="text-sm text-muted-foreground text-center">
+                  Signing in creates your account automatically. No password needed — we use secure wallet-based authentication.
+                </p>
+
+                {/* Mobile perks */}
+                <div className="mt-8 lg:hidden space-y-3">
+                  {perks.map(({ icon: Icon, text }) => (
+                    <div key={text} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#118C4C]/10 flex items-center justify-center shrink-0">
+                        <Icon className="h-4 w-4 text-[#118C4C]" />
+                      </div>
+                      <span className="text-muted-foreground text-sm">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
       );
     }
 
-    // Loading user profile data
-    if (isLoading) {
-      return <LoadingScreen message="Loading your profile..." />;
-    }
+    if (isLoading) return <LoadingScreen message="Loading your profile..." />;
 
-    // Block non-admins from /admin
     if (authenticated && currentUser && pathname.startsWith("/admin") && currentUser.role !== "admin") {
       router.replace("/");
       return <LoadingScreen message="Redirecting..." />;
     }
 
-    // User is authenticated and profile data is loaded
     if (authenticated && currentUser) {
       return (
         <>
@@ -162,9 +192,7 @@ const withAuth = <P extends object>(
                 title="Complete Your Profile"
                 message="Please complete your profile to unlock all features and have the best experience."
                 actionLabel="Complete Profile Now"
-                onAction={() => {
-                  window.location.href = "/profile";
-                }}
+                onAction={() => { window.location.href = "/profile"; }}
                 onClose={() => setShowProfileToast(false)}
                 duration={10000}
               />
@@ -174,20 +202,17 @@ const withAuth = <P extends object>(
       );
     }
 
-    // Fallback error state
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center p-8 max-w-md">
-          <div className="mb-4">
-            <AlertCircle className="h-16 w-16 text-red-500 mx-auto" />
-          </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Oops! Something went wrong</h2>
-          <p className="text-muted-foreground mb-6">
-            We couldn't load your account. Please try refreshing the page or contact support if the problem persists.
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-foreground mb-2">Something went wrong</h2>
+          <p className="text-muted-foreground text-sm mb-6">
+            We couldn't load your account. Please refresh the page or contact support.
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white font-medium px-6 py-3 rounded-lg transition-colors"
+            className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white font-medium px-6 py-2.5 rounded-xl text-sm transition-colors"
           >
             Refresh Page
           </button>
