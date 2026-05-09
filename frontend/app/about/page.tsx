@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { Shield, Users, Leaf, MapPin, FileText } from "lucide-react"
+import { Shield, Users, Leaf, MapPin, FileText, Sparkles, Quote } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "About Foodra — Nigeria's Blockchain-Powered Farm Marketplace",
@@ -33,7 +33,7 @@ const pillars = [
 ]
 
 const team = [
-  { name: "Foodra Team", role: "Platform & Engineering" },
+  { name: "Aondongu Amos Tyonongo", role: "Founder & CEO" },
   { name: "Agricultural Advisors", role: "Domain Expertise" },
   { name: "Community Partners", role: "Farmer Outreach" },
 ]
@@ -71,6 +71,48 @@ export default function AboutPage() {
           </section>
         ))}
       </div>
+
+      {/* Founder Spotlight */}
+      <section className="mb-10">
+        <div className="flex items-center gap-2 mb-5">
+          <Sparkles className="h-5 w-5 text-[#118C4C]" />
+          <h2 className="text-xl font-semibold text-foreground">Meet the Founder</h2>
+        </div>
+        <div className="relative overflow-hidden rounded-3xl border border-[#118C4C]/20 bg-gradient-to-br from-emerald-50 via-white to-lime-50 dark:from-[#118C4C]/10 dark:via-card dark:to-card p-6 md:p-8">
+          <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[#118C4C]/10 blur-3xl" />
+          <div className="absolute -left-8 -bottom-8 h-32 w-32 rounded-full bg-lime-100/60 dark:bg-[#118C4C]/5 blur-3xl" />
+          <div className="relative flex flex-col md:flex-row items-center md:items-start gap-6">
+            {/* Avatar */}
+            <div className="shrink-0">
+              <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-gradient-to-br from-[#118C4C] to-[#0d6d3a] flex items-center justify-center shadow-lg">
+                <span className="text-4xl md:text-5xl font-bold text-white select-none">A</span>
+              </div>
+            </div>
+            {/* Info */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex flex-col md:flex-row md:items-center gap-2 mb-1">
+                <h3 className="text-2xl md:text-3xl font-bold text-foreground">Aondongu Amos Tyonongo</h3>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#118C4C]/10 px-3 py-1 text-xs font-semibold text-[#118C4C] self-center">
+                  <Sparkles className="h-3 w-3" /> Founder & CEO
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">Benue State, Nigeria · Foodra Technologies Ltd</p>
+
+              {/* Quote */}
+              <div className="relative mb-4">
+                <Quote className="absolute -top-1 -left-1 h-5 w-5 text-[#118C4C]/30" />
+                <p className="pl-5 text-base md:text-lg text-foreground font-medium leading-relaxed italic">
+                  "Africa has the land, the people, and the will. What farmers need is the right technology to connect them to the world — that's exactly what Foodra is built to do."
+                </p>
+              </div>
+
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                Aondongu Amos Tyonongo is a Nigerian entrepreneur and technologist from Benue State with a deep passion for solving Africa's food security crisis through technology. Driven by firsthand experience of the challenges smallholder farmers face — from market access to financial exclusion — he founded Foodra to bridge the gap between farmers and buyers using blockchain, AI, and modern web technology. His vision is a self-sufficient Africa where every farmer has the tools, funding, and market access to thrive.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Team */}
       <section className="mb-10">
