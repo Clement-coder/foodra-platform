@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ShieldCheck } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -93,6 +93,23 @@ function NewListingPage() {
 
   if (!currentUser) {
     return null
+  }
+
+  if (!currentUser.isVerified) {
+    return (
+      <div className="container mx-auto px-4 py-16 max-w-md text-center">
+        <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center mx-auto mb-4">
+          <ShieldCheck className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+        </div>
+        <h1 className="text-xl font-bold text-foreground mb-2">Verification required</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+          You need to complete identity verification before listing products. Check your verification status or complete it now.
+        </p>
+        <Button onClick={() => router.push("/profile")} className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+          Go to Profile
+        </Button>
+      </div>
+    )
   }
 
   return (
