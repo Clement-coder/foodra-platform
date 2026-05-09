@@ -1,5 +1,21 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Shield, Users, Leaf, MapPin, FileText } from "lucide-react"
+
+export const metadata: Metadata = {
+  title: "About Foodra — Nigeria's Blockchain-Powered Farm Marketplace",
+  description: "Learn about Foodra Technologies Ltd, Nigeria's leading AgriTech platform. We connect smallholder farmers directly with buyers, provide agricultural training, farm loans, and blockchain-powered payments to drive food security across Africa.",
+  alternates: { canonical: "https://foodramarket.com/about" },
+  openGraph: {
+    title: "About Foodra — Nigeria's Blockchain-Powered Farm Marketplace",
+    description: "Foodra Technologies Ltd is building Africa's most trusted agricultural marketplace. Fair market access, farmer empowerment, and food security — starting with Nigeria.",
+    url: "https://foodramarket.com/about",
+    siteName: "Foodra",
+    images: [{ url: "https://foodramarket.com/foodra.png", width: 1200, height: 630, alt: "About Foodra" }],
+    locale: "en_NG",
+    type: "website",
+  },
+}
 
 const pillars = [
   {

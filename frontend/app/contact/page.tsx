@@ -1,5 +1,21 @@
+import type { Metadata } from "next"
 import { Mail, MapPin, Phone, Clock, Shield } from "lucide-react"
 import GetInTouch from "@/components/GetInTouch"
+
+export const metadata: Metadata = {
+  title: "Contact Foodra — Support, Partnerships & Enquiries",
+  description: "Contact Foodra for platform support, partnerships, product feedback, or general enquiries. Email us at support@foodramarket.com. We're available Monday to Friday, 9am–6pm WAT. Based in Lagos, Nigeria.",
+  alternates: { canonical: "https://foodramarket.com/contact" },
+  openGraph: {
+    title: "Contact Foodra — Support & Partnerships",
+    description: "Reach Foodra's support team at support@foodramarket.com for help with orders, farmer accounts, funding applications, or partnership opportunities.",
+    url: "https://foodramarket.com/contact",
+    siteName: "Foodra",
+    images: [{ url: "https://foodramarket.com/foodra.png", width: 1200, height: 630, alt: "Contact Foodra" }],
+    locale: "en_NG",
+    type: "website",
+  },
+}
 
 const contactItems = [
   {

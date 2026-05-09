@@ -13,6 +13,7 @@ import Providers from "./Provider"
 import { SupportChat } from "@/components/SupportChat"
 import { ToastProvider } from "@/lib/toast"
 import { OfflineBanner } from "@/components/OfflineBanner"
+import { organizationJsonLd } from "@/lib/seo"
 
 const geistMono = localFont({
   src: [
@@ -46,47 +47,44 @@ export const viewport: Viewport = {
 
 // ---- METADATA ----
 export const metadata: Metadata = {
-  title: "Foodra - Empowering Nigerian Farmers",
-  description: "Foodra is a blockchain-powered AgriTech platform empowering smallholder farmers in Nigeria and Africa with direct market access, agricultural training, funding opportunities, and crypto wallets for financial inclusion.",
+  title: "Foodra — Nigeria's #1 Farm Marketplace | Buy & Sell Fresh Farm Produce",
+  description: "Foodra is Nigeria's leading AgriTech marketplace where farmers sell fresh produce directly to buyers. Buy rice, yam, tomatoes, vegetables & more. Access farm loans, training programs, and blockchain-powered payments. Join 5,000+ farmers across Africa.",
   keywords: [
-    "Foodra",
-    "AgriTech Nigeria",
-    "African agriculture platform",
-    "smallholder farmers",
-    "farmer marketplace Nigeria",
-    "agricultural funding",
-    "farm loans Nigeria",
-    "farming training online",
-    "blockchain agriculture",
-    "crypto wallet farmers",
-    "food security Africa",
-    "farmer empowerment",
-    "buy farm produce Nigeria",
-    "sell agricultural products",
-    "Base blockchain",
-    "Web3 agriculture",
-    "decentralized marketplace",
-    "Nigerian farmers",
-    "agribusiness Africa",
-    "farm produce marketplace",
+    "Foodra", "Foodra Market", "foodramarket.com",
+    "buy farm produce Nigeria", "sell farm produce online Nigeria",
+    "farmer marketplace Nigeria", "agricultural marketplace Africa",
+    "fresh vegetables online Nigeria", "buy rice Nigeria", "buy yam online",
+    "buy tomatoes Nigeria", "buy cassava Nigeria", "buy maize Nigeria",
+    "buy groundnut Nigeria", "buy palm oil Nigeria", "buy plantain Nigeria",
+    "Nigerian farm market", "Lagos farm produce", "Abuja farm market",
+    "smallholder farmer platform Nigeria", "farmer empowerment Africa",
+    "agribusiness Nigeria", "AgriTech Nigeria", "AgriTech Africa",
+    "agricultural training Nigeria", "farming courses online Nigeria",
+    "farm loans Nigeria", "agricultural grants Nigeria", "farmer funding Nigeria",
+    "blockchain agriculture Nigeria", "Web3 farm marketplace",
+    "food security Nigeria", "food security Africa",
+    "African food supply chain", "buy organic produce Nigeria",
+    "direct from farmer Nigeria", "farm to table Nigeria",
   ],
-  authors: [{ name: "Foodra" }],
-  creator: "Foodra",
-  metadataBase: new URL("https://foodra.vercel.app"),
+  authors: [{ name: "Foodra", url: "https://foodramarket.com" }],
+  creator: "Foodra Technologies Ltd",
+  publisher: "Foodra Technologies Ltd",
+  metadataBase: new URL("https://foodramarket.com"),
+  alternates: { canonical: "https://foodramarket.com" },
   openGraph: {
-    title: "Foodra - Empowering Nigerian Farmers",
-    description: "Blockchain-powered AgriTech platform connecting farmers with markets, training, and funding across Africa.",
-    url: "https://foodra.vercel.app",
+    title: "Foodra — Nigeria's #1 Farm Marketplace",
+    description: "Buy fresh farm produce directly from verified Nigerian farmers. Rice, yam, vegetables, grains & more. Plus farm loans, training, and blockchain payments.",
+    url: "https://foodramarket.com",
     siteName: "Foodra",
-    images: [{ url: "/foodra_logo.jpeg", width: 800, height: 600, alt: "Foodra Logo" }],
+    images: [{ url: "/foodra.png", width: 1200, height: 630, alt: "Foodra — Nigeria's Farm Marketplace" }],
     locale: "en_NG",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Foodra - Empowering Nigerian Farmers",
-    description: "Blockchain-powered AgriTech platform connecting farmers with markets, training, and funding across Africa.",
-    images: ["/foodra_logo.jpeg"],
+    title: "Foodra — Nigeria's #1 Farm Marketplace",
+    description: "Buy fresh farm produce directly from verified Nigerian farmers. Rice, yam, vegetables, grains & more.",
+    images: ["/foodra.png"],
   },
   icons: {
     icon: [
@@ -102,6 +100,12 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Foodra",
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large", "max-video-preview": -1 },
+  },
+  category: "Agriculture, Marketplace, Technology",
 }
 
 // ---- ROOT LAYOUT ----
@@ -118,6 +122,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Foodra" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
+        />
       </head>
       <body className="antialiased">
         <style>
