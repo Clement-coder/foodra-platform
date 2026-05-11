@@ -355,9 +355,9 @@ function ProfilePage() {
           <FormInput label="Full Name" {...register("name")} error={errors.name?.message} placeholder="Your full name" required />
           <FormInput label="Email" value={getEmail()} placeholder="Your email" required readOnly />
           <FormInput label="Phone Number" {...register("phone")} error={errors.phone?.message} placeholder="+234XXXXXXXXX" required />
-          <FormSelect label="Country" {...register("location")} error={errors.location?.message}
+          <FormSelect label="Country" {...register("location")} value={watch("location") ?? ""} error={errors.location?.message}
             options={africanCountries.map(c => ({ value: c.name, label: c.name }))} required />
-          <FormSelect label="Account Type" {...register("accountType")} error={errors.accountType?.message}
+          <FormSelect label="Account Type" {...register("accountType")} value={watch("accountType") ?? ""} error={errors.accountType?.message}
             options={[{ value: "Farmer", label: "Farmer" }, { value: "Buyer", label: "Buyer" }]} required />
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} className="flex-1">Cancel</Button>
