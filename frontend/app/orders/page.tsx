@@ -119,7 +119,7 @@ function OrdersPage() {
       ) : (
         <div className="space-y-4">
           {orders.map((order, index) => {
-            const escrowOrderId = order.items.find((i) => i.escrowOrderId)?.escrowOrderId;
+            const escrowOrderId = (order.items || []).find((i) => i.escrowOrderId)?.escrowOrderId;
             const escrowStatus = order.escrowStatus;
             const isActive = activeOrderId === order.id;
             const canAct = (escrowStatus === "locked" || (!!order.escrowTxHash && escrowStatus === "none")) && !!escrowOrderId;
@@ -159,7 +159,7 @@ function OrdersPage() {
 
                     {/* Items */}
                     <div className="space-y-2">
-                      {order.items.map((item) => (
+                      {(order.items || []).map((item) => (
                         <div key={item.productId} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 border border-[#118C4C]/10">
                           {item.image ? (
                             <Image src={item.image} alt={item.productName} width={52} height={52} className="rounded-md object-cover flex-shrink-0 border border-[#118C4C]/20" unoptimized />

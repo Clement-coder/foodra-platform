@@ -178,7 +178,7 @@ export function useOrders() {
     try {
       const res = await authFetch(getAccessToken, `/api/orders?userId=${currentUser.id}`)
       const data = await res.json()
-      setOrders(data)
+      setOrders(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching orders:', error)
     } finally {

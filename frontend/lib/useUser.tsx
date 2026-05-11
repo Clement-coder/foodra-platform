@@ -72,7 +72,7 @@ export function useUser() {
           const syncedUser = await response.json()
           setCurrentUser({
             ...syncedUser,
-            name: getPrivyName(),
+            name: syncedUser.name || getPrivyName(),
             email: getPrivyEmail(),
             wallet: getPrivyWallet(),
             linked_accounts: privyUserAny?.linkedAccounts || [],
@@ -96,6 +96,7 @@ export function useUser() {
 
     try {
       const payload: Record<string, string> = { privyId: privyUser.id }
+      if ("name" in updates && updates.name !== undefined) payload.name = updates.name
       if ("phone" in updates && updates.phone !== undefined) payload.phone = updates.phone
       if (updates.location !== undefined) payload.location = updates.location
       if (updates.role !== undefined) payload.role = updates.role
@@ -115,7 +116,7 @@ export function useUser() {
       const updatedUser = await response.json()
       setCurrentUser({
         ...updatedUser,
-        name: getPrivyName(),
+        name: updatedUser.name || getPrivyName(),
         email: getPrivyEmail(),
         wallet: getPrivyWallet(),
         linked_accounts: privyUserAny?.linkedAccounts || [],

@@ -16,7 +16,6 @@ import withAuth from "@/components/withAuth"
 import { SignOutModal } from "@/components/SignOutModal"
 import { ProfileCompletionModal } from "@/components/ProfileCompletionModal"
 import { useUser } from "@/lib/useUser"
-import { RatingSummary } from "@/components/RatingSummary"
 import { supabase } from "@/lib/supabase"
 import { ProductCard } from "@/components/ProductCard"
 import type { Product } from "@/lib/types"
@@ -27,8 +26,7 @@ import { authFetch } from "@/lib/authFetch"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { MembershipBadge } from "@/components/MembershipBadge"
 import { computeMembership } from "@/lib/membership"
-
-type Tab = "orders" | "wishlist" | "ratings"
+type Tab = "orders" | "wishlist" | "membership"
 
 function ProfilePage() {
   const { currentUser: user, isLoading, updateUser } = useUser()
@@ -128,7 +126,7 @@ function ProfilePage() {
 
   const onSubmit = async (data: ProfileUpdateFormData) => {
     try {
-      const ok = await updateUser({ phone: data.phone, location: data.location, role: data.accountType === "Farmer" ? "farmer" : "buyer" })
+      const ok = await updateUser({ name: data.name, phone: data.phone, location: data.location, role: data.accountType === "Farmer" ? "farmer" : "buyer" })
       if (!ok) throw new Error()
       setIsEditModalOpen(false)
       reset()
@@ -164,7 +162,7 @@ function ProfilePage() {
   const TABS: { key: Tab; label: string }[] = [
     { key: "orders", label: "Orders" },
     { key: "wishlist", label: "Wishlist" },
-    { key: "ratings", label: "Ratings" },
+    { key: "membership", label: "Membership" },
   ]
 
   return (
@@ -250,12 +248,6 @@ function ProfilePage() {
             <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />Joined {joinedDate}</span>
           </div>
 
-          {/* Membership progress — own profile only */}
-          <div className="mt-4 p-4 rounded-2xl border border-border bg-muted/30">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Membership Progress</p>
-            <MembershipBadge score={membership} showProgress />
-          </div>
-
           {/* Wallet */}
           <div className="mt-3">
             {user.wallet ? (
@@ -332,8 +324,8 @@ function ProfilePage() {
               </div>
             )
           ) : (
-            <div className="py-2">
-              <RatingSummary farmerId={user.id} detail />
+            <div className="py-4">
+              <MembershipBadge score={membership} showProgress />
             </div>
           )}
         </div>
@@ -356,7 +348,7 @@ function ProfilePage() {
             </div>
             <p className="text-xs text-muted-foreground">Click to change photo</p>
           </div>
-          <FormInput label="Full Name" {...register("name")} error={errors.name?.message} placeholder="Your full name" required readOnly />
+          <FormInput label="Full Name" {...register("name")} error={errors.name?.message} placeholder="Your full name" required />
           <FormInput label="Email" value={getEmail()} placeholder="Your email" required readOnly />
           <FormInput label="Phone Number" {...register("phone")} error={errors.phone?.message} placeholder="+234XXXXXXXXX" required />
           <FormSelect label="Country" {...register("location")} error={errors.location?.message}
