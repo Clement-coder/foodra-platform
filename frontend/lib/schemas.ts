@@ -123,12 +123,13 @@ export type TrainingRegistrationFormData = z.infer<typeof trainingRegistrationSc
 
 // Profile update schema
 export const profileUpdateSchema = z.object({
-  name: z.string().min(2, "Name is required"),
+  name: z.string().trim().min(2, "Name is required"),
   phone: z
     .string()
+    .trim()
     .regex(/^\+?[0-9\s-]{10,16}$/, "Please enter a valid phone number"),
-  location: z.string().min(2, "Location must be at least 2 characters"),
-  accountType: z.enum(["Farmer", "Buyer"]),
+  location: z.string().trim().min(2, "Location must be at least 2 characters"),
+  accountType: z.enum(["Farmer", "Buyer"]).optional(),
 })
 
 export type ProfileUpdateFormData = z.infer<typeof profileUpdateSchema>

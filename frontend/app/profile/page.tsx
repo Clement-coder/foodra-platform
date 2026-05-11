@@ -126,7 +126,11 @@ function ProfilePage() {
 
   const onSubmit = async (data: ProfileUpdateFormData) => {
     try {
-      const ok = await updateUser({ name: data.name, phone: data.phone, location: data.location, role: data.accountType === "Farmer" ? "farmer" : "buyer" })
+      const payload: Partial<User> = { name: data.name, phone: data.phone, location: data.location }
+      if (data.accountType) {
+        payload.role = data.accountType === "Farmer" ? "farmer" : "buyer"
+      }
+      const ok = await updateUser(payload)
       if (!ok) throw new Error()
       setIsEditModalOpen(false)
       reset()
