@@ -9,7 +9,7 @@ export const fundingApplicationSchema = z.object({
   fullName: z.string().min(3, "Full name must be at least 3 characters"),
   phoneNumber: z
     .string()
-    .regex(/^\+?[0-9]{10,13}$/, "Phone number must be 10-13 digits, optionally starting with +"),
+    .regex(/^\+?[0-9\s-]{10,16}$/, "Please enter a valid phone number"),
   location: z.string().min(2, "Location must be at least 2 characters"),
   farmSize: z.number().positive("Farm size must be greater than 0").refine((val) => !isNaN(val), { message: "Please enter a valid number" }),
   farmType: z.string().min(2, "Farm type is required"),
@@ -114,7 +114,7 @@ export const trainingRegistrationSchema = z.object({
   fullName: z.string().min(3, "Full name must be at least 3 characters"),
   phoneNumber: z
     .string()
-    .regex(/^\+?[0-9]{10,13}$/, "Phone number must be 10-13 digits, optionally starting with +"),
+    .regex(/^\+?[0-9\s-]{10,16}$/, "Please enter a valid phone number"),
   location: z.string().min(2, "Location must be at least 2 characters"),
   trainingId: z.string().min(1, "Training ID is required"),
 })
@@ -123,11 +123,10 @@ export type TrainingRegistrationFormData = z.infer<typeof trainingRegistrationSc
 
 // Profile update schema
 export const profileUpdateSchema = z.object({
-  name: z.string().optional(),
+  name: z.string().min(2, "Name is required"),
   phone: z
     .string()
-    .regex(/^\+?[0-9]{10,13}$/, "Phone number must be 10-13 digits, optionally starting with +")
-    .optional(),
+    .regex(/^\+?[0-9\s-]{10,16}$/, "Please enter a valid phone number"),
   location: z.string().min(2, "Location must be at least 2 characters"),
   accountType: z.enum(["Farmer", "Buyer"]),
 })
