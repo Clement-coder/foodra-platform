@@ -116,7 +116,7 @@ export function NotificationSidebar({ open, onClose, notifications, onMarkRead }
                     >
                       {FOODRA_TYPES.has(n.type) ? (
                         <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#118C4C] flex-shrink-0 mt-0.5 bg-white">
-                          <Image src="/foodra.png" alt="Foodra" width={32} height={32} className="object-cover w-full h-full" />
+                          <Image src="/foodra_logo.jpeg" alt="Foodra" width={32} height={32} className="object-cover w-full h-full" />
                         </div>
                       ) : (
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${TYPE_COLOR[n.type] || TYPE_COLOR.system}`}>
