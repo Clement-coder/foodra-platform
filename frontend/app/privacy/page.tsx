@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Shield, Eye, Database, Lock, UserCheck, Mail, AlertCircle, Globe } from "lucide-react"
+import { ContactSupportButton } from "@/components/ContactSupportButton"
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Foodra",
@@ -153,13 +154,7 @@ export default function PrivacyPolicyPage() {
             <h3 className="font-semibold text-foreground mb-1">Have a privacy concern?</h3>
             <p className="text-sm text-muted-foreground">Our team responds to all privacy requests within 5 business days.</p>
           </div>
-          <a
-            href="mailto:support@foodramarket.com"
-            className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#118C4C] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0d6d3a] transition-colors"
-          >
-            <Mail className="h-4 w-4" />
-            Contact Support
-          </a>
+          <ContactSupportButton />
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-8">

@@ -6,7 +6,7 @@ import { usePrivy, useSendTransaction, useFundWallet } from "@privy-io/react-aut
 import { ethers } from "ethers"
 import { QRCodeSVG } from "qrcode.react"
 import { FormInput } from "@/components/FormInput"
-import { DollarSign, History, PlusCircle, MinusCircle, Copy, RefreshCcw, Wallet, Eye, EyeOff, Banknote, Clock, CreditCard } from "lucide-react"
+import { DollarSign, History, PlusCircle, MinusCircle, Copy, RefreshCcw, Wallet, Eye, EyeOff, Banknote, Clock, CreditCard, TrendingUp, TrendingDown, Bitcoin, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/Modal"
 import { useToast } from "@/lib/toast"
@@ -464,7 +464,10 @@ function WalletPage() {
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  <span className="text-2xl font-semibold text-white/60 mb-1">USDC</span>
+                  <span className="text-2xl font-semibold text-white/60 mb-1 flex items-center gap-1">
+                    <DollarSign className="h-5 w-5 text-white/50" />
+                    USDC
+                  </span>
                 </div>
                 <AnimatePresence mode="wait">
                   {usdNgnRate && (
@@ -506,6 +509,29 @@ function WalletPage() {
                 Gas: {balanceVisible ? `${balance} ETH` : "•••••"}
               </p>
             </div>
+          </div>
+
+          {/* ── Stats Cards ── */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+            {[
+              { label: "Total Balance", value: balanceVisible ? `${countedUsdc}` : "••••", sub: "Live Balance", icon: DollarSign, color: "emerald" },
+              { label: "Total Profit", value: "0.00", sub: "Net profit from investments", icon: TrendingUp, color: "green" },
+              { label: "Total Invested", value: "0.00", sub: "Total amount invested", icon: DollarSign, color: "blue" },
+              { label: "Total Earned", value: "0.00", sub: "Total earnings from investments", icon: TrendingDown, color: "purple" },
+              { label: "BTC Price", value: "—", sub: "Live market price", icon: Bitcoin, color: "orange", noDollar: true },
+            ].map(({ label, value, sub, icon: Icon, color, noDollar }) => (
+              <div key={label} className="rounded-2xl bg-card border border-border p-4 shadow-sm">
+                <div className={`inline-flex p-2 rounded-lg bg-${color}-100 dark:bg-${color}-900/30 mb-3`}>
+                  <Icon className={`h-4 w-4 text-${color}-600 dark:text-${color}-400`} />
+                </div>
+                <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                <p className="text-lg font-bold text-foreground flex items-center gap-0.5">
+                  {!noDollar && <DollarSign className="h-4 w-4 text-muted-foreground" />}
+                  {value}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+              </div>
+            ))}
           </div>
 
           {/* ── Action Buttons ── */}
@@ -635,6 +661,25 @@ function WalletPage() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* ── Contact Agent ── */}
+          <div className="mt-6 rounded-2xl bg-card border border-border p-5 flex items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                <MessageCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Need help?</p>
+                <p className="text-xs text-muted-foreground">Contact our agent directly through the app chat.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => window.dispatchEvent(new Event("foodra:open-support-chat"))}
+              className="shrink-0 px-4 py-2 rounded-xl bg-[#118C4C] hover:bg-[#0d6d3a] text-white text-sm font-semibold transition-colors"
+            >
+              Open Chat
+            </button>
           </div>
 
         </motion.div>
