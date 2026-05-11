@@ -56,22 +56,22 @@ function TierLadder({ score, inView, isModal = false }: { score: MembershipScore
               initial={{ opacity: 0, x: -12 }}
               animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -12 }}
               transition={{ type: "spring", stiffness: 100, damping: 12, delay: (isModal ? 0.05 : 0.2) + i * 0.1 }}
-              className={`relative flex items-start ${isModal ? "gap-3 pb-5" : "gap-4 pb-6"} last:pb-0`}
+              className={`relative flex items-start ${isModal ? "gap-3 pb-6" : "gap-4 pb-7"} last:pb-0`}
             >
               {/* Node */}
-              <div className="relative z-10 flex-shrink-0">
+              <div className="relative z-10 flex-shrink-0 mt-1">
                 <motion.div
                   animate={isCurrent ? { scale: [1, 1.15, 1] } : {}}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${isModal ? "text-base" : "text-lg"} border-2 transition-all ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-lg border-2 transition-all ${
                     isCurrent
                       ? `bg-gradient-to-br ${TIER_GRADIENT[tier.tier]} border-white shadow-lg ${isModal ? "" : `shadow-${TIER_GLOW[tier.tier]}`}`
                       : isReached
-                      ? `bg-gradient-to-br ${TIER_GRADIENT[tier.tier]} border-transparent opacity-80`
-                      : "bg-muted border-border"
+                      ? `bg-gradient-to-br ${TIER_GRADIENT[tier.tier]} border-transparent opacity-90 shadow-sm`
+                      : "bg-muted/50 border-border"
                   }`}
                 >
-                  {isReached ? tier.emoji : <Lock className={`${isModal ? "h-3.5 w-3.5" : "h-4 w-4"} text-muted-foreground`} />}
+                  <span className={!isReached ? "opacity-30 grayscale" : ""}>{tier.emoji}</span>
                 </motion.div>
                 {isCurrent && (
                   <motion.div
@@ -82,30 +82,54 @@ function TierLadder({ score, inView, isModal = false }: { score: MembershipScore
                 )}
               </div>
 
-              {/* Content */}
-              <div className={`flex-1 pt-1.5 ${!isReached ? "opacity-40" : ""}`}>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className={`font-bold ${isModal ? "text-sm" : "text-sm"} ${isCurrent ? tier.color : isReached ? "text-foreground" : "text-muted-foreground"}`}>
-                    {tier.tier}
-                  </span>
-                  {isCurrent && (
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gradient-to-r ${TIER_GRADIENT[tier.tier]} text-white`}>
-                      {isModal ? "You" : "Current"}
+              {/* Content Card */}
+              <div className={`flex-1 p-3.5 rounded-2xl border relative overflow-hidden transition-all ${
+                isCurrent 
+                  ? "bg-card border-[#118C4C]/30 shadow-md ring-1 ring-[#118C4C]/10" 
+                  : isReached 
+                  ? "bg-card border-border shadow-sm" 
+                  : "bg-muted/20 border-dashed border-border"
+              }`}>
+                {isCurrent && (
+                  <div className={`absolute inset-0 opacity-[0.08] bg-gradient-to-r ${TIER_GRADIENT[tier.tier]} pointer-events-none`} />
+                )}
+                
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between gap-1.5 flex-wrap mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`font-bold ${isModal ? "text-sm" : "text-base"} ${isCurrent ? tier.color : isReached ? "text-foreground" : "text-muted-foreground"}`}>
+                        {tier.tier}
+                      </span>
+                      {isCurrent && (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r ${TIER_GRADIENT[tier.tier]} text-white shadow-sm`}>
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    {!isReached && <Lock className="h-3.5 w-3.5 text-muted-foreground/40" />}
+                  </div>
+                  
+                  <p className={`text-xs ${isCurrent ? "text-foreground font-medium" : isReached ? "text-muted-foreground" : "text-muted-foreground/70"}`}>
+                    {tier.description}
+                  </p>
+                  
+                  {/* Badges/Tags */}
+                  <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                    <span className="text-[10px] font-semibold text-muted-foreground bg-muted/60 border border-border px-2 py-0.5 rounded-md">
+                      {tier.min}–{tier.max} pts
                     </span>
-                  )}
-                  {tier.tier === "Champion" && isReached && (
-                    <>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#118C4C]/10 text-[#118C4C] flex items-center gap-0.5`}>
-                        <BadgeCheck className="h-3 w-3" /> Auto-Verified
-                      </span>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-500 flex items-center gap-0.5`}>
-                        <Star className="h-3 w-3" /> 5% Off Orders
-                      </span>
-                    </>
-                  )}
+                    {tier.tier === "Champion" && isReached && (
+                      <>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[#118C4C]/10 text-[#118C4C] border border-[#118C4C]/20 flex items-center gap-1">
+                          <BadgeCheck className="h-3 w-3" /> Auto-Verified
+                        </span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-500 border border-amber-500/20 flex items-center gap-1">
+                          <Star className="h-3 w-3" /> 5% Off Orders
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <p className={`${isModal ? "text-[11px]" : "text-xs"} text-muted-foreground mt-0.5`}>{tier.description}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{tier.min}–{tier.max} pts</p>
               </div>
             </motion.div>
           )
