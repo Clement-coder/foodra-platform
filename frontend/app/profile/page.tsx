@@ -166,9 +166,11 @@ function ProfilePage() {
 
         {/* Cover + Avatar */}
         <div className="relative">
-          {/* Cover */}
-          <div className="h-36 sm:h-48 w-full bg-gradient-to-br from-[#118C4C] via-[#0d7a40] to-lime-500 rounded-b-3xl overflow-hidden">
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
+          {/* Cover — matches wallet card style */}
+          <div className="relative h-36 sm:h-48 w-full rounded-3xl overflow-hidden bg-gradient-to-br from-[#118C4C] via-[#0d7a42] to-[#1a5c35] shadow-2xl">
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5" />
+            <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-white/5" />
           </div>
 
           {/* Avatar */}
@@ -197,17 +199,19 @@ function ProfilePage() {
         {/* Action buttons row */}
         <div className="flex justify-end gap-2 px-4 pt-3 pb-1">
           <Button onClick={() => setIsShareModalOpen(true)} variant="outline" size="sm" className="rounded-full gap-1.5">
-            <Share2 className="h-3.5 w-3.5" /> Share
+            <Share2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Share</span>
           </Button>
           <Button onClick={() => { setValue("name", user.name || displayName); setValue("phone", user.phone || ""); setValue("location", user.location || ""); setValue("accountType", user.role === "farmer" || user.role === "admin" ? "Farmer" : "Buyer"); setIsEditModalOpen(true) }}
             size="sm" className="rounded-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1.5">
             <Edit className="h-3.5 w-3.5" />
-            {profileCompletion < 100 ? `Complete (${profileCompletion}%)` : "Edit Profile"}
+            <span className="hidden sm:inline">{profileCompletion < 100 ? `Complete (${profileCompletion}%)` : "Edit Profile"}</span>
           </Button>
           {user.role === "admin" && (
             <a href="/admin">
               <Button size="sm" className="rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5" /> Admin
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Admin</span>
               </Button>
             </a>
           )}

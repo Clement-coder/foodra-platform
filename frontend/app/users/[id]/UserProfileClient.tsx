@@ -35,8 +35,10 @@ export default function UserProfileClient({ user, userProducts }: UserProfileCli
 
         {/* Cover */}
         <div className="relative">
-          <div className="h-36 sm:h-48 w-full bg-gradient-to-br from-[#118C4C] via-[#0d7a40] to-lime-500 rounded-b-3xl overflow-hidden">
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
+          <div className="relative h-36 sm:h-48 w-full rounded-3xl overflow-hidden bg-gradient-to-br from-[#118C4C] via-[#0d7a42] to-[#1a5c35] shadow-2xl">
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5" />
+            <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-white/5" />
           </div>
 
           {/* Avatar */}
