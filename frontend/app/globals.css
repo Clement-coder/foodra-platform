@@ -4,6 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --navbar-height: 56px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --content-top: calc(var(--navbar-height) + var(--safe-top));
   /* Foodra brand colors - light green background and primary green */
   --background: oklch(0.97 0.02 140);
   --foreground: oklch(0.2 0 0);

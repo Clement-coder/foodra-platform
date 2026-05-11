@@ -185,7 +185,7 @@ export function NavBar() {
     <>
       {/* Fixed navbar — covers status bar area on PWA */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border/60"
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
+        style={{ paddingTop: "var(--safe-top)" }}
       >
         <div className="flex h-14 items-center justify-between px-3 md:px-6 max-w-7xl mx-auto">
           {/* Logo */}

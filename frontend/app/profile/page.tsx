@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { BadgeCheck, Edit, LogOut, Share2, UserIcon, Wallet, Copy, Check, ShoppingBag, MapPin, CalendarDays, ShieldCheck, Camera, Loader2, Package, Star } from "lucide-react"
+import { BadgeCheck, Edit, LogOut, Share2, UserIcon, Wallet, Copy, Check, MapPin, CalendarDays, ShieldCheck, Camera, Loader2, Package, ShoppingBag } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { FormInput } from "@/components/FormInput"
@@ -25,6 +25,8 @@ import { africanCountries } from "@/lib/countries"
 import ThemeToggle from "@/components/ThemeToggle"
 import { authFetch } from "@/lib/authFetch"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
+import { MembershipBadge } from "@/components/MembershipBadge"
+import { computeMembership } from "@/lib/membership"
 
 type Tab = "orders" | "wishlist" | "ratings"
 
@@ -84,7 +86,6 @@ function ProfilePage() {
       setLoadingTab(false)
     }
   }, [tab, user?.id])
-
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user?.id) return
@@ -148,6 +149,17 @@ function ProfilePage() {
   const displayName = getDisplayName()
   const profileCompletion = calculateProfileCompletion(user)
   const joinedDate = new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+
+  const membership = computeMembership({
+    hasName: !!user.name,
+    hasPhone: !!user.phone,
+    hasLocation: !!user.location,
+    hasAvatar: !!user.avatar,
+    createdAt: user.createdAt,
+    ordersCount: orders.length,
+    hasDisputes: false, // disputes not fetched client-side; defaults to clean
+    isVerified: !!user.isVerified,
+  })
 
   const TABS: { key: Tab; label: string }[] = [
     { key: "orders", label: "Orders" },
@@ -230,11 +242,18 @@ function ProfilePage() {
               </span>
             )}
             <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full capitalize">{user.role || "user"}</span>
+            <MembershipBadge score={membership} />
           </div>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
             {user.location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{user.location}</span>}
             <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />Joined {joinedDate}</span>
+          </div>
+
+          {/* Membership progress — own profile only */}
+          <div className="mt-4 p-4 rounded-2xl border border-border bg-muted/30">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Your Membership Progress</p>
+            <MembershipBadge score={membership} showProgress />
           </div>
 
           {/* Wallet */}
