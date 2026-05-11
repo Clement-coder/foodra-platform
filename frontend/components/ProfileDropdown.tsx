@@ -4,7 +4,7 @@ import { User } from "@/lib/types"
 import { useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, ShoppingBag, GraduationCap, DollarSign, User as UserIcon, ChevronDown, PackagePlus, TrendingUp, Heart, Package } from "lucide-react"
+import { Home, ShoppingBag, GraduationCap, DollarSign, User as UserIcon, ChevronDown, Heart, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ThemeToggle from "./ThemeToggle"
 
@@ -16,10 +16,8 @@ const dropdownLinks = [
   { name: "Profile", href: "/profile", icon: UserIcon },
   { name: "Home", href: "/", icon: Home },
   { name: "Market", href: "/marketplace", icon: ShoppingBag },
-  { name: "List Products", href: "/listing/new", icon: PackagePlus },
   { name: "My Orders", href: "/orders", icon: Package },
   { name: "Wishlist", href: "/wishlist", icon: Heart },
-  { name: "My Sales", href: "/sales", icon: TrendingUp },
   { name: "Training", href: "/training", icon: GraduationCap },
   { name: "Funding", href: "/funding", icon: DollarSign },
 ]
@@ -41,17 +39,11 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
       <Button variant="outline" size="sm" className="gap-2 bg-transparent hover:bg-accent transition-colors">
         {user.avatar ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={user.avatar}
-            alt="User Avatar"
-            className="h-6 w-6 rounded-full object-cover"
-          />
+          <img src={user.avatar} alt="User Avatar" className="h-6 w-6 rounded-full object-cover" />
         ) : (
           <UserIcon className="h-4 w-4" />
         )}
-        <span className="hidden sm:inline">
-          Profile
-        </span>
+        <span className="hidden sm:inline">Profile</span>
         <ChevronDown className="h-4 w-4" />
       </Button>
       <AnimatePresence>
@@ -77,7 +69,7 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
               ))}
               <div className="px-3 pt-2 pb-1 border-t border-border/50 mt-1">
                 <p className="text-xs text-muted-foreground mb-2">Theme</p>
-                <ThemeToggle className="w-full" />
+                <ThemeToggle className="w-full justify-between" />
               </div>
             </div>
           </motion.div>

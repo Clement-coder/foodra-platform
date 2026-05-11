@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, MapPin, Share2, ShoppingCart, UserIcon, X, Eye } from "lucide-react"
+import { ArrowLeft, MapPin, Share2, ShoppingCart, X, Eye } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -15,7 +15,6 @@ import type { Product, CartItem } from "@/lib/types"
 import { useCart } from "@/lib/useCart"
 import { useUser } from "@/lib/useUser"
 import { ProductComments } from "@/components/ProductComments"
-import { RatingSummary } from "@/components/RatingSummary"
 import { WishlistButton } from "@/components/WishlistButton"
 import { productJsonLd } from "@/lib/seo"
 import { GridLayout } from "@/components/GridLayout"
@@ -68,7 +67,7 @@ function ProductDetailPage() {
     addToCart({ productId: product.id, productName: product.productName, pricePerUnit: product.pricePerUnit, quantity: 1, image: product.image })
   }
 
-  const isOwnProduct = currentUser?.id === product?.farmerId
+  const isAdmin = currentUser?.role === "admin"
 
   if (loading) {
     return (
@@ -196,16 +195,14 @@ function ProductDetailPage() {
             <div className="flex items-center gap-3 mb-6">
               <span className="text-4xl font-bold text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
               <span className="text-muted-foreground">per {product.unit || 'unit'}</span>
-              {!isOwnProduct && (
-                <WishlistButton
-                  productId={product.id}
-                  productName={product.productName}
-                  image={product.image}
-                  pricePerUnit={product.pricePerUnit}
-                  className="ml-auto h-10 w-10 rounded-xl border border-input"
-                  iconSize="h-6 w-6"
-                />
-              )}
+              <WishlistButton
+                productId={product.id}
+                productName={product.productName}
+                image={product.image}
+                pricePerUnit={product.pricePerUnit}
+                className="ml-auto h-10 w-10 rounded-xl border border-input"
+                iconSize="h-6 w-6"
+              />
             </div>
 
             <Card className="mb-6 border-[#118C4C]/20">
@@ -217,12 +214,6 @@ function ProductDetailPage() {
                     </div>
                     <span className="text-foreground">{product.location}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-[#118C4C]/10 rounded-lg">
-                      <UserIcon className="h-4 w-4 text-[#118C4C]" />
-                    </div>
-                    <span className="text-foreground">Sold by {product.farmerName}</span>
-                  </div>
                   <div className="pt-2 border-t border-[#118C4C]/20">
                     <p className="text-sm text-muted-foreground">Available Stock</p>
                     <p className="text-lg font-semibold text-[#118C4C]">{product.quantity} {product.unit || 'unit'}{product.quantity !== 1 ? 's' : ''}</p>
@@ -231,32 +222,14 @@ function ProductDetailPage() {
               </CardContent>
             </Card>
 
-            {!isOwnProduct && (
-              <Button
-                onClick={handleAddToCart}
-                size="lg"
-                className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 mb-4 shadow-lg shadow-[#118C4C]/20"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                Add to Cart
-              </Button>
-            )}
-
-            {isOwnProduct && (
-              <div className="w-full p-4 mb-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                <p className="text-sm text-amber-800 dark:text-amber-200 text-center">
-                  This is your product. You cannot add it to cart.
-                </p>
-              </div>
-            )}
-
-            {isOwnProduct && (
-              <Link href={`/listing/${product.id}/edit`} className="block mb-4">
-                <Button variant="outline" size="lg" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C]/5 gap-2">
-                  Edit Product
-                </Button>
-              </Link>
-            )}
+            <Button
+              onClick={handleAddToCart}
+              size="lg"
+              className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 mb-4 shadow-lg shadow-[#118C4C]/20"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              Add to Cart
+            </Button>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link href="/shop" className="block">
@@ -321,31 +294,23 @@ function ProductDetailPage() {
             <CardContent className="p-6">
               <h3 className="font-semibold mb-4 flex items-center gap-2">
                 <div className="h-1 w-6 bg-[#118C4C] rounded"></div>
-                Seller Information
+                Seller
               </h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={product.farmerAvatar || `https://api.dicebear.com/8.x/bottts/svg?seed=${product.farmerId}`}
-                    alt={product.farmerName}
-                    className="h-12 w-12 rounded-full object-cover border-2 border-[#118C4C]"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div>
-                    <p className="font-medium text-foreground">{product.farmerName}</p>
-                    {product.farmerIsVerified && (
-                      <p className="text-[#118C4C] text-xs font-medium">✓ Verified Farmer</p>
-                    )}
-                    <div className="mt-1"><RatingSummary farmerId={product.farmerId} /></div>
-                  </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/foodra-icon.png" alt="Foodra" className="h-10 w-10 rounded-full object-cover border-2 border-[#118C4C]" onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/8.x/initials/svg?seed=Foodra` }} />
+                <div>
+                  <p className="font-medium text-foreground">Foodra</p>
+                  <p className="text-[#118C4C] text-xs font-medium">✓ Official Store</p>
                 </div>
-                <Link href={`/users/${product.farmerId}`}>
-                  <Button variant="outline" size="sm" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C] hover:text-white transition-colors">
-                    View Seller Profile
+              </div>
+              {isAdmin && (
+                <Link href={`/listing/${product.id}/edit`} className="block mt-3">
+                  <Button variant="outline" size="sm" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C]/5">
+                    Edit Product (Admin)
                   </Button>
                 </Link>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
