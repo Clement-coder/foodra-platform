@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { FileText, Shield, ShoppingBag, Ban, AlertTriangle, RefreshCw, Scale, Mail, Gavel, Users } from "lucide-react"
-import { ContactSupportButton } from "@/components/ContactSupportButton"
 
 export const metadata: Metadata = {
   title: "Terms of Service | Foodra",
@@ -182,7 +181,13 @@ export default function TermsOfServicePage() {
             <h3 className="font-semibold text-foreground mb-1">Questions about these Terms?</h3>
             <p className="text-sm text-muted-foreground">Our team is happy to clarify anything. We respond within 5 business days.</p>
           </div>
-          <ContactSupportButton label="Contact Support" />
+          <a
+            href="mailto:support@foodramarket.com"
+            className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#118C4C] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0d6d3a] transition-colors"
+          >
+            <Mail className="h-4 w-4" />
+            Contact Support
+          </a>
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-8">

@@ -22,12 +22,6 @@ export function SupportChat() {
   const { getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    const handler = () => setOpen(true)
-    window.addEventListener("foodra:open-support-chat", handler)
-    return () => window.removeEventListener("foodra:open-support-chat", handler)
-  }, [])
   const [messages, setMessages] = useState<SupportMessage[]>([])
   const [text, setText] = useState("")
   const [sending, setSending] = useState(false)
