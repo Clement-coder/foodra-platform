@@ -190,7 +190,7 @@ export function NavBar() {
         <div className="flex h-14 items-center justify-between px-3 md:px-6 max-w-7xl mx-auto">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <img src="/foodra_logo.jpeg" alt="Foodra" className="h-8 w-8 rounded-lg rounded-bl-xl rounded-tr-2xl object-cover" />
+            <img src="/foodra_logo.jpeg" alt="Foodra" className="h-8 w-auto object-contain" />
             <span className="font-bold text-[#118C4C] text-base tracking-tight hidden sm:block">FOODRA</span>
           </a>
 

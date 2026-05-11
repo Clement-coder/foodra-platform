@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Filter, PackageOpen, ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { Filter, PackageOpen, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
@@ -121,14 +121,6 @@ function MarketplacePage() {
               </Button>
             </Link>
           )}
-          {authenticated && (
-            <Link href="/listing/new">
-              <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20">
-                <Plus className="h-4 w-4" />
-                List Product
-              </Button>
-            </Link>
-          )}
         </div>
       </div>
 
@@ -198,16 +190,8 @@ function MarketplacePage() {
           <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
             {searchQuery
               ? "Try a different search term or clear your filters."
-              : "Be the first to list a product and reach buyers across Africa."}
+              : "No products available yet. Check back soon!"}
           </p>
-          {authenticated && !searchQuery && (
-            <Link href="/listing/new">
-              <Button size="lg" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20 px-8">
-                <Plus className="h-5 w-5" />
-                List Your First Product
-              </Button>
-            </Link>
-          )}
         </div>
       ) : (
         <>
