@@ -74,11 +74,14 @@ export async function POST(request: Request) {
 
     const payload: Record<string, any> = existingUser
       ? {
-          name: body.name || "User",
-          email: body.email || null,
-          wallet_address: body.wallet || null,
-          // Don't overwrite a custom uploaded avatar — only set if user has no avatar yet
-          ...(existingUser.avatar_url ? {} : { avatar_url: body.avatar || null }),
+          // Only overwrite name if database name is empty or "User", and body has a better name
+          ...( (!existingUser.name || existingUser.name === "User") && body.name !== "User" ? { name: body.name } : {} ),
+          // Only overwrite email if database doesn't have one
+          ...( !existingUser.email && body.email ? { email: body.email } : {} ),
+          // Only overwrite wallet if database doesn't have one
+          ...( !existingUser.wallet_address && body.wallet ? { wallet_address: body.wallet } : {} ),
+          // Only overwrite avatar if database doesn't have one
+          ...( !existingUser.avatar_url && body.avatar ? { avatar_url: body.avatar } : {} ),
         }
       : {
           privy_id: claims.userId,
@@ -90,6 +93,9 @@ export async function POST(request: Request) {
         }
 
     const runWrite = async () => {
+      if (existingUser && Object.keys(payload).length === 0) {
+        return { data: existingUser, error: null }
+      }
       const query = existingUser
         ? supabaseAdmin.from("users").update(payload).eq("privy_id", claims.userId)
         : supabaseAdmin.from("users").insert(payload)
