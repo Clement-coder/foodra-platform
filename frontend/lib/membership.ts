@@ -29,7 +29,7 @@ export const TIERS: { tier: MembershipTier; min: number; max: number; color: str
   { tier: "Sprout",    min: 20, max: 39,  color: "text-lime-700",    bg: "bg-lime-100 dark:bg-lime-900/40",     emoji: "🌿", description: "Building your presence on the platform" },
   { tier: "Grower",    min: 40, max: 59,  color: "text-emerald-700", bg: "bg-emerald-100 dark:bg-emerald-900/40", emoji: "🌾", description: "An active and trusted community member" },
   { tier: "Harvester", min: 60, max: 79,  color: "text-green-700",   bg: "bg-green-100 dark:bg-green-900/40",   emoji: "🏆", description: "A highly trusted member of Foodra" },
-  { tier: "Champion",  min: 80, max: 100, color: "text-[#118C4C]",   bg: "bg-[#118C4C]/10",                     emoji: "⭐", description: "Elite verified member — the highest level" },
+  { tier: "Champion",  min: 80, max: 100, color: "text-[#118C4C]",   bg: "bg-[#118C4C]/10",                     emoji: "⭐", description: "Elite verified member — enjoy a 5% discount on all purchases" },
 ]
 
 export const STEPS = [

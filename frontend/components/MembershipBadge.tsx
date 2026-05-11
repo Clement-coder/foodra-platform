@@ -94,9 +94,14 @@ function TierLadder({ score, inView, isModal = false }: { score: MembershipScore
                     </span>
                   )}
                   {tier.tier === "Champion" && isReached && (
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#118C4C]/10 text-[#118C4C] flex items-center gap-0.5`}>
-                      <BadgeCheck className="h-3 w-3" /> Auto-Verified
-                    </span>
+                    <>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#118C4C]/10 text-[#118C4C] flex items-center gap-0.5`}>
+                        <BadgeCheck className="h-3 w-3" /> Auto-Verified
+                      </span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-500 flex items-center gap-0.5`}>
+                        <Star className="h-3 w-3" /> 5% Off Orders
+                      </span>
+                    </>
                   )}
                 </div>
                 <p className={`${isModal ? "text-[11px]" : "text-xs"} text-muted-foreground mt-0.5`}>{tier.description}</p>

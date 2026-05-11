@@ -12,7 +12,7 @@ All recent SQL files have been fixed and are ready for integration:
 
 ### Integration Order:
 1. credit_score.sql ✅
-2. order_tracking.sql ✅  
+2. order_tracking.sql ✅
 3. wishlist.sql ✅
 4. product_views.sql ✅
 5. farmer_verification.sql ✅
