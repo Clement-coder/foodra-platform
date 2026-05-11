@@ -69,7 +69,7 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
               ))}
               <div className="px-3 pt-2 pb-1 border-t border-border/50 mt-1">
                 <p className="text-xs text-muted-foreground mb-2">Theme</p>
-                <ThemeToggle className="w-full justify-between" />
+                <ThemeToggle showLabels={false} className="w-full justify-between" />
               </div>
             </div>
           </motion.div>

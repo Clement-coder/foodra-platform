@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
+import { AuthError, requireAdminUser } from "@/lib/serverAuth"
 
-export async function GET() {
-  const supabase = getSupabaseAdminClient()
-  if (!supabase) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 500 })
-  }
-
+export async function GET(request: Request) {
   try {
+    await requireAdminUser(request)
+    
+    const supabase = getSupabaseAdminClient()
+    if (!supabase) {
+      return NextResponse.json({ error: "Supabase not configured" }, { status: 500 })
+    }
     // Test basic connection
     const { data: products, error: productsError } = await supabase
       .from("products")
@@ -33,6 +35,9 @@ export async function GET() {
       }
     })
   } catch (error: any) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status })
+    }
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

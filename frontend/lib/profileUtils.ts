@@ -3,20 +3,15 @@ import { User } from "./types";
 
 export function calculateProfileCompletion(user: User): number {
   let completedFields = 0;
-  const totalFields = 6; // name, email, phone, location, accountType, avatar
+  const totalFields = 5; // name, phone, location, role, avatar (email is immutable and empty for phone-auth users)
 
   // Name field
   if (user.name && user.name.trim() !== "") {
     completedFields++;
   }
 
-  // Email field
-  if (user.email) {
-    completedFields++;
-  }
-
   // Phone field
-  if (user.phone) {
+  if (user.phone && user.phone.trim() !== "") {
     completedFields++;
   }
 

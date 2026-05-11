@@ -202,7 +202,7 @@ function ProfilePage() {
           {/* Top-right actions */}
           <div className="absolute top-3 right-3 flex items-center gap-2">
             <LanguageSwitcher compact />
-            <ThemeToggle compact />
+            <ThemeToggle />
           </div>
         </div>
 

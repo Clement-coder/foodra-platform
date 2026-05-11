@@ -136,10 +136,11 @@ export async function PATCH(request: Request) {
     const body = (await request.json()) as UpdateBody
 
     const updatePayload: Record<string, string | null> = {}
+    if ("name" in body) updatePayload.name = (body as any).name || null
     if ("phone" in body) updatePayload.phone = body.phone || null
     if ("avatar_url" in body) updatePayload.avatar_url = body.avatar_url || null
     if ("location" in body) updatePayload.location = body.location || null
-    if ("role" in body && body.role && user.role === "admin") updatePayload.role = body.role
+    if ("role" in body && body.role) updatePayload.role = body.role
     if ("terms_accepted_at" in body) updatePayload.terms_accepted_at = typeof body.terms_accepted_at === "string" ? body.terms_accepted_at : null
 
     if (Object.keys(updatePayload).length === 0) {
