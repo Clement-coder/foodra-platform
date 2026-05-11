@@ -3,8 +3,11 @@
 import { useEffect, useRef } from "react"
 import { X, Bell, ShoppingBag, DollarSign, GraduationCap, MessageCircle, Megaphone, Info, CheckCheck } from "lucide-react"
 import { AnimatePresence, motion } from "framer-motion"
+import Image from "next/image"
 import type { Notification } from "@/lib/useNotifications"
 import { formatTimeAgo } from "@/lib/timeUtils"
+
+const FOODRA_TYPES = new Set(["broadcast", "system"])
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
   order: <ShoppingBag className="w-4 h-4" />,
@@ -72,11 +75,9 @@ export function NotificationSidebar({ open, onClose, notifications, onMarkRead }
             onDragEnd={(_, info) => { if (info.offset.x > 80 || info.velocity.x > 500) onClose() }}
             className="fixed right-0 top-0 bottom-0 z-[61] w-full max-w-sm bg-card dark:bg-card shadow-2xl flex flex-col cursor-grab active:cursor-grabbing"
           >
-            {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
             </div>
-            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-border dark:border-border cursor-default">
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-green-600" />
@@ -99,7 +100,6 @@ export function NotificationSidebar({ open, onClose, notifications, onMarkRead }
               </div>
             </div>
 
-            {/* List */}
             <div className="flex-1 overflow-y-auto cursor-default" onPointerDown={(e) => e.stopPropagation()}>
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
@@ -114,9 +114,15 @@ export function NotificationSidebar({ open, onClose, notifications, onMarkRead }
                       onClick={() => handleClick(n)}
                       className={`w-full text-left px-5 py-4 flex items-start gap-3 hover:bg-muted dark:hover:bg-gray-800/50 transition-colors ${!n.is_read ? "bg-green-50/50 dark:bg-green-900/10" : ""}`}
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${TYPE_COLOR[n.type] || TYPE_COLOR.system}`}>
-                        {TYPE_ICON[n.type] || TYPE_ICON.system}
-                      </div>
+                      {FOODRA_TYPES.has(n.type) ? (
+                        <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#118C4C] flex-shrink-0 mt-0.5 bg-white">
+                          <Image src="/foodra.png" alt="Foodra" width={32} height={32} className="object-cover w-full h-full" />
+                        </div>
+                      ) : (
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${TYPE_COLOR[n.type] || TYPE_COLOR.system}`}>
+                          {TYPE_ICON[n.type] || TYPE_ICON.system}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <p className={`text-sm font-medium leading-snug ${!n.is_read ? "text-foreground dark:text-white" : "text-muted-foreground dark:text-muted-foreground"}`}>
@@ -125,6 +131,9 @@ export function NotificationSidebar({ open, onClose, notifications, onMarkRead }
                           {!n.is_read && <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0 mt-1.5" />}
                         </div>
                         <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5 leading-relaxed">{n.message}</p>
+                        {FOODRA_TYPES.has(n.type) && (
+                          <p className="text-[10px] text-[#118C4C] font-medium mt-0.5">From Foodra</p>
+                        )}
                         <p className="text-[10px] text-muted-foreground mt-1">{formatTimeAgo(n.created_at)}</p>
                       </div>
                     </button>

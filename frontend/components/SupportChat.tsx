@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { MessageCircle, X, Send, Paperclip, Loader2, Bot } from "lucide-react"
+import { MessageCircle, X, Send, Paperclip, Loader2 } from "lucide-react"
+import { FoodraAvatar } from "@/components/FoodraAvatar"
 import { usePrivy } from "@privy-io/react-auth"
 import { useUser } from "@/lib/useUser"
 import { authFetch } from "@/lib/authFetch"
@@ -173,9 +174,7 @@ export function SupportChat() {
         <div style={panelStyle} className="z-50 w-[calc(100vw-2rem)] sm:w-96 max-h-[70vh] bg-card dark:bg-card rounded-2xl shadow-2xl border border-border dark:border-border flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-green-600 px-4 py-3 flex items-center gap-3 flex-shrink-0">
-            <div className="w-8 h-8 bg-card/20 rounded-full flex items-center justify-center">
-              <MessageCircle className="w-4 h-4 text-white" />
-            </div>
+            <FoodraAvatar size={32} />
             <div className="flex-1">
               <p className="text-white font-semibold text-sm">Foodra Support</p>
               <p className="text-green-100 text-xs">We typically reply within a few hours</p>
@@ -195,11 +194,8 @@ export function SupportChat() {
             )}
             {messages.map(msg => (
               <div key={msg.id} className={`flex items-end gap-2 ${msg.is_admin_reply ? "justify-start" : "justify-end"}`}>
-                {/* Support bot avatar */}
                 {msg.is_admin_reply && (
-                  <div className="w-7 h-7 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  </div>
+                  <FoodraAvatar size={28} />
                 )}
                 <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                   msg.is_admin_reply

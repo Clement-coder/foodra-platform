@@ -8,13 +8,15 @@ import { formatTimeAgo } from "@/lib/timeUtils"
 import { supabase } from "@/lib/supabase"
 import { usePrivy } from "@privy-io/react-auth"
 import { authFetch } from "@/lib/authFetch"
+import { FoodraAvatar } from "@/components/FoodraAvatar"
 
 interface Comment {
   id: string
   comment: string
   created_at: string
   user_id: string
-  users: { name: string; avatar_url: string | null } | null
+  is_admin?: boolean
+  users: { name: string; avatar_url: string | null; role?: string } | null
 }
 
 interface ProductCommentsProps {
@@ -93,23 +95,31 @@ export function ProductComments({ productId, currentUserId, productOwnerId }: Pr
         <p className="text-sm text-muted-foreground text-center py-6">No comments yet. Be the first!</p>
       ) : (
         <div className="space-y-3">
-          {comments.map(c => (
-            <div key={c.id} className="flex gap-3">
-              <img
-                src={c.users?.avatar_url || `https://api.dicebear.com/8.x/bottts/svg?seed=${c.user_id}`}
-                alt=""
-                className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5"
-                referrerPolicy="no-referrer"
-              />
-              <div className="flex-1 bg-muted/50 rounded-xl px-3 py-2">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-sm font-semibold">{c.users?.name || "User"}</span>
-                  <span className="text-xs text-muted-foreground">{formatTimeAgo(c.created_at)}</span>
+          {comments.map(c => {
+            const isAdmin = c.users?.role === "admin" || c.is_admin
+            return (
+              <div key={c.id} className="flex gap-3">
+                {isAdmin ? (
+                  <FoodraAvatar size={32} className="mt-0.5" />
+                ) : (
+                  <img
+                    src={c.users?.avatar_url || `https://api.dicebear.com/8.x/bottts/svg?seed=${c.user_id}`}
+                    alt=""
+                    className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5"
+                    referrerPolicy="no-referrer"
+                  />
+                )}
+                <div className={`flex-1 rounded-xl px-3 py-2 ${isAdmin ? "bg-[#118C4C]/8 border border-[#118C4C]/20" : "bg-muted/50"}`}>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-sm font-semibold">{isAdmin ? "Foodra" : (c.users?.name || "User")}</span>
+                    {isAdmin && <span className="text-[10px] text-[#118C4C] font-medium bg-[#118C4C]/10 px-1.5 py-0.5 rounded-full">Official</span>}
+                    <span className="text-xs text-muted-foreground">{formatTimeAgo(c.created_at)}</span>
+                  </div>
+                  <p className="text-sm text-foreground">{c.comment}</p>
                 </div>
-                <p className="text-sm text-foreground">{c.comment}</p>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

@@ -17,6 +17,7 @@ import { useUser } from "@/lib/useUser"
 import { ProductComments } from "@/components/ProductComments"
 import { WishlistButton } from "@/components/WishlistButton"
 import { productJsonLd } from "@/lib/seo"
+import { FoodraAvatar } from "@/components/FoodraAvatar"
 import { GridLayout } from "@/components/GridLayout"
 import { ProductCard } from "@/components/ProductCard"
 
@@ -297,8 +298,7 @@ function ProductDetailPage() {
                 Seller
               </h3>
               <div className="flex items-center gap-3 p-3 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/foodra-icon.png" alt="Foodra" className="h-10 w-10 rounded-full object-cover border-2 border-[#118C4C]" onError={(e) => { (e.target as HTMLImageElement).src = `https://api.dicebear.com/8.x/initials/svg?seed=Foodra` }} />
+                <FoodraAvatar size={40} />
                 <div>
                   <p className="font-medium text-foreground">Foodra</p>
                   <p className="text-[#118C4C] text-xs font-medium">✓ Official Store</p>
