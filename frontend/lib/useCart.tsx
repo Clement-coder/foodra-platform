@@ -199,7 +199,10 @@ export function useOrders() {
         }),
       })
 
-      if (!res.ok) throw new Error('Failed to create order')
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body?.error || body?.message || `Failed to create order (${res.status})`)
+      }
 
       const order = await res.json()
       await fetchOrders()

@@ -110,7 +110,10 @@ export async function POST(request: Request) {
       .select()
       .single()
 
-    if (orderError) throw orderError
+    if (orderError) {
+      console.error('Order insert error:', JSON.stringify(orderError))
+      throw orderError
+    }
 
     const orderItems = body.items.map((item: any) => ({
       order_id: order.id,
@@ -129,6 +132,7 @@ export async function POST(request: Request) {
 
     // If escrow columns don't exist yet (migration not run), retry without them
     if (itemsError && (itemsError.code === '42703' || String(itemsError.message).includes('does not exist'))) {
+      console.warn('Escrow columns missing, retrying without them:', itemsError.message)
       const baseItems = body.items.map((item: any) => ({
         order_id: order.id,
         product_id: item.productId,
@@ -140,7 +144,10 @@ export async function POST(request: Request) {
       ({ error: itemsError } = await supabaseAdmin.from('order_items').insert(baseItems))
     }
 
-    if (itemsError) throw itemsError
+    if (itemsError) {
+      console.error('Order items insert error:', JSON.stringify(itemsError))
+      throw itemsError
+    }
 
     // Decrement product quantity and mark unavailable if stock hits 0
     for (const item of body.items) {
