@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
 import { AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
 
 export async function GET(request: Request) {
   try {
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) return NextResponse.json({ error: 'DB unavailable' }, { status: 500 })
+
     const auth = await requireAuthenticatedUser(request)
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId') || auth.user.id
@@ -15,7 +17,7 @@ export async function GET(request: Request) {
     }
 
     if (trainingId) {
-      const { data } = await supabase
+      const { data } = await supabaseAdmin
         .from('training_enrollments')
         .select('id')
         .eq('user_id', userId)
@@ -24,7 +26,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ enrolled: !!data })
     }
 
-    const { count } = await supabase
+    const { count } = await supabaseAdmin
       .from('training_enrollments')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
@@ -37,17 +39,20 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) return NextResponse.json({ error: 'DB unavailable' }, { status: 500 })
+
     const auth = await requireAuthenticatedUser(request)
     const body = await request.json()
-    
-    const { data, error } = await supabase
+
+    const { data, error } = await supabaseAdmin
       .from('training_enrollments')
       .insert({
         training_id: body.trainingId,
         user_id: auth.user.id,
-        full_name: body.fullName,
-        phone_number: body.phoneNumber,
-        location: body.location,
+        full_name: body.fullName || auth.user.name || 'Unknown',
+        phone_number: body.phoneNumber || auth.user.phone || '',
+        location: body.location || auth.user.location || '',
       })
       .select()
       .single()
@@ -59,22 +64,18 @@ export async function POST(request: Request) {
       throw error
     }
 
-    // Notify user of successful enrollment
-    if (auth.user.id) {
-      const supabaseAdmin = getSupabaseAdminClient()
-      let trainingTitle = "the training"
-      if (supabaseAdmin && body.trainingId) {
-        const { data: t } = await supabaseAdmin.from("trainings").select("title").eq("id", body.trainingId).single()
-        if (t?.title) trainingTitle = t.title
-      }
-      await createNotification({
-        userId: auth.user.id,
-        type: "training",
-        title: "Training Enrollment Confirmed",
-        message: `You have successfully enrolled in "${trainingTitle}".`,
-        link: `/training/${body.trainingId}`,
-      })
+    let trainingTitle = 'the training'
+    if (body.trainingId) {
+      const { data: t } = await supabaseAdmin.from('trainings').select('title').eq('id', body.trainingId).single()
+      if (t?.title) trainingTitle = t.title
     }
+    await createNotification({
+      userId: auth.user.id,
+      type: 'training',
+      title: 'Training Enrollment Confirmed',
+      message: `You have successfully enrolled in "${trainingTitle}".`,
+      link: `/training/${body.trainingId}`,
+    })
 
     return NextResponse.json(data)
   } catch (error) {

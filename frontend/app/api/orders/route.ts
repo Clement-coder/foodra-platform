@@ -123,9 +123,22 @@ export async function POST(request: Request) {
       escrow_status: 'none',
     }))
 
-    const { error: itemsError } = await supabaseAdmin
+    let { error: itemsError } = await supabaseAdmin
       .from('order_items')
       .insert(orderItems)
+
+    // If escrow columns don't exist yet (migration not run), retry without them
+    if (itemsError && (itemsError.code === '42703' || String(itemsError.message).includes('does not exist'))) {
+      const baseItems = body.items.map((item: any) => ({
+        order_id: order.id,
+        product_id: item.productId,
+        product_name: item.productName,
+        quantity: item.quantity,
+        price: item.pricePerUnit,
+        image_url: item.image,
+      }));
+      ({ error: itemsError } = await supabaseAdmin.from('order_items').insert(baseItems))
+    }
 
     if (itemsError) throw itemsError
 

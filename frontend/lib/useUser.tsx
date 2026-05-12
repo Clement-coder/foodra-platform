@@ -95,13 +95,13 @@ export function useUser() {
     if (!currentUser || !privyUser?.id) return false
 
     try {
-      const payload: Record<string, string> = { privyId: privyUser.id }
+      const payload: Record<string, string> = {}
       if ("name" in updates && updates.name !== undefined) payload.name = updates.name
       if ("phone" in updates && updates.phone !== undefined) payload.phone = updates.phone
       if (updates.location !== undefined) payload.location = updates.location
       if (updates.role !== undefined) payload.role = updates.role
 
-      if (Object.keys(payload).length === 1) return true
+      if (Object.keys(payload).length === 0) return true
 
       const response = await authFetch(getAccessToken, "/api/users/sync", {
         method: "PATCH",
