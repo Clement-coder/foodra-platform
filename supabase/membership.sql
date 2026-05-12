@@ -30,11 +30,11 @@ BEGIN
   v_score := v_score + LEAST(v_weeks_old * 2, 20);
 
   -- Orders: 5pts each, max 30pts
-  SELECT COUNT(*) INTO v_orders_count FROM orders WHERE user_id = p_user_id;
+  SELECT COUNT(*) INTO v_orders_count FROM orders WHERE buyer_id = p_user_id;
   v_score := v_score + LEAST(v_orders_count * 5, 30);
 
   -- No disputes: 20pts
-  SELECT COUNT(*) INTO v_disputes_count FROM disputes WHERE user_id = p_user_id;
+  SELECT COUNT(*) INTO v_disputes_count FROM order_disputes WHERE buyer_id = p_user_id;
   IF v_disputes_count = 0 THEN
     v_score := v_score + 20;
   END IF;
@@ -85,7 +85,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION trg_order_membership()
 RETURNS TRIGGER AS $$
 BEGIN
-  PERFORM refresh_user_membership(NEW.user_id);
+  PERFORM refresh_user_membership(NEW.buyer_id);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
