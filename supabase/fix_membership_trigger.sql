@@ -1,5 +1,5 @@
--- Fix: membership trigger and score function used wrong column name
--- orders.user_id does not exist — correct column is buyer_id
+-- Fix: membership functions used wrong column names
+-- orders.buyer_id (not user_id), order_disputes.user_id (correct)
 
 CREATE OR REPLACE FUNCTION compute_membership_score(p_user_id UUID)
 RETURNS INTEGER AS $$
