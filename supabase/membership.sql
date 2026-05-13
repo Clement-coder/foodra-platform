@@ -34,7 +34,7 @@ BEGIN
   v_score := v_score + LEAST(v_orders_count * 5, 30);
 
   -- No disputes: 20pts
-  SELECT COUNT(*) INTO v_disputes_count FROM order_disputes WHERE buyer_id = p_user_id;
+  SELECT COUNT(*) INTO v_disputes_count FROM order_disputes WHERE user_id = p_user_id;
   IF v_disputes_count = 0 THEN
     v_score := v_score + 20;
   END IF;
