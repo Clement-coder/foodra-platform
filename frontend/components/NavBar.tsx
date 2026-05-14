@@ -228,12 +228,12 @@ export function NavBar() {
               className="md:hidden p-2 rounded-lg hover:bg-accent transition-colors"
               aria-label="Search"
             >
-              <Search className="h-5 w-5 text-foreground" />
+              <Search className="h-6 w-6 sm:h-5 sm:w-5 text-foreground" />
             </button>
 
             {/* Cart */}
             <a href="/shop" className="relative p-2 rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5" aria-label={`Shopping cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}>
-              <ShoppingCart className="h-5 w-5 text-foreground" />
+              <ShoppingCart className="h-6 w-6 sm:h-5 sm:w-5 text-foreground" />
               <span className="hidden md:inline text-sm font-medium">Shop</span>
               {cartCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-[#118C4C] text-white text-[10px] flex items-center justify-center font-bold" aria-hidden="true">
@@ -245,7 +245,7 @@ export function NavBar() {
             {/* Wallet */}
             {authenticated && (
               <a href="/wallet" className="p-2 rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5">
-                <Wallet className="h-5 w-5" />
+                <Wallet className="h-6 w-6 sm:h-5 sm:w-5" />
                 <span className="hidden md:inline text-sm font-medium">{t("nav.wallet")}</span>
               </a>
             )}
@@ -257,7 +257,7 @@ export function NavBar() {
                 className="relative p-2 rounded-lg hover:bg-accent transition-colors"
                 aria-label="Notifications"
               >
-                <Bell className="h-5 w-5 text-foreground" />
+                <Bell className="h-6 w-6 sm:h-5 sm:w-5 text-foreground" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-green-600 text-white text-[10px] flex items-center justify-center font-bold">
                     {unreadCount > 9 ? "9+" : unreadCount}
