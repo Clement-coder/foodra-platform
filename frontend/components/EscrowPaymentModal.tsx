@@ -171,7 +171,7 @@ export function EscrowPaymentModal({ isOpen, onClose, onSuccessClose, cart, tota
           </motion.div>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="w-full space-y-2">
             <Button onClick={onSuccessClose} className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
-              View My Orders
+              View My Order
             </Button>
             <p className="text-xs text-muted-foreground">Redirecting automatically in 3 seconds...</p>
           </motion.div>

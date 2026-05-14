@@ -301,20 +301,21 @@ function ShopPage() {
         />
       )}
 
-      {/* Escrow Payment Modal */}
-      {pendingOrderId && (
-        <EscrowPaymentModal
-          isOpen={isCheckoutModalOpen}
-          onClose={async () => {
-            if (pendingOrderId) await deletePendingOrder(pendingOrderId);
-            setIsCheckoutModalOpen(false);
-            setPendingOrderId(null);
-          }}
-          onSuccessClose={() => {
-            setIsCheckoutModalOpen(false);
-            setPendingOrderId(null);
-            router.push("/orders");
-          }}
+{/* Escrow Payment Modal */}
+       {pendingOrderId && (
+         <EscrowPaymentModal
+           isOpen={isCheckoutModalOpen}
+           onClose={async () => {
+             if (pendingOrderId) await deletePendingOrder(pendingOrderId);
+             setIsCheckoutModalOpen(false);
+             setPendingOrderId(null);
+           }}
+           onSuccessClose={() => {
+             const orderId = pendingOrderId;
+             setIsCheckoutModalOpen(false);
+             setPendingOrderId(null);
+             router.push(`/orders/${orderId}`);
+           }}
           cart={enrichedCartItems}
           totalNgn={totalAmount}
           supabaseOrderId={pendingOrderId}
