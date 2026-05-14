@@ -6,8 +6,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { usePrivy } from "@privy-io/react-auth";
 import {
-  ArrowLeft, MapPin, Phone, User, Mail, Package,
-  Calendar, DollarSign, ExternalLink, Loader2, CheckCircle, AlertTriangle, Download,
+   ArrowLeft, MapPin, Phone, User, Package,
+   Calendar, DollarSign, ExternalLink, Loader2, CheckCircle, AlertTriangle, Download,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,6 @@ import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
 import { DisputeModal } from "@/components/DisputeModal";
 import withAuth from "@/components/withAuth";
 import { useEscrow } from "@/lib/useEscrow";
-import { useUser } from "@/lib/useUser";
 import { useToast } from "@/lib/toast";
 import { downloadReceiptImage, maskSensitive } from "@/lib/receipt";
 import type { Order } from "@/lib/types";
@@ -26,7 +25,6 @@ function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { toast, confirm } = useToast();
-  const { currentUser } = useUser();
   const { getAccessToken } = usePrivy();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -247,46 +245,6 @@ function OrderDetailPage() {
                   <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <span>{order.deliveryAddress}, {order.deliveryCity}, {order.deliveryState}</span>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Seller info */}
-        {order.farmers && order.farmers.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-            <Card className="border-[#118C4C]/20">
-              <CardHeader className="pb-3 border-b border-[#118C4C]/10">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <User className="h-4 w-4 text-[#118C4C]" /> Seller Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-3">
-                {order.farmers.map((farmer) => (
-                  <a key={farmer.id} href={`/users/${farmer.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    {farmer.avatar ? (
-                      <Image src={farmer.avatar} alt={farmer.name} width={44} height={44} className="rounded-full object-cover border-2 border-[#118C4C]/20 flex-shrink-0" unoptimized />
-                    ) : (
-                      <div className="w-11 h-11 rounded-full bg-[#118C4C]/10 border-2 border-[#118C4C]/20 flex items-center justify-center flex-shrink-0">
-                        <User className="h-5 w-5 text-[#118C4C]" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm hover:underline underline-offset-2">{farmer.name || "—"}</p>
-                      {farmer.location && <p className="text-xs text-muted-foreground">{farmer.location}</p>}
-                      {farmer.phone && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                          <Phone className="h-3 w-3" />{farmer.phone}
-                        </p>
-                      )}
-                      {farmer.email && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Mail className="h-3 w-3" />{farmer.email}
-                        </p>
-                      )}
-                    </div>
-                  </a>
-                ))}
               </CardContent>
             </Card>
           </motion.div>
