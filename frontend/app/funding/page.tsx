@@ -12,6 +12,7 @@ import type { FundingApplication } from "@/lib/types"
 import withAuth from "../../components/withAuth";
 import { useUser } from "@/lib/useUser"
 import { authFetch } from "@/lib/authFetch"
+import { computeMembership } from "@/lib/membership"
 
 function FundingPage() {
   const { currentUser: user, isLoading } = useUser()
@@ -57,6 +58,19 @@ function FundingPage() {
     approved: applications.filter((a) => a.status === "Approved").length,
   }
 
+  const membership = user ? computeMembership({
+    hasName: !!user.name,
+    hasPhone: !!user.phone,
+    hasLocation: !!user.location,
+    hasAvatar: !!user.avatar,
+    createdAt: user.createdAt,
+    ordersCount: 0,
+    hasDisputes: false,
+    isVerified: !!user.isVerified,
+  }) : null
+
+  const canApplyForFunding = user?.role === "farmer" && membership?.tier === "Champion"
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -70,13 +84,16 @@ function FundingPage() {
             <p className="text-muted-foreground">Access funding opportunities for your farm</p>
           </div>
         </div>
-        {user && (
+        {canApplyForFunding && (
           <Link href="/funding/apply">
             <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
               <Plus className="h-4 w-4" />
               Apply for Funding
             </Button>
           </Link>
+        )}
+        {user?.role === "farmer" && membership?.tier !== "Champion" && (
+          <p className="text-sm text-muted-foreground">⭐ Reach Champion tier to apply for funding</p>
         )}
       </div>
 
@@ -179,7 +196,7 @@ function FundingPage() {
               ? "Apply for funding to grow your farming business and unlock new opportunities."
               : "Try changing the filter to see other applications"}
           </p>
-          {filter === "all" && (
+          {filter === "all" && canApplyForFunding && (
             <Link href="/funding/apply">
               <Button size="lg" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20 px-8">
                 <Plus className="h-5 w-5" />

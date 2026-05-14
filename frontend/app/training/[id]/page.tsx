@@ -201,8 +201,8 @@ function TrainingDetailPage() {
                     <p className="font-medium">You're enrolled!</p>
                   </div>
                 ) : (
-                  <Button onClick={handleJoinTraining} disabled={isFull || !currentUser} className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white mb-3" size="lg">
-                    {!currentUser ? "Sign in to Enroll" : isFull ? "Training Full" : "Enroll Now"}
+                  <Button onClick={handleJoinTraining} disabled={isFull} className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white mb-3" size="lg">
+                    {isFull ? "Training Full" : "Enroll Now"}
                   </Button>
                 )}
 
