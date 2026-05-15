@@ -37,6 +37,7 @@ const sections = [
       "Farmers and sellers are solely responsible for the accuracy, legality, and quality of their product listings.",
       "All listed products must be genuine agricultural goods. Misrepresentation of products is strictly prohibited.",
       "Sellers must honour confirmed orders and fulfil delivery obligations within the agreed timeframe.",
+      "Delivery fees are not included in the product price. A delivery fee applies when your order arrives and is separate from the escrow payment. Buyers are responsible for covering delivery costs.",
       "Foodra uses a blockchain-based escrow system (FoodraEscrow) to hold buyer payments until delivery is confirmed, protecting both parties.",
       "Buyers must confirm delivery within 7 days. If no action is taken, funds are automatically released to the seller.",
       "Foodra charges a 2.5% platform fee on completed transactions to sustain platform operations.",
@@ -59,6 +60,7 @@ const sections = [
     title: "Payments, Escrow & Fees",
     body: [
       "All marketplace payments are processed in USDC (a USD-pegged stablecoin) via the FoodraEscrow smart contract on the Base blockchain.",
+      "The escrow payment covers the product price only. Delivery fees are charged separately upon delivery and are the buyer's responsibility.",
       "Funds are held in escrow until the buyer confirms delivery or the 7-day auto-release period expires.",
       "A platform fee of 2.5% is deducted from each completed transaction and sent to the Foodra treasury wallet.",
       "Foodra does not hold fiat currency on your behalf. All wallet balances are non-custodial and managed through Privy.",
