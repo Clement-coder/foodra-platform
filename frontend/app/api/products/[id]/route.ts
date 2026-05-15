@@ -77,14 +77,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
     }
 
-    const { error } = await supabaseAdmin.from('products').update(updates).eq('id', id)
+    // Remap frontend field names to DB column names
+    const { image, productName, pricePerUnit, ...rest } = updates
+    const dbUpdates: Record<string, unknown> = { ...rest }
+    if (image !== undefined) dbUpdates.image_url = image
+    if (productName !== undefined) dbUpdates.name = productName
+    if (pricePerUnit !== undefined) dbUpdates.price = pricePerUnit
+
+    const { error } = await supabaseAdmin.from('products').update(dbUpdates).eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    const nextPrice = typeof updates.price === "number" ? updates.price : null
+    const nextPrice = typeof dbUpdates.price === "number" ? dbUpdates.price : null
     if (nextPrice !== null && nextPrice < Number(existingProduct.price ?? nextPrice)) {
       await notifyWishlistPriceDrop({
         productId: id,
-        productName: String(updates.name || existingProduct.name || "a product"),
+        productName: String(dbUpdates.name || existingProduct.name || "a product"),
         currentPrice: nextPrice,
       })
     }
