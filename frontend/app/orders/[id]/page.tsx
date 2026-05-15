@@ -212,7 +212,13 @@ function OrderDetailPage() {
             <CardContent className="p-5 space-y-3">
               {order.items.map((item) => (
                 <div key={item.productId} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 border border-[#118C4C]/10">
-                  <Image src={item.image} alt={item.productName} width={64} height={64} className="rounded-lg object-cover border-2 border-[#118C4C]/20" unoptimized />
+                  {item.image ? (
+                    <Image src={item.image} alt={item.productName} width={64} height={64} className="rounded-lg object-cover border-2 border-[#118C4C]/20" unoptimized />
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg bg-muted border-2 border-[#118C4C]/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[10px] text-muted-foreground">No img</span>
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{item.productName}</p>
                     <p className="text-sm text-muted-foreground">{item.quantity} × ₦{item.pricePerUnit.toLocaleString()}</p>
@@ -256,7 +262,7 @@ function OrderDetailPage() {
             <Card className="border-[#118C4C]/20">
               <CardContent className="p-5">
                 <p className="text-sm text-muted-foreground mb-1">Escrow Transaction</p>
-                <a href={`https://sepolia.basescan.org/tx/${order.escrowTxHash}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#118C4C] text-sm font-mono hover:underline">
+                <a href={`https://${process.env.NEXT_PUBLIC_CHAIN_ID === "8453" ? "" : "sepolia."}basescan.org/tx/${order.escrowTxHash}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#118C4C] text-sm font-mono hover:underline">
                   {order.escrowTxHash.slice(0, 14)}...{order.escrowTxHash.slice(-8)}
                   <ExternalLink className="h-3.5 w-3.5" />
                 </a>

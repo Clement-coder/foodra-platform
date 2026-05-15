@@ -22,10 +22,15 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!query.trim()) {
+      setLoading(false)
+      return
+    }
     const fetchData = async () => {
+      setLoading(true)
       try {
         const [productsRes, trainingsRes, usersRes] = await Promise.all([
-          fetch("/api/products"),
+          fetch(`/api/products/search?q=${encodeURIComponent(query)}`),
           fetch("/api/trainings"),
           fetch("/api/users"),
         ])
@@ -45,20 +50,11 @@ export default function SearchPage() {
     }
 
     fetchData()
-  }, [])
+  }, [query])
 
   const normalizedQuery = query.trim().toLowerCase()
 
-  const filteredProducts = useMemo(() => {
-    if (!normalizedQuery) return []
-    return products.filter(
-      (p) =>
-        p.productName.toLowerCase().includes(normalizedQuery) ||
-        p.description.toLowerCase().includes(normalizedQuery) ||
-        p.category.toLowerCase().includes(normalizedQuery) ||
-        p.farmerName.toLowerCase().includes(normalizedQuery)
-    )
-  }, [products, normalizedQuery])
+  const filteredProducts = products // already filtered by search API
 
   const filteredTrainings = useMemo(() => {
     if (!normalizedQuery) return []

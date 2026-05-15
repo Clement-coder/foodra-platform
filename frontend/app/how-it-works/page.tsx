@@ -13,21 +13,21 @@ export default function HowItWorksPage() {
       number: "1",
       icon: UserPlus,
       title: "Create Your Account",
-      description: "Sign up with Privy and complete your farmer profile in minutes",
+      description: "Sign up in seconds with Privy — no paperwork, no stress. Just connect and you're in.",
       color: "bg-blue-100 dark:bg-blue-900/20 text-blue-600",
     },
     {
       number: "2",
       icon: ShoppingBag,
-      title: "List Your Products",
-      description: "Add your farm products to the marketplace with photos and descriptions",
+      title: "Browse Fresh Products",
+      description: "Explore hundreds of farm-fresh products listed directly by verified farmers across Nigeria.",
       color: "bg-green-100 dark:bg-green-900/20 text-green-600",
     },
     {
       number: "3",
       icon: TrendingUp,
-      title: "Connect with Buyers",
-      description: "Reach customers across Nigeria and grow your sales",
+      title: "Buy with Confidence",
+      description: "Add to cart, pay securely via escrow, and get your order delivered straight to your door.",
       color: "bg-purple-100 dark:bg-purple-900/20 text-purple-600",
     },
   ]
@@ -37,10 +37,10 @@ export default function HowItWorksPage() {
       icon: ShoppingBag,
       title: "Marketplace",
       steps: [
-        "List unlimited products for free",
-        "Set your own prices",
-        "Manage inventory easily",
-        "Direct communication with buyers",
+        "Browse hundreds of fresh farm products",
+        "Filter by category, price, and location",
+        "Buy directly from verified farmers",
+        "Secure escrow payment — pay only when satisfied",
       ],
     },
     {
@@ -68,19 +68,19 @@ export default function HowItWorksPage() {
   const faqs = [
     {
       question: "Is Foodra free to use?",
-      answer: "Yes, creating an account and listing products is completely free. We only charge a small commission on successful sales.",
+      answer: "Yes! Creating an account and browsing the marketplace is completely free. You only pay for the products you buy.",
     },
     {
-      question: "How do I receive payments?",
-      answer: "Payments are processed securely through our platform. Once a sale is confirmed, funds are transferred directly to your registered bank account.",
+      question: "How does payment work?",
+      answer: "Payments are secured in escrow — your money is held safely until you confirm delivery. Once you're happy with your order, the farmer gets paid. If something goes wrong, you can raise a dispute.",
     },
     {
-      question: "Can I apply for multiple training programs?",
-      answer: "You can enroll in as many training programs as you like to expand your knowledge and skills.",
+      question: "Can I track my order?",
+      answer: "Absolutely. Once you place an order, you can track its status in real-time from your Orders page — from processing all the way to delivery.",
     },
     {
-      question: "What documents do I need for funding applications?",
-      answer: "Basic requirements include your farm registration, ID, and a business plan. Specific requirements vary by funding source.",
+      question: "What if I'm not satisfied with my order?",
+      answer: "No worries. You can raise a dispute directly from your order page. Our team reviews every dispute and ensures a fair resolution within 3–5 business days.",
     },
   ]
 
@@ -92,7 +92,7 @@ export default function HowItWorksPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">How Foodra Works</h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              A simple, three-step process to start growing your farming business
+              Fresh farm produce, delivered to you — directly from Nigerian farmers. Here's how easy it is.
             </p>
           </motion.div>
         </div>

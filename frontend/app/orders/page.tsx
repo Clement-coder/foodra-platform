@@ -213,7 +213,7 @@ function OrdersPage() {
                     {order.escrowTxHash && (
                       <p className="text-xs text-muted-foreground" onClick={(e) => e.stopPropagation()}>
                         Tx:{" "}
-                        <a href={`https://sepolia.basescan.org/tx/${order.escrowTxHash}`} target="_blank" rel="noopener noreferrer" className="text-[#118C4C] underline underline-offset-2">
+                        <a href={`https://${process.env.NEXT_PUBLIC_CHAIN_ID === "8453" ? "" : "sepolia."}basescan.org/tx/${order.escrowTxHash}`} target="_blank" rel="noopener noreferrer" className="text-[#118C4C] underline underline-offset-2">
                           {order.escrowTxHash.slice(0, 10)}...{order.escrowTxHash.slice(-6)}
                         </a>
                       </p>

@@ -93,7 +93,9 @@ function FundingPage() {
           </Link>
         )}
         {user?.role === "farmer" && membership?.tier !== "Champion" && (
-          <p className="text-sm text-muted-foreground">⭐ Reach Champion tier to apply for funding</p>
+          <Link href="/profile" className="text-sm text-muted-foreground hover:text-[#118C4C] transition-colors">
+            ⭐ Reach Champion tier to apply for funding — <span className="underline">view your membership</span>
+          </Link>
         )}
       </div>
 

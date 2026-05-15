@@ -7,7 +7,6 @@ import { TrainingCard } from "@/components/TrainingCard"
 import { Skeleton } from "@/components/Skeleton"
 import { Button } from "@/components/ui/button"
 import type { Training } from "@/lib/types"
-import withAuth from "../../components/withAuth"
 
 function TrainingPage() {
   const [trainings, setTrainings] = useState<Training[]>([])
@@ -97,4 +96,4 @@ function TrainingPage() {
   )
 }
 
-export default withAuth(TrainingPage)
+export default TrainingPage

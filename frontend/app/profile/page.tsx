@@ -303,11 +303,11 @@ function ProfilePage() {
                   <a key={o.id} href={`/orders/${o.id}`} className="flex items-center justify-between p-4 rounded-2xl border border-border hover:border-[#118C4C]/40 hover:bg-muted/40 transition-colors">
                     <div>
                       <p className="text-sm font-medium">Order #{o.id.slice(-6).toUpperCase()}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{new Date(o.created_at || o.createdAt).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{new Date(o.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-[#118C4C]">₦{(o.totalAmount || o.total_amount || 0).toLocaleString()}</p>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${o.status === "delivered" ? "bg-green-100 text-green-700" : o.status === "cancelled" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+                      <p className="text-sm font-bold text-[#118C4C]">₦{(o.totalAmount || 0).toLocaleString()}</p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${o.status === "Delivered" ? "bg-green-100 text-green-700" : o.status === "Cancelled" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
                         {o.status}
                       </span>
                     </div>

@@ -174,7 +174,7 @@ export default function WishlistPage() {
                     className="text-[#118C4C]"
                     title="Add to cart"
                     onClick={() => {
-                      addToCart({ productId: item.productId, productName: item.productName, pricePerUnit: item.priceAtAdd, quantity: 1, image: item.image })
+                      addToCart({ productId: item.productId, productName: item.productName, pricePerUnit: item.currentPrice ?? item.priceAtAdd, quantity: 1, image: item.image })
                       toast.success("Added to cart")
                     }}
                   >

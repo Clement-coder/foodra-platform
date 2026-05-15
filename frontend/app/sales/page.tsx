@@ -1,109 +1,187 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { Package, ShoppingBag, ArrowLeft } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, TrendingUp, Package, DollarSign, ShoppingBag, Truck } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
 import withAuth from "@/components/withAuth";
 import { useUser } from "@/lib/useUser";
 import { usePrivy } from "@privy-io/react-auth";
 import { authFetch } from "@/lib/authFetch";
 
-interface PurchaseSummary {
-  totalOrders: number;
-  totalSpent: number;
-  totalItems: number;
-}
-
-function PurchasesPage() {
+function SalesDashboard() {
   const router = useRouter();
   const { currentUser } = useUser();
   const { getAccessToken } = usePrivy();
-  const [summary, setSummary] = useState<PurchaseSummary | null>(null);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!currentUser) return;
-    authFetch(getAccessToken, `/api/orders?userId=${currentUser.id}`)
+    authFetch(getAccessToken, `/api/orders/farmer?farmerId=${currentUser.id}`)
       .then((r) => r.json())
-      .then((orders: any[]) => {
-        if (!Array.isArray(orders)) return;
-        const totalOrders = orders.length;
-        const totalSpent = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-        const totalItems = orders.reduce((sum, o) => sum + (o.items?.length || 0), 0);
-        setSummary({ totalOrders, totalSpent, totalItems });
-      })
+      .then((d) => setOrders(Array.isArray(d) ? d : []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [currentUser]);
 
+  const stats = useMemo(() => {
+    const totalRevenue = orders
+      .filter((o) => o.escrowStatus === "released")
+      .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
+    const pendingEscrow = orders
+      .filter((o) => o.escrowStatus === "locked")
+      .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
+    const totalOrders = orders.length;
+    const totalItems = orders.reduce((sum: number, o: any) => sum + (o.items?.length || 0), 0);
+    return { totalRevenue, pendingEscrow, totalOrders, totalItems };
+  }, [orders]);
+
+  // Top products by revenue
+  const topProducts = useMemo(() => {
+    const map = new Map<string, { name: string; image: string; revenue: number; qty: number }>();
+    for (const order of orders) {
+      if (order.escrowStatus !== "released") continue;
+      for (const item of order.items || []) {
+        const existing = map.get(item.productId) || { name: item.productName, image: item.image, revenue: 0, qty: 0 };
+        existing.revenue += item.pricePerUnit * item.quantity;
+        existing.qty += item.quantity;
+        map.set(item.productId, existing);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  }, [orders]);
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2">
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </Button>
-
-      <h1 className="text-2xl font-bold text-foreground mb-6">My Purchases</h1>
-
-      {loading ? (
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />
-          ))}
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+            <div className="h-2 w-10 bg-[#118C4C] rounded" />
+            Sales Dashboard
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">Your farm sales overview</p>
         </div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
-        >
-          <Card className="border-[#118C4C]/20">
-            <CardContent className="p-5 flex flex-col items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-[#118C4C]/10 flex items-center justify-center">
-                <ShoppingBag className="h-5 w-5 text-[#118C4C]" />
-              </div>
-              <p className="text-3xl font-bold text-[#118C4C]">{summary?.totalOrders ?? 0}</p>
-              <p className="text-xs text-muted-foreground text-center">Total Orders</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-[#118C4C]/20">
-            <CardContent className="p-5 flex flex-col items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-[#118C4C]/10 flex items-center justify-center">
-                <Package className="h-5 w-5 text-[#118C4C]" />
-              </div>
-              <p className="text-3xl font-bold text-[#118C4C]">{summary?.totalItems ?? 0}</p>
-              <p className="text-xs text-muted-foreground text-center">Items Purchased</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-[#118C4C]/20">
-            <CardContent className="p-5 flex flex-col items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-[#118C4C]/10 flex items-center justify-center">
-                <span className="text-[#118C4C] font-bold text-sm">₦</span>
-              </div>
-              <p className="text-3xl font-bold text-[#118C4C]">
-                {(summary?.totalSpent ?? 0).toLocaleString()}
-              </p>
-              <p className="text-xs text-muted-foreground text-center">Total Spent</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      <div className="mt-6">
-        <Button
-          onClick={() => router.push("/orders")}
-          className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white"
-        >
-          View All Orders
+        <Button variant="outline" onClick={() => router.back()} className="gap-2 border-[#118C4C]/30">
+          <ArrowLeft className="h-4 w-4" /> Back
         </Button>
       </div>
+
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[1, 2, 3, 4].map((i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)}
+        </div>
+      ) : (
+        <>
+          {/* Stats */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {[
+              { label: "Total Revenue", value: `₦${stats.totalRevenue.toLocaleString()}`, icon: TrendingUp, color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/20" },
+              { label: "In Escrow", value: `₦${stats.pendingEscrow.toLocaleString()}`, icon: DollarSign, color: "text-amber-600", bg: "bg-amber-100 dark:bg-amber-900/20" },
+              { label: "Total Orders", value: stats.totalOrders, icon: ShoppingBag, color: "text-blue-600", bg: "bg-blue-100 dark:bg-blue-900/20" },
+              { label: "Items Sold", value: stats.totalItems, icon: Package, color: "text-purple-600", bg: "bg-purple-100 dark:bg-purple-900/20" },
+            ].map(({ label, value, icon: Icon, color, bg }) => (
+              <Card key={label} className="border-[#118C4C]/20">
+                <CardContent className="p-5 flex flex-col gap-2">
+                  <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center`}>
+                    <Icon className={`h-5 w-5 ${color}`} />
+                  </div>
+                  <p className="text-xl font-bold text-foreground">{value}</p>
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </motion.div>
+
+          {/* Top Products */}
+          {topProducts.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+              <Card className="border-[#118C4C]/20 mb-6">
+                <CardHeader className="pb-3 border-b border-[#118C4C]/10">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-[#118C4C]" /> Top Products by Revenue
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 space-y-3">
+                  {topProducts.map((p, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className="text-xs font-bold text-muted-foreground w-4">{i + 1}</span>
+                      {p.image ? (
+                        <Image src={p.image} alt={p.name} width={40} height={40} className="rounded-lg object-cover border border-[#118C4C]/20" unoptimized />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-muted border border-[#118C4C]/20" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">{p.qty} units sold</p>
+                      </div>
+                      <p className="text-sm font-bold text-[#118C4C]">₦{p.revenue.toLocaleString()}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Orders */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <Card className="border-[#118C4C]/20">
+              <CardHeader className="pb-3 border-b border-[#118C4C]/10">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Truck className="h-4 w-4 text-[#118C4C]" /> Orders ({orders.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                {orders.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <ShoppingBag className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm">No orders yet. List products to start selling.</p>
+                    <Button onClick={() => router.push("/listing/new")} className="mt-4 bg-[#118C4C] hover:bg-[#0d6d3a] text-white" size="sm">
+                      List a Product
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {orders.map((order) => (
+                      <div key={order.id} className="p-3 rounded-xl border border-[#118C4C]/10 bg-muted/20 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold">Order #{order.id.slice(-6).toUpperCase()}</span>
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-[#118C4C] text-white text-xs">{order.status}</Badge>
+                            <EscrowStatusBadge status={order.escrowStatus} />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{new Date(order.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}</span>
+                          <span className="font-bold text-[#118C4C] text-sm">₦{order.totalAmount.toLocaleString()}</span>
+                        </div>
+                        {order.buyer && (
+                          <p className="text-xs text-muted-foreground">Buyer: <span className="font-medium text-foreground">{order.buyer.name || "Anonymous"}</span></p>
+                        )}
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {(order.items || []).map((item: any, i: number) => (
+                            <span key={i} className="text-[11px] bg-[#118C4C]/10 text-[#118C4C] px-2 py-0.5 rounded-full">
+                              {item.productName} ×{item.quantity}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </>
+      )}
     </div>
   );
 }
 
-export default withAuth(PurchasesPage);
+export default withAuth(SalesDashboard);

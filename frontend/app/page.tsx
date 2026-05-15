@@ -15,12 +15,17 @@ import GetInTouch from "@/components/GetInTouch"
 
 export default function LandingPage() {
   const [communityUsers, setCommunityUsers] = useState<User[]>([])
+  const [liveStats, setLiveStats] = useState<{ users: number; products: number } | null>(null)
   const carouselRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetch("/api/users")
       .then((r) => r.ok ? r.json() : [])
       .then((data: User[]) => setCommunityUsers(Array.isArray(data) ? data.slice(0, 12) : []))
+      .catch(() => {})
+    fetch("/api/stats")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => d && setLiveStats(d))
       .catch(() => {})
   }, [])
 
@@ -61,8 +66,8 @@ export default function LandingPage() {
   ]
 
   const stats = [
-    { icon: Users, label: "Active Farmers", value: "5,000+" },
-    { icon: ShoppingBag, label: "Products Listed", value: "12,000+" },
+    { icon: Users, label: "Active Members", value: liveStats ? `${liveStats.users.toLocaleString()}+` : "5,000+" },
+    { icon: ShoppingBag, label: "Products Listed", value: liveStats ? `${liveStats.products.toLocaleString()}+` : "12,000+" },
     { icon: TrendingUp, label: "Success Rate", value: "94%" },
   ]
 
