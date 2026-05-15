@@ -24,7 +24,7 @@ const sections = [
     title: "Email & Phone",
     body: [
       "General support & enquiries: support@foodramarket.com",
-      "Phone: +234 800 000 0000 (Mon – Fri, 9am – 6pm WAT)",
+      "Phone: +234 915 700 0181 (Mon – Fri, 9am – 6pm WAT)",
       "We aim to respond to all emails within 1–2 business days.",
       "For urgent financial or order disputes, include your order reference number in the subject line.",
     ],
