@@ -251,6 +251,9 @@ function OrderDetailPage() {
                   <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   <span>{order.deliveryAddress}, {order.deliveryCity}, {order.deliveryState}</span>
                 </div>
+                <p className="text-xs text-amber-600 dark:text-amber-400 pt-1 border-t border-border mt-2">
+                  🚚 Delivery fees are your responsibility. Please coordinate with the farmer directly.
+                </p>
               </CardContent>
             </Card>
           </motion.div>
