@@ -251,7 +251,7 @@ function ShopPage() {
                 </div>
                 <div className="flex justify-between p-3 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
                   <span className="text-muted-foreground">Delivery</span>
-                  <span className="text-sm text-muted-foreground font-medium">Paid by you</span>
+                  <span className="text-xs text-muted-foreground font-medium">Fee on arrival</span>
                 </div>
                 <div className="border-t-2 border-[#118C4C]/20 pt-3 flex justify-between p-3 rounded-lg bg-[#118C4C]/10">
                   <span className="font-semibold text-foreground text-lg">
@@ -281,7 +281,7 @@ function ShopPage() {
               </Link>
 
               <p className="text-xs text-muted-foreground text-center mt-4">
-                Secure checkout · Delivery fees are arranged directly with the farmer after order placement.
+                Secure checkout · A small delivery fee applies on arrival.
               </p>
             </CardContent>
           </Card>

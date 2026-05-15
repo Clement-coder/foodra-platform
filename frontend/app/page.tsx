@@ -279,13 +279,13 @@ export default function LandingPage() {
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl">
           <div className="rounded-2xl bg-gradient-to-br from-[#118C4C] to-[#0d6d3a] p-8 md:p-12 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Ready to Transform Your Farm?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Fresh Food, Straight to You</h2>
             <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-              Join thousands of farmers already growing their business with Foodra
+              Discover farm-fresh produce from across Nigeria — buy directly from the source and enjoy quality you can taste.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/marketplace" className="w-full sm:w-auto">
-                <Button size="lg" className="bg-white text-[#118C4C] hover:bg-white/90 dark:bg-white dark:text-[#118C4C] dark:hover:bg-white/90 w-full gap-2 font-semibold">
+                <Button size="lg" className="bg-white text-[#118C4C] hover:bg-white/90 w-full gap-2 font-semibold">
                   Explore Marketplace
                   <ArrowRight className="h-5 w-5" />
                 </Button>
