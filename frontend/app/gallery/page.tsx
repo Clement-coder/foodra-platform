@@ -60,7 +60,6 @@ export default function GalleryPage() {
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                     unoptimized
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
                   />
                   {/* Fallback placeholder shown when image missing */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#118C4C]/5">
