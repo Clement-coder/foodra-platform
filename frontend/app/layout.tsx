@@ -70,7 +70,6 @@ export const metadata: Metadata = {
   creator: "Foodra Technologies Ltd",
   publisher: "Foodra Technologies Ltd",
   metadataBase: new URL("https://foodramarket.com"),
-  alternates: { canonical: "https://foodramarket.com" },
   openGraph: {
     title: "Foodra — Nigeria's #1 Farm Marketplace",
     description: "Buy fresh farm produce directly from verified Nigerian farmers. Rice, yam, vegetables, grains & more. Plus farm loans, training, and blockchain payments.",
