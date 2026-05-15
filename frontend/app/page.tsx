@@ -66,8 +66,8 @@ export default function LandingPage() {
   ]
 
   const stats = [
-    { icon: Users, label: "Active Members", value: liveStats ? `${liveStats.users.toLocaleString()}+` : "5,000+" },
-    { icon: ShoppingBag, label: "Products Listed", value: liveStats ? `${liveStats.products.toLocaleString()}+` : "12,000+" },
+    { icon: Users, label: "Active Members", value: liveStats ? `${liveStats.users.toLocaleString()}+` : null },
+    { icon: ShoppingBag, label: "Products Listed", value: liveStats ? `${liveStats.products.toLocaleString()}+` : null },
     { icon: TrendingUp, label: "Success Rate", value: "94%" },
   ]
 
@@ -104,7 +104,11 @@ export default function LandingPage() {
                     <stat.icon className="h-6 w-6 text-[#118C4C]" />
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-foreground">{stat.value}</p>
+                {stat.value !== null ? (
+                  <p className="text-3xl font-bold text-foreground">{stat.value}</p>
+                ) : (
+                  <div className="h-9 w-20 bg-muted animate-pulse rounded-lg mx-auto" />
+                )}
                 <p className="text-muted-foreground">{stat.label}</p>
               </motion.div>
             ))}
