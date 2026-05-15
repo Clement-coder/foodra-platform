@@ -51,7 +51,7 @@ const Footer = () => {
           <div>
             <p className="font-semibold text-foreground mb-3 text-xs uppercase tracking-wide">Company</p>
             <ul className="space-y-2">
-              {([["About", "/about"], ["How It Works", "/how-it-works"], ["Contact", "/contact"]] as [string, string][]).map(([label, href]) => (
+              {([["About", "/about"], ["How It Works", "/how-it-works"], ["Impact", "/impact"], ["Gallery", "/gallery"], ["Partners", "/partners"], ["Contact", "/contact"]] as [string, string][]).map(([label, href]) => (
                 <li key={href}><Link href={href} className="hover:text-foreground transition-colors">{label}</Link></li>
               ))}
             </ul>
