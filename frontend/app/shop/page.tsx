@@ -97,7 +97,7 @@ function ShopPage() {
         escrowTxHash: results[0]?.txHash,
         escrowStatus: "locked",
         usdcAmount: Number(results[0]?.usdcAmount) / 1_000_000,
-        items: results.map((r) => ({ productId: r.productId, escrowOrderId: r.orderId })),
+        items: results.map((r) => ({ productId: r.productId, escrowOrderId: r.orderId, farmerWallet: r.farmerWallet })),
         deliveryFullName: selectedDelivery?.fullName,
         deliveryPhone: selectedDelivery?.phone,
         deliveryAddress: selectedDelivery?.addressLine,

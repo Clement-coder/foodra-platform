@@ -70,12 +70,40 @@ export async function PATCH(
       }
     }
 
-    // Update per-item escrow order IDs
+    // Notify farmer when buyer confirms delivery (funds released to farmer)
+    if (escrowStatus === "released") {
+      const { data: orderData } = await supabase
+        .from("orders")
+        .select("total_amount, usdc_amount, order_items(products!inner(farmer_id))")
+        .eq("id", id)
+        .single();
+      if (orderData) {
+        const farmerIds = [...new Set(
+          (orderData.order_items as any[]).map((i: any) => i.products?.farmer_id).filter(Boolean)
+        )];
+        for (const farmerId of farmerIds) {
+          await createNotification({
+            userId: farmerId as string,
+            type: "order",
+            title: "Payment Released to You 💸",
+            message: `The buyer confirmed delivery. ₦${Number(orderData.total_amount).toLocaleString()}${orderData.usdc_amount ? ` (${Number(orderData.usdc_amount).toFixed(2)} USDC)` : ""} has been released from escrow to your wallet.`,
+            link: "/sales",
+          });
+        }
+      }
+    }
+
+    // Update per-item escrow order IDs and farmer wallet
     if (items?.length) {
       for (const item of items) {
+        const updatePayload: Record<string, any> = {
+          escrow_order_id: item.escrowOrderId,
+          escrow_status: escrowStatus || "locked",
+        }
+        if (item.farmerWallet) updatePayload.farmer_wallet = item.farmerWallet
         await supabase
           .from("order_items")
-          .update({ escrow_order_id: item.escrowOrderId, escrow_status: escrowStatus || "locked" })
+          .update(updatePayload)
           .eq("order_id", id)
           .eq("product_id", item.productId);
       }

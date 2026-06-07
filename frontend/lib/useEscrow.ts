@@ -69,7 +69,7 @@ export function useEscrow() {
         await approveTx.wait();
       }
 
-      const results: { productId: string; orderId: string; txHash: string; usdcAmount: bigint; rate: number }[] = [];
+      const results: { productId: string; orderId: string; txHash: string; usdcAmount: bigint; rate: number; farmerWallet: string }[] = [];
 
       // Create one escrow per unique farmer
       const farmerGroups = items.reduce((acc, item) => {
@@ -97,10 +97,11 @@ export function useEscrow() {
 
         results.push({
           productId,
-          orderId: orderIdBytes,  // bytes32 hex string e.g. "0xabc..."
+          orderId: orderIdBytes,
           txHash: receipt.hash,
           usdcAmount: farmerUsdc,
           rate,
+          farmerWallet,
         });
       }
 

@@ -26,6 +26,7 @@ export interface EscrowResult {
   txHash: string;
   usdcAmount: bigint;
   rate: number;
+  farmerWallet: string;
 }
 
 type Step = "preview" | "signing" | "success" | "error";
