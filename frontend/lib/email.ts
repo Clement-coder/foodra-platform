@@ -675,3 +675,41 @@ export async function sendCryptoSentEmail(
   `)
   await send(to, `✅ You sent ${amount} ${token} on Foodra`, html)
 }
+
+// ─── 21. Crypto received ──────────────────────────────────────────────────────
+export async function sendCryptoReceivedEmail(
+  to: string, name: string,
+  amount: string, token: string,
+  fromAddress: string, fromName: string | null,
+  txHash: string | null,
+  ngnEquiv: number | null,
+  userId?: string
+) {
+  const explorerUrl = txHash ? `https://sepolia.basescan.org/tx/${txHash}` : null
+  const refId = txHash ? `TX-${txHash.slice(-10).toUpperCase()}` : `TX-${Date.now().toString(36).toUpperCase()}`
+  const html = layout(`
+    ${heading("You Received Crypto! 🎉")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, a transfer has just landed in your Foodra wallet.
+    </p>
+    ${moneyBox([
+      { label: "Amount Received", value: `${amount} ${token}`, bold: true, green: true },
+      ...(ngnEquiv ? [{ label: "NGN Equivalent", value: `≈ ₦${ngnEquiv.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }] : []),
+      { label: "From", value: fromName ? `${fromName} (${fromAddress.slice(0, 8)}...${fromAddress.slice(-6)})` : `${fromAddress.slice(0, 10)}...${fromAddress.slice(-8)}` },
+      { label: "Network", value: "Base Sepolia (Testnet)" },
+      ...(txHash ? [{ label: "Tx Hash", value: `${txHash.slice(0, 12)}...${txHash.slice(-8)}` }] : []),
+    ])}
+    ${receiptBlock([
+      { label: "Amount Received", value: `${amount} ${token}`, bold: true, green: true },
+      ...(ngnEquiv ? [{ label: "NGN Equiv", value: `₦${ngnEquiv.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }] : []),
+      { label: "From", value: fromName ?? `${fromAddress.slice(0, 10)}...${fromAddress.slice(-6)}` },
+      { label: "Network", value: "Base Sepolia" },
+      ...(txHash ? [{ label: "Tx Hash", value: `${txHash.slice(0, 12)}...${txHash.slice(-8)}` }] : []),
+    ], refId)}
+    ${explorerUrl ? `<div style="text-align:center;margin:16px 0;">
+      <a href="${explorerUrl}" style="color:#1a6b2e;font-size:13px;text-decoration:underline;">View on Basescan →</a>
+    </div>` : ""}
+    ${btn("View Wallet", appUrl("/wallet", userId))}
+  `)
+  await send(to, `🎉 You received ${amount} ${token} on Foodra`, html)
+}
