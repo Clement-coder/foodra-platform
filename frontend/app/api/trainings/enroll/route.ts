@@ -62,6 +62,7 @@ export async function POST(request: Request) {
       if (error.code === '23505') {
         return NextResponse.json({ error: 'Already enrolled' }, { status: 400 })
       }
+      console.error('Enrollment insert error:', error)
       throw error
     }
 
@@ -80,9 +81,10 @@ export async function POST(request: Request) {
       link: `/training/${body.trainingId}`,
     })
 
-    // Email user with full training details
-    if (auth.user.email) {
-      sendTrainingEnrollmentEmail(auth.user.email, auth.user.name || "Farmer", trainingTitle, body.trainingId, auth.user.id, trainingDetails).catch(() => {})
+    // Use email from auth or fall back to DB lookup
+    const userEmail = auth.user.email || (await supabaseAdmin.from('users').select('email').eq('id', auth.user.id).single()).data?.email
+    if (userEmail) {
+      sendTrainingEnrollmentEmail(userEmail, auth.user.name || "Farmer", trainingTitle, body.trainingId, auth.user.id, trainingDetails).catch((e) => console.error('Enrollment email error:', e))
     }
 
     return NextResponse.json(data)

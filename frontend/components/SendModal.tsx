@@ -9,6 +9,7 @@ import { Modal } from "@/components/Modal"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/lib/toast"
 import { USDC_ADDRESS, USDC_ABI } from "@/lib/escrow"
+import { authFetch } from "@/lib/authFetch"
 import Image from "next/image"
 
 interface FoodraUser {
@@ -109,15 +110,14 @@ export function SendModal({ isOpen, onClose, ethBalance, usdcBalance, usdNgnRate
     setErrorMsg("")
 
     try {
+      let finalTxHash = ""
+
       if (token === "ETH") {
         await sendTransaction({
           to: recipient as `0x${string}`,
           value: ethers.parseEther(amount),
           chainId: `0x${(Number(process.env.NEXT_PUBLIC_CHAIN_ID) || 84532).toString(16)}` as any,
         })
-        // sendTransaction doesn't return a hash via Privy hook, so we just mark success
-        setTxHash("")
-        setStep("success")
       } else {
         // USDC transfer via contract
         const wallet = wallets[0]
@@ -134,11 +134,25 @@ export function SendModal({ isOpen, onClose, ethBalance, usdcBalance, usdNgnRate
         const tx = await usdc.transfer(recipient, rawAmount)
         const receipt = await tx.wait()
         if (!receipt || receipt.status === 0) throw new Error("Transaction reverted")
-        setTxHash(receipt.hash)
-        setStep("success")
+        finalTxHash = receipt.hash
       }
 
+      setTxHash(finalTxHash)
+      setStep("success")
       onSuccess()
+
+      // Fire confirmation email (non-blocking)
+      authFetch(getAccessToken, "/api/wallet/send-confirmation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount, token, toAddress: recipient,
+          toName: selected?.name ?? null,
+          txHash: finalTxHash || null,
+          ngnEquiv: ngnEquiv ?? null,
+        }),
+      }).catch(() => {})
+
     } catch (err: any) {
       const msg = err?.reason || err?.shortMessage || err?.message || "Transaction failed"
       setErrorMsg(msg)

@@ -77,6 +77,27 @@ function moneyBox(lines: { label: string; value: string; bold?: boolean; green?:
   </div>`
 }
 
+// Inline receipt block — embedded in financial emails as a downloadable-style summary
+function receiptBlock(lines: { label: string; value: string; bold?: boolean; green?: boolean }[], receiptRef: string) {
+  const rows = lines.filter(l => l.label || l.value).map(l =>
+    `<tr>
+      <td style="padding:7px 12px;font-size:13px;color:${l.bold ? "#1a1a1a" : "#666"};font-weight:${l.bold ? "700" : "400"};border-bottom:1px dashed #e5e7eb;">${l.label}</td>
+      <td style="padding:7px 12px;font-size:13px;color:${l.green ? "#1a6b2e" : l.bold ? "#111" : "#333"};font-weight:${l.bold ? "700" : "600"};text-align:right;border-bottom:1px dashed #e5e7eb;">${l.value}</td>
+    </tr>`
+  ).join("")
+  return `
+  <div style="margin:24px 0;border:1.5px solid #d1fae5;border-radius:12px;overflow:hidden;font-family:monospace;">
+    <div style="background:linear-gradient(135deg,#1a6b2e,#2d9e4f);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="color:#fff;font-size:12px;font-weight:700;letter-spacing:1px;">FOODRA RECEIPT</span>
+      <span style="color:rgba(255,255,255,0.75);font-size:11px;">${new Date().toLocaleDateString("en-NG", { day: "2-digit", month: "short", year: "numeric" })}</span>
+    </div>
+    <table cellpadding="0" cellspacing="0" style="width:100%;background:#fafffe;">${rows}</table>
+    <div style="background:#f0fdf4;padding:8px 12px;text-align:center;border-top:1px dashed #d1fae5;">
+      <span style="font-size:10px;color:#6b7280;letter-spacing:0.5px;">REF: ${receiptRef} • foodramarket.com</span>
+    </div>
+  </div>`
+}
+
 // ─── Send helper ──────────────────────────────────────────────────────────────
 async function send(to: string, subject: string, html: string) {
   if (!to || !process.env.RESEND_API_KEY) return
@@ -183,6 +204,12 @@ export async function sendOrderConfirmationEmail(
       ...(rate ? [{ label: "Exchange Rate", value: `₦${rate.toLocaleString()} / USDC` }] : []),
       { label: "Total Paid (NGN)", value: `₦${total.toLocaleString()}`, bold: true, green: true },
     ])}
+    ${receiptBlock([
+      { label: "Order ID", value: `#${orderId.slice(-8).toUpperCase()}` },
+      ...items.map(i => ({ label: `${i.name} ×${i.qty}`, value: `₦${(i.price * i.qty).toLocaleString()}` })),
+      { label: "Total", value: `₦${total.toLocaleString()}`, bold: true, green: true },
+      ...(usdcAmount ? [{ label: "USDC", value: `${usdcAmount.toFixed(4)} USDC` }] : []),
+    ], `ORD-${orderId.slice(-8).toUpperCase()}`)}
     ${btn("Track Your Order", appUrl(`/orders/${orderId}`, userId))}
   `)
   await send(to, `Order Confirmed #${orderId.slice(-8).toUpperCase()} ✅`, html)
@@ -460,6 +487,12 @@ export async function sendWalletFundingStatusEmail(to: string, name: string, sta
       { label: "Status", value: status, bold: true },
       ...(adminNote ? [{ label: "Note", value: adminNote }] : []),
     ])}
+    ${status === "Confirmed" ? receiptBlock([
+      { label: "Reference", value: reference },
+      { label: "NGN Transferred", value: `₦${Number(ngnAmount).toLocaleString()}` },
+      { label: "USDC Credited", value: `${usdcAmount} USDC`, bold: true, green: true },
+      ...(rate ? [{ label: "Rate", value: `₦${rate.toLocaleString()} / USDC` }] : []),
+    ], `WFR-${reference}`) : ""}
     ${status !== "Confirmed" ? `<div style="background:#f8faf5;border-radius:12px;padding:16px 20px;margin-top:4px;">
       <p style="margin:0;font-size:13px;color:#666;">
         ${status === "Rejected" ? "Please contact support if you believe this is an error." : "Please create a new funding request if you still want to top up your wallet."}
@@ -601,4 +634,44 @@ export async function sendDisputeResolvedEmail(to: string, name: string, orderId
     ${btn("View Order", appUrl(`/orders/${orderId}`, userId))}
   `)
   await send(to, `⚖️ Dispute Resolved — Order #${orderId.slice(-8).toUpperCase()}`, html)
+}
+
+// ─── 20. Crypto send confirmation ────────────────────────────────────────────
+export async function sendCryptoSentEmail(
+  to: string, name: string,
+  amount: string, token: string,
+  toAddress: string, toName: string | null,
+  txHash: string | null,
+  ngnEquiv: number | null,
+  userId?: string
+) {
+  const explorerUrl = txHash ? `https://sepolia.basescan.org/tx/${txHash}` : null
+  const html = layout(`
+    ${heading("Crypto Sent Successfully ✅")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, your transfer has been confirmed on the blockchain.
+    </p>
+    ${moneyBox([
+      { label: "Amount Sent", value: `${amount} ${token}`, bold: true, green: true },
+      ...(ngnEquiv ? [{ label: "NGN Equivalent", value: `≈ ₦${ngnEquiv.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }] : []),
+      { label: "To", value: toName ? `${toName} (${toAddress.slice(0, 8)}...${toAddress.slice(-6)})` : `${toAddress.slice(0, 10)}...${toAddress.slice(-8)}` },
+      { label: "Network", value: "Base Sepolia (Testnet)" },
+      ...(txHash ? [{ label: "Tx Hash", value: `${txHash.slice(0, 12)}...${txHash.slice(-8)}` }] : []),
+    ])}
+    ${receiptBlock([
+      { label: "Amount", value: `${amount} ${token}`, bold: true, green: true },
+      ...(ngnEquiv ? [{ label: "NGN Equiv", value: `₦${ngnEquiv.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }] : []),
+      { label: "To", value: toName ?? `${toAddress.slice(0, 10)}...${toAddress.slice(-6)}` },
+      { label: "Network", value: "Base Sepolia" },
+      ...(txHash ? [{ label: "Tx Hash", value: `${txHash.slice(0, 12)}...${txHash.slice(-8)}` }] : []),
+    ], txHash ? `TX-${txHash.slice(-10).toUpperCase()}` : `TX-${Date.now().toString(36).toUpperCase()}`)}
+    ${explorerUrl ? `<div style="text-align:center;margin:16px 0;">
+      <a href="${explorerUrl}" style="color:#1a6b2e;font-size:13px;text-decoration:underline;">View on Basescan →</a>
+    </div>` : ""}
+    <div style="background:#f8faf5;border-left:4px solid #1a6b2e;padding:14px 18px;border-radius:0 8px 8px 0;">
+      <p style="margin:0;font-size:13px;color:#555;">Keep this email as your proof of transfer.</p>
+    </div>
+    ${btn("View Wallet", appUrl("/wallet", userId))}
+  `)
+  await send(to, `✅ You sent ${amount} ${token} on Foodra`, html)
 }

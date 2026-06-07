@@ -25,7 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       location: training.location || '',
       instructor: training.instructor_name || '',
       capacity: training.capacity,
-      enrolled: training.training_enrollments?.[0]?.count || 0,
+      enrolled: Number(training.training_enrollments?.[0]?.count ?? 0),
       image: training.image_url || '',
     }
 
