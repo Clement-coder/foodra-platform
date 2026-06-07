@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/Modal"
 import { useToast } from "@/lib/toast"
 import { TransactionItem } from "@/components/TransactionItem"
+import { SendModal } from "@/components/SendModal"
 import { baseSepolia } from "viem/chains"
 import type { Chain } from "viem"
 import { useUser } from "@/lib/useUser"
@@ -91,7 +92,7 @@ function WalletPage() {
   const [usdNgnRate, setUsdNgnRate] = useState<number | null>(null)
   const [ethToUsdRate, setEthToUsdRate] = useState<number | null>(null)
   const [isAddFundsModalOpen, setIsAddFundsModalOpen] = useState(false)
-  const [isWithdrawFundsModalOpen, setIsWithdrawFundsModalOpen] = useState(false)
+  const [isSendModalOpen, setIsSendModalOpen] = useState(false)
   const [isConfirmWithdrawModalOpen, setIsConfirmWithdrawModalOpen] = useState(false)
   const [isComingSoonModalOpen, setIsComingSoonModalOpen] = useState(false)
   const [isNgnFundModalOpen, setIsNgnFundModalOpen] = useState(false)
@@ -152,7 +153,6 @@ function WalletPage() {
           const raw: bigint = await usdcContract.balanceOf(address)
           setUsdcBalance((Number(raw) / 1_000_000).toFixed(4))
         } catch {
-          // fallback: fetch from Blockscout token balances
           const res = await fetch(`https://base-sepolia.blockscout.com/api/v2/addresses/${address}/token-balances`)
           if (res.ok) {
             const tokens = await res.json()
@@ -161,7 +161,6 @@ function WalletPage() {
           }
         }
       } else {
-        // No contract address configured — fetch all token balances and find USDC
         const res = await fetch(`https://base-sepolia.blockscout.com/api/v2/addresses/${address}/token-balances`)
         if (res.ok) {
           const tokens = await res.json()
@@ -202,7 +201,6 @@ function WalletPage() {
 
   const fetchFundRequests = async () => {
     if (!currentUser?.id) return
-    // Auto-expire stale requests first
     await fetch("/api/wallet/expire-requests", { method: "POST" }).catch(() => {})
     try {
       const res = await authFetch(getAccessToken, `/api/wallet/fund-request?userId=${currentUser.id}`)
@@ -239,168 +237,61 @@ function WalletPage() {
     }
   }, [user?.wallet?.address, selectedChain])
 
-  useEffect(() => {
-    fetchRateSettings()
-  }, [])
+  useEffect(() => { fetchRateSettings() }, [])
+  useEffect(() => { fetchFundRequests() }, [currentUser?.id])
 
-  useEffect(() => {
-    fetchFundRequests()
-  }, [currentUser?.id])
-
-  // Realtime: update fund request status when admin confirms/rejects
   useEffect(() => {
     if (!currentUser?.id) return
     let channel: ReturnType<typeof supabase.channel> | null = null
     try {
       channel = supabase
         .channel(`wfr:${currentUser.id}`)
-        .on("postgres_changes", {
-          event: "UPDATE",
-          schema: "public",
-          table: "wallet_funding_requests",
-          filter: `user_id=eq.${currentUser.id}`,
-        }, (payload) => {
-          const updated = payload.new as FundRequest
-          setFundRequests(prev => prev.map(r => r.id === updated.id ? updated : r))
-          if (updated.status !== "Pending") setActiveFundRequest(null)
-        })
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "wallet_funding_requests", filter: `user_id=eq.${currentUser.id}` },
+          (payload) => {
+            const updated = payload.new as FundRequest
+            setFundRequests(prev => prev.map(r => r.id === updated.id ? updated : r))
+            if (updated.status !== "Pending") setActiveFundRequest(null)
+          })
         .subscribe()
-    } catch { /* realtime unavailable, polling via fetchFundRequests is sufficient */ }
+    } catch { /* realtime unavailable */ }
     return () => { if (channel) supabase.removeChannel(channel) }
   }, [currentUser?.id])
 
-  // Auto-expire active request when countdown hits 0
   useEffect(() => {
-    if (activeFundRequest && secondsLeft === 0) {
-      setActiveFundRequest(null)
-      fetchFundRequests()
-    }
+    if (activeFundRequest && secondsLeft === 0) { setActiveFundRequest(null); fetchFundRequests() }
   }, [secondsLeft])
 
-  useEffect(() => {
-    // Real-time validation for recipient address
-    if (recipientAddress && !ethers.isAddress(recipientAddress)) {
-      setRecipientError("Please enter a valid recipient address.")
-    } else {
-      setRecipientError(null)
-    }
-
-    // Real-time validation for withdrawal amount
-    if (withdrawAmount) {
-      if (parseFloat(withdrawAmount) <= 0) {
-        setAmountError("Please enter a valid amount.")
-      } else if (parseFloat(withdrawAmount) > parseFloat(balance)) {
-        setAmountError("Insufficient balance.")
-      } else {
-        setAmountError(null)
-      }
-    } else {
-      setAmountError(null)
-    }
-  }, [recipientAddress, withdrawAmount, balance])
-
-  const handleRefreshWalletData = async () => {
-    await fetchWalletData()
-    await fetchEthRate()
-    toast.success("Wallet data refreshed!")
-  }
-
-  const handleRefreshTransactions = async () => {
-    setIsRefreshingTransactions(true)
-    await fetchWalletData()
-    setIsRefreshingTransactions(false)
-    toast.success("Transaction history refreshed!")
-  }
-
-  const copyToClipboard = () => {
-    if (user?.wallet?.address) {
-      navigator.clipboard.writeText(user.wallet.address)
-      toast.success("Address copied to clipboard!")
-    }
-  }
-
-  const copyText = (text: string, label = "Copied!") => {
-    navigator.clipboard.writeText(text)
-    toast.success(label)
-  }
-
-  const handleWithdraw = () => {
-    if (recipientError || amountError || !recipientAddress || !withdrawAmount) {
-      return
-    }
-    setIsWithdrawFundsModalOpen(false)
-    setIsConfirmWithdrawModalOpen(true)
-  }
-
-  const confirmWithdraw = async () => {
-    try {
-      const valueInWei = ethers.parseEther(withdrawAmount)
-
-      await sendTransaction({
-        to: recipientAddress as `0x${string}`,
-        value: valueInWei,
-        chainId: `0x${selectedChain.id.toString(16)}` as any,
-      })
-
-      toast.success("Transaction submitted successfully!")
-      setIsConfirmWithdrawModalOpen(false)
-      setRecipientAddress("")
-      setWithdrawAmount("")
-
-      setTimeout(() => {
-        fetchWalletData()
-      }, 3000)
-    } catch (error) {
-      console.error("Error sending transaction:", error)
-      toast.error("Transaction failed. Please try again.")
-      setIsConfirmWithdrawModalOpen(false)
-    }
-  }
+  const handleRefreshWalletData = async () => { await fetchWalletData(); await fetchEthRate(); toast.success("Wallet data refreshed!") }
+  const handleRefreshTransactions = async () => { setIsRefreshingTransactions(true); await fetchWalletData(); setIsRefreshingTransactions(false); toast.success("Transaction history refreshed!") }
+  const copyToClipboard = () => { if (user?.wallet?.address) { navigator.clipboard.writeText(user.wallet.address); toast.success("Address copied to clipboard!") } }
+  const copyText = (text: string, label = "Copied!") => { navigator.clipboard.writeText(text); toast.success(label) }
 
   const handleNgnFundSubmit = async () => {
     if (!currentUser?.id || !ngnAmount || parseFloat(ngnAmount) <= 0) return
     setIsSubmittingFund(true)
     try {
       const res = await authFetch(getAccessToken, "/api/wallet/fund-request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ngnAmount: parseFloat(ngnAmount) }),
       })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        toast.error(err.error || "Failed to create funding request. Please try again.")
-        return
-      }
+      if (!res.ok) { const err = await res.json().catch(() => ({})); toast.error(err.error || "Failed to create funding request."); return }
       const req: FundRequest = await res.json()
-      setActiveFundRequest(req)
-      setFundRequests(prev => [req, ...prev])
-      setNgnAmount("")
-      setIsNgnFundModalOpen(false)
-      setIsNgnConfirmModalOpen(true)
-    } catch {
-      toast.error("Failed to create funding request. Please try again.")
-    } finally {
-      setIsSubmittingFund(false)
-    }
+      setActiveFundRequest(req); setFundRequests(prev => [req, ...prev]); setNgnAmount("")
+      setIsNgnFundModalOpen(false); setIsNgnConfirmModalOpen(true)
+    } catch { toast.error("Failed to create funding request.") }
+    finally { setIsSubmittingFund(false) }
   }
 
   const filteredTransactions = transactions.filter((txn) => {
     if (!user?.wallet?.address) return false
     if (transactionFilter === "all") return true
-    if (transactionFilter === "send") {
-      return txn.from.toLowerCase() === user.wallet.address.toLowerCase()
-    }
-    if (transactionFilter === "receive") {
-      return txn.to.toLowerCase() === user.wallet.address.toLowerCase()
-    }
+    if (transactionFilter === "send") return txn.from.toLowerCase() === user.wallet.address.toLowerCase()
+    if (transactionFilter === "receive") return txn.to.toLowerCase() === user.wallet.address.toLowerCase()
     return true
   })
 
-  const isWithdrawButtonDisabled = !!recipientError || !!amountError || !recipientAddress || !withdrawAmount
+  const shortAddress = user?.wallet?.address ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}` : ""
 
-  const shortAddress = user?.wallet?.address
-    ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}`
-    : ""
 
   return (
     <div className="min-h-screen bg-background">
@@ -514,7 +405,7 @@ function WalletPage() {
               { label: "Add Funds", icon: PlusCircle, color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400", onClick: () => setIsAddFundsModalOpen(true), desc: "Receive crypto" },
               { label: "Buy Crypto", icon: CreditCard, color: "bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400", onClick: () => user?.wallet?.address && fundWallet({ address: user.wallet.address, options: { chain: baseSepolia } }), desc: "Card / Bank" },
               { label: "Fund NGN", icon: Banknote, color: "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400", onClick: () => setIsNgnFundModalOpen(true), desc: "Bank transfer" },
-              { label: "Send", icon: MinusCircle, color: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400", onClick: () => setIsWithdrawFundsModalOpen(true), desc: "Withdraw ETH" },
+              { label: "Send", icon: MinusCircle, color: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400", onClick: () => setIsSendModalOpen(true), desc: "ETH / USDC" },
               { label: "Bridge", icon: RefreshCcw, color: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400", onClick: () => setIsComingSoonModalOpen(true), desc: "Cross-chain" },
             ].map(({ label, icon: Icon, color, onClick, desc }) => (
               <button key={label} onClick={onClick}
@@ -663,76 +554,15 @@ function WalletPage() {
         </div>
       </Modal>
 
-      <Modal
-        isOpen={isWithdrawFundsModalOpen}
-        onClose={() => setIsWithdrawFundsModalOpen(false)}
-        title="Withdraw Funds from Wallet"
-      >
-        <div className="space-y-4">
-          <p className="text-muted-foreground">Enter the recipient address and the amount you wish to withdraw.</p>
-          <div>
-            <FormInput
-              label="Recipient Address"
-              placeholder="0x..."
-              value={recipientAddress}
-              onChange={(e) => setRecipientAddress(e.target.value)}
-              required
-            />
-            {recipientError && <p className="text-red-500 text-sm mt-1">{recipientError}</p>}
-          </div>
-          <div>
-            <FormInput
-              label="Amount (ETH)"
-              placeholder="0.0"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              required
-            />
-            {amountError && <p className="text-red-500 text-sm mt-1">{amountError}</p>}
-            {parseFloat(withdrawAmount) > 0 && ethToUsdRate && usdNgnRate && (
-              <div className="mt-2 text-sm text-muted-foreground">
-                <p>~₦{(parseFloat(withdrawAmount) * ethToUsdRate * usdNgnRate).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} NGN</p>
-              </div>
-            )}
-          </div>
-          <Button onClick={handleWithdraw} className="w-full bg-red-600 hover:bg-red-700 text-white" disabled={isWithdrawButtonDisabled}>
-            Continue
-          </Button>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={isConfirmWithdrawModalOpen}
-        onClose={() => setIsConfirmWithdrawModalOpen(false)}
-        title="Confirm Withdrawal"
-      >
-        <div className="space-y-4">
-          <p className="text-muted-foreground">Please confirm the withdrawal details:</p>
-          <div className="bg-muted p-4 rounded-lg space-y-2">
-            <div>
-              <p className="text-sm text-muted-foreground">Recipient</p>
-              <p className="font-mono text-sm break-all">{recipientAddress}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Amount</p>
-              <p className="font-bold text-lg">{withdrawAmount} ETH</p>
-              {ethToUsdRate && usdNgnRate && (
-                <div className="mt-1 text-sm text-muted-foreground">
-                  <p>~₦{(parseFloat(withdrawAmount) * ethToUsdRate * usdNgnRate).toFixed(2)} NGN</p>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button onClick={() => setIsConfirmWithdrawModalOpen(false)} variant="outline" className="flex-1">
-              Cancel
-            </Button>
-            <Button onClick={confirmWithdraw} className="flex-1 bg-red-600 hover:bg-red-700 text-white">
-              Confirm Withdrawal
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <SendModal
+        isOpen={isSendModalOpen}
+        onClose={() => setIsSendModalOpen(false)}
+        ethBalance={balance}
+        usdcBalance={usdcBalance}
+        usdNgnRate={usdNgnRate}
+        ethToUsdRate={ethToUsdRate}
+        onSuccess={() => { setTimeout(fetchWalletData, 3000) }}
+      />
 
       <Modal
         isOpen={isComingSoonModalOpen}
