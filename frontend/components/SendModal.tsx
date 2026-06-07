@@ -146,12 +146,21 @@ export function SendModal({ isOpen, onClose, ethBalance, usdcBalance, usdNgnRate
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
+      // Video element may not be in DOM yet (AnimatePresence delay) — retry until it is
+      const attachStream = () => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.play().then(() => {
+            scanningRef.current = true
+            requestAnimationFrame(scanFrame)
+          }).catch(() => {
+            setScanError("Could not start camera preview.")
+          })
+        } else {
+          setTimeout(attachStream, 50)
+        }
       }
-      scanningRef.current = true
-      requestAnimationFrame(scanFrame)
+      attachStream()
     } catch {
       setScanError("Camera access denied. Please allow camera permission and try again.")
     }
@@ -375,7 +384,7 @@ export function SendModal({ isOpen, onClose, ethBalance, usdcBalance, usdNgnRate
                     exit={{ opacity: 0, height: 0 }}
                     className="relative rounded-2xl overflow-hidden bg-black"
                   >
-                    <video ref={videoRef} className="w-full aspect-square object-cover" playsInline muted />
+                    <video ref={videoRef} className="w-full aspect-square object-cover" playsInline muted autoPlay style={{ display: "block", minHeight: 220 }} />
                     <canvas ref={canvasRef} className="hidden" />
                     {/* Corner scan frame */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
