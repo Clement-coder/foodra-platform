@@ -17,7 +17,7 @@ function layout(content: string) {
         <tr>
           <td style="background:linear-gradient(135deg,#1a6b2e 0%,#2d9e4f 100%);padding:28px 40px;text-align:center;">
             <img src="${LOGO}" alt="Foodra" width="56" height="56"
-              style="border-radius:12px;display:block;margin:0 auto 12px;object-fit:cover;"
+              style="border-radius:12px;display:block;margin:0 auto 12px;object-fit:cover;background:#ffffff;padding:6px;box-shadow:0 2px 8px rgba(0,0,0,0.15);"
               onerror="this.style.display='none'" />
             <div style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Foodra</div>
             <div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:2px;">Empowering African Farmers</div>
