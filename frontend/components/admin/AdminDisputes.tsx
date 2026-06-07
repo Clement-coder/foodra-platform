@@ -24,24 +24,33 @@ function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
     if (!ok) return
     setSaving(true)
 
-    // Update escrow status on the order
-    const res = await authFetch(getAccessToken, `/api/orders/${dispute.order_id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ escrow_status: action === "release" ? "released" : "refunded" }),
-    })
+    try {
+      const escrowResolution = action === "release" ? "released" : "refunded"
 
-    if (res.ok) {
-      // Mark dispute as resolved in Supabase
+      // Update escrow status on the order via the dedicated escrow endpoint
+      const escrowRes = await authFetch(getAccessToken, `/api/orders/${dispute.order_id}/escrow`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ escrowStatus: escrowResolution }),
+      })
+
+      if (!escrowRes.ok) {
+        toast.error("Failed to update escrow status.")
+        setSaving(false)
+        return
+      }
+
+      // Mark dispute resolved and send emails/notifications
       await authFetch(getAccessToken, `/api/orders/${dispute.order_id}/dispute`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ disputeId: dispute.id, status: "resolved" }),
-      }).catch(() => {})
+        body: JSON.stringify({ disputeId: dispute.id, status: "resolved", escrowResolution }),
+      })
+
       toast.success(action === "release" ? "Escrow released to farmer" : "Escrow refunded to buyer")
       onRefresh()
       onClose()
-    } else {
+    } catch {
       toast.error("Failed to resolve dispute.")
     }
     setSaving(false)

@@ -38,8 +38,10 @@ function OrderDetailPage() {
   useEffect(() => { fetchOrder(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const escrowOrderId = order?.items.find((i) => i.escrowOrderId)?.escrowOrderId;
-  // Show actions if locked OR if tx hash exists but status wasn't saved (broken save scenario)
-  const canAct = order && (order.escrowStatus === "locked" || (!!order.escrowTxHash && order.escrowStatus === "none")) && !!escrowOrderId;
+  // Escrow actions (confirm/dispute on-chain) require locked escrow
+  const canEscrowAct = order && (order.escrowStatus === "locked" || (!!order.escrowTxHash && order.escrowStatus === "none")) && !!escrowOrderId;
+  // Dispute can be raised any time the order is not already cancelled/disputed
+  const canDispute = order && !["Cancelled", "disputed"].includes(order.escrowStatus ?? "") && order.status !== "Cancelled";
 
   const handleConfirm = async () => {
     if (!order || !escrowOrderId) return;
@@ -56,16 +58,31 @@ function OrderDetailPage() {
   };
 
   const handleDispute = async (reason: string, details: string) => {
-    if (!order || !escrowOrderId) return;
-    const success = await raiseDispute(escrowOrderId);
-    if (success) {
-      await authFetch(getAccessToken, `/api/orders/${order.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "disputed" }) });
-      await authFetch(getAccessToken, `/api/orders/${order.id}/dispute`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason, details }) }).catch(() => {});
+    if (!order) return;
+    // Try to raise on-chain dispute if escrow exists
+    if (escrowOrderId) {
+      const success = await raiseDispute(escrowOrderId);
+      if (success) {
+        await authFetch(getAccessToken, `/api/orders/${order.id}/escrow`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ escrowStatus: "disputed" }),
+        });
+      }
+    }
+    // Always save dispute record in DB
+    const res = await authFetch(getAccessToken, `/api/orders/${order.id}/dispute`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason, details }),
+    });
+    if (res.ok) {
       toast.success("Dispute raised. Our team will review within 3–5 business days.");
       setDisputeOpen(false);
       fetchOrder();
     } else {
-      toast.error(escrowError || "Failed to raise dispute. Please try again.");
+      const err = await res.json().catch(() => ({}));
+      toast.error(err.error || "Failed to submit dispute.");
     }
   };
 
@@ -184,19 +201,27 @@ function OrderDetailPage() {
         </motion.div>
 
         {/* Action buttons */}
-        {canAct && (
+        {(canEscrowAct || canDispute) && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
             <Card className="border-[#118C4C]/30 bg-[#118C4C]/5">
               <CardContent className="p-4">
-                <p className="text-sm font-medium mb-3">Your payment is secured in escrow. Have you received your items?</p>
+                <p className="text-sm font-medium mb-3">
+                  {canEscrowAct
+                    ? "Your payment is secured in escrow. Have you received your items?"
+                    : "Have an issue with this order?"}
+                </p>
                 <div className="flex gap-3">
-                  <Button onClick={handleConfirm} disabled={escrowLoading} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
-                    {escrowLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                    {escrowLoading ? "Processing..." : "Confirm Delivery"}
-                  </Button>
-                  <Button onClick={() => setDisputeOpen(true)} disabled={escrowLoading} variant="outline" className="flex-1 border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2">
-                    <AlertTriangle className="h-4 w-4" /> Raise Dispute
-                  </Button>
+                  {canEscrowAct && (
+                    <Button onClick={handleConfirm} disabled={escrowLoading} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
+                      {escrowLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                      {escrowLoading ? "Processing..." : "Confirm Delivery"}
+                    </Button>
+                  )}
+                  {canDispute && (
+                    <Button onClick={() => setDisputeOpen(true)} disabled={escrowLoading} variant="outline" className="flex-1 border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2">
+                      <AlertTriangle className="h-4 w-4" /> Raise Dispute
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
