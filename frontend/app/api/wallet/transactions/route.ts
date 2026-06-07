@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const ethData = ethRes.ok ? await ethRes.json() : { items: [] }
     const tokenData = tokenRes.ok ? await tokenRes.json() : { items: [] }
 
-    // ETH transactions — only include value transfers (skip 0-value contract calls)
+    // ETH — skip 0-value contract calls
     const ethTxs = (ethData.items ?? [])
       .filter((tx: any) => tx.value && tx.value !== "0")
       .map((tx: any) => ({
@@ -29,23 +29,24 @@ export async function GET(request: Request) {
         type: "eth",
       }))
 
-    // USDC token transfers — Blockscout uses `address_hash` not `address`
-    const usdcTxs = (tokenData.items ?? [])
-      .filter((t: any) => {
-        if (!USDC_ADDRESS) return true
-        return (t.token?.address_hash ?? "").toLowerCase() === USDC_ADDRESS
-      })
-      .map((t: any) => ({
-        hash: t.transaction_hash,
-        from: t.from?.hash ?? "",
-        to: t.to?.hash ?? "",
-        value: t.total?.value ?? "0",
-        timeStamp: t.timestamp ? String(Math.floor(new Date(t.timestamp).getTime() / 1000)) : "0",
-        type: "usdc",
-        tokenSymbol: t.token?.symbol ?? "USDC",
-        // decimals live in t.total.decimals, not t.token.decimals
-        tokenDecimals: String(t.total?.decimals ?? t.token?.decimals ?? "6"),
-      }))
+    // ERC-20 token transfers — show USDC by symbol match OR by configured contract address
+    // This handles testnet where multiple USDC contracts may exist
+    const usdcTxs = (tokenData.items ?? []).map((t: any) => ({
+      hash: t.transaction_hash,
+      from: t.from?.hash ?? "",
+      to: t.to?.hash ?? "",
+      value: t.total?.value ?? "0",
+      timeStamp: t.timestamp ? String(Math.floor(new Date(t.timestamp).getTime() / 1000)) : "0",
+      type: "usdc",
+      tokenSymbol: t.token?.symbol ?? "USDC",
+      tokenDecimals: String(t.total?.decimals ?? t.token?.decimals ?? "6"),
+      contractAddress: (t.token?.address_hash ?? "").toLowerCase(),
+    })).filter((t: any) => {
+      // If a specific contract is configured, prefer it — but also show other USDC tokens
+      const isConfiguredContract = USDC_ADDRESS && t.contractAddress === USDC_ADDRESS
+      const isUsdcSymbol = t.tokenSymbol.toUpperCase().includes("USDC")
+      return isConfiguredContract || isUsdcSymbol || !USDC_ADDRESS
+    })
 
     const all = [...ethTxs, ...usdcTxs].sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp))
 
