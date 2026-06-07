@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { createNotification } from "@/lib/notify"
 import { assertSelfOrAdmin, AuthError, requireAdminUser, requireAuthenticatedUser } from "@/lib/serverAuth"
+import { sendWalletFundingRequestEmail, sendWalletFundingStatusEmail } from "@/lib/email"
 
 function generateReference(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -121,6 +122,11 @@ export async function POST(request: Request) {
       link: "/wallet",
     })
 
+    // Email user with full breakdown
+    if (auth.user.email) {
+      sendWalletFundingRequestEmail(auth.user.email, auth.user.name || "User", ngnAmount, usdcAmount, reference, auth.user.id, effectiveRate).catch(() => {})
+    }
+
     return NextResponse.json(data)
   } catch (error) {
     if (error instanceof AuthError) {
@@ -166,6 +172,12 @@ export async function PATCH(request: Request) {
         message: msgs[status] || "",
         link: "/wallet",
       })
+
+      // Email user
+      const { data: user } = await supabase.from("users").select("email, name").eq("id", data.user_id).single()
+      if (user?.email && ["Confirmed", "Rejected", "Expired"].includes(status)) {
+        sendWalletFundingStatusEmail(user.email, user.name || "User", status, Number(data.ngn_amount), Number(data.usdc_amount), data.reference, adminNote, data.user_id, Number(data.rate_ngn_per_usdc) || undefined).catch(() => {})
+      }
     }
 
     return NextResponse.json(data)

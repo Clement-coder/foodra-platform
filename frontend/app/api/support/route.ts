@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { createNotification } from "@/lib/notify"
 import { assertSelfOrAdmin, AuthError, requireAdminUser, requireAuthenticatedUser } from "@/lib/serverAuth"
+import { sendSupportReplyEmail } from "@/lib/email"
 
 // GET /api/support?userId=... - get messages for a user
 export async function GET(request: Request) {
@@ -80,6 +81,12 @@ export async function POST(request: Request) {
         title: "New Support Reply",
         message: message && message !== "📎 Image" ? message.slice(0, 100) : "Admin sent you an image.",
       })
+
+      // Email the user the reply
+      const { data: user } = await supabaseAdmin.from("users").select("email, name").eq("id", targetUserId).single()
+      if (user?.email) {
+        sendSupportReplyEmail(user.email, user.name || "User", message && message !== "📎 Image" ? message : "📎 The support team sent you an image.", targetUserId).catch(() => {})
+      }
     }
 
     if (!isAdminReply) {

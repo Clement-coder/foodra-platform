@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notify";
 import { AuthError, requireAdminUser, requireAuthenticatedUser } from "@/lib/serverAuth";
-import { sendDisputeSubmittedEmail } from "@/lib/email";
+import { sendDisputeSubmittedEmail, sendDisputeResolvedEmail } from "@/lib/email";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -39,7 +39,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     // Email buyer
     const { data: buyer } = await supabase.from("users").select("email, name").eq("id", buyerId).single();
-    if (buyer?.email) sendDisputeSubmittedEmail(buyer.email, buyer.name || "Customer", id, reason).catch(() => {});
+    if (buyer?.email) sendDisputeSubmittedEmail(buyer.email, buyer.name || "Customer", id, reason, buyerId).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -73,6 +73,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         message: "Your dispute has been reviewed and resolved by our team. Check your order for the updated payment status.",
         link: `/orders/${dispute.order_id}`,
       });
+
+      // Email the buyer
+      const { data: buyer } = await supabase.from("users").select("email, name").eq("id", dispute.user_id).single()
+      if (buyer?.email) sendDisputeResolvedEmail(buyer.email, buyer.name || "Customer", dispute.order_id, dispute.user_id).catch(() => {})
     }
 
     return NextResponse.json({ success: true });

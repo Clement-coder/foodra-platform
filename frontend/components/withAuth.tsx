@@ -49,13 +49,20 @@ const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
     const pathname = usePathname();
     const { toast } = useToast();
     const [showProfileToast, setShowProfileToast] = useState(false);
-    const prevAuthRef = useRef<boolean | null>(null);
+    const prevAuthRef = useRef<boolean>(false);
 
     useEffect(() => {
       if (!ready || isLoading) return;
       if (!authenticated) { prevAuthRef.current = false; return; }
-      if (prevAuthRef.current === false && authenticated && currentUser) {
+      if (!prevAuthRef.current && authenticated && currentUser) {
         toast.success(`Welcome back, ${currentUser.name || "Farmer"}! 👋`);
+        // Redirect to the page they originally tried to visit
+        const intended = sessionStorage.getItem("foodra_redirect")
+        if (intended) {
+          sessionStorage.removeItem("foodra_redirect")
+          router.replace(intended)
+          return
+        }
       }
       prevAuthRef.current = authenticated;
       if (authenticated && currentUser) {
@@ -73,6 +80,14 @@ const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
     if (!ready) return <LoadingScreen message="Starting up..." />;
 
     if (!authenticated) {
+      // Save the intended destination so we can return after login
+      if (typeof window !== "undefined") {
+        const intended = window.location.pathname + window.location.search
+        if (intended !== "/" && intended !== "/login") {
+          sessionStorage.setItem("foodra_redirect", intended)
+        }
+      }
+
       return (
         <div className="min-h-screen bg-background flex flex-col">
           <div className="absolute top-4 right-4 z-10">

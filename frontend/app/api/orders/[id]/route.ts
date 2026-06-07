@@ -128,7 +128,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           })
           // Email buyer
           const { data: buyer } = await supabase.from("users").select("email, name").eq("id", order.buyer_id).single()
-          if (buyer?.email) sendOrderStatusEmail(buyer.email, buyer.name || "Customer", id, status).catch(() => {})
+          if (buyer?.email) sendOrderStatusEmail(buyer.email, buyer.name || "Customer", id, status, order.buyer_id).catch(() => {})
         }
       }
     }

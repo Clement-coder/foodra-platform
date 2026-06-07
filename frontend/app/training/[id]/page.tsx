@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/Skeleton"
 import type { Training } from "@/lib/types"
 import withAuth from "../../../components/withAuth"
+import { WrongAccountBanner } from "@/components/WrongAccountBanner"
 import { useUser } from "@/lib/useUser"
 import { format } from "date-fns"
 import { useToast } from "@/lib/toast"
@@ -112,6 +113,7 @@ function TrainingDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <WrongAccountBanner />
       <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2">
         <ArrowLeft className="h-4 w-4" />
         Back

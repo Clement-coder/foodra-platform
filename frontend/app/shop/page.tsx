@@ -33,10 +33,14 @@ function ShopPage() {
   const [enrichedCartItems, setEnrichedCartItems] = useState<(CartItem & { farmerWallet: string })[]>([]);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryAddress | null>(null);
 
-  const deletePendingOrder = async (orderId: string) => {
-    if (!currentUser) return;
-    await authFetch(getAccessToken, `/api/orders?orderId=${orderId}&userId=${currentUser.id}`, { method: "DELETE" });
-  };
+  const handleEscrowError = async (orderId: string) => {
+    await authFetch(getAccessToken, "/api/orders/payment-failed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId }),
+    }).catch(() => {})
+    setPendingOrderId(null)
+  }
 
   const handleProceedToCheckout = async () => {
     if (currentUser && calculateProfileCompletion(currentUser) < 100) {
@@ -304,7 +308,9 @@ function ShopPage() {
          <EscrowPaymentModal
            isOpen={isCheckoutModalOpen}
            onClose={async () => {
-             if (pendingOrderId) await deletePendingOrder(pendingOrderId);
+             if (pendingOrderId) {
+               await authFetch(getAccessToken, `/api/orders?orderId=${pendingOrderId}&userId=${currentUser?.id}`, { method: "DELETE" }).catch(() => {})
+             }
              setIsCheckoutModalOpen(false);
              setPendingOrderId(null);
            }}
@@ -318,6 +324,7 @@ function ShopPage() {
           totalNgn={totalAmount}
           supabaseOrderId={pendingOrderId}
           onSuccess={handleEscrowSuccess}
+          onError={handleEscrowError}
         />
       )}
     </div>

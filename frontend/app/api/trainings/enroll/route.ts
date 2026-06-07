@@ -66,9 +66,11 @@ export async function POST(request: Request) {
     }
 
     let trainingTitle = 'the training'
+    let trainingDetails: { date?: string; mode?: string; location?: string; instructor?: string } = {}
     if (body.trainingId) {
-      const { data: t } = await supabaseAdmin.from('trainings').select('title').eq('id', body.trainingId).single()
+      const { data: t } = await supabaseAdmin.from('trainings').select('title, date, mode, location, instructor_name').eq('id', body.trainingId).single()
       if (t?.title) trainingTitle = t.title
+      trainingDetails = { date: t?.date, mode: t?.mode, location: t?.location, instructor: t?.instructor_name }
     }
     await createNotification({
       userId: auth.user.id,
@@ -78,9 +80,9 @@ export async function POST(request: Request) {
       link: `/training/${body.trainingId}`,
     })
 
-    // Email user
+    // Email user with full training details
     if (auth.user.email) {
-      sendTrainingEnrollmentEmail(auth.user.email, auth.user.name || "Farmer", trainingTitle, body.trainingId).catch(() => {})
+      sendTrainingEnrollmentEmail(auth.user.email, auth.user.name || "Farmer", trainingTitle, body.trainingId, auth.user.id, trainingDetails).catch(() => {})
     }
 
     return NextResponse.json(data)

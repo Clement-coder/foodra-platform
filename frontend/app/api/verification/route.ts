@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { createNotification } from "@/lib/notify"
 import { AuthError, requireAdminUser, requireAuthenticatedUser } from "@/lib/serverAuth"
+import { sendVerificationSubmittedEmail, sendVerificationDecisionEmail } from "@/lib/email"
 
 export async function GET(request: Request) {
   try {
@@ -78,6 +79,11 @@ export async function POST(request: Request) {
       })
     }
 
+    // Email the farmer confirming submission
+    if (auth.user.email) {
+      sendVerificationSubmittedEmail(auth.user.email, auth.user.name || "Farmer", auth.user.id).catch(() => {})
+    }
+
     return NextResponse.json(data)
   } catch (error) {
     if (error instanceof AuthError) {
@@ -127,6 +133,12 @@ export async function PATCH(request: Request) {
         : `Your verification request was rejected.${adminNote ? ` Reason: ${adminNote}` : ""}`,
       link: "/profile",
     })
+
+    // Email the farmer the decision
+    const { data: farmer } = await supabase.from("users").select("email, name").eq("id", updated.user_id).single()
+    if (farmer?.email) {
+      sendVerificationDecisionEmail(farmer.email, farmer.name || "Farmer", status === "Approved", adminNote, updated.user_id).catch(() => {})
+    }
 
     return NextResponse.json(updated)
   } catch (error) {

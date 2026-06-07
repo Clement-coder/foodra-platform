@@ -3,6 +3,8 @@ import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
 import { assertSelfOrAdmin, AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
 import { sendOrderConfirmationEmail, sendFarmerNewOrderEmail } from '@/lib/email'
+import { computeMembership } from '@/lib/membership'
+import { checkAndNotifyMembershipUpgrade } from '@/lib/membershipNotify'
 
 export async function GET(request: Request) {
   try {
@@ -100,6 +102,21 @@ export async function POST(request: Request) {
     const auth = await requireAuthenticatedUser(request)
     const body = await request.json()
     const buyerId = auth.user.id
+
+    // Snapshot tier before this order so we can detect upgrades after
+    const [buyerSnap, prevOrdersSnap, prevDisputesSnap] = await Promise.all([
+      supabaseAdmin.from("users").select("name, phone, location, avatar_url, created_at, is_verified").eq("id", buyerId).single(),
+      supabaseAdmin.from("orders").select("id", { count: "exact", head: true }).eq("buyer_id", buyerId),
+      supabaseAdmin.from("order_disputes").select("id").eq("user_id", buyerId).limit(1),
+    ])
+    const bu = buyerSnap.data
+    const previousTier = bu ? computeMembership({
+      hasName: !!bu.name, hasPhone: !!bu.phone, hasLocation: !!bu.location,
+      hasAvatar: !!bu.avatar_url, createdAt: bu.created_at,
+      ordersCount: prevOrdersSnap.count ?? 0,
+      hasDisputes: (prevDisputesSnap.data?.length ?? 0) > 0,
+      isVerified: !!bu.is_verified,
+    }).tier : "Seed"
     
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
@@ -181,7 +198,7 @@ export async function POST(request: Request) {
       const { data: buyer } = await supabaseAdmin.from("users").select("email, name").eq("id", buyerId).single()
       if (buyer?.email) {
         const emailItems = body.items.map((i: any) => ({ name: i.productName, qty: i.quantity, price: i.pricePerUnit }))
-        sendOrderConfirmationEmail(buyer.email, buyer.name || "Customer", order.id, Number(body.totalAmount), emailItems).catch(() => {})
+        sendOrderConfirmationEmail(buyer.email, buyer.name || "Customer", order.id, Number(body.totalAmount), emailItems, buyerId).catch(() => {})
       }
 
       // Email each unique farmer
@@ -193,6 +210,9 @@ export async function POST(request: Request) {
           sendFarmerNewOrderEmail(farmer.email, farmer.name || "Farmer", order.id, farmerItems, Number(body.totalAmount)).catch(() => {})
         }
       }
+
+      // Check if placing this order pushed buyer to a new membership tier
+      checkAndNotifyMembershipUpgrade(supabaseAdmin, buyerId, previousTier)
     }
 
     return NextResponse.json(order)

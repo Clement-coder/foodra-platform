@@ -17,6 +17,7 @@ interface Props {
   totalNgn: number;
   supabaseOrderId: string;
   onSuccess: (escrowResults: EscrowResult[]) => Promise<void>;
+  onError?: (orderId: string) => void;
 }
 
 export interface EscrowResult {
@@ -29,7 +30,7 @@ export interface EscrowResult {
 
 type Step = "preview" | "signing" | "success" | "error";
 
-export function EscrowPaymentModal({ isOpen, onClose, onSuccessClose, cart, totalNgn, supabaseOrderId, onSuccess }: Props) {
+export function EscrowPaymentModal({ isOpen, onClose, onSuccessClose, cart, totalNgn, supabaseOrderId, onSuccess, onError }: Props) {
   const { createEscrows, loading, error } = useEscrow();
   const [step, setStep] = useState<Step>("preview");
   const [usdcPreview, setUsdcPreview] = useState<string>("...");
@@ -65,6 +66,7 @@ export function EscrowPaymentModal({ isOpen, onClose, onSuccessClose, cart, tota
       setStep("success");
     } else {
       setStep("error");
+      onError?.(supabaseOrderId);
     }
   };
 

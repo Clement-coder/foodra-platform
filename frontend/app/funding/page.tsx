@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { FundingCard } from "@/components/FundingCard"
 import type { FundingApplication } from "@/lib/types"
 import withAuth from "../../components/withAuth";
+import { WrongAccountBanner } from "@/components/WrongAccountBanner"
 import { useUser } from "@/lib/useUser"
 import { authFetch } from "@/lib/authFetch"
 import { computeMembership } from "@/lib/membership"
@@ -73,6 +74,7 @@ function FundingPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <WrongAccountBanner />
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div className="flex items-center gap-3">

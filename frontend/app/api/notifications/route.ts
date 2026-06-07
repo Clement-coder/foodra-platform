@@ -58,9 +58,18 @@ export async function POST(request: Request) {
       const { error } = await supabase.from("notifications").insert(rows)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-      // Send email to every user that has one
-      for (const u of users) {
-        if (u.email) sendAdminMessageEmail(u.email, u.name || "User", body.message).catch(() => {})
+      // Batched broadcast email — 10 per batch with 600ms delay to avoid rate limits
+      const withEmail = (users as any[]).filter((u: any) => u.email)
+      if (withEmail.length) {
+        const msg = body.message
+        ;(async () => {
+          const BATCH = 10
+          for (let i = 0; i < withEmail.length; i += BATCH) {
+            const chunk = withEmail.slice(i, i + BATCH)
+            await Promise.allSettled(chunk.map((u: any) => sendAdminMessageEmail(u.email, u.name || "User", msg)))
+            if (i + BATCH < withEmail.length) await new Promise(r => setTimeout(r, 600))
+          }
+        })().catch(() => {})
       }
 
       return NextResponse.json({ success: true, count: rows.length })

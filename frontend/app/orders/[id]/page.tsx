@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
 import { DisputeModal } from "@/components/DisputeModal";
 import withAuth from "@/components/withAuth";
+import { WrongAccountBanner } from "@/components/WrongAccountBanner";
 import { useEscrow } from "@/lib/useEscrow";
 import { useToast } from "@/lib/toast";
 import { downloadReceiptImage, maskSensitive } from "@/lib/receipt";
@@ -127,6 +128,7 @@ function OrderDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <WrongAccountBanner />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">

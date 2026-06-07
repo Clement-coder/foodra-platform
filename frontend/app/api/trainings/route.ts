@@ -22,7 +22,7 @@ export async function GET() {
       location: t.location || '',
       instructor: t.instructor_name || '',
       capacity: t.capacity,
-      enrolled: t.training_enrollments?.[0]?.count || 0,
+      enrolled: Number(t.training_enrollments?.[0]?.count ?? 0),
       image: t.image_url || '',
     })) || []
 

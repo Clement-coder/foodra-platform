@@ -135,9 +135,13 @@ export async function POST(request: Request) {
       link: "/funding",
     })
 
-    // Email applicant
+    // Email applicant with full breakdown
     if (auth.user.email) {
-      sendFundingSubmittedEmail(auth.user.email, auth.user.name || "Farmer", Number(body.amountRequested), creditResult.score, creditResult.tier).catch(() => {})
+      sendFundingSubmittedEmail(
+        auth.user.email, auth.user.name || "Farmer",
+        Number(body.amountRequested), creditResult.score, creditResult.tier, auth.user.id,
+        { farmSize: body.farmSize, farmType: body.farmType, yearsOfExperience: body.yearsOfExperience, expectedOutcome: body.expectedOutcome }
+      ).catch(() => {})
     }
 
     return NextResponse.json(data)
@@ -197,7 +201,7 @@ export async function PATCH(request: Request) {
       // Email applicant
       const { data: applicant } = await supabaseAdmin.from("users").select("email, name").eq("id", data.user_id).single()
       if (applicant?.email) {
-        sendFundingDecisionEmail(applicant.email, applicant.name || "Farmer", status, Number(data.amount_requested), body.note).catch(() => {})
+        sendFundingDecisionEmail(applicant.email, applicant.name || "Farmer", status, Number(data.amount_requested), body.note, data.user_id).catch(() => {})
       }
     }
 

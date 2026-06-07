@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { AuthError, verifyPrivyToken } from "@/lib/serverAuth"
 import { sendWelcomeEmail } from "@/lib/email"
+import { computeMembership } from "@/lib/membership"
+import { checkAndNotifyMembershipUpgrade } from "@/lib/membershipNotify"
 
 type SyncBody = {
   privyId: string
@@ -140,13 +142,26 @@ export async function PATCH(request: Request) {
       const claims = await verifyPrivyToken(request)
       const { data } = await supabaseAdmin
         .from("users")
-        .select("id, privy_id, role")
+        .select("id, privy_id, role, name, phone, location, avatar_url, created_at, is_verified")
         .eq("privy_id", claims.userId)
         .single()
       if (!data) throw new AuthError(403, "User account not found")
       return { user: data }
     })()
     const body = (await request.json()) as UpdateBody
+
+    // Snapshot current tier before the update so we can detect upgrades
+    const [ordersSnap, disputesSnap] = await Promise.all([
+      supabaseAdmin.from("orders").select("id", { count: "exact", head: true }).eq("buyer_id", user.id),
+      supabaseAdmin.from("order_disputes").select("id").eq("user_id", user.id).limit(1),
+    ])
+    const previousTier = computeMembership({
+      hasName: !!user.name, hasPhone: !!user.phone, hasLocation: !!user.location,
+      hasAvatar: !!user.avatar_url, createdAt: user.created_at,
+      ordersCount: ordersSnap.count ?? 0,
+      hasDisputes: (disputesSnap.data?.length ?? 0) > 0,
+      isVerified: !!user.is_verified,
+    }).tier
 
     const updatePayload: Record<string, string | null> = {}
     if ("name" in body) updatePayload.name = (body as any).name || null
@@ -183,6 +198,10 @@ export async function PATCH(request: Request) {
     }
 
     if (error) throw error
+
+    // Check if profile completion pushed them to a new membership tier
+    checkAndNotifyMembershipUpgrade(supabaseAdmin, user.id, previousTier)
+
     return NextResponse.json(mapUser(data))
   } catch (error: any) {
     console.error("Error updating user profile fields:", error)
