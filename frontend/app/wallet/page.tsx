@@ -101,6 +101,7 @@ function WalletPage() {
   const [withdrawAmount, setWithdrawAmount] = useState("")
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [transactionFilter, setTransactionFilter] = useState<"all" | "send" | "receive">("all")
+  const [tokenFilter, setTokenFilter] = useState<"usdc" | "eth" | "all">("usdc")
   const [isRefreshingTransactions, setIsRefreshingTransactions] = useState(false)
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false)
   const [usdcBalance, setUsdcBalance] = useState<string>("0")
@@ -284,7 +285,10 @@ function WalletPage() {
 
   const filteredTransactions = transactions.filter((txn) => {
     if (!user?.wallet?.address) return false
-    if (transactionFilter === "all") return true
+    // Token type filter
+    if (tokenFilter === "usdc" && txn.type !== "usdc") return false
+    if (tokenFilter === "eth" && txn.type !== "eth") return false
+    // Direction filter
     if (transactionFilter === "send") return txn.from.toLowerCase() === user.wallet.address.toLowerCase()
     if (transactionFilter === "receive") return txn.to.toLowerCase() === user.wallet.address.toLowerCase()
     return true
@@ -482,17 +486,30 @@ function WalletPage() {
 
           {/* ── Transaction History ── */}
           <div className="rounded-2xl bg-card border border-border overflow-hidden shadow-sm">
-            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <div className="px-4 py-3 border-b border-border flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <History className="h-4 w-4 text-muted-foreground" />
                 <h2 className="text-base font-semibold text-foreground">Transaction History</h2>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {/* Token type filter */}
+                {(["usdc", "eth", "all"] as const).map(f => (
+                  <button key={f} onClick={() => setTokenFilter(f)}
+                    className={`px-3 py-1.5 text-xs rounded-lg font-semibold transition-colors uppercase tracking-wide ${
+                      tokenFilter === f
+                        ? "bg-[#118C4C] text-white"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-muted-foreground hover:bg-accent"
+                    }`}>
+                    {f}
+                  </button>
+                ))}
+                <div className="w-px h-4 bg-border mx-0.5" />
+                {/* Direction filter */}
                 {(["all", "send", "receive"] as const).map(f => (
                   <button key={f} onClick={() => setTransactionFilter(f)}
                     className={`px-3 py-1.5 text-xs sm:text-sm rounded-lg font-medium transition-colors capitalize ${
                       transactionFilter === f
-                        ? "bg-[#118C4C] text-white"
+                        ? "bg-foreground text-background"
                         : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-muted-foreground hover:bg-accent dark:hover:bg-gray-700"
                     }`}>
                     {f}
@@ -510,8 +527,14 @@ function WalletPage() {
                   <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
                     <History className="h-6 w-6 text-muted-foreground" />
                   </div>
-                  <p className="text-base font-medium">No transactions yet</p>
-                  <p className="text-sm text-center">Your on-chain activity will appear here</p>
+                  <p className="text-base font-medium">No {tokenFilter !== "all" ? tokenFilter.toUpperCase() : ""} transactions yet</p>
+                  <p className="text-sm text-center">
+                    {tokenFilter === "usdc"
+                      ? "Your USDC sends and receives will appear here"
+                      : tokenFilter === "eth"
+                      ? "Your ETH gas transactions will appear here"
+                      : "Your on-chain activity will appear here"}
+                  </p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-50 dark:divide-gray-800">

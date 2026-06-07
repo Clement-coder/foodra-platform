@@ -208,12 +208,37 @@ export function SendModal({ isOpen, onClose, ethBalance, usdcBalance, usdNgnRate
     setErrorMsg("")
     try {
       let finalTxHash = ""
+
       if (token === "ETH") {
-        await sendTransaction({
-          to: recipient as `0x${string}`,
-          value: ethers.parseEther(amount),
-          chainId: `0x${(Number(process.env.NEXT_PUBLIC_CHAIN_ID) || 84532).toString(16)}` as any,
-        })
+        // Privy's sendTransaction doesn't return a hash directly — capture via provider after submit
+        const wallet = wallets[0]
+        if (wallet) {
+          try {
+            await wallet.switchChain(Number(process.env.NEXT_PUBLIC_CHAIN_ID || 84532))
+            const provider = new ethers.BrowserProvider(await wallet.getEthereumProvider())
+            const signer = await provider.getSigner()
+            const tx = await signer.sendTransaction({
+              to: recipient,
+              value: ethers.parseEther(amount),
+            })
+            const receipt = await tx.wait()
+            if (!receipt || receipt.status === 0) throw new Error("Transaction reverted")
+            finalTxHash = receipt.hash
+          } catch {
+            // Fallback to Privy's sendTransaction (no hash returned)
+            await sendTransaction({
+              to: recipient as `0x${string}`,
+              value: ethers.parseEther(amount),
+              chainId: `0x${(Number(process.env.NEXT_PUBLIC_CHAIN_ID) || 84532).toString(16)}` as any,
+            })
+          }
+        } else {
+          await sendTransaction({
+            to: recipient as `0x${string}`,
+            value: ethers.parseEther(amount),
+            chainId: `0x${(Number(process.env.NEXT_PUBLIC_CHAIN_ID) || 84532).toString(16)}` as any,
+          })
+        }
       } else {
         const wallet = wallets[0]
         if (!wallet) throw new Error("No wallet connected")
@@ -226,14 +251,26 @@ export function SendModal({ isOpen, onClose, ethBalance, usdcBalance, usdNgnRate
         if (!receipt || receipt.status === 0) throw new Error("Transaction reverted")
         finalTxHash = receipt.hash
       }
+
       setTxHash(finalTxHash)
       setStep("success")
       onSuccess()
+
+      // Fire email confirmation — log any failure for debugging
       authFetch(getAccessToken, "/api/wallet/send-confirmation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount, token, toAddress: recipient, toName: resolvedUser?.name ?? null, txHash: finalTxHash || null, ngnEquiv: ngnEquiv ?? null }),
-      }).catch(() => {})
+        body: JSON.stringify({
+          amount, token,
+          toAddress: recipient,
+          toName: resolvedUser?.name ?? null,
+          txHash: finalTxHash || null,
+          ngnEquiv: ngnEquiv ?? null,
+        }),
+      }).then(res => {
+        if (!res.ok) res.json().then(d => console.error("send-confirmation API error:", d)).catch(() => {})
+      }).catch(e => console.error("send-confirmation fetch error:", e))
+
     } catch (err: any) {
       setErrorMsg(err?.reason || err?.shortMessage || err?.message || "Transaction failed")
       setStep("error")
