@@ -57,7 +57,8 @@ export function CommodityTicker() {
 
   return (
     <div
-      className="bg-[#0d6d3a] border-b border-[#118C4C]/40 h-9 flex items-center overflow-hidden select-none"
+      className="fixed left-0 right-0 z-40 bg-[#0d6d3a] border-b border-[#118C4C]/40 h-9 flex items-center overflow-hidden select-none"
+      style={{ top: "var(--navbar-height)" }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       title="Hover to pause. Source: WFP Food Prices, Nigeria (monthly)"
