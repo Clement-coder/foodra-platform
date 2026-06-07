@@ -12,6 +12,7 @@ import "./globals.css"
 import Providers from "./Provider"
 import { SupportChat } from "@/components/SupportChat"
 import { ToastProvider } from "@/lib/toast"
+import { CommodityTicker } from "@/components/CommodityTicker"
 import { OfflineBanner } from "@/components/OfflineBanner"
 import { organizationJsonLd } from "@/lib/seo"
 
@@ -158,6 +159,7 @@ export default function RootLayout({
           <CartProvider>
             <AppLoader>
               <NavBar />
+              <CommodityTicker />
               <main className="min-h-screen pb-24 md:pb-8" style={{ paddingTop: "var(--content-top)" }}>{children}</main>
               <div className="mb-20 md:mb-0">
                 <Footer />
