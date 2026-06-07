@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { assertSelfOrAdmin, AuthError, requireAdminUser, requireAuthenticatedUser } from "@/lib/serverAuth"
+import { sendAdminMessageEmail } from "@/lib/email"
 
 // GET /api/notifications?userId=xxx  — fetch user's notifications
 // GET /api/notifications?broadcast=true&actorPrivyId=xxx — admin: get all users for broadcast
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
 
     if (body.broadcast) {
       await requireAdminUser(request)
-      const { data: users } = await supabase.from("users").select("id")
+      const { data: users } = await supabase.from("users").select("id, email, name")
       if (!users?.length) return NextResponse.json({ success: true })
 
       const rows = users.map((u: any) => ({
@@ -56,6 +57,12 @@ export async function POST(request: Request) {
 
       const { error } = await supabase.from("notifications").insert(rows)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+      // Send email to every user that has one
+      for (const u of users) {
+        if (u.email) sendAdminMessageEmail(u.email, u.name || "User", body.message).catch(() => {})
+      }
+
       return NextResponse.json({ success: true, count: rows.length })
     }
 
