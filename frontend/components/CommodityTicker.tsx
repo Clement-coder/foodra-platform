@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { TrendingUp, RefreshCcw } from "lucide-react"
+import { TrendingUp, RefreshCcw, ArrowRight } from "lucide-react"
+import Link from "next/link"
 import type { CommodityPrice } from "@/app/api/commodity-prices/route"
 
 function PriceTag({ item }: { item: CommodityPrice }) {
@@ -88,7 +89,7 @@ export function CommodityTicker() {
         </div>
       </div>
 
-      {/* Date + refresh */}
+      {/* Date + refresh + view all */}
       <div className="shrink-0 flex items-center gap-2 px-3 h-full border-l border-white/10">
         {fetchedAt && (
           <span className="text-white/40 text-xs hidden lg:block">
@@ -98,6 +99,11 @@ export function CommodityTicker() {
         <button onClick={load} title="Refresh" className="text-white/50 hover:text-white transition-colors">
           <RefreshCcw className="h-3 w-3" />
         </button>
+        <Link href="/market-prices" title="View all prices"
+          className="flex items-center gap-1 text-white/70 hover:text-white transition-colors text-xs font-medium">
+          <span className="hidden sm:block">All</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
       </div>
 
       <style>{`
