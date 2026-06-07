@@ -8,6 +8,7 @@ export const ESCROW_ABI = [
   "function confirmDelivery(bytes32 orderId) external",
   "function raiseDispute(bytes32 orderId) external",
   "function autoRelease(bytes32 orderId) external",
+  "function resolveDispute(bytes32 orderId, address releaseTo) external",
   "function getEscrow(bytes32 orderId) external view returns (tuple(address buyer, address farmer, uint256 amount, uint256 ngnAmount, uint8 status, uint256 createdAt))",
   "function computeOrderId(string calldata supabaseOrderId, string calldata productId) external pure returns (bytes32)",
 ];

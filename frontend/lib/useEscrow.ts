@@ -160,5 +160,42 @@ export function useEscrow() {
     }
   };
 
-  return { createEscrows, confirmDelivery, raiseDispute, loading, error };
+  /**
+   * Admin-only: resolve a disputed escrow on-chain
+   * releaseTo = farmer wallet → release to farmer
+   * releaseTo = null/undefined → refund buyer (contract uses address(0))
+   */
+  const resolveDispute = async (escrowOrderId: string, releaseTo: string | null) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { escrow } = await getSignerAndContracts();
+      const orderId = escrowOrderId.startsWith("0x") ? escrowOrderId : `0x${escrowOrderId}`;
+
+      // Verify escrow exists and is in DISPUTED state
+      const escrowData = await escrow.getEscrow(orderId);
+      if (!escrowData || escrowData.buyer === "0x0000000000000000000000000000000000000000") {
+        throw new Error("Escrow not found on-chain.");
+      }
+      const statusNum = Number(escrowData.status);
+      // Allow resolving from LOCKED (2=REFUNDED check) or DISPUTED (3)
+      if (statusNum !== 3 && statusNum !== 0) {
+        const labels = ["LOCKED", "RELEASED", "REFUNDED", "DISPUTED"];
+        throw new Error(`Cannot resolve — escrow is ${labels[statusNum] ?? statusNum}.`);
+      }
+
+      // address(0) = refund buyer; farmer address = release to farmer
+      const releaseAddress = releaseTo ?? ethers.ZeroAddress;
+      const tx = await escrow.resolveDispute(orderId, releaseAddress);
+      await tx.wait();
+      return true;
+    } catch (err: any) {
+      setError(err?.reason || err?.message || "Failed to resolve dispute on-chain");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { createEscrows, confirmDelivery, raiseDispute, resolveDispute, loading, error };
 }

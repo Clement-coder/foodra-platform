@@ -2,22 +2,28 @@
 
 import { useState } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { AlertTriangle, X, ExternalLink } from "lucide-react"
+import { AlertTriangle, X, ExternalLink, Loader2 } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
 import { authFetch } from "@/lib/authFetch"
+import { useEscrow } from "@/lib/useEscrow"
 
-function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
-  dispute: any; order: any; privyId?: string; onClose: () => void; onRefresh: () => void
+function DisputeModal({ dispute, order, onClose, onRefresh }: {
+  dispute: any; order: any; onClose: () => void; onRefresh: () => void
 }) {
   const { toast, confirm } = useToast()
   const { getAccessToken } = usePrivy()
+  const { resolveDispute, loading: escrowLoading, error: escrowError } = useEscrow()
   const [saving, setSaving] = useState(false)
+
+  const busy = saving || escrowLoading
 
   const resolveEscrow = async (action: "release" | "refund") => {
     const ok = await confirm({
       title: "Resolve Dispute",
-      message: action === "release" ? "Release payment to the farmer?" : "Refund payment to the buyer?",
+      message: action === "release"
+        ? "Release payment to the farmer? This will transfer USDC on-chain."
+        : "Refund buyer? This will return USDC to the buyer on-chain.",
       confirmLabel: action === "release" ? "Release to Farmer" : "Refund Buyer",
       danger: action === "refund",
     })
@@ -27,31 +33,47 @@ function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
     try {
       const escrowResolution = action === "release" ? "released" : "refunded"
 
-      // Update escrow status on the order via the dedicated escrow endpoint
-      const escrowRes = await authFetch(getAccessToken, `/api/orders/${dispute.order_id}/escrow`, {
+      // ── Step 1: Call resolveDispute on-chain if escrow exists ──
+      const escrowOrderId = order?.order_items?.[0]?.escrow_order_id
+        ?? order?.escrow_order_id
+        ?? null
+
+      if (escrowOrderId) {
+        // For release: pass farmer wallet; for refund: pass null (contract uses address(0) = buyer)
+        const farmerWallet = action === "release"
+          ? (order?.order_items?.[0]?.farmer_wallet ?? null)
+          : null
+
+        const onChainOk = await resolveDispute(escrowOrderId, farmerWallet)
+        if (!onChainOk) {
+          toast.error(escrowError || "On-chain transaction failed. USDC was not moved.")
+          setSaving(false)
+          return
+        }
+      } else {
+        // No on-chain escrow — warn but continue with DB update
+        toast.warning?.("No on-chain escrow found — updating records only.")
+      }
+
+      // ── Step 2: Update DB escrow status ──
+      await authFetch(getAccessToken, `/api/orders/${dispute.order_id}/escrow`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ escrowStatus: escrowResolution }),
       })
 
-      if (!escrowRes.ok) {
-        toast.error("Failed to update escrow status.")
-        setSaving(false)
-        return
-      }
-
-      // Mark dispute resolved and send emails/notifications
+      // ── Step 3: Mark dispute resolved + send notification/email ──
       await authFetch(getAccessToken, `/api/orders/${dispute.order_id}/dispute`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ disputeId: dispute.id, status: "resolved", escrowResolution }),
       })
 
-      toast.success(action === "release" ? "Escrow released to farmer" : "Escrow refunded to buyer")
+      toast.success(action === "release" ? "✓ Escrow released to farmer on-chain" : "✓ Buyer refunded on-chain")
       onRefresh()
       onClose()
-    } catch {
-      toast.error("Failed to resolve dispute.")
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to resolve dispute.")
     }
     setSaving(false)
   }
@@ -93,33 +115,42 @@ function DisputeModal({ dispute, order, privyId, onClose, onRefresh }: {
               <p className="text-xs text-muted-foreground mb-1">Order</p>
               <p className="font-mono text-xs">#{order.id.slice(-6).toUpperCase()}</p>
               <p className="font-bold">₦{Number(order.total_amount).toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">Escrow: <span className="font-medium text-red-600">{order.escrow_status}</span></p>
+              <p className="text-xs text-muted-foreground">
+                Escrow: <span className="font-medium text-red-600">{order.escrow_status}</span>
+              </p>
               {order.escrow_tx_hash && (
                 <a href={`https://sepolia.basescan.org/tx/${order.escrow_tx_hash}`} target="_blank" rel="noopener noreferrer"
                   className="text-xs text-green-600 underline flex items-center gap-1">
-                  View on chain <ExternalLink className="w-3 h-3" />
+                  View escrow on-chain <ExternalLink className="w-3 h-3" />
                 </a>
+              )}
+              {!order?.order_items?.[0]?.escrow_order_id && (
+                <p className="text-xs text-amber-600 mt-1">⚠ No on-chain escrow ID found — resolution will update records only.</p>
               )}
             </div>
           )}
 
           {/* Resolve actions */}
-          {dispute.status === "open" && (
+          {dispute.status === "open" ? (
             <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800 space-y-3">
-              <p className="text-xs font-semibold text-orange-700 dark:text-orange-400">Resolve this dispute</p>
+              <p className="text-xs font-semibold text-orange-700 dark:text-orange-400">
+                Resolve this dispute — this will execute an on-chain transaction
+              </p>
               <div className="flex gap-2">
-                <button onClick={() => resolveEscrow("release")} disabled={saving}
-                  className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium disabled:opacity-40">
+                <button onClick={() => resolveEscrow("release")} disabled={busy}
+                  className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium disabled:opacity-40 flex items-center justify-center gap-2">
+                  {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   Release to Farmer
                 </button>
-                <button onClick={() => resolveEscrow("refund")} disabled={saving}
-                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium disabled:opacity-40">
+                <button onClick={() => resolveEscrow("refund")} disabled={busy}
+                  className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium disabled:opacity-40 flex items-center justify-center gap-2">
+                  {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   Refund Buyer
                 </button>
               </div>
+              {escrowError && <p className="text-xs text-red-500">{escrowError}</p>}
             </div>
-          )}
-          {dispute.status !== "open" && (
+          ) : (
             <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-xs text-green-700 dark:text-green-400 font-medium">
               ✓ Dispute resolved
             </div>
@@ -146,7 +177,6 @@ export default function AdminDisputes({ data, privyId, onRefresh }: {
         <DisputeModal
           dispute={selected}
           order={getOrder(selected.order_id)}
-          privyId={privyId}
           onClose={() => setSelected(null)}
           onRefresh={onRefresh}
         />
