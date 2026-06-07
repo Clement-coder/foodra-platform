@@ -1,18 +1,18 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { TrendingUp, RefreshCcw } from "lucide-react"
 import type { CommodityPrice } from "@/app/api/commodity-prices/route"
 
 function PriceTag({ item }: { item: CommodityPrice }) {
   return (
-    <span className="inline-flex items-center gap-2 px-4 whitespace-nowrap">
-      <span className="text-white/60 text-xs font-medium">{item.displayName}</span>
-      <span className="text-white font-bold text-sm">
+    <span className="inline-flex items-center gap-3 px-4 whitespace-nowrap shrink-0">
+      <span className="text-white/70 text-xs font-medium">{item.displayName}</span>
+      <span className="text-white font-bold text-xs">
         ₦{item.price.toLocaleString()}
-        <span className="text-white/50 font-normal text-xs">/{item.unit}</span>
+        <span className="text-white/50 font-normal">/{item.unit}</span>
       </span>
-      <span className="w-px h-3 bg-white/20" />
+      <span className="text-white/20 text-xs">•</span>
     </span>
   )
 }
@@ -22,15 +22,13 @@ export function CommodityTicker() {
   const [loading, setLoading] = useState(true)
   const [fetchedAt, setFetchedAt] = useState<string | null>(null)
   const [paused, setPaused] = useState(false)
-  const trackRef = useRef<HTMLDivElement>(null)
 
-  const fetch_ = async () => {
+  const load = async () => {
     setLoading(true)
     try {
       const res = await fetch("/api/commodity-prices")
       if (res.ok) {
-        const data = await res.json()
-        setPrices(data)
+        setPrices(await res.json())
         const at = res.headers.get("X-Fetched-At")
         if (at) setFetchedAt(at)
       }
@@ -39,12 +37,12 @@ export function CommodityTicker() {
     }
   }
 
-  useEffect(() => { fetch_() }, [])
+  useEffect(() => { load() }, [])
 
   if (loading) {
     return (
-      <div className="bg-[#0d6d3a] h-9 flex items-center px-4 gap-2">
-        <TrendingUp className="h-3.5 w-3.5 text-white/60 animate-pulse" />
+      <div className="fixed left-0 right-0 z-40 h-9 bg-[#0d6d3a] flex items-center px-4 gap-2" style={{ top: "var(--navbar-height)" }}>
+        <TrendingUp className="h-3.5 w-3.5 text-white/60 animate-pulse shrink-0" />
         <span className="text-white/50 text-xs">Loading market prices…</span>
       </div>
     )
@@ -52,55 +50,60 @@ export function CommodityTicker() {
 
   if (!prices.length) return null
 
-  // Duplicate for seamless loop
-  const items = [...prices, ...prices]
+  // 4 copies = guaranteed seamless loop on all screen widths
+  const items = [...prices, ...prices, ...prices, ...prices]
+  // ~3s per item feels readable
+  const duration = `${prices.length * 3}s`
 
   return (
     <div
-      className="fixed left-0 right-0 z-40 bg-[#0d6d3a] border-b border-[#118C4C]/40 h-9 flex items-center overflow-hidden select-none"
+      className="fixed left-0 right-0 z-40 h-9 bg-[#0d6d3a] border-b border-[#118C4C]/40 flex items-center overflow-hidden"
       style={{ top: "var(--navbar-height)" }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      title="Hover to pause. Source: WFP Food Prices, Nigeria (monthly)"
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
     >
-      {/* Label */}
-      <div className="flex-shrink-0 flex items-center gap-1.5 px-3 border-r border-white/20 h-full bg-[#118C4C]">
-        <TrendingUp className="h-3.5 w-3.5 text-white" />
-        <span className="text-white text-xs font-bold tracking-wide hidden sm:block">MARKET</span>
+      {/* Label badge */}
+      <div className="shrink-0 flex items-center gap-1.5 px-3 h-full bg-[#118C4C]/80 border-r border-white/10 z-10">
+        <TrendingUp className="h-3.5 w-3.5 text-white shrink-0" />
+        <span className="text-white text-xs font-bold tracking-wider hidden sm:block">LIVE</span>
       </div>
 
-      {/* Scrolling track */}
-      <div className="flex-1 overflow-hidden relative">
+      {/* Ticker track — translate -25% = one full copy with 4 copies */}
+      <div className="flex-1 overflow-hidden">
         <div
-          ref={trackRef}
           className="flex items-center"
           style={{
-            animation: paused ? "none" : `ticker ${prices.length * 4}s linear infinite`,
-            willChange: "transform",
+            animationName: "commodity-scroll",
+            animationDuration: duration,
+            animationTimingFunction: "linear",
+            animationIterationCount: "infinite",
+            animationPlayState: paused ? "paused" : "running",
           }}
         >
           {items.map((item, i) => (
-            <PriceTag key={`${item.commodity}-${i}`} item={item} />
+            <PriceTag key={i} item={item} />
           ))}
         </div>
       </div>
 
-      {/* Refresh + date */}
-      <div className="flex-shrink-0 flex items-center gap-2 px-3 border-l border-white/20 h-full">
+      {/* Date + refresh */}
+      <div className="shrink-0 flex items-center gap-2 px-3 h-full border-l border-white/10">
         {fetchedAt && (
-          <span className="text-white/40 text-xs hidden md:block">
+          <span className="text-white/40 text-xs hidden lg:block">
             {new Date(fetchedAt).toLocaleDateString("en-NG", { month: "short", day: "numeric" })}
           </span>
         )}
-        <button onClick={fetch_} title="Refresh prices" className="text-white/50 hover:text-white transition-colors">
+        <button onClick={load} title="Refresh" className="text-white/50 hover:text-white transition-colors">
           <RefreshCcw className="h-3 w-3" />
         </button>
       </div>
 
       <style>{`
-        @keyframes ticker {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        @keyframes commodity-scroll {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-25%); }
         }
       `}</style>
     </div>
