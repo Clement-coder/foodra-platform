@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notify";
 import { AuthError, requireAuthenticatedUser } from "@/lib/serverAuth";
+import { sendOrderStatusEmail } from "@/lib/email";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -125,6 +126,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             message: statusMessages[status],
             link: `/orders/${id}`,
           })
+          // Email buyer
+          const { data: buyer } = await supabase.from("users").select("email, name").eq("id", order.buyer_id).single()
+          if (buyer?.email) sendOrderStatusEmail(buyer.email, buyer.name || "Customer", id, status).catch(() => {})
         }
       }
     }

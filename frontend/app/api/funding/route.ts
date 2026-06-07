@@ -4,6 +4,7 @@ import { createNotification } from '@/lib/notify'
 import { computeCreditScore } from '@/lib/creditScore'
 import { rateLimit, getClientIp } from '@/lib/rateLimit'
 import { assertSelfOrAdmin, AuthError, requireAdminUser, requireAuthenticatedUser } from '@/lib/serverAuth'
+import { sendFundingSubmittedEmail, sendFundingDecisionEmail } from '@/lib/email'
 
 export async function GET(request: Request) {
   try {
@@ -134,6 +135,11 @@ export async function POST(request: Request) {
       link: "/funding",
     })
 
+    // Email applicant
+    if (auth.user.email) {
+      sendFundingSubmittedEmail(auth.user.email, auth.user.name || "Farmer", Number(body.amountRequested), creditResult.score, creditResult.tier).catch(() => {})
+    }
+
     return NextResponse.json(data)
   } catch (error: any) {
     if (error instanceof AuthError) {
@@ -188,6 +194,11 @@ export async function PATCH(request: Request) {
           : `Your funding application has been rejected.${body.note ? ` Reason: ${body.note}` : ""}`,
         link: "/funding",
       })
+      // Email applicant
+      const { data: applicant } = await supabaseAdmin.from("users").select("email, name").eq("id", data.user_id).single()
+      if (applicant?.email) {
+        sendFundingDecisionEmail(applicant.email, applicant.name || "Farmer", status, Number(data.amount_requested), body.note).catch(() => {})
+      }
     }
 
     return NextResponse.json(data)

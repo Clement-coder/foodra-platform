@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { rateLimit, getClientIp } from "@/lib/rateLimit"
+import { sendContactConfirmationEmail } from "@/lib/email"
 
 // POST /api/contact — contact form submission
 export async function POST(request: Request) {
@@ -28,5 +29,7 @@ export async function POST(request: Request) {
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  sendContactConfirmationEmail(email, name, subject || "General Inquiry").catch(() => {})
   return NextResponse.json({ ok: true })
 }

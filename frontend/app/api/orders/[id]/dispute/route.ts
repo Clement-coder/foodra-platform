@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notify";
 import { AuthError, requireAdminUser, requireAuthenticatedUser } from "@/lib/serverAuth";
+import { sendDisputeSubmittedEmail } from "@/lib/email";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -35,6 +36,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       message: `Your dispute for order #${id.slice(-6).toUpperCase()} has been received. We'll review it within 3–5 business days.`,
       link: `/orders/${id}`,
     });
+
+    // Email buyer
+    const { data: buyer } = await supabase.from("users").select("email, name").eq("id", buyerId).single();
+    if (buyer?.email) sendDisputeSubmittedEmail(buyer.email, buyer.name || "Customer", id, reason).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

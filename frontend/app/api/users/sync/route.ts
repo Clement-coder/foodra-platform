@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { AuthError, verifyPrivyToken } from "@/lib/serverAuth"
+import { sendWelcomeEmail } from "@/lib/email"
 
 type SyncBody = {
   privyId: string
@@ -108,6 +109,12 @@ export async function POST(request: Request) {
     }
 
     if (error) throw error
+
+    // Send welcome email only for brand new users
+    if (!existingUser && data?.email) {
+      sendWelcomeEmail(data.email, data.name || "Farmer").catch(() => {})
+    }
+
     return NextResponse.json(mapUser(data))
   } catch (error: any) {
     console.error("Error syncing user:", error)

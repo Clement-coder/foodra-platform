@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { createNotification } from "@/lib/notify"
 import { AuthError, requireAdminUser } from "@/lib/serverAuth"
+import { sendAdminMessageEmail } from "@/lib/email"
 
 // POST /api/admin/message — admin sends a notification to a specific user
 export async function POST(request: Request) {
@@ -27,6 +28,10 @@ export async function POST(request: Request) {
       message: message.trim(),
       link: undefined,
     })
+
+    // Email the user
+    const { data: user } = await supabase.from("users").select("email, name").eq("id", targetUserId).single()
+    if (user?.email) sendAdminMessageEmail(user.email, user.name || "User", message.trim()).catch(() => {})
 
     return NextResponse.json({ success: true })
   } catch (error) {

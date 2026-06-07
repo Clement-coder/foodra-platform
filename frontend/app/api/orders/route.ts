@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
 import { assertSelfOrAdmin, AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
+import { sendOrderConfirmationEmail, sendFarmerNewOrderEmail } from '@/lib/email'
 
 export async function GET(request: Request) {
   try {
@@ -175,6 +176,23 @@ export async function POST(request: Request) {
         message: `Your order of ₦${Number(body.totalAmount).toLocaleString()} has been placed and is being processed.`,
         link: `/orders/${order.id}`,
       })
+
+      // Email buyer
+      const { data: buyer } = await supabaseAdmin.from("users").select("email, name").eq("id", buyerId).single()
+      if (buyer?.email) {
+        const emailItems = body.items.map((i: any) => ({ name: i.productName, qty: i.quantity, price: i.pricePerUnit }))
+        sendOrderConfirmationEmail(buyer.email, buyer.name || "Customer", order.id, Number(body.totalAmount), emailItems).catch(() => {})
+      }
+
+      // Email each unique farmer
+      const farmerIds = [...new Set<string>(body.items.map((i: any) => i.farmerId).filter(Boolean))] as string[]
+      for (const fid of farmerIds) {
+        const { data: farmer } = await supabaseAdmin.from("users").select("email, name").eq("id", fid).single()
+        if (farmer?.email) {
+          const farmerItems = body.items.filter((i: any) => i.farmerId === fid).map((i: any) => ({ name: i.productName, qty: i.quantity }))
+          sendFarmerNewOrderEmail(farmer.email, farmer.name || "Farmer", order.id, farmerItems, Number(body.totalAmount)).catch(() => {})
+        }
+      }
     }
 
     return NextResponse.json(order)

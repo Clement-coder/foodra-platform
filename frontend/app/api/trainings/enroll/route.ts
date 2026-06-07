@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
 import { AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
+import { sendTrainingEnrollmentEmail } from '@/lib/email'
 
 export async function GET(request: Request) {
   try {
@@ -76,6 +77,11 @@ export async function POST(request: Request) {
       message: `You have successfully enrolled in "${trainingTitle}".`,
       link: `/training/${body.trainingId}`,
     })
+
+    // Email user
+    if (auth.user.email) {
+      sendTrainingEnrollmentEmail(auth.user.email, auth.user.name || "Farmer", trainingTitle, body.trainingId).catch(() => {})
+    }
 
     return NextResponse.json(data)
   } catch (error) {
