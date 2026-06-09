@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notify";
 import { AuthError, requireAuthenticatedUser } from "@/lib/serverAuth";
-import { sendEscrowStatusEmail } from "@/lib/email";
+import { sendEscrowStatusEmail, sendEscrowLockedBuyerEmail, sendDeliveryConfirmedBuyerEmail, sendWalletDeductionEmail } from "@/lib/email";
 
 export async function PATCH(
   request: Request,
@@ -52,7 +52,7 @@ export async function PATCH(
     if (escrowStatus === "locked") {
       const { data: orderData } = await supabase
         .from("orders")
-        .select("total_amount, order_items(products!inner(farmer_id))")
+        .select("total_amount, usdc_amount, escrow_tx_hash, order_items(products!inner(farmer_id))")
         .eq("id", id)
         .single();
       if (orderData) {
@@ -70,6 +70,23 @@ export async function PATCH(
           const { data: farmer } = await supabase.from("users").select("email, name").eq("id", farmerId).single();
           if (farmer?.email) {
             sendEscrowStatusEmail(farmer.email, farmer.name || "Farmer", id, "locked", Number(orderData.total_amount), farmerId as string).catch(() => {});
+          }
+        }
+        // Notify + email buyer that payment is locked
+        await createNotification({
+          userId: order.buyer_id,
+          type: "order",
+          title: "Payment Locked in Escrow 🔒",
+          message: `₦${Number(orderData.total_amount).toLocaleString()} is secured in escrow for order #${id.slice(-6).toUpperCase()}. Funds release when you confirm delivery.`,
+          link: `/orders/${id}`,
+        });
+        const txH = escrowTxHash || orderData.escrow_tx_hash;
+        const { data: buyer } = await supabase.from("users").select("email, name").eq("id", order.buyer_id).single();
+        if (buyer?.email) {
+          sendEscrowLockedBuyerEmail(buyer.email, buyer.name || "Customer", id, Number(orderData.total_amount), Number(usdcAmount || orderData.usdc_amount || 0), txH || null, order.buyer_id).catch(() => {});
+          if (usdcAmount || orderData.usdc_amount) {
+            const usdc = Number(usdcAmount || orderData.usdc_amount);
+            sendWalletDeductionEmail(buyer.email, buyer.name || "Customer", id, usdc, Number(orderData.total_amount), txH || null, order.buyer_id).catch(() => {});
           }
         }
       }
@@ -98,6 +115,18 @@ export async function PATCH(
           if (farmer?.email) {
             sendEscrowStatusEmail(farmer.email, farmer.name || "Farmer", id, "released", Number(orderData.total_amount), farmerId as string).catch(() => {});
           }
+        }
+        // Notify + email buyer that delivery is confirmed
+        await createNotification({
+          userId: order.buyer_id,
+          type: "order",
+          title: "Delivery Confirmed ✅",
+          message: `You confirmed delivery for order #${id.slice(-6).toUpperCase()}. Payment has been released to the farmer. Thank you!`,
+          link: `/orders/${id}`,
+        });
+        const { data: buyer } = await supabase.from("users").select("email, name").eq("id", order.buyer_id).single();
+        if (buyer?.email) {
+          sendDeliveryConfirmedBuyerEmail(buyer.email, buyer.name || "Customer", id, Number(orderData.total_amount), order.buyer_id).catch(() => {});
         }
       }
     }

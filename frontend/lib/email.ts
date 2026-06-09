@@ -30,6 +30,13 @@ function layout(content: string) {
           <td style="background:#f8faf5;padding:24px 40px;text-align:center;border-top:1px solid #e8f0e0;">
             <p style="margin:0;font-size:12px;color:#888;">© 2026 Foodra · Building the future of African agriculture</p>
             <p style="margin:6px 0 0;font-size:12px;color:#aaa;">You're receiving this because you have an account on Foodra.</p>
+            <p style="margin:8px 0 0;font-size:11px;color:#bbb;">
+              <a href="https://foodramarket.com/privacy" style="color:#1a6b2e;text-decoration:none;">Privacy Policy</a>
+              &nbsp;·&nbsp;
+              <a href="https://foodramarket.com/terms" style="color:#1a6b2e;text-decoration:none;">Terms of Service</a>
+              &nbsp;·&nbsp;
+              <a href="https://foodramarket.com/profile" style="color:#1a6b2e;text-decoration:none;">Manage Notifications</a>
+            </p>
           </td>
         </tr>
       </table>
@@ -658,6 +665,110 @@ export async function sendEscrowStatusEmail(
     ${btn("View Sales", appUrl("/sales", userId))}
   `)
   await send(to, `${isLocked ? "🔒" : isReleased ? "💸" : "↩️"} Escrow update for order #${orderId.slice(-8).toUpperCase()}`, html)
+}
+
+// ─── 20b. Escrow locked — buyer confirmation ──────────────────────────────────
+export async function sendEscrowLockedBuyerEmail(
+  to: string, name: string,
+  orderId: string, amount: number, usdcAmount: number, txHash: string | null, userId?: string
+) {
+  const html = layout(`
+    ${heading("Payment Locked in Escrow 🔒")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, your payment has been securely locked in escrow for order <strong>#${orderId.slice(-8).toUpperCase()}</strong>. Funds will only be released to the farmer once you confirm delivery.
+    </p>
+    ${moneyBox([
+      { label: "Amount Locked", value: `₦${amount.toLocaleString()}`, bold: true, green: true },
+      { label: "USDC Amount", value: `${usdcAmount.toFixed(4)} USDC` },
+      ...(txHash ? [{ label: "Tx Hash", value: `${txHash.slice(0, 12)}...${txHash.slice(-8)}` }] : []),
+    ])}
+    <div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:0 8px 8px 0;margin:16px 0;">
+      <p style="margin:0;font-size:13px;color:#555;">Once your order is delivered, return to Foodra and click <strong>Confirm Delivery</strong> to release payment to the farmer.</p>
+    </div>
+    ${btn("View My Order", appUrl(`/orders/${orderId}`, userId))}
+  `)
+  await send(to, `🔒 Payment secured for order #${orderId.slice(-8).toUpperCase()}`, html)
+}
+
+// ─── 20c. Delivery confirmed — buyer ─────────────────────────────────────────
+export async function sendDeliveryConfirmedBuyerEmail(
+  to: string, name: string,
+  orderId: string, amount: number, userId?: string
+) {
+  const html = layout(`
+    ${heading("Delivery Confirmed ✅")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, you've confirmed delivery of order <strong>#${orderId.slice(-8).toUpperCase()}</strong>. <strong>₦${amount.toLocaleString()}</strong> has been released from escrow to the farmer's wallet.
+    </p>
+    <div style="background:#f0fdf4;border-left:4px solid #1a6b2e;padding:14px 18px;border-radius:0 8px 8px 0;">
+      <p style="margin:0;font-size:13px;color:#555;">Thank you for using Foodra's secure escrow system. Your payment supported a local farmer directly.</p>
+    </div>
+    ${btn("Rate Your Experience", appUrl(`/orders/${orderId}`, userId))}
+  `)
+  await send(to, `✅ Delivery confirmed — Order #${orderId.slice(-8).toUpperCase()}`, html)
+}
+
+// ─── 20d. Wallet deduction for escrow ────────────────────────────────────────
+export async function sendWalletDeductionEmail(
+  to: string, name: string,
+  orderId: string, usdcAmount: number, ngnEquiv: number, txHash: string | null, userId?: string
+) {
+  const html = layout(`
+    ${heading("Wallet Payment Processed 💳")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, your wallet has been charged for order <strong>#${orderId.slice(-8).toUpperCase()}</strong>. The funds are now secured in escrow.
+    </p>
+    ${moneyBox([
+      { label: "Deducted", value: `${usdcAmount.toFixed(4)} USDC`, bold: true },
+      { label: "NGN Equivalent", value: `≈ ₦${ngnEquiv.toLocaleString()}`, green: true },
+      { label: "Status", value: "Locked in Escrow 🔒" },
+      ...(txHash ? [{ label: "Tx Hash", value: `${txHash.slice(0, 12)}...${txHash.slice(-8)}` }] : []),
+    ])}
+    ${btn("View Order", appUrl(`/orders/${orderId}`, userId))}
+  `)
+  await send(to, `💳 ₦${ngnEquiv.toLocaleString()} deducted for order #${orderId.slice(-8).toUpperCase()}`, html)
+}
+
+// ─── 20e. Cart abandonment reminder ──────────────────────────────────────────
+export async function sendCartAbandonmentEmail(
+  to: string, name: string,
+  items: { name: string; qty: number; price: number }[],
+  total: number, userId?: string
+) {
+  const itemRows = items.map(i =>
+    `<tr>
+      <td style="padding:8px 0;font-size:14px;color:#555;">${i.name}</td>
+      <td style="padding:8px 0;font-size:14px;color:#555;text-align:center;">${i.qty}</td>
+      <td style="padding:8px 0;font-size:14px;color:#1a1a1a;font-weight:600;text-align:right;">₦${(i.price * i.qty).toLocaleString()}</td>
+    </tr>`
+  ).join("")
+  const html = layout(`
+    ${heading("You left items in your cart 🛒")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, you have items waiting in your cart. Complete your purchase before they sell out!
+    </p>
+    <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <thead>
+        <tr style="border-bottom:2px solid #e8f0e0;">
+          <th style="padding:8px 0;font-size:12px;color:#888;text-align:left;font-weight:600;">ITEM</th>
+          <th style="padding:8px 0;font-size:12px;color:#888;text-align:center;font-weight:600;">QTY</th>
+          <th style="padding:8px 0;font-size:12px;color:#888;text-align:right;font-weight:600;">SUBTOTAL</th>
+        </tr>
+      </thead>
+      <tbody>${itemRows}</tbody>
+      <tfoot>
+        <tr style="border-top:2px solid #e8f0e0;">
+          <td colspan="2" style="padding:10px 0;font-size:15px;font-weight:700;color:#1a1a1a;">Total</td>
+          <td style="padding:10px 0;font-size:15px;font-weight:700;color:#1a6b2e;text-align:right;">₦${total.toLocaleString()}</td>
+        </tr>
+      </tfoot>
+    </table>
+    <div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:0 8px 8px 0;margin:16px 0;">
+      <p style="margin:0;font-size:13px;color:#555;">⚡ Fresh produce sells fast. Complete your order now to secure your items.</p>
+    </div>
+    ${btn("Complete My Order", appUrl("/shop", userId))}
+  `)
+  await send(to, `🛒 ${name}, you left ₦${total.toLocaleString()} worth of items in your cart`, html)
 }
 
 // ─── 21. Role changed by admin ────────────────────────────────────────────────

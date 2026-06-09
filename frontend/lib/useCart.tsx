@@ -1,12 +1,16 @@
 "use client"
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react"
 import type { ReactNode } from "react"
 import { usePrivy } from "@privy-io/react-auth"
 import type { CartItem, Order } from "./types"
 import { useUser } from "./useUser"
 import { useToast } from "./toast"
 import { authFetch } from "./authFetch"
+
+// Cart abandonment: send reminder after 1 hour, then every 3 hours while cart is non-empty
+const REMIND_INITIAL_MS = 60 * 60 * 1000   // 1 hour
+const REMIND_REPEAT_MS  = 3 * 60 * 60 * 1000 // 3 hours
 
 type CartContextValue = {
   cart: CartItem[]
@@ -23,9 +27,42 @@ const CartContext = createContext<CartContextValue | null>(null)
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([])
   const { currentUser, isLoading: userLoading } = useUser()
+  const { getAccessToken } = usePrivy()
   const { toast } = useToast()
+  const abandonTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const repeatTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const cartKey = currentUser ? `foodra_cart_${currentUser.id}` : null
+
+  const sendAbandonmentReminder = async (cartItems: CartItem[]) => {
+    if (!cartItems.length) return
+    const items = cartItems.map(i => ({ name: i.productName, qty: i.quantity, price: i.pricePerUnit }))
+    const total = cartItems.reduce((s, i) => s + i.pricePerUnit * i.quantity, 0)
+    authFetch(getAccessToken, "/api/cart/remind", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items, total }),
+    }).catch(() => {})
+  }
+
+  // Start/reset abandonment timers whenever cart changes
+  useEffect(() => {
+    if (abandonTimer.current) clearTimeout(abandonTimer.current)
+    if (repeatTimer.current) clearInterval(repeatTimer.current)
+
+    if (!cart.length || !currentUser) return
+
+    abandonTimer.current = setTimeout(() => {
+      sendAbandonmentReminder(cart)
+      repeatTimer.current = setInterval(() => sendAbandonmentReminder(cart), REMIND_REPEAT_MS)
+    }, REMIND_INITIAL_MS)
+
+    return () => {
+      if (abandonTimer.current) clearTimeout(abandonTimer.current)
+      if (repeatTimer.current) clearInterval(repeatTimer.current)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart, currentUser])
 
   // Load cart when user resolves — don't clear while auth is still loading
   useEffect(() => {
