@@ -197,17 +197,18 @@ export function useCart() {
 
 export function useOrders() {
   const { getAccessToken } = usePrivy()
-  const { currentUser } = useUser()
+  const { currentUser, isLoading: userLoading } = useUser()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (userLoading) return          // still resolving auth — keep loading=true
     if (currentUser) {
       fetchOrders()
     } else {
       setLoading(false)
     }
-  }, [currentUser])
+  }, [currentUser, userLoading])
 
   const fetchOrders = async () => {
     if (!currentUser) return

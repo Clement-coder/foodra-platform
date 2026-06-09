@@ -47,7 +47,7 @@ function ProfilePage() {
   const [orderLayout, setOrderLayout] = useState<"list" | "compact">("list")
   const [orders, setOrders] = useState<Order[]>([])
   const [wishlist, setWishlist] = useState<Product[]>([])
-  const [loadingTab, setLoadingTab] = useState(false)
+  const [loadingTab, setLoadingTab] = useState(true)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const { register, handleSubmit, formState: { errors }, setValue, reset, watch } = useForm<ProfileUpdateFormData>({
