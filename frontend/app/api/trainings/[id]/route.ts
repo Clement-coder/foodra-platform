@@ -4,18 +4,14 @@ import { supabase } from '@/lib/supabase'
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   try {
-    const { data: training, error } = await supabase
-      .from('trainings')
-      .select(`
-        *,
-        training_enrollments(count)
-      `)
-      .eq('id', id)
-      .single()
+    const [{ data: training, error }, { count }] = await Promise.all([
+      supabase.from('trainings').select('*').eq('id', id).single(),
+      supabase.from('training_enrollments').select('id', { count: 'exact', head: true }).eq('training_id', id),
+    ])
 
     if (error) throw error
 
-    const formatted = {
+    return NextResponse.json({
       id: training.id,
       title: training.title,
       summary: training.summary || '',
@@ -25,11 +21,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       location: training.location || '',
       instructor: training.instructor_name || '',
       capacity: training.capacity,
-      enrolled: Number(training.training_enrollments?.[0]?.count ?? 0),
+      enrolled: count ?? 0,
       image: training.image_url || '',
-    }
-
-    return NextResponse.json(formatted)
+    })
   } catch (error) {
     console.error('Error fetching training:', error)
     return NextResponse.json({ error: 'Failed to fetch training' }, { status: 404 })

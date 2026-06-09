@@ -31,24 +31,21 @@ function TrainingDetailPage() {
 
   useEffect(() => {
     if (!id) return
-    const fetchTraining = async () => {
-      setLoading(true)
-      try {
-        const res = await fetch(`/api/trainings/${id}`)
-        setTraining(res.ok ? await res.json() : null)
-      } catch {
-        setTraining(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchTraining()
+    setTraining(null)
+    setIsEnrolled(false)  // reset on id change
+    setLoading(true)
+    fetch(`/api/trainings/${id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => setTraining(data))
+      .catch(() => setTraining(null))
+      .finally(() => setLoading(false))
   }, [id])
 
-  // Check enrollment from Supabase via API
+  // Check enrollment — depends on id AND currentUser both being ready
   useEffect(() => {
     if (!currentUser || !id) return
-    authFetch(getAccessToken, `/api/trainings/enroll?userId=${currentUser.id}&trainingId=${id}`)
+    setIsEnrolled(false)  // reset while re-checking
+    authFetch(getAccessToken, `/api/trainings/enroll?trainingId=${id}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => { if (data?.enrolled) setIsEnrolled(true) })
       .catch(() => {})
@@ -79,7 +76,8 @@ function TrainingDetailPage() {
         throw new Error("Enrollment failed")
       }
       setIsEnrolled(true)
-      setTraining((t) => t ? { ...t, enrolled: t.enrolled + 1 } : t)
+      // Refresh training to get accurate enrolled count from DB
+      fetch(`/api/trainings/${training.id}`).then(r => r.ok ? r.json() : null).then(d => { if (d) setTraining(d) }).catch(() => {})
       toast.success(`You've enrolled in "${training.title}"!`)
     } catch {
       toast.error("Failed to enroll. Please try again.")

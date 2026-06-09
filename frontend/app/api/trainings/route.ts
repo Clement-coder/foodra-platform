@@ -7,10 +7,20 @@ export async function GET() {
   try {
     const { data: trainings, error } = await supabase
       .from('trainings')
-      .select(`*, training_enrollments(count)`)
+      .select('*')
       .order('date', { ascending: true })
 
     if (error) throw error
+
+    // Fetch enrollment counts in one query
+    const { data: enrollCounts } = await supabase
+      .from('training_enrollments')
+      .select('training_id')
+
+    const countMap: Record<string, number> = {}
+    for (const row of enrollCounts || []) {
+      countMap[row.training_id] = (countMap[row.training_id] || 0) + 1
+    }
 
     const formatted = trainings?.map((t) => ({
       id: t.id,
@@ -22,7 +32,7 @@ export async function GET() {
       location: t.location || '',
       instructor: t.instructor_name || '',
       capacity: t.capacity,
-      enrolled: Number(t.training_enrollments?.[0]?.count ?? 0),
+      enrolled: countMap[t.id] ?? 0,
       image: t.image_url || '',
     })) || []
 
