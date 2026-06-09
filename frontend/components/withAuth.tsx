@@ -136,7 +136,7 @@ const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
             </div>
 
             {/* Right — sign in panel */}
-            <div className="flex flex-1 items-center justify-center px-6 py-16 lg:py-0">
+            <div className="flex flex-1 items-center justify-center px-6 py-8 sm:py-12 lg:py-0">
               <motion.div
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}

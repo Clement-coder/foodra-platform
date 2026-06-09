@@ -70,7 +70,7 @@ function FundingPage() {
     isVerified: !!user.isVerified,
   }) : null
 
-  const canApplyForFunding = user?.role === "farmer" && membership?.tier === "Champion"
+  const canApplyForFunding = !!user
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -92,11 +92,6 @@ function FundingPage() {
               <Plus className="h-4 w-4" />
               Apply for Funding
             </Button>
-          </Link>
-        )}
-        {user?.role === "farmer" && membership?.tier !== "Champion" && (
-          <Link href="/profile" className="text-sm text-muted-foreground hover:text-[#118C4C] transition-colors">
-            ⭐ Reach Champion tier to apply for funding — <span className="underline">view your membership</span>
           </Link>
         )}
       </div>
