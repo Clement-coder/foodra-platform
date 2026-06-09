@@ -112,7 +112,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
     }
 
-    const { error } = await supabase.from("orders").update({ status, updated_at: new Date().toISOString() }).eq("id", id)
+    const STATUS_ORDER = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"]
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      // Never move status backward (except admin can do anything)
+      .in("status", auth.user.role === "admin"
+        ? STATUS_ORDER
+        : STATUS_ORDER.slice(0, STATUS_ORDER.indexOf(status))
+      )
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Notify buyer of status change
