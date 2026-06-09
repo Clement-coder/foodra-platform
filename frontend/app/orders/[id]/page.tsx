@@ -7,13 +7,13 @@ import { motion } from "framer-motion";
 import { usePrivy } from "@privy-io/react-auth";
 import {
    ArrowLeft, MapPin, Phone, User, Package,
-   Calendar, DollarSign, ExternalLink, Loader2, CheckCircle, AlertTriangle, Download,
+   Calendar, ExternalLink, Loader2, CheckCircle, AlertTriangle, Download, Hash,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
 import { DisputeModal } from "@/components/DisputeModal";
+import { StatusPill, JourneyBar } from "@/components/OrderCard";
 import withAuth from "@/components/withAuth";
 import { WrongAccountBanner } from "@/components/WrongAccountBanner";
 import { useEscrow } from "@/lib/useEscrow";
@@ -167,34 +167,28 @@ function OrderDetailPage() {
       <div className="space-y-5">
         {/* Status row */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="border-[#118C4C]/20">
-            <CardContent className="p-5 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#118C4C]/10 rounded-lg">
-                  <Calendar className="h-5 w-5 text-[#118C4C]" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Placed on</p>
-                  <p className="font-semibold text-sm">
-                    {new Date(order.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-                  </p>
-                </div>
+          <Card className="border-border overflow-hidden">
+            <div className="px-5 py-3 bg-muted/30 border-b border-border flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-bold text-sm tracking-widest">{order.id.slice(-6).toUpperCase()}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#118C4C]/10 rounded-lg">
-                  <DollarSign className="h-5 w-5 text-[#118C4C]" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Total</p>
-                  <p className="font-bold text-[#118C4C]">
-                    ₦{order.totalAmount.toLocaleString()}
-                    {order.usdcAmount ? <span className="text-xs text-muted-foreground ml-1">({order.usdcAmount.toFixed(2)} USDC)</span> : null}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <Badge className="bg-[#118C4C] text-white hover:bg-[#0d6d3a]">{order.status}</Badge>
+              <div className="flex items-center gap-2 flex-wrap">
+                <StatusPill status={order.status} />
                 <EscrowStatusBadge status={order.escrowStatus} />
+              </div>
+            </div>
+            <CardContent className="p-5">
+              {order.status !== "Cancelled" && <JourneyBar status={order.status} />}
+              <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
+                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  {new Date(order.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                </span>
+                <div className="text-right">
+                  <p className="font-black text-[#118C4C] text-xl">₦{Number(order.totalAmount).toLocaleString()}</p>
+                  {order.usdcAmount ? <p className="text-xs text-muted-foreground">{Number(order.usdcAmount).toFixed(4)} USDC</p> : null}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -210,15 +204,15 @@ function OrderDetailPage() {
                     ? "Your payment is secured in escrow. Have you received your items?"
                     : "Have an issue with this order?"}
                 </p>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   {canEscrowAct && (
-                    <Button onClick={handleConfirm} disabled={escrowLoading} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
+                    <Button onClick={handleConfirm} disabled={escrowLoading} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 w-full">
                       {escrowLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
                       {escrowLoading ? "Processing..." : "Confirm Delivery"}
                     </Button>
                   )}
                   {canDispute && (
-                    <Button onClick={() => setDisputeOpen(true)} disabled={escrowLoading} variant="outline" className="flex-1 border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2">
+                    <Button onClick={() => setDisputeOpen(true)} disabled={escrowLoading} variant="outline" className="flex-1 border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2 w-full">
                       <AlertTriangle className="h-4 w-4" /> Raise Dispute
                     </Button>
                   )}

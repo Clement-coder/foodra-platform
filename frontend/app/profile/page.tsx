@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { BadgeCheck, Edit, LogOut, Share2, UserIcon, Wallet, Copy, Check, MapPin, CalendarDays, ShieldCheck, Camera, Loader2, Package, ShoppingBag } from "lucide-react"
+import { BadgeCheck, Edit, LogOut, Share2, UserIcon, Wallet, Copy, Check, MapPin, CalendarDays, ShieldCheck, Camera, Loader2, Package, ShoppingBag, LayoutGrid, List } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { FormInput } from "@/components/FormInput"
@@ -18,7 +18,8 @@ import { ProfileCompletionModal } from "@/components/ProfileCompletionModal"
 import { useUser } from "@/lib/useUser"
 import { supabase } from "@/lib/supabase"
 import { ProductCard } from "@/components/ProductCard"
-import type { Product, User } from "@/lib/types"
+import { OrderCard, ORDER_STATUS } from "@/components/OrderCard"
+import type { Product, Order, User } from "@/lib/types"
 import { calculateProfileCompletion } from "@/lib/profileUtils"
 import { africanCountries } from "@/lib/countries"
 import ThemeToggle from "@/components/ThemeToggle"
@@ -27,6 +28,8 @@ import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { MembershipBadge } from "@/components/MembershipBadge"
 import { computeMembership } from "@/lib/membership"
 type Tab = "orders" | "wishlist" | "membership"
+const ORDER_TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"] as const
+type OTab = typeof ORDER_TABS[number]
 
 function ProfilePage() {
   const { currentUser: user, isLoading, updateUser } = useUser()
@@ -39,7 +42,9 @@ function ProfilePage() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [copied, setCopied] = useState(false)
   const [tab, setTab] = useState<Tab>("orders")
-  const [orders, setOrders] = useState<any[]>([])
+  const [orderTab, setOrderTab] = useState<OTab>("All")
+  const [orderLayout, setOrderLayout] = useState<"list" | "compact">("list")
+  const [orders, setOrders] = useState<Order[]>([])
   const [wishlist, setWishlist] = useState<Product[]>([])
   const [loadingTab, setLoadingTab] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
@@ -299,20 +304,39 @@ function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {orders.map((o: any) => (
-                  <a key={o.id} href={`/orders/${o.id}`} className="flex items-center justify-between p-4 rounded-2xl border border-border hover:border-[#118C4C]/40 hover:bg-muted/40 transition-colors">
-                    <div>
-                      <p className="text-sm font-medium">Order #{o.id.slice(-6).toUpperCase()}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{new Date(o.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-[#118C4C]">₦{(o.totalAmount || 0).toLocaleString()}</p>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${o.status === "Delivered" ? "bg-green-100 text-green-700" : o.status === "Cancelled" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
-                        {o.status}
-                      </span>
-                    </div>
-                  </a>
-                ))}
+                {/* Order filter + layout toggle */}
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1.5 overflow-x-auto pb-0.5 flex-1 scrollbar-none">
+                    {ORDER_TABS.map(t => {
+                      const count = t === "All" ? orders.length : orders.filter(o => o.status === t).length
+                      const active = orderTab === t
+                      const s = t !== "All" ? ORDER_STATUS[t] : null
+                      return (
+                        <button key={t} onClick={() => setOrderTab(t)}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap transition-all border flex-shrink-0
+                            ${active ? "bg-[#118C4C] text-white border-[#118C4C]" : "bg-muted/50 text-muted-foreground border-border hover:bg-muted"}`}>
+                          {s && <span className={active ? "text-white/80" : s.text}>{s.icon}</span>}
+                          {t}
+                          {count > 0 && <span className={`text-[9px] px-1 rounded-full font-bold ${active ? "bg-white/20" : "bg-muted"}`}>{count}</span>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <button onClick={() => setOrderLayout(l => l === "list" ? "compact" : "list")}
+                    className="flex-shrink-0 p-1.5 rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground">
+                    {orderLayout === "list" ? <LayoutGrid className="h-4 w-4" /> : <List className="h-4 w-4" />}
+                  </button>
+                </div>
+                {/* Order cards */}
+                {(orderTab === "All" ? orders : orders.filter(o => o.status === orderTab)).length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-8">No {orderTab} orders.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {(orderTab === "All" ? orders : orders.filter((o: Order) => o.status === orderTab)).map((o: Order) => (
+                      <OrderCard key={o.id} order={o} compact={orderLayout === "compact"} />
+                    ))}
+                  </div>
+                )}
               </div>
             )
           ) : tab === "wishlist" ? (
