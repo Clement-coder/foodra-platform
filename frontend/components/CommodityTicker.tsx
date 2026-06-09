@@ -25,26 +25,30 @@ export function CommodityTicker() {
   const [loading, setLoading] = useState(true)
   const [fetchedAt, setFetchedAt] = useState<string | null>(null)
   const [paused, setPaused] = useState(false)
+  const hidden = pathname === "/wallet" || pathname === "/profile"
 
-  if (pathname === "/wallet" || pathname === "/profile") return (
-    <style>{`:root { --ticker-height: 0px; }`}</style>
-  )
-
-  const load = async () => {
+  const load = () => {
     setLoading(true)
-    try {
-      const res = await fetch("/api/commodity-prices")
-      if (res.ok) {
-        setPrices(await res.json())
-        const at = res.headers.get("X-Fetched-At")
-        if (at) setFetchedAt(at)
-      }
-    } finally {
-      setLoading(false)
-    }
+    fetch("/api/commodity-prices")
+      .then(r => {
+        if (r.ok) {
+          const at = r.headers.get("X-Fetched-At")
+          if (at) setFetchedAt(at)
+          return r.json()
+        }
+        return []
+      })
+      .then(data => setPrices(Array.isArray(data) ? data : []))
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    if (!hidden) load()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hidden])
+
+  if (hidden) return <style>{`:root { --ticker-height: 0px; }`}</style>
 
   if (loading) {
     return (
