@@ -29,9 +29,9 @@ const variantStyles = {
 
 
   const sizeStyles: Record<NonNullable<ButtonProps["size"]>, string> = {
-    sm: "px-4 h-8",
-    default: "px-6 h-10",
-    lg: "px-8 h-12 sm:text-base md:text-lg",
+    sm: "px-4 py-2 min-h-[2rem]",
+    default: "px-6 py-2.5 min-h-[2.5rem]",
+    lg: "px-8 py-3 min-h-[3rem] sm:text-base md:text-lg",
     icon: "h-9 w-9 p-0",
   }
 
