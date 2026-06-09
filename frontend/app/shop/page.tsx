@@ -278,6 +278,13 @@ function ShopPage() {
                 ) : "Proceed to Checkout"}
               </Button>
 
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-xs text-amber-800 dark:text-amber-300">
+                <span className="text-base flex-shrink-0">🚚</span>
+                <p className="leading-relaxed">
+                  <strong>Delivery fee not included.</strong> A separate delivery fee will be charged when your order arrives. You are responsible for this cost.
+                </p>
+              </div>
+
               <Link href="/marketplace">
                 <Button variant="outline" className="w-full bg-transparent">
                   Continue Shopping

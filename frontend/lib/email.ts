@@ -217,6 +217,12 @@ export async function sendOrderConfirmationEmail(
       { label: "Total", value: `₦${total.toLocaleString()}`, bold: true, green: true },
       ...(usdcAmount ? [{ label: "USDC", value: `${usdcAmount.toFixed(4)} USDC` }] : []),
     ], `ORD-${orderId.slice(-8).toUpperCase()}`)}
+    <div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:0 8px 8px 0;margin:16px 0;">
+      <p style="margin:0;font-size:13px;color:#92400e;font-weight:600;">🚚 Delivery Fee Notice</p>
+      <p style="margin:6px 0 0;font-size:13px;color:#555;line-height:1.6;">
+        A <strong>delivery fee</strong> is <strong>not included</strong> in your order total above. This fee is charged separately upon delivery and is your responsibility as the buyer. You will be notified of the delivery fee before your item arrives.
+      </p>
+    </div>
     ${btn("Track Your Order", appUrl(`/orders/${orderId}`, userId))}
   `)
   await send(to, `Order Confirmed #${orderId.slice(-8).toUpperCase()} ✅`, html)
@@ -233,6 +239,12 @@ const statusConfig: Record<string, { icon: string; title: string; message: strin
 export async function sendOrderStatusEmail(to: string, name: string, orderId: string, status: string, userId?: string) {
   const cfg = statusConfig[status]
   if (!cfg) return
+  const deliveryReminder = status === "Shipped"
+    ? `<div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:0 8px 8px 0;margin:16px 0;">
+        <p style="margin:0;font-size:13px;color:#92400e;font-weight:600;">🚚 Delivery Fee Reminder</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#555;line-height:1.6;">Your order is on its way! Please note that a <strong>delivery fee is charged separately upon arrival</strong> and is not included in your escrow payment. Kindly have it ready.</p>
+       </div>`
+    : ""
   const html = layout(`
     ${heading(`${cfg.icon} ${cfg.title}`)}
     <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
@@ -244,6 +256,7 @@ export async function sendOrderStatusEmail(to: string, name: string, orderId: st
         ${infoRow("New Status", tag(status, cfg.tagColor, cfg.tagBg))}
       </table>
     </div>
+    ${deliveryReminder}
     ${btn("View Order Details", appUrl(`/orders/${orderId}`, userId))}
   `)
   await send(to, `Your order is ${status} ${cfg.icon}`, html)

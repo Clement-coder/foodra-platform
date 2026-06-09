@@ -37,7 +37,7 @@ const sections = [
       "Farmers and sellers are solely responsible for the accuracy, legality, and quality of their product listings.",
       "All listed products must be genuine agricultural goods. Misrepresentation of products is strictly prohibited.",
       "Sellers must honour confirmed orders and fulfil delivery obligations within the agreed timeframe.",
-      "Delivery fees are not included in the product price. A delivery fee applies when your order arrives and is separate from the escrow payment. Buyers are responsible for covering delivery costs.",
+      "⚠️ DELIVERY FEE NOTICE: Delivery fees are NOT included in the product price or escrow payment. A delivery fee is charged separately when your order is delivered to you. As a buyer, you are fully responsible for paying this delivery fee upon arrival of your goods.",
       "Foodra uses a blockchain-based escrow system (FoodraEscrow) to hold buyer payments until delivery is confirmed, protecting both parties.",
       "Buyers must confirm delivery within 7 days. If no action is taken, funds are automatically released to the seller.",
       "Foodra charges a 2.5% platform fee on completed transactions to sustain platform operations.",
@@ -150,7 +150,7 @@ export default function TermsOfServicePage() {
         <div className="flex items-start gap-3 rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/20 p-5 mb-8">
           <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
-            <strong>Key points:</strong> You must be 18+ to use Foodra. Sellers are responsible for their listings. Payments are held in escrow until delivery is confirmed. Disputes are resolved by Foodra admins. These Terms are governed by Nigerian law.
+            <strong>Key points:</strong> You must be 18+ to use Foodra. Sellers are responsible for their listings. Payments are held in escrow until delivery is confirmed. <strong>Delivery fees are charged separately upon arrival and are the buyer's responsibility.</strong> Disputes are resolved by Foodra admins. These Terms are governed by Nigerian law.
           </p>
         </div>
 
@@ -166,12 +166,24 @@ export default function TermsOfServicePage() {
                 <span className="ml-auto text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{index + 1}/{sections.length}</span>
               </div>
               <ul className="px-6 py-5 space-y-3">
-                {section.body.map((point, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm md:text-base text-muted-foreground leading-relaxed">
-                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#118C4C] shrink-0" />
-                    {point}
-                  </li>
-                ))}
+                {section.body.map((point, i) => {
+                  const isWarning = point.startsWith("⚠️")
+                  const text = isWarning ? point.replace("⚠️ ", "") : point
+                  if (isWarning) {
+                    return (
+                      <li key={i} className="flex items-start gap-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 px-4 py-3">
+                        <span className="text-base flex-shrink-0">🚚</span>
+                        <span className="text-sm md:text-base text-amber-800 dark:text-amber-300 leading-relaxed font-medium">{text}</span>
+                      </li>
+                    )
+                  }
+                  return (
+                    <li key={i} className="flex items-start gap-2.5 text-sm md:text-base text-muted-foreground leading-relaxed">
+                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#118C4C] shrink-0" />
+                      {point}
+                    </li>
+                  )
+                })}
               </ul>
             </section>
           ))}
