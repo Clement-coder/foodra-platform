@@ -70,7 +70,9 @@ function FundingPage() {
     isVerified: !!user.isVerified,
   }) : null
 
-  const canApplyForFunding = !!user
+  const canApplyForFunding = !!user && user.role !== "admin" && membership?.tier === "Champion"
+  const isAdmin = user?.role === "admin"
+  const isFarmerBelowChampion = !!user && user.role !== "admin" && membership?.tier !== "Champion"
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -93,6 +95,12 @@ function FundingPage() {
               Apply for Funding
             </Button>
           </Link>
+        )}
+        {isFarmerBelowChampion && (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-400">
+            <span>⭐</span>
+            <span>Reach <strong>Champion</strong> tier to apply — <Link href="/profile" className="underline hover:text-amber-900 dark:hover:text-amber-300">view membership</Link></span>
+          </div>
         )}
       </div>
 
@@ -191,15 +199,26 @@ function FundingPage() {
             {filter === "all" ? "No Applications Yet" : `No ${filter} Applications`}
           </h2>
           <p className="text-muted-foreground mb-8 max-w-sm">
-            {filter === "all"
+            {filter !== "all"
+              ? "Try changing the filter to see other applications."
+              : isAdmin
+              ? "No funding applications have been submitted yet."
+              : canApplyForFunding
               ? "Apply for funding to grow your farming business and unlock new opportunities."
-              : "Try changing the filter to see other applications"}
+              : "You need to reach Champion membership tier before you can apply for funding."}
           </p>
           {filter === "all" && canApplyForFunding && (
             <Link href="/funding/apply">
               <Button size="lg" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20 px-8">
                 <Plus className="h-5 w-5" />
                 Apply for Funding
+              </Button>
+            </Link>
+          )}
+          {filter === "all" && isFarmerBelowChampion && (
+            <Link href="/profile">
+              <Button size="lg" variant="outline" className="gap-2 border-amber-400 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 px-8">
+                ⭐ View My Membership Progress
               </Button>
             </Link>
           )}
