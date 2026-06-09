@@ -130,7 +130,7 @@ export default function PartnersPage() {
               Are you an organisation, investor, or technology provider aligned with our mission? We'd love to explore how we can grow together.
             </p>
             <Link href="/contact">
-              <Button className="bg-white text-[#118C4C] hover:bg-white/90 font-semibold">
+              <Button variant="white">
                 Get in Touch
               </Button>
             </Link>

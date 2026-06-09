@@ -1,7 +1,7 @@
 import React from "react"
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "ghost" | "outline" | "destructive"
+  variant?: "default" | "ghost" | "outline" | "destructive" | "white" | "white-outline"
   size?: "default" | "sm" | "lg" | "icon"
 }
 
@@ -15,24 +15,21 @@ const Button: React.FC<ButtonProps> = ({
   const baseStyles =
     "flex items-center justify-center rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#118C4C]/50 disabled:opacity-50 disabled:pointer-events-none text-xs sm:text-sm"
 
-const variantStyles = {
-  default: "bg-[#118C4C] text-white hover:bg-[#0E7A40]",
-  secondary:
-    "bg-white text-[#118C4C] border border-[#118C4C] hover:bg-[#DCFCE7] shadow-none",
-  ghost:
-    "bg-transparent text-[#118C4C] hover:bg-[#DCFCE7] shadow-none",
-  outline:
-    "bg-transparent border border-[#118C4C] text-[#118C4C] hover:bg-[#DCFCE7] shadow-none",
-  destructive:
-    "bg-red-600 text-white hover:bg-red-700",
-}
-
+  const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
+    default:       "bg-[#118C4C] text-white hover:bg-[#0E7A40]",
+    ghost:         "bg-transparent text-[#118C4C] hover:bg-[#DCFCE7] shadow-none",
+    outline:       "bg-transparent border border-[#118C4C] text-[#118C4C] hover:bg-[#DCFCE7] shadow-none",
+    destructive:   "bg-red-600 text-white hover:bg-red-700",
+    // For use on dark/green backgrounds
+    "white":       "bg-white text-[#118C4C] hover:bg-white/90 font-semibold",
+    "white-outline":"bg-transparent border border-white text-white hover:bg-white/10",
+  }
 
   const sizeStyles: Record<NonNullable<ButtonProps["size"]>, string> = {
-    sm: "px-4 py-2 min-h-[2rem]",
+    sm:      "px-4 py-2 min-h-[2rem]",
     default: "px-6 py-2.5 min-h-[2.5rem]",
-    lg: "px-8 py-3 min-h-[3rem] sm:text-base md:text-lg",
-    icon: "h-9 w-9 p-0",
+    lg:      "px-8 py-3 min-h-[3rem] sm:text-base md:text-lg",
+    icon:    "h-9 w-9 p-0",
   }
 
   return (

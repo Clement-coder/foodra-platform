@@ -113,10 +113,8 @@ export default function LandingHero() {
               <Link href="/how-it-works" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="border-none text-white z-20 
-                   bg-white/20 hover:bg-white/30 
-                   backdrop-blur-md p-2 w-full"
+                  variant="white-outline"
+                  className="w-full"
                 >
                   How It Works
                 </Button>
