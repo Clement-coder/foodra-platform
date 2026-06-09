@@ -30,6 +30,7 @@ export async function PATCH(
     const orderUpdate: Record<string, unknown> = {};
     if (escrowTxHash) orderUpdate.escrow_tx_hash = escrowTxHash;
     if (escrowStatus) orderUpdate.escrow_status = escrowStatus;
+    if (escrowStatus === "released") orderUpdate.status = "Delivered"; // always mark Delivered when payment released
     if (usdcAmount !== undefined) orderUpdate.usdc_amount = usdcAmount;
     if (deliveryFullName) orderUpdate.delivery_full_name = deliveryFullName;
     if (deliveryPhone) orderUpdate.delivery_phone = deliveryPhone;

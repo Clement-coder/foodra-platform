@@ -50,6 +50,7 @@ function OrderDetailPage() {
     const success = await confirmDelivery(escrowOrderId);
     if (success) {
       await authFetch(getAccessToken, `/api/orders/${order.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "released" }) });
+      await authFetch(getAccessToken, `/api/orders/${order.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "Delivered" }) });
       toast.success("Delivery confirmed! Payment released to farmer.");
       fetchOrder();
     } else {

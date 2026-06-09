@@ -50,9 +50,14 @@ function OrdersPage() {
     setActiveOrderId(orderId);
     const success = await confirmDelivery(escrowOrderId);
     if (success) {
+      // Update escrow_status + order status to Delivered in one call
       await authFetch(getAccessToken, `/api/orders/${orderId}/escrow`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ escrowStatus: "released" }),
+      });
+      await authFetch(getAccessToken, `/api/orders/${orderId}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Delivered" }),
       });
       toast.success("Delivery confirmed! Payment released to farmer.");
       refreshOrders();
