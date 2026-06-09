@@ -26,7 +26,9 @@ export function CommodityTicker() {
   const [fetchedAt, setFetchedAt] = useState<string | null>(null)
   const [paused, setPaused] = useState(false)
 
-  if (pathname === "/wallet" || pathname === "/profile") return null
+  if (pathname === "/wallet" || pathname === "/profile") return (
+    <style>{`:root { --ticker-height: 0px; }`}</style>
+  )
 
   const load = async () => {
     setLoading(true)
