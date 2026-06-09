@@ -96,13 +96,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     void actorPrivyId
 
     if (auth.user.role !== "admin") {
-      if (status !== "Shipped") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-      const { data: items } = await supabase
-        .from("order_items")
-        .select("products!inner(farmer_id)")
-        .eq("order_id", id)
-      const isFarmerOnOrder = (items ?? []).some((i: any) => i.products?.farmer_id === auth.user.id)
-      if (!isFarmerOnOrder) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      if (status === "Delivered") {
+        // Only the buyer can confirm delivery
+        const { data: order } = await supabase.from("orders").select("buyer_id").eq("id", id).single()
+        if (order?.buyer_id !== auth.user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      } else if (status === "Shipped") {
+        const { data: items } = await supabase
+          .from("order_items")
+          .select("products!inner(farmer_id)")
+          .eq("order_id", id)
+        const isFarmerOnOrder = (items ?? []).some((i: any) => i.products?.farmer_id === auth.user.id)
+        if (!isFarmerOnOrder) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      } else {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+      }
     }
 
     const { error } = await supabase.from("orders").update({ status, updated_at: new Date().toISOString() }).eq("id", id)

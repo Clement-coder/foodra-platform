@@ -72,17 +72,20 @@ export function JourneyBar({ status }: { status: string }) {
 interface OrderCardProps {
   order: Order
   onConfirmDelivery?: (orderId: string, escrowOrderId: string) => void
+  onConfirmDeliverySimple?: (orderId: string) => void
   onRaiseDispute?: (order: Order) => void
   onDelete?: (orderId: string) => void
   isProcessing?: boolean
   compact?: boolean // used in profile tab
 }
 
-export function OrderCard({ order, onConfirmDelivery, onRaiseDispute, onDelete, isProcessing, compact }: OrderCardProps) {
+export function OrderCard({ order, onConfirmDelivery, onConfirmDeliverySimple, onRaiseDispute, onDelete, isProcessing, compact }: OrderCardProps) {
   const router = useRouter()
   const escrowOrderId = (order.items || []).find((i) => i.escrowOrderId)?.escrowOrderId
   const escrowStatus = order.escrowStatus
   const canAct = (escrowStatus === "locked" || (!!order.escrowTxHash && escrowStatus === "none")) && !!escrowOrderId
+  // Non-escrow orders: buyer can confirm delivery when order is Shipped
+  const canConfirmSimple = !canAct && order.status === "Shipped" && (!escrowStatus || escrowStatus === "none") && !order.escrowTxHash
   const escrowMeta = escrowStatus ? ESCROW_STATUS[escrowStatus] : undefined
   const isCancelled = order.status === "Cancelled"
   const itemCount = order.items?.length ?? 0
@@ -207,11 +210,22 @@ export function OrderCard({ order, onConfirmDelivery, onRaiseDispute, onDelete, 
         )}
 
         {/* ── Actions ── */}
-        {(onDelete || canAct || onConfirmDelivery) && (
+        {(onDelete || canAct || onConfirmDelivery || canConfirmSimple) && (
           <div className="flex flex-col sm:flex-row gap-2 pt-1" onClick={(e) => e.stopPropagation()}>
             {canAct && onConfirmDelivery && (
               <Button
                 onClick={() => onConfirmDelivery(order.id, escrowOrderId!)}
+                disabled={isProcessing}
+                size="sm"
+                className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1.5 w-full sm:w-auto"
+              >
+                <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                {isProcessing ? "Processing…" : "Confirm Delivery"}
+              </Button>
+            )}
+            {canConfirmSimple && onConfirmDeliverySimple && (
+              <Button
+                onClick={() => onConfirmDeliverySimple(order.id)}
                 disabled={isProcessing}
                 size="sm"
                 className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1.5 w-full sm:w-auto"

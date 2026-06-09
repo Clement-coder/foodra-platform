@@ -70,6 +70,26 @@ function OrdersPage() {
     setActiveOrderId(null);
   };
 
+  const handleConfirmDeliverySimple = async (orderId: string) => {
+    const ok = await confirm({ title: "Confirm Delivery", message: "Confirm you received this order?", confirmLabel: "Confirm Delivery" });
+    if (!ok) return;
+    setActiveOrderId(orderId);
+    const res = await authFetch(getAccessToken, `/api/orders/${orderId}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "Delivered" }),
+    });
+    if (res.ok) {
+      toast.success("Delivery confirmed!");
+      refreshOrders();
+      const order = orders.find(o => o.id === orderId);
+      const farmer = order?.farmers?.[0];
+      if (farmer) setRatingTarget({ orderId, farmerId: farmer.id, farmerName: farmer.name });
+    } else {
+      toast.error("Failed to confirm delivery. Please try again.");
+    }
+    setActiveOrderId(null);
+  };
+
   const handleRaiseDispute = async (reason: string, details: string) => {
     if (!disputeOrder) return;
     const escrowOrderId = disputeOrder.items?.find(i => i.escrowOrderId)?.escrowOrderId;
@@ -153,6 +173,7 @@ function OrdersPage() {
                   order={order}
                   isProcessing={activeOrderId === order.id && loading}
                   onConfirmDelivery={handleConfirmDelivery}
+                  onConfirmDeliverySimple={handleConfirmDeliverySimple}
                   onRaiseDispute={(o) => setDisputeOrder(o)}
                   onDelete={handleDelete}
                 />
