@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabase"
 import type { User, Product } from "@/lib/types"
 import { computeMembership } from "@/lib/membership"
 
+const FOODRA_LOGO = "https://foodramarket.com/foodra_logo.jpeg"
+
 export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!id) notFound()
@@ -13,37 +15,58 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
   if (userError || !rawUser) notFound()
 
+  const isAdmin = rawUser.role === "admin"
+
   const [
-    { count: ordersCount },
+    { count: buyerOrdersCount },
+    { count: totalProductsCount },
     { data: rawProducts },
   ] = await Promise.all([
     supabase.from("orders").select("*", { count: "exact", head: true }).eq("buyer_id", id),
-    supabase.from("products").select("*").eq("farmer_id", id).eq("is_available", true).order("created_at", { ascending: false }).limit(12),
+    // For admin: count ALL products on the platform
+    isAdmin
+      ? supabase.from("products").select("*", { count: "exact", head: true })
+      : supabase.from("products").select("*", { count: "exact", head: true }).eq("farmer_id", id),
+    supabase.from("products").select("*")
+      .eq(isAdmin ? "is_available" : "farmer_id", isAdmin ? true : id)
+      .order("created_at", { ascending: false })
+      .limit(12),
   ])
 
   const user: User = {
     id: rawUser.id,
-    name: rawUser.name || "Foodra",
-    email: rawUser.email || "",
-    avatar: rawUser.avatar_url || "",
+    // Foodra admins always show as "Foodra"
+    name: isAdmin ? "Foodra" : (rawUser.name || "User"),
+    email: isAdmin ? "support@foodramarket.com" : (rawUser.email || ""),
+    // Always use the Foodra logo for admin accounts
+    avatar: isAdmin ? FOODRA_LOGO : (rawUser.avatar_url || ""),
     wallet: rawUser.wallet_address || "",
     createdAt: rawUser.created_at,
-    phone: rawUser.phone || "",
-    location: rawUser.location || undefined,
+    phone: isAdmin ? "+234 800 FOODRA" : (rawUser.phone || ""),
+    location: isAdmin ? "Benue State, Nigeria" : (rawUser.location || undefined),
     role: rawUser.role || "buyer",
-    isVerified: !!rawUser.is_verified,
+    isVerified: true, // admin is always verified
   }
 
-  const membership = computeMembership({
-    hasName: !!rawUser.name,
-    hasPhone: !!rawUser.phone,
-    hasLocation: !!rawUser.location,
-    hasAvatar: !!rawUser.avatar_url,
-    createdAt: rawUser.created_at,
-    ordersCount: ordersCount ?? 0,
-    hasDisputes: false,
-    isVerified: !!rawUser.is_verified,
-  })
+  // Admins get max membership score → Champion
+  const membership = isAdmin
+    ? computeMembership({
+        hasName: true, hasPhone: true, hasLocation: true, hasAvatar: true,
+        createdAt: rawUser.created_at,
+        ordersCount: 6, // max orders points
+        hasDisputes: false,
+        isVerified: true,
+      })
+    : computeMembership({
+        hasName: !!rawUser.name,
+        hasPhone: !!rawUser.phone,
+        hasLocation: !!rawUser.location,
+        hasAvatar: !!rawUser.avatar_url,
+        createdAt: rawUser.created_at,
+        ordersCount: buyerOrdersCount ?? 0,
+        hasDisputes: false,
+        isVerified: !!rawUser.is_verified,
+      })
 
   const products: Product[] = (rawProducts || []).map((p: any) => ({
     id: p.id,
@@ -56,11 +79,18 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
     image: p.image_url || "",
     location: p.location || "",
     farmerId: p.farmer_id || id,
-    farmerName: user.name,
-    farmerAvatar: user.avatar,
-    farmerIsVerified: user.isVerified,
+    farmerName: isAdmin ? "Foodra" : user.name,
+    farmerAvatar: isAdmin ? FOODRA_LOGO : user.avatar,
+    farmerIsVerified: true,
     createdAt: p.created_at,
   }))
 
-  return <UserProfileClient user={user} membership={membership} products={products} ordersCount={ordersCount ?? 0} />
+  return (
+    <UserProfileClient
+      user={user}
+      membership={membership}
+      products={products}
+      ordersCount={isAdmin ? (totalProductsCount ?? 0) : (buyerOrdersCount ?? 0)}
+    />
+  )
 }

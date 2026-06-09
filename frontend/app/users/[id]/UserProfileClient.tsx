@@ -7,7 +7,7 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import {
   ArrowLeft, Share2, MapPin, CalendarDays, ShieldCheck, Package,
-  Wallet, BadgeCheck, ExternalLink, Sprout, Phone, ShoppingBag,
+  Wallet, BadgeCheck, ExternalLink, Sprout, Phone, ShoppingBag, Mail,
 } from "lucide-react"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import { MembershipBadge } from "@/components/MembershipBadge"
@@ -31,7 +31,7 @@ export default function UserProfileClient({ user, membership, products, ordersCo
 
   const stats = [
     { label: "Products", value: products.length, icon: <Package className="h-4 w-4" /> },
-    { label: "Orders", value: ordersCount, icon: <ShoppingBag className="h-4 w-4" /> },
+    { label: isFoodra ? "Listed" : "Orders", value: ordersCount, icon: <ShoppingBag className="h-4 w-4" /> },
     { label: "Since", value: new Date(user.createdAt).getFullYear(), icon: <CalendarDays className="h-4 w-4" /> },
   ]
 
@@ -70,7 +70,7 @@ export default function UserProfileClient({ user, membership, products, ordersCo
                   <Image src={user.avatar} alt={user.name} fill className="object-cover" referrerPolicy="no-referrer" unoptimized />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#118C4C] to-[#063d1e] text-white text-5xl font-black">
-                    {isFoodra ? "🌱" : (user.name || "U")[0].toUpperCase()}
+                    {(user.name || "U")[0].toUpperCase()}
                   </div>
                 )}
               </div>
@@ -164,6 +164,43 @@ export default function UserProfileClient({ user, membership, products, ordersCo
             <p className="text-sm text-muted-foreground leading-relaxed">
               Foodra is Nigeria's leading AgriTech marketplace. All products listed here are curated and managed directly by the Foodra team — ensuring quality, fair pricing, and reliable delivery for buyers and farmers alike.
             </p>
+          </div>
+        )}
+
+        {/* ── Contact info (Foodra only) ── */}
+        {isFoodra && (
+          <div className="mx-5 mt-4 grid grid-cols-1 gap-3">
+            <a href="mailto:support@foodramarket.com"
+              className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-card hover:border-[#118C4C]/40 hover:bg-[#118C4C]/5 transition-all group">
+              <div className="w-9 h-9 rounded-xl bg-[#118C4C]/10 flex items-center justify-center flex-shrink-0">
+                <Mail className="h-4 w-4 text-[#118C4C]" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Support Email</p>
+                <p className="text-sm font-semibold text-foreground truncate">support@foodramarket.com</p>
+              </div>
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+            </a>
+            <a href="tel:+2348003663727"
+              className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-card hover:border-[#118C4C]/40 hover:bg-[#118C4C]/5 transition-all group">
+              <div className="w-9 h-9 rounded-xl bg-[#118C4C]/10 flex items-center justify-center flex-shrink-0">
+                <Phone className="h-4 w-4 text-[#118C4C]" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Support Phone</p>
+                <p className="text-sm font-semibold text-foreground">+234 800 FOODRA</p>
+              </div>
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+            </a>
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-card">
+              <div className="w-9 h-9 rounded-xl bg-[#118C4C]/10 flex items-center justify-center flex-shrink-0">
+                <MapPin className="h-4 w-4 text-[#118C4C]" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Location</p>
+                <p className="text-sm font-semibold text-foreground">Benue State, Nigeria</p>
+              </div>
+            </div>
           </div>
         )}
 
