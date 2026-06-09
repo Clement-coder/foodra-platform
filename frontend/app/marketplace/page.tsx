@@ -80,49 +80,58 @@ function MarketplacePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
-            <div className="h-2 w-12 bg-[#118C4C] rounded"></div>
-            {t("marketplace.title")}
-          </h1>
-          <p className="text-muted-foreground">
-            {filters.search
-              ? `${t("marketplace.searchResults")} "${filters.search}"`
-              : t("marketplace.subtitle")}
-          </p>
+      <div className="flex flex-col gap-4 mb-8">
+        {/* Title row */}
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-1 flex items-center gap-3">
+              <div className="h-2 w-10 sm:w-12 bg-[#118C4C] rounded shrink-0"></div>
+              {t("marketplace.title")}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {filters.search
+                ? `${t("marketplace.searchResults")} "${filters.search}"`
+                : t("marketplace.subtitle")}
+            </p>
+          </div>
+          {/* Filter button — always visible top-right on mobile */}
+          <div className="shrink-0 mt-1">
+            <FilterPanel
+              open={panelOpen}
+              onOpenChange={setPanelOpen}
+              filters={filters}
+              onChange={setFilters}
+              locations={locations}
+              extraCategories={extraCategories}
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Secondary actions — wrap on small screens */}
+        <div className="flex flex-wrap items-center gap-2">
           <Link href="/wishlist" aria-label="Wishlist">
-            <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20">
-              <Heart className="h-5 w-5" />
+            <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 gap-1.5">
+              <Heart className="h-4 w-4" />
+              <span className="hidden sm:inline">Wishlist</span>
             </Button>
           </Link>
           {authenticated && (
             <Link href="/orders">
-              <Button variant="outline" className="gap-2 flex items-center border-[#118C4C]/30 hover:bg-[#118C4C]/5">
-                <PackageOpen />
-                View My Orders
+              <Button variant="outline" size="sm" className="gap-1.5 border-[#118C4C]/30 hover:bg-[#118C4C]/5">
+                <PackageOpen className="h-4 w-4" />
+                <span className="hidden xs:inline">My Orders</span>
+                <span className="xs:hidden">Orders</span>
               </Button>
             </Link>
           )}
           {currentUser?.role === "admin" && (
             <Link href="/listing/new">
-              <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20">
+              <Button size="sm" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1.5 shadow-md shadow-[#118C4C]/20">
                 <Plus className="h-4 w-4" />
-                List Product
+                <span>List Product</span>
               </Button>
             </Link>
           )}
-          {/* Filter panel trigger */}
-          <FilterPanel
-            open={panelOpen}
-            onOpenChange={setPanelOpen}
-            filters={filters}
-            onChange={setFilters}
-            locations={locations}
-            extraCategories={extraCategories}
-          />
         </div>
       </div>
 
