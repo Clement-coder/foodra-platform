@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
 import { TrendingUp, RefreshCcw, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import type { CommodityPrice } from "@/app/api/commodity-prices/route"
@@ -19,10 +20,13 @@ function PriceTag({ item }: { item: CommodityPrice }) {
 }
 
 export function CommodityTicker() {
+  const pathname = usePathname()
   const [prices, setPrices] = useState<CommodityPrice[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchedAt, setFetchedAt] = useState<string | null>(null)
   const [paused, setPaused] = useState(false)
+
+  if (pathname === "/wallet" || pathname === "/profile") return null
 
   const load = async () => {
     setLoading(true)
