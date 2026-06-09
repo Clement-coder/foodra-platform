@@ -1,20 +1,20 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, Filter, PackageOpen, ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { Plus, PackageOpen, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { GridLayout } from "@/components/GridLayout";
-import { Skeleton, ProductCardSkeleton } from "@/components/Skeleton";
-import { AdvancedSearchFilters, DEFAULT_FILTERS, type SearchFilters } from "@/components/AdvancedSearchFilters";
+import { ProductCardSkeleton } from "@/components/Skeleton";
+import { FilterPanel, DEFAULT_FILTERS, type SearchFilters } from "@/components/AdvancedSearchFilters";
 import { t } from "@/lib/i18n";
 import type { Product } from "@/lib/types";
 import { usePrivy } from "@privy-io/react-auth";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { useUser } from "@/lib/useUser";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const DEFAULT_CATEGORIES = [
   "All", "Vegetables", "Fruits", "Grains", "Tubers",
@@ -24,73 +24,58 @@ const DEFAULT_CATEGORIES = [
 const PAGE_SIZE = 12;
 
 function MarketplacePage() {
-  const searchParams = useSearchParams();
-  const searchQuery = searchParams.get("search") || "";
   const { authenticated } = usePrivy();
   const { currentUser } = useUser();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [page, setPage] = useState(1);
-  const [advFilters, setAdvFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch('/api/products');
-        if (!res.ok) return;
-        const data = await res.json();
-        setProducts(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
+    fetch('/api/products')
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setProducts(Array.isArray(data) ? data : []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  // Reset to page 1 when filter/search changes
-  useEffect(() => { setPage(1); }, [selectedCategory, searchQuery, advFilters]);
+  useEffect(() => { setPage(1); }, [filters]);
 
   const locations = useMemo(() => {
     const locs = new Set(products.map((p) => p.location).filter(Boolean));
-    return [...locs].sort();
+    return [...locs].sort() as string[];
+  }, [products]);
+
+  const extraCategories = useMemo(() => {
+    const fromProducts = new Set(products.map((p) => p.category));
+    return [...fromProducts].filter((c) => !DEFAULT_CATEGORIES.includes(c));
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    let result = products.filter((product) => {
-      const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
-      const matchesSearch =
-        searchQuery === "" ||
-        product.productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesMinPrice = advFilters.minPrice === null || product.pricePerUnit >= advFilters.minPrice;
-      const matchesMaxPrice = advFilters.maxPrice === null || product.pricePerUnit <= advFilters.maxPrice;
-      const matchesLocation = advFilters.location === "" || product.location === advFilters.location;
-      return matchesCategory && matchesSearch && matchesMinPrice && matchesMaxPrice && matchesLocation;
+    let result = products.filter((p) => {
+      const q = filters.search.toLowerCase();
+      return (
+        (filters.category === "All" || p.category === filters.category) &&
+        (!q || p.productName.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)) &&
+        (filters.minPrice === null || p.pricePerUnit >= filters.minPrice) &&
+        (filters.maxPrice === null || p.pricePerUnit <= filters.maxPrice) &&
+        (filters.location === "" || p.location === filters.location) &&
+        (filters.unit === "" || p.unit === filters.unit) &&
+        (!filters.inStockOnly || p.quantity > 0) &&
+        (!filters.verifiedOnly || p.farmerIsVerified === true)
+      );
     });
-
-    // Sort
-    switch (advFilters.sortBy) {
-      case "price_asc": result = result.sort((a, b) => a.pricePerUnit - b.pricePerUnit); break;
-      case "price_desc": result = result.sort((a, b) => b.pricePerUnit - a.pricePerUnit); break;
-      case "name_asc": result = result.sort((a, b) => a.productName.localeCompare(b.productName)); break;
-      default: break; // newest — already sorted by API
-    }
+    if (filters.sortBy === "price_asc") result = result.sort((a, b) => a.pricePerUnit - b.pricePerUnit);
+    else if (filters.sortBy === "price_desc") result = result.sort((a, b) => b.pricePerUnit - a.pricePerUnit);
+    else if (filters.sortBy === "name_asc") result = result.sort((a, b) => a.productName.localeCompare(b.productName));
+    else if (filters.sortBy === "popular") result = result.sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0));
     return result;
-  }, [products, selectedCategory, searchQuery, advFilters]);
+  }, [products, filters]);
 
   const totalPages = Math.ceil(filteredProducts.length / PAGE_SIZE);
   const paginatedProducts = filteredProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  const categories = useMemo(() => {
-    const fromProducts = new Set(products.map((p) => p.category));
-    return DEFAULT_CATEGORIES.filter((c) => c === "All" || fromProducts.has(c)).concat(
-      [...fromProducts].filter((c) => !DEFAULT_CATEGORIES.includes(c))
-    );
-  }, [products]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -102,8 +87,8 @@ function MarketplacePage() {
             {t("marketplace.title")}
           </h1>
           <p className="text-muted-foreground">
-            {searchQuery
-              ? `${t("marketplace.searchResults")} "${searchQuery}"`
+            {filters.search
+              ? `${t("marketplace.searchResults")} "${filters.search}"`
               : t("marketplace.subtitle")}
           </p>
         </div>
@@ -129,10 +114,19 @@ function MarketplacePage() {
               </Button>
             </Link>
           )}
+          {/* Filter panel trigger */}
+          <FilterPanel
+            open={panelOpen}
+            onOpenChange={setPanelOpen}
+            filters={filters}
+            onChange={setFilters}
+            locations={locations}
+            extraCategories={extraCategories}
+          />
         </div>
       </div>
 
-      {/* Weather Widget — collapsible */}
+      {/* Weather Widget */}
       <details className="mb-6 group">
         <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 list-none select-none w-fit">
           <span className="group-open:hidden">▶</span>
@@ -144,44 +138,46 @@ function MarketplacePage() {
         </div>
       </details>
 
-      {/* Category Filter */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-[#118C4C]" />
-            <span className="text-sm font-medium text-muted-foreground">Filter by category:</span>
-          </div>
-          <AdvancedSearchFilters
-            filters={advFilters}
-            onChange={setAdvFilters}
-            locations={locations}
-          />
+      {/* Active filter chips */}
+      {(filters.category !== "All" || filters.search || filters.location || filters.unit || filters.minPrice || filters.maxPrice || filters.sortBy !== "newest" || filters.inStockOnly || filters.verifiedOnly) && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {filters.category !== "All" && (
+            <Chip label={filters.category} onRemove={() => setFilters((f) => ({ ...f, category: "All" }))} />
+          )}
+          {filters.search && (
+            <Chip label={`"${filters.search}"`} onRemove={() => setFilters((f) => ({ ...f, search: "" }))} />
+          )}
+          {filters.location && (
+            <Chip label={filters.location} onRemove={() => setFilters((f) => ({ ...f, location: "" }))} />
+          )}
+          {filters.unit && (
+            <Chip label={`Unit: ${filters.unit}`} onRemove={() => setFilters((f) => ({ ...f, unit: "" }))} />
+          )}
+          {(filters.minPrice !== null || filters.maxPrice !== null) && (
+            <Chip
+              label={`₦${filters.minPrice ?? 0} – ${filters.maxPrice ? `₦${filters.maxPrice}` : "∞"}`}
+              onRemove={() => setFilters((f) => ({ ...f, minPrice: null, maxPrice: null }))}
+            />
+          )}
+          {filters.sortBy !== "newest" && (
+            <Chip
+              label={{ price_asc: "Price ↑", price_desc: "Price ↓", name_asc: "A–Z", popular: "Most Viewed" }[filters.sortBy]!}
+              onRemove={() => setFilters((f) => ({ ...f, sortBy: "newest" }))}
+            />
+          )}
+          {filters.inStockOnly && (
+            <Chip label="In Stock" onRemove={() => setFilters((f) => ({ ...f, inStockOnly: false }))} />
+          )}
+          {filters.verifiedOnly && (
+            <Chip label="Verified Farmers" onRemove={() => setFilters((f) => ({ ...f, verifiedOnly: false }))} />
+          )}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(category)}
-              className={
-                selectedCategory === category
-                  ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white shadow-md shadow-[#118C4C]/20"
-                  : "bg-transparent hover:bg-[#118C4C]/10 border-[#118C4C]/30"
-              }
-            >
-              {category}
-            </Button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Products Grid */}
       {loading ? (
         <GridLayout>
-          {[...Array(PAGE_SIZE)].map((_, i) => (
-            <ProductCardSkeleton key={i} />
-          ))}
+          {[...Array(PAGE_SIZE)].map((_, i) => <ProductCardSkeleton key={i} />)}
         </GridLayout>
       ) : filteredProducts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -193,14 +189,14 @@ function MarketplacePage() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-foreground mb-2">
-            {searchQuery ? `No results for "${searchQuery}"` : "No products yet"}
+            {filters.search ? `No results for "${filters.search}"` : "No products yet"}
           </h2>
           <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
-            {searchQuery
+            {filters.search
               ? "Try a different search term or clear your filters."
               : "Be the first to list a product and reach buyers across Africa."}
           </p>
-          {currentUser?.role === "admin" && !searchQuery && (
+          {currentUser?.role === "admin" && !filters.search && (
             <Link href="/listing/new">
               <Button size="lg" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20 px-8">
                 <Plus className="h-5 w-5" />
@@ -219,16 +215,9 @@ function MarketplacePage() {
             </GridLayout>
           </motion.div>
 
-          {/* Pagination with ellipsis */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-1.5 mt-10 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="border-[#118C4C]/30"
-              >
+              <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="border-[#118C4C]/30">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               {(() => {
@@ -244,27 +233,15 @@ function MarketplacePage() {
                 }
                 return pages.map((p, i) =>
                   p === "..." ? (
-                    <span key={`ellipsis-${i}`} className="px-1 text-muted-foreground text-sm">…</span>
+                    <span key={`e-${i}`} className="px-1 text-muted-foreground text-sm">…</span>
                   ) : (
-                    <Button
-                      key={p}
-                      variant={p === page ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setPage(p as number)}
-                      className={p === page ? "bg-[#118C4C] text-white" : "border-[#118C4C]/30"}
-                    >
+                    <Button key={p} variant={p === page ? "default" : "outline"} size="sm" onClick={() => setPage(p as number)} className={p === page ? "bg-[#118C4C] text-white" : "border-[#118C4C]/30"}>
                       {p}
                     </Button>
                   )
                 );
               })()}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="border-[#118C4C]/30"
-              >
+              <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="border-[#118C4C]/30">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -276,6 +253,17 @@ function MarketplacePage() {
         </>
       )}
     </div>
+  );
+}
+
+function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#118C4C]/10 text-[#118C4C] text-xs font-medium">
+      {label}
+      <button onClick={onRemove} className="hover:text-[#0d6d3a]" aria-label="Remove filter">
+        ×
+      </button>
+    </span>
   );
 }
 
