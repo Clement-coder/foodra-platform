@@ -22,7 +22,7 @@ const Button: React.FC<ButtonProps> = ({
     destructive:   "bg-red-600 text-white hover:bg-red-700",
     // For use on dark/green backgrounds
     "white":       "bg-white text-[#118C4C] hover:bg-white/90 font-semibold",
-    "white-outline":"bg-transparent border border-white text-white hover:bg-white/10",
+    "white-outline":"bg-transparent border-2 border-white text-white hover:bg-white/10",
   }
 
   const sizeStyles: Record<NonNullable<ButtonProps["size"]>, string> = {
