@@ -15,13 +15,14 @@ import { useUser } from "@/lib/useUser";
 import { RatingModal } from "@/components/RatingModal";
 import { authFetch } from "@/lib/authFetch";
 import { OrderCard, ORDER_STATUS } from "@/components/OrderCard";
+import { OrdersPageSkeleton } from "@/components/Skeleton";
 import type { Order } from "@/lib/types";
 
 const TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"] as const;
 type Tab = typeof TABS[number];
 
 function OrdersPage() {
-  const { orders, refreshOrders } = useOrders();
+  const { orders, refreshOrders, loading: ordersLoading } = useOrders();
   const { confirmDelivery, raiseDispute, loading } = useEscrow();
   const { currentUser } = useUser();
   const { getAccessToken } = usePrivy();
@@ -106,6 +107,8 @@ function OrdersPage() {
     setActiveOrderId(null);
     setDisputeOrder(null);
   };
+
+  if (ordersLoading) return <OrdersPageSkeleton />;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-3xl">

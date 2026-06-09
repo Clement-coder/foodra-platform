@@ -8,6 +8,7 @@ import { usePrivy } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { FundingCard } from "@/components/FundingCard"
+import { FundingPageSkeleton } from "@/components/Skeleton"
 import type { FundingApplication } from "@/lib/types"
 import withAuth from "../../components/withAuth";
 import { WrongAccountBanner } from "@/components/WrongAccountBanner"
@@ -176,11 +177,8 @@ function FundingPage() {
       )}
 
       {/* Applications List */}
-      {isLoading ? (
-        <div className="text-center py-10">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#118C4C] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading user data...</p>
-        </div>
+      {(isLoading || loading) ? (
+        <FundingPageSkeleton />
       ) : !user ? (
         <Card className="p-8 text-center">
           <DollarSign className="h-16 w-16 text-muted-foreground mx-auto mb-4" />

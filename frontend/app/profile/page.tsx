@@ -27,6 +27,7 @@ import { authFetch } from "@/lib/authFetch"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { MembershipBadge } from "@/components/MembershipBadge"
 import { computeMembership } from "@/lib/membership"
+import { ProfilePageSkeleton, OrderCardSkeleton } from "@/components/Skeleton"
 type Tab = "orders" | "wishlist" | "membership"
 const ORDER_TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"] as const
 type OTab = typeof ORDER_TABS[number]
@@ -146,11 +147,7 @@ function ProfilePage() {
   }
 
   if (isLoading || !user) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#118C4C]" />
-      </div>
-    )
+    return <ProfilePageSkeleton />
   }
 
   const displayName = getDisplayName()
@@ -294,7 +291,7 @@ function ProfilePage() {
         {/* Tab content */}
         <div className="px-4 pt-5">
           {loadingTab ? (
-            <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#118C4C]" /></div>
+            <div className="space-y-3">{[...Array(3)].map((_, i) => <OrderCardSkeleton key={i} />)}</div>
           ) : tab === "orders" ? (
             orders.length === 0 ? (
               <div className="text-center py-16 text-muted-foreground">

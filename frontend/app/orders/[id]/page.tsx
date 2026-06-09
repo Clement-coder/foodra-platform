@@ -21,6 +21,7 @@ import { useToast } from "@/lib/toast";
 import { downloadReceiptImage, maskSensitive } from "@/lib/receipt";
 import type { Order } from "@/lib/types";
 import { authFetch } from "@/lib/authFetch";
+import { OrderDetailSkeleton } from "@/components/Skeleton";
 
 function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -88,19 +89,7 @@ function OrderDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="relative w-16 h-16">
-          <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="w-full h-full">
-            <div className="w-full h-full rounded-full border-4 border-transparent border-t-[#118C4C] border-r-[#118C4C]" />
-          </motion.div>
-          <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="absolute inset-0 m-auto w-10 h-10 bg-[#118C4C] rounded-full opacity-20" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 className="h-5 w-5 text-[#118C4C] animate-spin" />
-          </div>
-        </div>
-      </div>
-    );
+    return <OrderDetailSkeleton />;
   }
 
   if (!order) {

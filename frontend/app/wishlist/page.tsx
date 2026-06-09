@@ -13,26 +13,31 @@ import { useCart } from "@/lib/useCart"
 import { useUser } from "@/lib/useUser"
 import { authFetch } from "@/lib/authFetch"
 import { getWishlist, removeFromWishlist, setAlertPrice, type WishlistItem } from "@/lib/wishlist"
+import { WishlistPageSkeleton } from "@/components/Skeleton"
 
 export default function WishlistPage() {
   const { getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const router = useRouter()
   const [items, setItems] = useState<WishlistItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [alertInputId, setAlertInputId] = useState<string | null>(null)
   const [alertInputValue, setAlertInputValue] = useState("")
   const { addToCart } = useCart()
   const { toast } = useToast()
 
   const refresh = async () => {
+    setLoading(true)
     if (currentUser?.id) {
       const res = await authFetch(getAccessToken, "/api/wishlist")
       if (res.ok) {
         setItems(await res.json())
+        setLoading(false)
         return
       }
     }
     setItems(getWishlist())
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -77,6 +82,8 @@ export default function WishlistPage() {
     setAlertInputId(null)
     await refresh()
   }
+
+  if (loading) return <WishlistPageSkeleton />
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">

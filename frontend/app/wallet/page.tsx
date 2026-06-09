@@ -17,6 +17,7 @@ import type { Chain } from "viem"
 import { useUser } from "@/lib/useUser"
 import { supabase } from "@/lib/supabase"
 import { authFetch } from "@/lib/authFetch"
+import { WalletPageSkeleton } from "@/components/Skeleton"
 
 interface Transaction {
   hash: string;
@@ -296,6 +297,7 @@ function WalletPage() {
 
   const shortAddress = user?.wallet?.address ? `${user.wallet.address.slice(0, 6)}...${user.wallet.address.slice(-4)}` : ""
 
+  if (!user) return <WalletPageSkeleton />
 
   return (
     <div className="min-h-screen bg-background">
