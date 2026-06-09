@@ -8,7 +8,8 @@ import { ArrowLeft, TrendingUp, Package, DollarSign, ShoppingBag, Truck } from "
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
+import { EscrowStatusBadge } from "@/components/EscrowStatusBadge"
+import { SalesPageSkeleton } from "@/components/Skeleton";
 import withAuth from "@/components/withAuth";
 import { useUser } from "@/lib/useUser";
 import { usePrivy } from "@privy-io/react-auth";
@@ -73,9 +74,7 @@ function SalesDashboard() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)}
-        </div>
+        <SalesPageSkeleton />
       ) : (
         <>
           {/* Stats */}

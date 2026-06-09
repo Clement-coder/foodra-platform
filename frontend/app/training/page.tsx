@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { GraduationCap, Search } from "lucide-react"
 import { motion } from "framer-motion"
 import { TrainingCard } from "@/components/TrainingCard"
-import { Skeleton } from "@/components/Skeleton"
+import { TrainingCardSkeleton } from "@/components/Skeleton"
 import { Button } from "@/components/ui/button"
 import type { Training } from "@/lib/types"
 
@@ -66,18 +66,7 @@ function TrainingPage() {
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden animate-pulse">
-              <div className="h-48 bg-muted" />
-              <div className="p-4 space-y-3">
-                <div className="h-5 bg-muted rounded w-3/4" />
-                <div className="h-4 bg-muted rounded w-full" />
-                <div className="h-4 bg-muted rounded w-2/3" />
-                <div className="h-2 bg-muted rounded-full w-full mt-2" />
-                <div className="h-10 bg-muted rounded-lg mt-2" />
-              </div>
-            </div>
-          ))}
+          {[...Array(6)].map((_, i) => <TrainingCardSkeleton key={i} />)}
         </div>
       ) : filteredTrainings.length === 0 ? (
         <div className="text-center py-16">

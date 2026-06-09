@@ -1,6 +1,10 @@
 @import "tailwindcss";
 /* @import "tw-animate-css"; */
 
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
