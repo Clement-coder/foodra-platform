@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin";
 import { createNotification } from "@/lib/notify";
 import { AuthError, requireAuthenticatedUser } from "@/lib/serverAuth";
+import { sendEscrowStatusEmail } from "@/lib/email";
 
 export async function PATCH(
   request: Request,
@@ -66,6 +67,10 @@ export async function PATCH(
             message: `A buyer has paid ₦${Number(orderData.total_amount).toLocaleString()} for your product. Funds are held in escrow until delivery is confirmed.`,
             link: "/sales",
           });
+          const { data: farmer } = await supabase.from("users").select("email, name").eq("id", farmerId).single();
+          if (farmer?.email) {
+            sendEscrowStatusEmail(farmer.email, farmer.name || "Farmer", id, "locked", Number(orderData.total_amount), farmerId as string).catch(() => {});
+          }
         }
       }
     }
@@ -89,6 +94,10 @@ export async function PATCH(
             message: `The buyer confirmed delivery. ₦${Number(orderData.total_amount).toLocaleString()}${orderData.usdc_amount ? ` (${Number(orderData.usdc_amount).toFixed(2)} USDC)` : ""} has been released from escrow to your wallet.`,
             link: "/sales",
           });
+          const { data: farmer } = await supabase.from("users").select("email, name").eq("id", farmerId).single();
+          if (farmer?.email) {
+            sendEscrowStatusEmail(farmer.email, farmer.name || "Farmer", id, "released", Number(orderData.total_amount), farmerId as string).catch(() => {});
+          }
         }
       }
     }

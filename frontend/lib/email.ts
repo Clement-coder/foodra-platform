@@ -636,7 +636,44 @@ export async function sendDisputeResolvedEmail(to: string, name: string, orderId
   await send(to, `⚖️ Dispute Resolved — Order #${orderId.slice(-8).toUpperCase()}`, html)
 }
 
-// ─── 20. Crypto send confirmation ────────────────────────────────────────────
+// ─── 20. Escrow status update (farmer) ───────────────────────────────────────
+export async function sendEscrowStatusEmail(
+  to: string, name: string,
+  orderId: string, escrowStatus: "locked" | "released" | "refunded",
+  amount: number, userId?: string
+) {
+  const isLocked = escrowStatus === "locked"
+  const isReleased = escrowStatus === "released"
+  const title = isLocked ? "Payment Secured in Escrow 🔒" : isReleased ? "Payment Released to You 💸" : "Payment Refunded to Buyer"
+  const body = isLocked
+    ? `A buyer has made a payment of <strong>₦${amount.toLocaleString()}</strong> for order <strong>#${orderId.slice(-8).toUpperCase()}</strong>. The funds are held securely in escrow and will be released once the buyer confirms delivery.`
+    : isReleased
+    ? `The buyer confirmed delivery for order <strong>#${orderId.slice(-8).toUpperCase()}</strong>. <strong>₦${amount.toLocaleString()}</strong> has been released from escrow to your wallet.`
+    : `The escrow payment for order <strong>#${orderId.slice(-8).toUpperCase()}</strong> has been refunded to the buyer after dispute resolution.`
+  const html = layout(`
+    ${heading(title)}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, ${body}
+    </p>
+    ${btn("View Sales", appUrl("/sales", userId))}
+  `)
+  await send(to, `${isLocked ? "🔒" : isReleased ? "💸" : "↩️"} Escrow update for order #${orderId.slice(-8).toUpperCase()}`, html)
+}
+
+// ─── 21. Role changed by admin ────────────────────────────────────────────────
+export async function sendRoleChangedEmail(to: string, name: string, newRole: string, userId?: string) {
+  const roleLabel = newRole.charAt(0).toUpperCase() + newRole.slice(1)
+  const html = layout(`
+    ${heading("Your Account Role Has Been Updated")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, an admin has updated your Foodra account role to <strong>${roleLabel}</strong>. Your new permissions are now active.
+    </p>
+    ${btn("View Profile", appUrl("/profile", userId))}
+  `)
+  await send(to, `🔄 Your Foodra account role changed to ${roleLabel}`, html)
+}
+
+// ─── 22. Crypto send confirmation ────────────────────────────────────────────
 export async function sendCryptoSentEmail(
   to: string, name: string,
   amount: string, token: string,
