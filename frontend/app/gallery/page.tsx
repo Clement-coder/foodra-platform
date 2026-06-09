@@ -1,28 +1,29 @@
-import type { Metadata } from "next"
+"use client"
+
+import { useState } from "react"
 import Image from "next/image"
+import { motion, AnimatePresence } from "framer-motion"
 import { Camera } from "lucide-react"
 
-export const metadata: Metadata = {
-  title: "Gallery | Foodra",
-  description: "A visual journey through Foodra's agricultural ecosystem — farms, markets, training sessions, and the communities we serve.",
-  alternates: { canonical: "https://foodramarket.com/gallery" },
-}
-
 const photos = [
-  { src: "/gallery/farm1.jpg", alt: "Lush green farmland at sunrise", caption: "Dawn on the farm", category: "Farms" },
-  { src: "/gallery/market1.jpg", alt: "Farmers displaying fresh produce at market", caption: "Market day", category: "Markets" },
-  { src: "/gallery/training1.jpg", alt: "Farmers attending a training session", caption: "Learning together", category: "Training" },
-  { src: "/gallery/farm2.jpg", alt: "Rows of healthy crops", caption: "Harvest season", category: "Farms" },
-  { src: "/gallery/community1.jpg", alt: "Farming community gathering", caption: "Community first", category: "Community" },
-  { src: "/gallery/market2.jpg", alt: "Fresh vegetables ready for sale", caption: "Fresh from the field", category: "Markets" },
-  { src: "/gallery/training2.jpg", alt: "Expert instructor demonstrating irrigation", caption: "Modern techniques", category: "Training" },
-  { src: "/gallery/farm3.jpg", alt: "Farmer tending to crops", caption: "Hands in the soil", category: "Farms" },
-  { src: "/gallery/community2.jpg", alt: "Women farmers cooperative meeting", caption: "Women in agriculture", category: "Community" },
+  { src: "/foodra_1.jpeg", caption: "Dawn on the farm", category: "Farms" },
+  { src: "/foodra_2.jpeg", caption: "Market day", category: "Markets" },
+  { src: "/foodra_3.jpeg", caption: "Learning together", category: "Training" },
+  { src: "/foodra_4.jpeg", caption: "Harvest season", category: "Farms" },
+  { src: "/foodra_5.jpeg", caption: "Community first", category: "Community" },
+  { src: "/foodra_6.jpeg", caption: "Fresh from the field", category: "Markets" },
+  { src: "/foodra_7.jpeg", caption: "Modern techniques", category: "Training" },
+  { src: "/foodra_8.jpeg", caption: "Hands in the soil", category: "Farms" },
 ]
 
 const categories = ["All", "Farms", "Markets", "Training", "Community"]
 
 export default function GalleryPage() {
+  const [active, setActive] = useState("All")
+  const [lightbox, setLightbox] = useState<string | null>(null)
+
+  const filtered = active === "All" ? photos : photos.filter((p) => p.category === active)
+
   return (
     <div className="min-h-screen">
       {/* Hero */}
@@ -38,48 +39,87 @@ export default function GalleryPage() {
         </div>
       </section>
 
-      {/* Category pills — static, no JS filter needed for SEO */}
       <section className="py-8 px-4">
         <div className="container mx-auto max-w-5xl">
+          {/* Filter pills */}
           <div className="flex flex-wrap gap-2 justify-center mb-10">
             {categories.map((c) => (
-              <span key={c} className="px-4 py-1.5 rounded-full text-sm border border-[#118C4C]/30 text-muted-foreground">
+              <button
+                key={c}
+                onClick={() => setActive(c)}
+                className={`px-4 py-1.5 rounded-full text-sm border transition-all ${
+                  active === c
+                    ? "bg-[#118C4C] text-white border-[#118C4C] shadow-md shadow-[#118C4C]/20"
+                    : "border-[#118C4C]/30 text-muted-foreground hover:border-[#118C4C] hover:text-[#118C4C]"
+                }`}
+              >
                 {c}
-              </span>
+              </button>
             ))}
           </div>
 
-          {/* Masonry-style grid */}
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-            {photos.map((photo) => (
-              <div key={photo.src} className="break-inside-avoid rounded-2xl overflow-hidden border border-[#118C4C]/20 group relative bg-muted">
-                <div className="relative w-full aspect-[4/3]">
-                  <Image
-                    src={photo.src}
-                    alt={photo.alt}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    unoptimized
-                  />
-                  {/* Fallback placeholder shown when image missing */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#118C4C]/5">
-                    <Camera className="h-8 w-8 text-[#118C4C]/30 mb-2" />
-                    <span className="text-xs text-muted-foreground">{photo.caption}</span>
+          {/* Masonry grid */}
+          <motion.div layout className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+            <AnimatePresence>
+              {filtered.map((photo) => (
+                <motion.div
+                  key={photo.src}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                  className="break-inside-avoid rounded-2xl overflow-hidden border border-[#118C4C]/20 group relative bg-muted cursor-pointer"
+                  onClick={() => setLightbox(photo.src)}
+                >
+                  <div className="relative w-full aspect-[4/3]">
+                    <Image
+                      src={photo.src}
+                      alt={photo.caption}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-white text-sm font-medium">{photo.caption}</p>
-                  <span className="text-white/70 text-xs">{photo.category}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-center text-sm text-muted-foreground mt-10">
-            More photos coming soon as our community grows. 📸
-          </p>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                    <p className="text-white text-sm font-medium">{photo.caption}</p>
+                    <span className="text-white/70 text-xs">{photo.category}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         </div>
       </section>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setLightbox(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+              className="relative max-w-4xl w-full max-h-[85vh] aspect-video rounded-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Image src={lightbox} alt="Gallery image" fill className="object-cover" />
+              <button
+                onClick={() => setLightbox(null)}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors text-lg"
+              >
+                ×
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
