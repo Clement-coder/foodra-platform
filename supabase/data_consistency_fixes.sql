@@ -100,20 +100,7 @@ $$;
 ALTER TABLE wishlists 
 ADD COLUMN IF NOT EXISTS last_alert_sent TIMESTAMP WITH TIME ZONE;
 
--- 5. Add indexes for performance on frequently queried columns
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_status_escrow 
-ON orders(status, escrow_status) WHERE status != 'Cancelled';
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_product_views_user_time 
-ON product_views(product_id, user_id, viewed_at);
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_wishlists_alerts 
-ON wishlists(product_id, alert_price) WHERE alert_price IS NOT NULL;
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_training_enrollments_capacity 
-ON training_enrollments(training_id);
-
--- 6. Update any existing order statuses that have conflicts
+-- 5. Update any existing order statuses that have conflicts
 UPDATE orders 
 SET status = 'Delivered' 
 WHERE escrow_status = 'released' AND status = 'Shipped' AND delivered_at IS NOT NULL;
@@ -122,7 +109,7 @@ UPDATE orders
 SET status = 'Cancelled' 
 WHERE escrow_status = 'refunded' AND status NOT IN ('Cancelled', 'Refunded');
 
--- 7. Clean up duplicate product views from same user on same day (keep latest)
+-- 6. Clean up duplicate product views from same user on same day (keep latest)
 WITH ranked_views AS (
     SELECT id, 
            ROW_NUMBER() OVER (
@@ -135,16 +122,16 @@ WITH ranked_views AS (
 DELETE FROM product_views 
 WHERE id IN (SELECT id FROM ranked_views WHERE rn > 1);
 
--- 8. Add constraints to prevent data inconsistencies
+-- 7. Add constraints to prevent data inconsistencies
 ALTER TABLE products 
-ADD CONSTRAINT check_quantity_non_negative 
+ADD CONSTRAINT IF NOT EXISTS check_quantity_non_negative 
 CHECK (quantity >= 0);
 
 ALTER TABLE orders 
-ADD CONSTRAINT check_total_amount_positive 
+ADD CONSTRAINT IF NOT EXISTS check_total_amount_positive 
 CHECK (total_amount > 0);
 
--- Create a view for consistent order states
+-- 8. Create a view for consistent order states
 CREATE OR REPLACE VIEW order_states AS
 SELECT 
     id,
