@@ -47,6 +47,7 @@ function ProfilePage() {
   const [orderLayout, setOrderLayout] = useState<"list" | "compact">("list")
   const [orders, setOrders] = useState<Order[]>([])
   const [wishlist, setWishlist] = useState<Product[]>([])
+  const [membership, setMembership] = useState<any>(null)
   const [loadingTab, setLoadingTab] = useState(true)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
@@ -90,6 +91,28 @@ function ProfilePage() {
       setLoadingTab(false)
     }
   }, [tab, user?.id])
+
+  // Fetch membership data once when user is available
+  useEffect(() => {
+    if (!user?.id) return
+    fetch(`/api/users/${user.id}/membership`)
+      .then(r => r.json())
+      .then(d => setMembership(d))
+      .catch(() => {
+        // Fallback to client-side calculation if API fails
+        const fallback = computeMembership({
+          hasName: !!user.name,
+          hasPhone: !!user.phone,
+          hasLocation: !!user.location,
+          hasAvatar: !!user.avatar,
+          createdAt: user.createdAt,
+          ordersCount: 0, // Will be 0 without server data
+          hasDisputes: false,
+          isVerified: !!user.isVerified,
+        })
+        setMembership(fallback)
+      })
+  }, [user?.id])
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user?.id) return
@@ -154,14 +177,15 @@ function ProfilePage() {
   const profileCompletion = calculateProfileCompletion(user)
   const joinedDate = new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
 
-  const membership = computeMembership({
+  // Use server-side membership data if available, otherwise show loading/fallback
+  const membershipScore = membership || computeMembership({
     hasName: !!user.name,
     hasPhone: !!user.phone,
     hasLocation: !!user.location,
     hasAvatar: !!user.avatar,
     createdAt: user.createdAt,
-    ordersCount: orders.length,
-    hasDisputes: false, // disputes not fetched client-side; defaults to clean
+    ordersCount: 0,
+    hasDisputes: false,
     isVerified: !!user.isVerified,
   })
 
@@ -246,7 +270,7 @@ function ProfilePage() {
               </span>
             )}
             <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full capitalize">{user.role || "user"}</span>
-            <MembershipBadge score={membership} />
+            <MembershipBadge score={membershipScore} />
           </div>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
@@ -350,7 +374,7 @@ function ProfilePage() {
             )
           ) : (
             <div className="py-4">
-              <MembershipBadge score={membership} showProgress />
+              <MembershipBadge score={membershipScore} showProgress />
             </div>
           )}
         </div>

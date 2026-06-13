@@ -20,6 +20,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
   const [
     { count: buyerOrdersCount },
     { count: totalProductsCount },
+    { count: disputesCount },
     { data: rawProducts },
   ] = await Promise.all([
     supabase.from("orders").select("*", { count: "exact", head: true }).eq("buyer_id", id),
@@ -27,6 +28,8 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
     isAdmin
       ? supabase.from("products").select("*", { count: "exact", head: true })
       : supabase.from("products").select("*", { count: "exact", head: true }).eq("farmer_id", id),
+    // Check for disputes
+    supabase.from("orders").select("*", { count: "exact", head: true }).eq("user_id", id).eq("has_dispute", true),
     supabase.from("products").select("*")
       .eq(isAdmin ? "is_available" : "farmer_id", isAdmin ? true : id)
       .order("created_at", { ascending: false })
@@ -64,7 +67,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
         hasAvatar: !!rawUser.avatar_url,
         createdAt: rawUser.created_at,
         ordersCount: buyerOrdersCount ?? 0,
-        hasDisputes: false,
+        hasDisputes: (disputesCount ?? 0) > 0,
         isVerified: !!rawUser.is_verified,
       })
 

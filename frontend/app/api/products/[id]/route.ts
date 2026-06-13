@@ -38,8 +38,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       image: product.image_url || '',
       location: product.location || '',
       farmerId: product.farmer_id,
-      farmerName: product.users?.name || 'Unknown',
-      farmerAvatar: product.users?.avatar_url || '',
+      farmerName: product.users?.role === 'admin' ? 'Foodra' : (product.users?.name || 'Foodra'),
+      farmerAvatar: product.users?.role === 'admin' ? 'https://foodramarket.com/foodra_logo.jpeg' : (product.users?.avatar_url || ''),
+      farmerIsVerified: true,
       createdAt: product.created_at,
     })
   } catch (error) {
