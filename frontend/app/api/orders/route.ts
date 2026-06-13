@@ -167,20 +167,18 @@ export async function POST(request: Request) {
       throw itemsError
     }
 
-    // Decrement product quantity and mark unavailable if stock hits 0
+    // Atomically decrement product quantity and validate stock
     for (const item of body.items) {
-      const { data: product } = await supabaseAdmin
-        .from('products')
-        .select('quantity')
-        .eq('id', item.productId)
-        .single()
-
-      if (product) {
-        const newQty = Math.max(0, product.quantity - item.quantity)
-        await supabaseAdmin
-          .from('products')
-          .update({ quantity: newQty, is_available: newQty > 0 })
-          .eq('id', item.productId)
+      const { data: updated, error: stockError } = await supabaseAdmin.rpc('decrement_product_stock', {
+        product_id: item.productId,
+        decrement_by: item.quantity
+      })
+      
+      if (stockError || !updated) {
+        // Rollback order if stock validation fails
+        await supabaseAdmin.from('order_items').delete().eq('order_id', order.id)
+        await supabaseAdmin.from('orders').delete().eq('id', order.id)
+        return NextResponse.json({ error: `Insufficient stock for ${item.productName}` }, { status: 400 })
       }
     }
 

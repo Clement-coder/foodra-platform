@@ -29,14 +29,27 @@ export default function WishlistPage() {
   const refresh = async () => {
     setLoading(true)
     if (currentUser?.id) {
-      const res = await authFetch(getAccessToken, "/api/wishlist")
-      if (res.ok) {
-        setItems(await res.json())
-        setLoading(false)
-        return
+      try {
+        const res = await authFetch(getAccessToken, "/api/wishlist")
+        if (res.ok) {
+          const serverItems = await res.json()
+          setItems(serverItems)
+          // Sync localStorage with server data
+          localStorage.setItem(`foodra_wishlist_${currentUser.id}`, JSON.stringify(serverItems))
+        } else {
+          throw new Error('Server fetch failed')
+        }
+      } catch {
+        // Only use localStorage as last resort and show warning
+        const localItems = getWishlist()
+        setItems(localItems)
+        if (localItems.length > 0) {
+          toast.error("Using offline data. Some items may be outdated.")
+        }
       }
+    } else {
+      setItems(getWishlist())
     }
-    setItems(getWishlist())
     setLoading(false)
   }
 

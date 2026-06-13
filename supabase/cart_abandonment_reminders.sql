@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS cart_abandonment_reminders (
   next_remind_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
+312
 -- RLS: server uses service role key (bypasses RLS); no direct client access needed
 ALTER TABLE cart_abandonment_reminders ENABLE ROW LEVEL SECURITY;
 

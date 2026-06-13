@@ -14,7 +14,8 @@ const REMIND_INITIAL_MS = 60 * 60 * 1000  // 1 hour
 
 type CartContextValue = {
   cart: CartItem[]
-  cartCount: number
+  cartCount: number // Total quantity of all items
+  cartItemsCount: number // Number of unique items
   addToCart: (item: CartItem | { id: string; productName: string; pricePerUnit: number; quantity: number; image: string }) => void
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => Promise<void>
@@ -94,34 +95,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
           image: item.image,
         }
 
-    // Check live stock before adding
-    try {
-      const res = await fetch(`/api/products/${normalizedItem.productId}`)
-      if (res.ok) {
-        const product = await res.json()
-        if (!product || product.quantity < 1) {
-          toast.error(`"${normalizedItem.productName}" is out of stock.`)
-          return
-        }
-        setCart((prev) => {
-          const existing = prev.find((i) => i.productId === normalizedItem.productId)
-          const currentQty = existing?.quantity || 0
-          if (currentQty >= product.quantity) {
-            toast.error(`Only ${product.quantity} unit(s) available.`)
-            return prev
-          }
-          const updated = existing
-            ? prev.map((i) => i.productId === normalizedItem.productId ? { ...i, quantity: i.quantity + 1 } : i)
-            : [...prev, { ...normalizedItem, quantity: 1 }]
-          persist(updated)
-          window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId: normalizedItem.productId, change: 1 } }))
-          return updated
-        })
-        toast.success(`"${normalizedItem.productName}" added to cart`)
-      }
-    } catch {
-      toast.error("Could not verify stock. Please try again.")
-    }
+    // Always add optimistically first, then validate server-side during checkout
+    setCart((prev) => {
+      const existing = prev.find((i) => i.productId === normalizedItem.productId)
+      const updated = existing
+        ? prev.map((i) => i.productId === normalizedItem.productId ? { ...i, quantity: i.quantity + 1 } : i)
+        : [...prev, { ...normalizedItem, quantity: 1 }]
+      persist(updated)
+      window.dispatchEvent(new CustomEvent("cartUpdated", { detail: { productId: normalizedItem.productId, change: 1 } }))
+      return updated
+    })
+    toast.success(`"${normalizedItem.productName}" added to cart`)
   }
 
   const removeFromCart = (productId: string) => {
@@ -171,6 +155,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart])
+  const cartItemsCount = cart.length
   const totalAmount = cart.reduce((sum, item) => sum + item.pricePerUnit * item.quantity, 0)
 
   return (
@@ -178,6 +163,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       value={{
         cart,
         cartCount,
+        cartItemsCount,
         addToCart,
         removeFromCart,
         updateQuantity,

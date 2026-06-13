@@ -46,23 +46,23 @@ export async function POST(request: Request) {
     const auth = await requireAuthenticatedUser(request)
     const body = await request.json()
 
-    const { data, error } = await supabaseAdmin
-      .from('training_enrollments')
-      .insert({
-        training_id: body.trainingId,
-        user_id: auth.user.id,
-        full_name: body.fullName || auth.user.name || 'Unknown',
-        phone_number: body.phoneNumber || auth.user.phone || '',
-        location: body.location || auth.user.location || '',
-      })
-      .select()
-      .single()
+    // Use atomic enrollment with capacity check
+    const { data, error } = await supabaseAdmin.rpc('enroll_with_capacity_check', {
+      p_training_id: body.trainingId,
+      p_user_id: auth.user.id,
+      p_full_name: body.fullName || auth.user.name || 'Unknown',
+      p_phone_number: body.phoneNumber || auth.user.phone || '',
+      p_location: body.location || auth.user.location || '',
+    })
 
     if (error) {
-      if (error.code === '23505') {
+      if (error.message === 'CAPACITY_FULL') {
+        return NextResponse.json({ error: 'Training is at full capacity' }, { status: 400 })
+      }
+      if (error.message === 'ALREADY_ENROLLED') {
         return NextResponse.json({ error: 'Already enrolled' }, { status: 400 })
       }
-      console.error('Enrollment insert error:', error)
+      console.error('Enrollment error:', error)
       throw error
     }
 
@@ -73,6 +73,7 @@ export async function POST(request: Request) {
       if (t?.title) trainingTitle = t.title
       trainingDetails = { date: t?.date, mode: t?.mode, location: t?.location, instructor: t?.instructor_name }
     }
+    
     await createNotification({
       userId: auth.user.id,
       type: 'training',

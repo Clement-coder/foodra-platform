@@ -42,13 +42,13 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
   const [range, setRange] = useState<Range>(6)
 
   const totalRevenue = data.orders
-    .filter((o: any) => o.status !== "Cancelled")
+    .filter((o: any) => ["Delivered", "Shipped"].includes(o.status) && o.escrow_status !== "refunded")
     .reduce((sum: number, o: any) => sum + Number(o.total_amount), 0)
 
-  const approvedFunding = data.funding.filter((f: any) => f.status === "Approved").length
-  const pendingFunding = data.funding.filter((f: any) => f.status === "Pending").length
+  const approvedFunding = data.funding.filter((f: any) => f.status === "Approved")
+  const pendingFunding = data.funding.filter((f: any) => f.status === "Pending")
   const approvalRate = data.funding.length > 0
-    ? Math.round((approvedFunding / data.funding.length) * 100) : 0
+    ? Math.round((approvedFunding.length / data.funding.length) * 100) : 0
 
   const categoryCount: Record<string, number> = {}
   for (const p of data.products) {
@@ -79,7 +79,7 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
     label: m.label,
     amount: data.orders
       .filter((o: any) => {
-        if (o.status === "Cancelled") return false
+        if (!["Delivered", "Shipped"].includes(o.status) || o.escrow_status === "refunded") return false
         const d = new Date(o.created_at)
         return d.getFullYear() === m.year && d.getMonth() === m.month
       })
@@ -93,7 +93,7 @@ export default function AdminAnalytics({ data, privyId }: { data: AdminData; pri
     { label: "Total Orders", value: data.orders.length, color: "purple" },
     { label: "Active Products", value: data.products.filter((p: any) => p.is_available).length, color: "yellow" },
     { label: "Funding Approval Rate", value: `${approvalRate}%`, color: "emerald" },
-    { label: "Pending Funding", value: pendingFunding, color: "orange" },
+    { label: "Pending Funding", value: pendingFunding.length, color: "orange" },
     { label: "Total Trainings", value: data.trainings.length, color: "cyan" },
     { label: "Total Enrollments", value: data.enrollments.length, color: "pink" },
   ]

@@ -23,8 +23,16 @@ export const USDC_ABI = [
 export const ESCROW_STATUS = ["LOCKED", "RELEASED", "REFUNDED", "DISPUTED"] as const;
 export type EscrowStatusType = typeof ESCROW_STATUS[number];
 
+let cachedRate: { rate: number; timestamp: number } | null = null
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
 /** Get live USD/NGN rate — 1 USDC ≈ 1 USD */
 export async function getNgnToUsdcRate(): Promise<number> {
+  // Check cache first
+  if (cachedRate && Date.now() - cachedRate.timestamp < CACHE_DURATION) {
+    return cachedRate.rate
+  }
+
   try {
     // Use ExchangeRate API for accurate NGN rate
     const res = await fetch("https://open.er-api.com/v6/latest/USD", {
@@ -34,10 +42,13 @@ export async function getNgnToUsdcRate(): Promise<number> {
     const data = await res.json();
     const rate = data?.rates?.NGN;
     if (!rate || typeof rate !== "number" || rate <= 0) throw new Error("invalid rate");
+    
+    // Cache the rate
+    cachedRate = { rate, timestamp: Date.now() }
     return rate; // NGN per 1 USDC
   } catch {
-    // Fallback
-    return 1600;
+    // Return cached rate if available, otherwise fallback
+    return cachedRate?.rate || 1600;
   }
 }
 

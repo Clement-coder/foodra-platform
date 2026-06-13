@@ -21,12 +21,22 @@ export async function POST(
       // Anonymous view tracking is fine
     }
 
-    await supabaseAdmin.from("product_views").insert({ 
-      product_id: id,
-      user_id: userId 
-    }).throwOnError()
-  } catch {
-    // Ignore errors (duplicate views, etc.)
+    // Use upsert to prevent duplicate views from same user within 24 hours
+    if (userId) {
+      await supabaseAdmin.rpc('record_unique_view', {
+        p_product_id: id,
+        p_user_id: userId
+      })
+    } else {
+      // Anonymous view - just insert
+      await supabaseAdmin.from("product_views").insert({ 
+        product_id: id,
+        user_id: null 
+      })
+    }
+  } catch (error) {
+    // Ignore most errors but log them
+    console.error('View tracking error:', error)
   }
   return NextResponse.json({ ok: true })
 }
