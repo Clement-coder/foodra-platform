@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/orders/auto-status",
-      "schedule": "0 * * * *"
+      "schedule": "0 2 * * *"
     }
   ]
 }
