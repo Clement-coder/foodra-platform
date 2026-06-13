@@ -30,6 +30,7 @@ function ProductDetailPage() {
   const { toast } = useToast()
   const [product, setProduct] = useState<Product | null>(null)
   const [related, setRelated] = useState<Product[]>([])
+  const [productStats, setProductStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
@@ -49,9 +50,19 @@ function ProductDetailPage() {
         setProduct(p)
         if (p) {
           // Track product view
-          fetch(`/api/products/${id}/views`, { method: "POST" }).catch(() => {})
-          // Fetch related products
-          fetch(`/api/products/${id}/related`).then(r => r.json()).then(setRelated).catch(() => {})
+          if (currentUser?.id) {
+            fetch(`/api/products/${id}/views?userId=${currentUser.id}`, { method: "POST" }).catch(() => {})
+          } else {
+            fetch(`/api/products/${id}/views`, { method: "POST" }).catch(() => {})
+          }
+          // Fetch related products and stats
+          Promise.all([
+            fetch(`/api/products/${id}/related`).then(r => r.json()).catch(() => []),
+            fetch(`/api/products/${id}/stats`).then(r => r.ok ? r.json() : null).catch(() => null)
+          ]).then(([relatedData, statsData]) => {
+            setRelated(relatedData)
+            setProductStats(statsData)
+          })
         }
       } catch (err) {
         setError(`Error loading product: ${err}`)
@@ -187,9 +198,23 @@ function ProductDetailPage() {
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{product.productName}</h1>
 
             {product.viewCount != null && product.viewCount > 0 && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-                <Eye className="h-3.5 w-3.5" />
-                <span>{product.viewCount.toLocaleString()} view{product.viewCount !== 1 ? "s" : ""}</span>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+                <div className="flex items-center gap-1.5">
+                  <Eye className="h-3.5 w-3.5" />
+                  <span>{product.viewCount.toLocaleString()} view{product.viewCount !== 1 ? "s" : ""}</span>
+                </div>
+                {productStats?.totalSold > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <ShoppingCart className="h-3.5 w-3.5" />
+                    <span>{productStats.totalSold} sold</span>
+                  </div>
+                )}
+                {productStats?.uniqueBuyers > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    <span>👥</span>
+                    <span>{productStats.uniqueBuyers} member{productStats.uniqueBuyers !== 1 ? "s" : ""} bought this</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -213,11 +238,27 @@ function ProductDetailPage() {
                     <div className="p-2 bg-[#118C4C]/10 rounded-lg">
                       <MapPin className="h-4 w-4 text-[#118C4C]" />
                     </div>
-                    <span className="text-foreground">{product.location}</span>
+                    <div className="flex-1">
+                      <span className="text-foreground font-medium">{product.location}</span>
+                      <p className="text-xs text-muted-foreground">Seller location</p>
+                    </div>
                   </div>
                   <div className="pt-2 border-t border-[#118C4C]/20">
-                    <p className="text-sm text-muted-foreground">Available Stock</p>
-                    <p className="text-lg font-semibold text-[#118C4C]">{product.quantity} {product.unit || 'unit'}{product.quantity !== 1 ? 's' : ''}</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Available Stock</p>
+                        <p className="text-lg font-semibold text-[#118C4C]">{product.quantity} {product.unit || 'unit'}{product.quantity !== 1 ? 's' : ''}</p>
+                      </div>
+                      {product.quantity > 0 && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Status</p>
+                          <p className="text-sm font-medium text-green-600 flex items-center gap-1">
+                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            In Stock
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -295,25 +336,105 @@ function ProductDetailPage() {
             <CardContent className="p-6">
               <h3 className="font-semibold mb-4 flex items-center gap-2">
                 <div className="h-1 w-6 bg-[#118C4C] rounded"></div>
-                Seller
+                Seller Information
               </h3>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
-                <FoodraAvatar size={40} />
-                <div>
-                  <p className="font-medium text-foreground">Foodra</p>
-                  <p className="text-[#118C4C] text-xs font-medium">✓ Official Store</p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
+                  <div className="relative">
+                    {product.farmerAvatar ? (
+                      <Image
+                        src={product.farmerAvatar}
+                        alt={product.farmerName}
+                        width={48}
+                        height={48}
+                        className="rounded-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-[#118C4C] rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">
+                          {product.farmerName?.[0]?.toUpperCase() || 'F'}
+                        </span>
+                      </div>
+                    )}
+                    {product.farmerIsVerified && (
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#118C4C] rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">✓</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <Link href={`/users/${product.farmerId}`} className="hover:underline">
+                      <p className="font-medium text-[#118C4C] flex items-center gap-1">
+                        {product.farmerName}
+                        {product.farmerIsVerified && <span className="text-xs">✓</span>}
+                      </p>
+                    </Link>
+                    <p className="text-sm text-muted-foreground">
+                      {product.farmerIsVerified ? "Verified Farmer" : "Farmer"}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              {isAdmin && (
-                <Link href={`/listing/${product.id}/edit`} className="block mt-3">
+                
+                {productStats && (
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-muted-foreground">Total Products</p>
+                      <p className="font-semibold text-[#118C4C]">{productStats.farmerProductCount || 0}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-muted-foreground">Member Since</p>
+                      <p className="font-semibold">
+                        {product.createdAt ? new Date(product.createdAt).getFullYear() : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                <Link href={`/users/${product.farmerId}`}>
                   <Button variant="outline" size="sm" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C]/5">
-                    Edit Product (Admin)
+                    View Farmer Profile
                   </Button>
                 </Link>
-              )}
+                
+                {isAdmin && (
+                  <Link href={`/listing/${product.id}/edit`}>
+                    <Button variant="outline" size="sm" className="w-full border-orange-300 hover:bg-orange-50 text-orange-700 mt-2">
+                      Edit Product (Admin)
+                    </Button>
+                  </Link>
+                )}
+              </div>
+                
             </CardContent>
           </Card>
         </div>
+
+        {/* Product Performance Section */}
+        {productStats && (productStats.totalSold > 0 || productStats.uniqueBuyers > 0) && (
+          <Card className="mb-4 border-[#118C4C]/20">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <div className="h-1 w-8 bg-[#118C4C] rounded"></div>
+                Product Performance
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="text-center p-4 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
+                  <div className="text-2xl font-bold text-[#118C4C]">{productStats.totalSold}</div>
+                  <div className="text-sm text-muted-foreground">Total Sold</div>
+                </div>
+                <div className="text-center p-4 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
+                  <div className="text-2xl font-bold text-[#118C4C]">{productStats.uniqueBuyers}</div>
+                  <div className="text-sm text-muted-foreground">Happy Customers</div>
+                </div>
+                <div className="text-center p-4 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
+                  <div className="text-2xl font-bold text-[#118C4C]">{product.viewCount || 0}</div>
+                  <div className="text-sm text-muted-foreground">Total Views</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Comments */}
         <Card className="mt-4 border-[#118C4C]/20">
