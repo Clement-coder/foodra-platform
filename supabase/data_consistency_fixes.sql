@@ -123,13 +123,17 @@ DELETE FROM product_views
 WHERE id IN (SELECT id FROM ranked_views WHERE rn > 1);
 
 -- 7. Add constraints to prevent data inconsistencies
-ALTER TABLE products 
-ADD CONSTRAINT IF NOT EXISTS check_quantity_non_negative 
-CHECK (quantity >= 0);
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'check_quantity_non_negative') THEN
+        ALTER TABLE products ADD CONSTRAINT check_quantity_non_negative CHECK (quantity >= 0);
+    END IF;
+END $$;
 
-ALTER TABLE orders 
-ADD CONSTRAINT IF NOT EXISTS check_total_amount_positive 
-CHECK (total_amount > 0);
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'check_total_amount_positive') THEN
+        ALTER TABLE orders ADD CONSTRAINT check_total_amount_positive CHECK (total_amount > 0);
+    END IF;
+END $$;
 
 -- 8. Create a view for consistent order states
 CREATE OR REPLACE VIEW order_states AS
