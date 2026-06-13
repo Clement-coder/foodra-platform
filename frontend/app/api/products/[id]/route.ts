@@ -4,6 +4,9 @@ import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
 import { notifyWishlistPriceDrop } from '@/lib/wishlistServer'
 
+const FOODRA_OWNER_ID = '292d7db3-2fd6-4dd2-9fac-d8c3b08b521d'
+const FOODRA_LOGO = 'https://foodramarket.com/foodra_logo.jpeg'
+
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   console.log("Fetching product with ID:", id)
@@ -11,7 +14,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   try {
     const { data: product, error } = await supabase
       .from('products')
-      .select(`*, users!products_farmer_id_fkey (id, name, avatar_url)`)
+      .select(`*, users!products_farmer_id_fkey (id, name, avatar_url, role, is_verified)`)
       .eq('id', id)
       .single()
 
@@ -37,9 +40,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       description: product.description || '',
       image: product.image_url || '',
       location: product.location || '',
-      farmerId: product.farmer_id,
-      farmerName: product.users?.role === 'admin' ? 'Foodra' : (product.users?.name || 'Foodra'),
-      farmerAvatar: product.users?.role === 'admin' ? 'https://foodramarket.com/foodra_logo.jpeg' : (product.users?.avatar_url || ''),
+      farmerId: FOODRA_OWNER_ID,
+      farmerName: 'Foodra',
+      farmerAvatar: FOODRA_LOGO,
       farmerIsVerified: true,
       createdAt: product.created_at,
     })
@@ -63,7 +66,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { data: existingProduct } = await supabaseAdmin.from('products').select('farmer_id, price, name').eq('id', id).single()
     if (!existingProduct) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
-    if (auth.user.role !== 'admin') {
+    if (!['admin', 'owner'].includes(auth.user.role)) {
       if (existingProduct.farmer_id !== auth.user.id)
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
@@ -114,7 +117,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     const auth = await requireAuthenticatedUser(request)
 
-    if (auth.user.role !== 'admin') {
+    if (!['admin', 'owner'].includes(auth.user.role)) {
       const { data: product } = await supabaseAdmin.from('products').select('farmer_id').eq('id', id).single()
       if (!product || product.farmer_id !== auth.user.id)
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

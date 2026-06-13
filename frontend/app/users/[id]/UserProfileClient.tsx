@@ -26,7 +26,7 @@ export default function UserProfileClient({ user, membership, products, ordersCo
   const [shareOpen, setShareOpen] = useState(false)
 
   const joinedDate = new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
-  const isFoodra = user.role === "admin"
+  const isFoodra = user.role === "admin" || user.role === "owner"
   const shortWallet = user.wallet ? `${user.wallet.slice(0, 6)}…${user.wallet.slice(-4)}` : null
 
   const stats = [
@@ -230,10 +230,15 @@ export default function UserProfileClient({ user, membership, products, ordersCo
                           <Package className="h-8 w-8 text-muted-foreground/30" />
                         </div>
                       )}
-                      <div className="absolute top-2 left-2">
+                      <div className="absolute top-2 left-2 flex flex-col gap-1">
                         <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-black/50 text-white backdrop-blur-sm">
                           {p.category}
                         </span>
+                        {isFoodra && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[#118C4C] text-white flex items-center gap-0.5">
+                            <Sprout className="h-2.5 w-2.5" /> Foodra
+                          </span>
+                        )}
                       </div>
                       {p.quantity === 0 && (
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center">

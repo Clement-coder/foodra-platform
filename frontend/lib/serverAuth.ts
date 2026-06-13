@@ -3,7 +3,7 @@ import "server-only"
 import { PrivyClient } from "@privy-io/server-auth"
 import { getSupabaseAdminClient } from "./supabaseAdmin"
 
-type Role = "farmer" | "buyer" | "admin"
+type Role = "farmer" | "buyer" | "admin" | "owner"
 
 export type DbUser = {
   id: string
@@ -81,7 +81,7 @@ export async function requireAuthenticatedUser(request: Request) {
 
 export async function requireAdminUser(request: Request) {
   const auth = await requireAuthenticatedUser(request)
-  if (auth.user.role !== "admin") {
+  if (!["admin", "owner"].includes(auth.user.role)) {
     throw new AuthError(403, "Forbidden")
   }
   return auth
@@ -97,5 +97,17 @@ export function assertSelfOrAdmin(actor: DbUser, targetUserId: string) {
 export function assertRole(actor: DbUser, roles: Role[]) {
   if (!roles.includes(actor.role)) {
     throw new AuthError(403, "Forbidden")
+  }
+}
+
+export function assertAdminOrOwner(actor: DbUser) {
+  if (!['admin', 'owner'].includes(actor.role)) {
+    throw new AuthError(403, "Admin or Owner access required")
+  }
+}
+
+export function assertSelfOrAdminOrOwner(actor: DbUser, targetUserId: string) {
+  if (actor.id !== targetUserId && !['admin', 'owner'].includes(actor.role)) {
+    throw new AuthError(403, "Access denied")
   }
 }

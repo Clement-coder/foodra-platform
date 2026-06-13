@@ -15,7 +15,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
   if (userError || !rawUser) notFound()
 
-  const isAdmin = rawUser.role === "admin"
+  const isAdmin = rawUser.role === "admin" || rawUser.role === "owner"
 
   const [
     { count: buyerOrdersCount },

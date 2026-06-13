@@ -7,7 +7,7 @@ export interface User {
   createdAt: string
   phone?: string
   location?: string
-  role?: "farmer" | "buyer" | "admin"
+  role?: "farmer" | "buyer" | "admin" | "owner"
   isVerified?: boolean
   linked_accounts?: Array<{ type: string }>
   termsAcceptedAt?: string | null

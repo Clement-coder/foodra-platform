@@ -4,6 +4,9 @@ import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
 import { AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
 
+const FOODRA_OWNER_ID = '292d7db3-2fd6-4dd2-9fac-d8c3b08b521d'
+const FOODRA_LOGO = 'https://foodramarket.com/foodra_logo.jpeg'
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -11,7 +14,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('products')
-      .select(`*, users!products_farmer_id_fkey (id, name, avatar_url)`)
+      .select(`*, users!products_farmer_id_fkey (id, name, avatar_url, role, is_verified)`)
       .order('created_at', { ascending: false })
 
     if (farmerId) {
@@ -33,9 +36,10 @@ export async function GET(request: Request) {
       description: p.description || '',
       image: p.image_url || '',
       location: p.location || '',
-      farmerId: p.farmer_id,
-      farmerName: p.users?.name || 'Unknown',
-      farmerAvatar: p.users?.avatar_url || '',
+      farmerId: FOODRA_OWNER_ID,
+      farmerName: 'Foodra',
+      farmerAvatar: FOODRA_LOGO,
+      farmerIsVerified: true,
       createdAt: p.created_at,
     })) || []
 
@@ -65,7 +69,7 @@ export async function POST(request: Request) {
 
     const auth = await requireAuthenticatedUser(request)
     const body = await request.json()
-    if (auth.user.role !== "farmer" && auth.user.role !== "admin") {
+    if (auth.user.role !== "farmer" && auth.user.role !== "admin" && auth.user.role !== "owner") {
       return NextResponse.json({ error: "Only farmers can list products" }, { status: 403 })
     }
     
