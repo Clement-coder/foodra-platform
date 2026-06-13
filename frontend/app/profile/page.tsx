@@ -256,9 +256,11 @@ function ProfilePage() {
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground/80 capitalize">
-                  {["admin","owner"].includes(user.role ?? "") ? "Platform Vendor" : user.role || "Member"}
-                </span>
+                {user.role !== "admin" && (
+                  <span className="font-semibold text-foreground/80 capitalize">
+                    {user.role === "owner" ? "Platform Vendor" : user.role || "Member"}
+                  </span>
+                )}
                 {user.location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{user.location}</span>}
                 <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />Joined {joinedDate}</span>
               </div>
