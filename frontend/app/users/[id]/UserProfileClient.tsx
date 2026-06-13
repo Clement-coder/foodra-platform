@@ -67,7 +67,14 @@ export default function UserProfileClient({ user, membership, products, ordersCo
             <div className="relative">
               <div className="w-32 h-32 rounded-2xl border-[5px] border-background overflow-hidden bg-muted shadow-2xl">
                 {user.avatar ? (
-                  <Image src={user.avatar} alt={user.name} fill className="object-cover" referrerPolicy="no-referrer" unoptimized />
+                  <Image
+                    src={user.avatar}
+                    alt={user.name}
+                    fill
+                    className={isFoodra ? "object-contain p-1" : "object-cover"}
+                    referrerPolicy="no-referrer"
+                    unoptimized
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#118C4C] to-[#063d1e] text-white text-5xl font-black">
                     {(user.name || "U")[0].toUpperCase()}

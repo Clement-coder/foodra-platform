@@ -204,28 +204,31 @@ function ProfilePage() {
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
 
-        {/* Cover + Avatar */}
+        {/* Cover + Avatar — matches /users/[id] layout */}
         <div className="relative">
-          {/* Cover — matches wallet card style */}
-          <div className="relative h-36 sm:h-48 w-full rounded-3xl overflow-hidden bg-gradient-to-br from-[#118C4C] via-[#0d7a42] to-[#1a5c35] shadow-2xl">
-            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
-            <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5" />
-            <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-white/5" />
+          <div className="h-48 sm:h-56 w-full overflow-hidden bg-gradient-to-br from-[#063d1e] via-[#118C4C] to-[#20c46a] relative">
+            <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/5" />
+            <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full bg-white/5" />
+            <div className="absolute top-8 right-1/3 w-20 h-20 rounded-full bg-white/5" />
           </div>
 
           {/* Avatar */}
-          <div className="absolute left-4 sm:left-6 -bottom-14">
+          <div className="absolute left-5 -bottom-16">
             <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-background overflow-hidden bg-muted shadow-lg">
+              <div className="w-32 h-32 rounded-2xl border-[5px] border-background overflow-hidden bg-muted shadow-2xl">
                 {user.avatar
                   ? <img src={user.avatar} className="w-full h-full object-cover" referrerPolicy="no-referrer" alt={displayName} />
-                  : <div className="w-full h-full flex items-center justify-center bg-[#118C4C] text-white text-3xl font-bold">{displayName[0].toUpperCase()}</div>
+                  : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#118C4C] to-[#063d1e] text-white text-5xl font-black">{displayName[0].toUpperCase()}</div>
                 }
               </div>
-              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 {avatarUploading ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Camera className="w-6 h-6 text-white" />}
               </div>
               <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+              {/* verified badge */}
+              <div className={`absolute -bottom-2 -right-2 w-9 h-9 rounded-full border-2 border-background flex items-center justify-center shadow-lg ${user.isVerified ? "bg-[#118C4C]" : "bg-muted"}`}>
+                {user.isVerified ? <BadgeCheck className="h-5 w-5 text-white" /> : <ShieldCheck className="h-4 w-4 text-muted-foreground" />}
+              </div>
             </div>
           </div>
 
@@ -233,70 +236,70 @@ function ProfilePage() {
           <div className="absolute top-3 right-3 flex items-center gap-2">
             <LanguageSwitcher compact />
             <ThemeToggle />
+            <button onClick={() => setIsShareModalOpen(true)}
+              className="flex items-center gap-1.5 text-white/90 hover:text-white text-sm bg-black/30 hover:bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full transition-colors">
+              <Share2 className="h-3.5 w-3.5" /> Share
+            </button>
           </div>
         </div>
 
-        {/* Action buttons row */}
-        <div className="flex justify-end gap-2 px-4 pt-3 pb-1">
-          <Button onClick={() => setIsShareModalOpen(true)} variant="outline" size="sm" className="rounded-full gap-1.5">
-            <Share2 className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Share</span>
-          </Button>
-          <Button onClick={() => { setValue("name", user.name || displayName); setValue("phone", user.phone || ""); setValue("location", user.location || ""); setValue("accountType", user.role === "farmer" || user.role === "admin" ? "Farmer" : "Buyer"); setIsEditModalOpen(true) }}
-            size="sm" className="rounded-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1.5">
-            <Edit className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{profileCompletion < 100 ? `Complete (${profileCompletion}%)` : "Edit Profile"}</span>
-          </Button>
-          {user.role === "admin" && (
-            <a href="/admin">
-              <Button size="sm" className="rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Admin</span>
-              </Button>
-            </a>
-          )}
-          <Button onClick={() => setIsSignOutModalOpen(true)} variant="outline" size="sm" className="rounded-full text-red-500 border-red-200 hover:bg-red-50 dark:hover:bg-red-950/20">
-            <LogOut className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-
-        {/* Name + bio */}
-        <div className="px-4 sm:px-6 mt-10">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold text-foreground">{displayName}</h1>
-            {user.isVerified && (
-              <span className="inline-flex items-center gap-1 text-xs bg-[#118C4C]/10 text-[#118C4C] px-2 py-0.5 rounded-full font-medium">
-                <BadgeCheck className="h-3.5 w-3.5" /> Verified
-              </span>
-            )}
-            <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full capitalize">{user.role || "user"}</span>
+        {/* Name + identity — matches /users/[id] layout */}
+        <div className="px-5 mt-20">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl font-black tracking-tight truncate">{displayName}</h1>
+                {user.isVerified && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300/40 flex-shrink-0">
+                    <ShieldCheck className="h-3 w-3" /> Verified
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground/80 capitalize">{user.role || "Member"}</span>
+                {user.location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{user.location}</span>}
+                <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />Joined {joinedDate}</span>
+              </div>
+            </div>
             <MembershipBadge score={membershipScore} />
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
-            {user.location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{user.location}</span>}
-            <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" />Joined {joinedDate}</span>
+          {/* Edit / Admin / Logout actions */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Button onClick={() => { setValue("name", user.name || displayName); setValue("phone", user.phone || ""); setValue("location", user.location || ""); setValue("accountType", user.role === "farmer" || user.role === "admin" ? "Farmer" : "Buyer"); setIsEditModalOpen(true) }}
+              size="sm" className="rounded-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1.5">
+              <Edit className="h-3.5 w-3.5" />
+              {profileCompletion < 100 ? `Complete (${profileCompletion}%)` : "Edit Profile"}
+            </Button>
+            {(user.role === "admin" || user.role === "owner") && (
+              <a href="/admin">
+                <Button size="sm" className="rounded-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Admin
+                </Button>
+              </a>
+            )}
+            <Button onClick={() => setIsSignOutModalOpen(true)} variant="outline" size="sm" className="rounded-full text-red-500 border-red-200 hover:bg-red-50 dark:hover:bg-red-950/20 gap-1.5">
+              <LogOut className="h-3.5 w-3.5" /> Sign out
+            </Button>
           </div>
 
           {/* Wallet */}
-          <div className="mt-3">
-            {user.wallet ? (
+          {user.wallet && (
+            <div className="mt-3">
               <button onClick={() => setShowWallet(v => !v)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
                 <Wallet className="h-3.5 w-3.5 text-[#118C4C]" />
-                {showWallet ? (
-                  <span className="font-mono">{user.wallet.slice(0, 6)}…{user.wallet.slice(-4)}</span>
-                ) : "Show wallet"}
+                {showWallet ? <span className="font-mono">{user.wallet.slice(0, 6)}…{user.wallet.slice(-4)}</span> : "Show wallet"}
               </button>
-            ) : null}
-            {showWallet && user.wallet && (
-              <div className="mt-2 flex items-center gap-2 bg-muted rounded-xl px-3 py-2 text-xs font-mono">
-                <span className="flex-1 truncate">{user.wallet}</span>
-                <button onClick={() => { navigator.clipboard.writeText(user.wallet!); setCopied(true); setTimeout(() => setCopied(false), 2000) }}>
-                  {copied ? <Check className="h-3.5 w-3.5 text-[#118C4C]" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />}
-                </button>
-              </div>
-            )}
-          </div>
+              {showWallet && (
+                <div className="mt-2 flex items-center gap-2 bg-muted rounded-xl px-3 py-2 text-xs font-mono">
+                  <span className="flex-1 truncate">{user.wallet}</span>
+                  <button onClick={() => { navigator.clipboard.writeText(user.wallet!); setCopied(true); setTimeout(() => setCopied(false), 2000) }}>
+                    {copied ? <Check className="h-3.5 w-3.5 text-[#118C4C]" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Divider */}
