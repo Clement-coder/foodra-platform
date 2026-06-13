@@ -4,30 +4,26 @@ import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, MapPin, Share2, ShoppingCart, X, Eye } from "lucide-react"
+import { ArrowLeft, MapPin, Share2, ShoppingCart, X, Eye, BadgeCheck, Minus, Plus, ChevronRight, Lock, Truck, RotateCcw, Zap } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/Skeleton"
 import { useToast } from "@/lib/toast"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
-import type { Product, CartItem } from "@/lib/types"
+import type { Product } from "@/lib/types"
 import { useCart } from "@/lib/useCart"
 import { useUser } from "@/lib/useUser"
 import { ProductComments } from "@/components/ProductComments"
 import { WishlistButton } from "@/components/WishlistButton"
 import { productJsonLd } from "@/lib/seo"
-import { FoodraAvatar } from "@/components/FoodraAvatar"
-import { GridLayout } from "@/components/GridLayout"
 import { ProductCard } from "@/components/ProductCard"
 
 function ProductDetailPage() {
   const router = useRouter()
-  const params = useParams();
-  const id = params.id as string;
+  const { id } = useParams() as { id: string }
   const { currentUser } = useUser()
   const { addToCart } = useCart()
   const { toast } = useToast()
+
   const [product, setProduct] = useState<Product | null>(null)
   const [related, setRelated] = useState<Product[]>([])
   const [productStats, setProductStats] = useState<any>(null)
@@ -35,429 +31,325 @@ function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isImageFullScreen, setIsImageFullScreen] = useState(false)
+  const [qty, setQty] = useState(1)
+  const [tab, setTab] = useState<"description" | "details" | "reviews">("description")
 
   useEffect(() => {
     if (!id) return
-    const fetchProduct = async () => {
-      setLoading(true)
-      try {
-        const res = await fetch(`/api/products/${id}`)
-        if (!res.ok) {
-          setError(`Failed to load product: ${res.status}`)
-          return
-        }
-        const p = await res.json()
+    setLoading(true)
+    fetch(`/api/products/${id}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(p => {
         setProduct(p)
-        if (p) {
-          // Track product view
-          if (currentUser?.id) {
-            fetch(`/api/products/${id}/views?userId=${currentUser.id}`, { method: "POST" }).catch(() => {})
-          } else {
-            fetch(`/api/products/${id}/views`, { method: "POST" }).catch(() => {})
-          }
-          // Fetch related products and stats
-          Promise.all([
-            fetch(`/api/products/${id}/related`).then(r => r.json()).catch(() => []),
-            fetch(`/api/products/${id}/stats`).then(r => r.ok ? r.json() : null).catch(() => null)
-          ]).then(([relatedData, statsData]) => {
-            setRelated(relatedData)
-            setProductStats(statsData)
-          })
-        }
-      } catch (err) {
-        setError(`Error loading product: ${err}`)
-        setProduct(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProduct()
+        if (currentUser?.id) fetch(`/api/products/${id}/views?userId=${currentUser.id}`, { method: "POST" }).catch(() => {})
+        else fetch(`/api/products/${id}/views`, { method: "POST" }).catch(() => {})
+        Promise.all([
+          fetch(`/api/products/${id}/related`).then(r => r.json()).catch(() => []),
+          fetch(`/api/products/${id}/stats`).then(r => r.ok ? r.json() : null).catch(() => null),
+        ]).then(([rel, stats]) => { setRelated(rel); setProductStats(stats) })
+      })
+      .catch(e => setError(`Failed to load product: ${e}`))
+      .finally(() => setLoading(false))
   }, [id])
 
   const handleAddToCart = () => {
     if (!product) return
-    addToCart({ productId: product.id, productName: product.productName, pricePerUnit: product.pricePerUnit, quantity: 1, image: product.image })
+    addToCart({ productId: product.id, productName: product.productName, pricePerUnit: product.pricePerUnit, quantity: qty, image: product.image })
+    toast.success(`${qty} × ${product.productName} added to cart`)
   }
 
-  const isAdmin = currentUser?.role === "admin"
+  const isAdminOrOwner = currentUser?.role === "admin" || currentUser?.role === "owner"
+  const inStock = product && product.quantity > 0
+  const lowStock = product && product.quantity > 0 && product.quantity <= 10
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <Skeleton className="h-[500px] rounded-2xl" />
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-1/3" />
-            <Skeleton className="h-12 w-2/3" />
-            <Skeleton className="h-6 w-1/4" />
-            <Skeleton className="h-32" />
-            <Skeleton className="h-12" />
-          </div>
+  if (loading) return (
+    <div className="max-w-6xl mx-auto px-4 py-8 animate-pulse">
+      <div className="h-4 w-48 bg-muted rounded mb-6" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="h-[480px] rounded-3xl bg-muted" />
+        <div className="space-y-4">
+          <div className="h-4 w-24 bg-muted rounded-full" />
+          <div className="h-10 w-3/4 bg-muted rounded" />
+          <div className="h-6 w-1/3 bg-muted rounded" />
+          <div className="h-20 bg-muted rounded-2xl" />
+          <div className="h-14 bg-muted rounded-2xl" />
         </div>
       </div>
-    )
-  }
+    </div>
+  )
 
-  if (!product) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
-          <span className="text-3xl">📦</span>
-        </div>
-        <h1 className="text-2xl font-bold text-foreground mb-3">Product Not Found</h1>
-        <p className="text-muted-foreground mb-6">{error || "The product you're looking for doesn't exist or has been removed."}</p>
-        <Link href="/marketplace">
-          <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white">Back to Marketplace</Button>
-        </Link>
-      </div>
-    )
-  }
+  if (!product) return (
+    <div className="max-w-6xl mx-auto px-4 py-16 text-center">
+      <div className="text-5xl mb-4">📦</div>
+      <h1 className="text-2xl font-bold mb-3">Product Not Found</h1>
+      <p className="text-muted-foreground mb-6">{error || "This product doesn't exist or has been removed."}</p>
+      <Link href="/marketplace"><Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white">Back to Marketplace</Button></Link>
+    </div>
+  )
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* JSON-LD structured data */}
-      {product && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(product)) }}
-        />
-      )}
-      <Button variant="ghost" onClick={() => router.back()} className="mb-6 gap-2">
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </Button>
+    <div className="max-w-6xl mx-auto px-4 pb-32 lg:pb-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(product)) }} />
 
-      <ShareOptionsModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        title={product ? `${product.productName} on Foodra` : "Product on Foodra"}
-        text={product ? `Check out this product: ${product.productName}` : "Check out this product"}
-        url={typeof window !== "undefined" ? window.location.href : ""}
-      />
+      <ShareOptionsModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)}
+        title={`${product.productName} on Foodra`} text={`Check out: ${product.productName}`}
+        url={typeof window !== "undefined" ? window.location.href : ""} />
 
-      {/* Full Screen Image Modal */}
-      {isImageFullScreen && product?.image && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
-          onClick={() => setIsImageFullScreen(false)}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4 text-white hover:bg-white/20"
-            onClick={() => setIsImageFullScreen(false)}
-          >
-            <X className="h-6 w-6" />
-          </Button>
-          <div className="relative w-full h-full max-w-7xl max-h-[90vh]">
-            <Image
-              src={product.image}
-              alt={product.productName}
-              fill
-              className="object-contain"
-              unoptimized
-            />
+      {/* Fullscreen image */}
+      {isImageFullScreen && product.image && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4" onClick={() => setIsImageFullScreen(false)}>
+          <button className="absolute top-4 right-4 text-white bg-white/10 hover:bg-white/20 p-2 rounded-full">
+            <X className="h-5 w-5" />
+          </button>
+          <div className="relative w-full max-w-4xl h-[80vh]">
+            <Image src={product.image} alt={product.productName} fill className="object-contain" unoptimized />
           </div>
         </div>
       )}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1.5 text-xs text-muted-foreground py-4">
+        <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+        <ChevronRight className="h-3 w-3" />
+        <Link href="/marketplace" className="hover:text-foreground transition-colors">Marketplace</Link>
+        <ChevronRight className="h-3 w-3" />
+        <span className="text-foreground font-medium truncate max-w-[200px]">{product.productName}</span>
+      </nav>
+
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+
           {/* Image */}
-          <div 
-            className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden bg-muted border-2 border-[#118C4C]/20 cursor-pointer hover:border-[#118C4C]/40 transition-colors"
-            onClick={() => product.image && setIsImageFullScreen(true)}
-          >
-            {product.image ? (
-              <Image 
-                src={product.image} 
-                alt={product.productName} 
-                fill 
-                className="object-cover"
-                unoptimized
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="text-muted-foreground">No image available</span>
-              </div>
-            )}
+          <div className="relative h-80 sm:h-[480px] rounded-3xl overflow-hidden bg-muted cursor-zoom-in group"
+            onClick={() => product.image && setIsImageFullScreen(true)}>
+            {product.image
+              ? <Image src={product.image} alt={product.productName} fill className="object-cover group-hover:scale-105 transition-transform duration-500" unoptimized />
+              : <div className="w-full h-full flex items-center justify-center text-muted-foreground">No image</div>
+            }
+            {/* Stock badge */}
+            <div className="absolute top-3 left-3">
+              {!inStock
+                ? <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">Out of Stock</span>
+                : lowStock
+                ? <span className="bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">Only {product.quantity} left</span>
+                : <span className="bg-[#118C4C] text-white text-xs font-bold px-2.5 py-1 rounded-full">In Stock</span>
+              }
+            </div>
+            <div className="absolute top-3 right-3">
+              <span className="bg-black/50 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full">{product.category}</span>
+            </div>
             {product.image && (
-              <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
-                <span className="text-white text-sm bg-black/50 px-4 py-2 rounded-full">Click to view full size</span>
+              <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="bg-black/60 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                  <Eye className="h-3 w-3" /> Tap to zoom
+                </span>
               </div>
             )}
           </div>
 
           {/* Info */}
-          <div>
-            <div className="mb-4">
-              <span className="inline-block bg-[#118C4C]/10 text-[#118C4C] text-sm font-semibold px-4 py-2 rounded-full border border-[#118C4C]/20">
-                {product.category}
-              </span>
+          <div className="flex flex-col gap-5">
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-2xl sm:text-3xl font-black leading-tight">{product.productName}</h1>
+              <WishlistButton productId={product.id} productName={product.productName} image={product.image} pricePerUnit={product.pricePerUnit}
+                className="flex-shrink-0 h-10 w-10 rounded-xl border border-input" iconSize="h-5 w-5" />
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{product.productName}</h1>
-
-            {product.viewCount != null && product.viewCount > 0 && (
-              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                <div className="flex items-center gap-1.5">
-                  <Eye className="h-3.5 w-3.5" />
-                  <span>{product.viewCount.toLocaleString()} view{product.viewCount !== 1 ? "s" : ""}</span>
-                </div>
-                {productStats?.totalSold > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <ShoppingCart className="h-3.5 w-3.5" />
-                    <span>{productStats.totalSold} sold</span>
-                  </div>
-                )}
-                {productStats?.uniqueBuyers > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <span>👥</span>
-                    <span>{productStats.uniqueBuyers} member{productStats.uniqueBuyers !== 1 ? "s" : ""} bought this</span>
-                  </div>
-                )}
+            {(product.viewCount ?? 0) > 0 && (
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" />{product.viewCount?.toLocaleString()} views</span>
+                {productStats?.totalSold > 0 && <span className="flex items-center gap-1"><ShoppingCart className="h-3.5 w-3.5" />{productStats.totalSold} sold</span>}
+                {productStats?.uniqueBuyers > 0 && <span>👥 {productStats.uniqueBuyers} buyers</span>}
               </div>
             )}
 
-            <div className="flex items-center gap-3 mb-6">
-              <span className="text-4xl font-bold text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
-              <span className="text-muted-foreground">per {product.unit || 'unit'}</span>
-              <WishlistButton
-                productId={product.id}
-                productName={product.productName}
-                image={product.image}
-                pricePerUnit={product.pricePerUnit}
-                className="ml-auto h-10 w-10 rounded-xl border border-input"
-                iconSize="h-6 w-6"
-              />
+            {/* Price */}
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-black text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
+                <span className="text-muted-foreground text-sm">/ {product.unit || "unit"}</span>
+              </div>
+              {qty > 1 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Total: <span className="font-bold text-foreground">₦{(product.pricePerUnit * qty).toLocaleString()}</span>
+                </p>
+              )}
             </div>
 
-            <Card className="mb-6 border-[#118C4C]/20">
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-[#118C4C]/10 rounded-lg">
-                      <MapPin className="h-4 w-4 text-[#118C4C]" />
+            {/* Seller */}
+            <Link href={`/users/${product.farmerId}`}>
+              <div className="flex items-center gap-3 p-3 rounded-2xl border border-border hover:border-[#118C4C]/40 hover:bg-[#118C4C]/5 transition-all group">
+                <div className="relative flex-shrink-0">
+                  {product.farmerAvatar
+                    ? <img src={product.farmerAvatar} alt={product.farmerName} className="w-10 h-10 rounded-full object-contain border border-border bg-white" />
+                    : <div className="w-10 h-10 rounded-full bg-[#118C4C] flex items-center justify-center text-white font-bold">{product.farmerName?.[0]?.toUpperCase()}</div>
+                  }
+                  {product.farmerIsVerified && (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#118C4C] rounded-full flex items-center justify-center border border-background">
+                      <BadgeCheck className="h-2.5 w-2.5 text-white" />
                     </div>
-                    <div className="flex-1">
-                      <span className="text-foreground font-medium">{product.location}</span>
-                      <p className="text-xs text-muted-foreground">Seller location</p>
-                    </div>
-                  </div>
-                  <div className="pt-2 border-t border-[#118C4C]/20">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Available Stock</p>
-                        <p className="text-lg font-semibold text-[#118C4C]">{product.quantity} {product.unit || 'unit'}{product.quantity !== 1 ? 's' : ''}</p>
-                      </div>
-                      {product.quantity > 0 && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Status</p>
-                          <p className="text-sm font-medium text-green-600 flex items-center gap-1">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                            In Stock
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm">{product.farmerName}</p>
+                  <p className="text-xs text-muted-foreground">{product.farmerIsVerified ? "✓ Verified Seller" : "Seller"} · {product.location}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+              </div>
+            </Link>
 
-            <Button
-              onClick={handleAddToCart}
-              size="lg"
-              className="w-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 mb-4 shadow-lg shadow-[#118C4C]/20"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              Add to Cart
-            </Button>
+            {/* Location + stock */}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50">
+                <MapPin className="h-4 w-4 text-[#118C4C] flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Location</p>
+                  <p className="font-medium truncate">{product.location}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50">
+                <ShoppingCart className="h-4 w-4 text-[#118C4C] flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Available</p>
+                  <p className="font-medium">{product.quantity} {product.unit || "unit"}{product.quantity !== 1 ? "s" : ""}</p>
+                </div>
+              </div>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Link href="/shop" className="block">
-                <Button variant="outline" size="lg" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C]/5">
-                  View Cart
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full gap-2 border-[#118C4C]/30 hover:bg-[#118C4C]/5"
-                onClick={() => setIsShareModalOpen(true)}
-              >
+            {/* Quantity selector */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium">Quantity</span>
+              <div className="flex items-center border border-border rounded-xl overflow-hidden">
+                <button onClick={() => setQty(q => Math.max(1, q - 1))} disabled={qty <= 1}
+                  className="px-3 py-2 hover:bg-muted transition-colors disabled:opacity-40">
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-10 text-center font-bold text-sm">{qty}</span>
+                <button onClick={() => setQty(q => Math.min(product.quantity, q + 1))} disabled={qty >= product.quantity}
+                  className="px-3 py-2 hover:bg-muted transition-colors disabled:opacity-40">
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex gap-3">
+              <Button onClick={handleAddToCart} disabled={!inStock} size="lg"
+                className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 rounded-2xl shadow-lg shadow-[#118C4C]/20">
+                <ShoppingCart className="h-5 w-5" />
+                {inStock ? "Add to Cart" : "Out of Stock"}
+              </Button>
+              <Button variant="outline" size="lg" onClick={() => setIsShareModalOpen(true)} className="rounded-2xl px-4">
                 <Share2 className="h-4 w-4" />
-                Share Product
               </Button>
             </div>
+
+            {inStock && (
+              <Link href="/shop">
+                <Button variant="outline" size="lg" className="w-full rounded-2xl border-[#118C4C]/30 hover:bg-[#118C4C]/5 text-[#118C4C] font-semibold">
+                  View Cart & Checkout
+                </Button>
+              </Link>
+            )}
+
+            {/* Trust badges */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { icon: <Lock className="h-4 w-4" />, label: "Secure Escrow" },
+                { icon: <Truck className="h-4 w-4" />, label: "Fast Delivery" },
+                { icon: <RotateCcw className="h-4 w-4" />, label: "7-day Release" },
+              ].map(b => (
+                <div key={b.label} className="flex flex-col items-center gap-1 p-2.5 rounded-xl bg-muted/50 text-center">
+                  <span className="text-[#118C4C]">{b.icon}</span>
+                  <span className="text-[10px] text-muted-foreground font-medium leading-tight">{b.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {isAdminOrOwner && (
+              <Link href={`/listing/${product.id}/edit`}>
+                <Button variant="outline" size="sm" className="w-full border-orange-300 text-orange-600 hover:bg-orange-50 rounded-xl">
+                  Edit Product (Admin)
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
-        {/* Description */}
-        <Card className="mb-4 border-[#118C4C]/20">
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold text-foreground mb-3 flex items-center gap-2">
-              <div className="h-1 w-8 bg-[#118C4C] rounded"></div>
-              Product Description
-            </h2>
-            <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{product.description}</p>
-          </CardContent>
-        </Card>
-
-        {/* Additional Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="border-[#118C4C]/20">
-            <CardContent className="p-6">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <div className="h-1 w-6 bg-[#118C4C] rounded"></div>
-                Product Information
-              </h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between p-2 rounded-lg bg-muted/50">
-                  <span className="text-muted-foreground">Category:</span>
-                  <span className="font-medium text-[#118C4C]">{product.category}</span>
-                </div>
-                <div className="flex justify-between p-2 rounded-lg bg-muted/50">
-                  <span className="text-muted-foreground">Available Stock:</span>
-                  <span className="font-medium text-[#118C4C]">{product.quantity} {product.unit || 'unit'}{product.quantity !== 1 ? 's' : ''}</span>
-                </div>
-                <div className="flex justify-between p-2 rounded-lg bg-muted/50">
-                  <span className="text-muted-foreground">Price per {product.unit || 'unit'}:</span>
-                  <span className="font-medium text-[#118C4C]">₦{product.pricePerUnit.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between p-2 rounded-lg bg-muted/50">
-                  <span className="text-muted-foreground">Location:</span>
-                  <span className="font-medium">{product.location}</span>
-                </div>
+        {/* Tabs */}
+        <div className="border border-border rounded-3xl overflow-hidden mb-8">
+          <div className="flex border-b border-border">
+            {(["description", "details", "reviews"] as const).map(t => (
+              <button key={t} onClick={() => setTab(t)}
+                className={`flex-1 py-3.5 text-sm font-semibold capitalize transition-colors
+                  ${tab === t ? "bg-[#118C4C]/5 text-[#118C4C] border-b-2 border-[#118C4C]" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"}`}>
+                {t}
+              </button>
+            ))}
+          </div>
+          <div className="p-6">
+            {tab === "description" && (
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{product.description || "No description provided."}</p>
+            )}
+            {tab === "details" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                {([
+                  ["Category", product.category],
+                  ["Unit", product.unit || "unit"],
+                  ["Price per unit", `₦${product.pricePerUnit.toLocaleString()}`],
+                  ["Available stock", `${product.quantity} ${product.unit || "unit"}${product.quantity !== 1 ? "s" : ""}`],
+                  ["Location", product.location],
+                  ["Listed", product.createdAt ? new Date(product.createdAt).toLocaleDateString("en-NG", { month: "long", year: "numeric" }) : "N/A"],
+                  ...(productStats?.totalSold > 0 ? [["Total sold", String(productStats.totalSold)]] : []),
+                  ...(productStats?.uniqueBuyers > 0 ? [["Unique buyers", String(productStats.uniqueBuyers)]] : []),
+                ] as [string, string][]).map(([k, v]) => (
+                  <div key={k} className="flex justify-between p-3 rounded-xl bg-muted/50">
+                    <span className="text-muted-foreground">{k}</span>
+                    <span className="font-semibold">{v}</span>
+                  </div>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-[#118C4C]/20">
-            <CardContent className="p-6">
-              <h3 className="font-semibold mb-4 flex items-center gap-2">
-                <div className="h-1 w-6 bg-[#118C4C] rounded"></div>
-                Seller Information
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
-                  <div className="relative">
-                    {product.farmerAvatar ? (
-                      <Image
-                        src={product.farmerAvatar}
-                        alt={product.farmerName}
-                        width={48}
-                        height={48}
-                        className="rounded-full object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-[#118C4C] rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">
-                          {product.farmerName?.[0]?.toUpperCase() || 'F'}
-                        </span>
-                      </div>
-                    )}
-                    {product.farmerIsVerified && (
-                      <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#118C4C] rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">✓</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <Link href={`/users/${product.farmerId}`} className="hover:underline">
-                      <p className="font-medium text-[#118C4C] flex items-center gap-1">
-                        {product.farmerName}
-                        {product.farmerIsVerified && <span className="text-xs">✓</span>}
-                      </p>
-                    </Link>
-                    <p className="text-sm text-muted-foreground">
-                      {product.farmerIsVerified ? "Verified Farmer" : "Farmer"}
-                    </p>
-                  </div>
-                </div>
-                
-                {productStats && (
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="p-3 rounded-lg bg-muted/50">
-                      <p className="text-muted-foreground">Total Products</p>
-                      <p className="font-semibold text-[#118C4C]">{productStats.farmerProductCount || 0}</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted/50">
-                      <p className="text-muted-foreground">Member Since</p>
-                      <p className="font-semibold">
-                        {product.createdAt ? new Date(product.createdAt).getFullYear() : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                
-                <Link href={`/users/${product.farmerId}`}>
-                  <Button variant="outline" size="sm" className="w-full border-[#118C4C]/30 hover:bg-[#118C4C]/5">
-                    View Farmer Profile
-                  </Button>
-                </Link>
-                
-                {isAdmin && (
-                  <Link href={`/listing/${product.id}/edit`}>
-                    <Button variant="outline" size="sm" className="w-full border-orange-300 hover:bg-orange-50 text-orange-700 mt-2">
-                      Edit Product (Admin)
-                    </Button>
-                  </Link>
-                )}
-              </div>
-                
-            </CardContent>
-          </Card>
+            )}
+            {tab === "reviews" && (
+              <ProductComments productId={product.id} currentUserId={currentUser?.id} productOwnerId={product.farmerId} />
+            )}
+          </div>
         </div>
 
-        {/* Product Performance Section */}
-        {productStats && (productStats.totalSold > 0 || productStats.uniqueBuyers > 0) && (
-          <Card className="mb-4 border-[#118C4C]/20">
-            <CardContent className="p-6">
-              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                <div className="h-1 w-8 bg-[#118C4C] rounded"></div>
-                Product Performance
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="text-center p-4 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
-                  <div className="text-2xl font-bold text-[#118C4C]">{productStats.totalSold}</div>
-                  <div className="text-sm text-muted-foreground">Total Sold</div>
-                </div>
-                <div className="text-center p-4 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
-                  <div className="text-2xl font-bold text-[#118C4C]">{productStats.uniqueBuyers}</div>
-                  <div className="text-sm text-muted-foreground">Happy Customers</div>
-                </div>
-                <div className="text-center p-4 rounded-lg bg-[#118C4C]/5 border border-[#118C4C]/20">
-                  <div className="text-2xl font-bold text-[#118C4C]">{product.viewCount || 0}</div>
-                  <div className="text-sm text-muted-foreground">Total Views</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Comments */}
-        <Card className="mt-4 border-[#118C4C]/20">
-          <CardContent className="p-6">
-            <ProductComments productId={product.id} currentUserId={currentUser?.id} productOwnerId={product.farmerId} />
-          </CardContent>
-        </Card>
-
-        {/* Related Products */}
+        {/* Related Products — horizontal scroll */}
         {related.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <div className="h-1 w-8 bg-[#118C4C] rounded" />
-              More in {product.category}
-            </h2>
-            <GridLayout>
-              {related.map((p) => <ProductCard key={p.id} product={p} />)}
-            </GridLayout>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <Zap className="h-4 w-4 text-[#118C4C]" /> More in {product.category}
+              </h2>
+              <Link href={`/marketplace?category=${product.category}`} className="text-xs text-[#118C4C] hover:underline font-medium">See all</Link>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-3 -mx-4 px-4" style={{ scrollbarWidth: "none" }}>
+              {related.map(p => (
+                <div key={p.id} className="flex-shrink-0 w-44">
+                  <ProductCard product={p} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </motion.div>
+
+      {/* Sticky mobile CTA */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border p-3 flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground truncate">{product.productName}</p>
+          <p className="font-black text-[#118C4C]">₦{(product.pricePerUnit * qty).toLocaleString()}</p>
+        </div>
+        <Button onClick={handleAddToCart} disabled={!inStock}
+          className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 rounded-xl px-6 shadow-lg shadow-[#118C4C]/20">
+          <ShoppingCart className="h-4 w-4" />
+          {inStock ? "Add to Cart" : "Out of Stock"}
+        </Button>
+      </div>
     </div>
   )
 }
 
-export default ProductDetailPage;
+export default ProductDetailPage
