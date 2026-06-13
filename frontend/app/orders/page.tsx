@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrivy } from "@privy-io/react-auth";
@@ -32,6 +32,12 @@ function OrdersPage() {
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const [disputeOrder, setDisputeOrder] = useState<Order | null>(null);
   const [ratingTarget, setRatingTarget] = useState<{ orderId: string; farmerId: string; farmerName: string } | null>(null);
+
+  // Poll for status updates every 30 s so UI reflects cron-driven changes
+  useEffect(() => {
+    const interval = setInterval(refreshOrders, 30_000);
+    return () => clearInterval(interval);
+  }, [refreshOrders]);
 
   const tabCount = (tab: Tab) => tab === "All" ? orders.length : orders.filter(o => o.status === tab).length;
   const visible = activeTab === "All" ? orders : orders.filter(o => o.status === activeTab);

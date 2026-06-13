@@ -38,6 +38,12 @@ function OrderDetailPage() {
 
   useEffect(() => { fetchOrder(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Poll every 30 s so status updates from the cron are reflected without a manual refresh
+  useEffect(() => {
+    const interval = setInterval(fetchOrder, 30_000);
+    return () => clearInterval(interval);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const escrowOrderId = order?.items.find((i) => i.escrowOrderId)?.escrowOrderId;
   // Escrow actions (confirm/dispute on-chain) require locked escrow
   const canEscrowAct = order && (order.escrowStatus === "locked" || (!!order.escrowTxHash && order.escrowStatus === "none")) && !!escrowOrderId;

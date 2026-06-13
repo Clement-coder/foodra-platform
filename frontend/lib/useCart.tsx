@@ -8,9 +8,9 @@ import { useUser } from "./useUser"
 import { useToast } from "./toast"
 import { authFetch } from "./authFetch"
 
-// Cart abandonment: send reminder after 1 hour, then every 3 hours while cart is non-empty
-const REMIND_INITIAL_MS = 60 * 60 * 1000   // 1 hour
-const REMIND_REPEAT_MS  = 3 * 60 * 60 * 1000 // 3 hours
+// Cart abandonment: send first reminder after 1 hour (client-side),
+// then the server cron handles 24 h follow-ups via cart_abandonment_reminders table.
+const REMIND_INITIAL_MS = 60 * 60 * 1000  // 1 hour
 
 type CartContextValue = {
   cart: CartItem[]
@@ -30,7 +30,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { getAccessToken } = usePrivy()
   const { toast } = useToast()
   const abandonTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const repeatTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const cartKey = currentUser ? `foodra_cart_${currentUser.id}` : null
 
@@ -45,22 +44,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }).catch(() => {})
   }
 
-  // Start/reset abandonment timers whenever cart changes
+  // Start/reset abandonment timer whenever cart changes.
+  // Fires once after 1 hr — the server cron handles 24 h repeats.
   useEffect(() => {
     if (abandonTimer.current) clearTimeout(abandonTimer.current)
-    if (repeatTimer.current) clearInterval(repeatTimer.current)
 
-    if (!cart.length || !currentUser) return
-
-    abandonTimer.current = setTimeout(() => {
-      sendAbandonmentReminder(cart)
-      repeatTimer.current = setInterval(() => sendAbandonmentReminder(cart), REMIND_REPEAT_MS)
-    }, REMIND_INITIAL_MS)
-
-    return () => {
-      if (abandonTimer.current) clearTimeout(abandonTimer.current)
-      if (repeatTimer.current) clearInterval(repeatTimer.current)
+    if (!cart.length || !currentUser) {
+      // Cart emptied — tell server to cancel pending reminders
+      if (currentUser) {
+        authFetch(getAccessToken, "/api/cart/remind", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: [], total: 0 }),
+        }).catch(() => {})
+      }
+      return
     }
+
+    abandonTimer.current = setTimeout(() => sendAbandonmentReminder(cart), REMIND_INITIAL_MS)
+
+    return () => { if (abandonTimer.current) clearTimeout(abandonTimer.current) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart, currentUser])
 
