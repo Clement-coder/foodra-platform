@@ -209,7 +209,7 @@ function Checklist({ score, inView, isModal = false }: { score: MembershipScore,
 export function MembershipBadge({ score, showProgress = false, prevTier }: MembershipBadgeProps) {
   const [open, setOpen] = useState(false)
   const [levelUp, setLevelUp] = useState(false)
-  const tierInfo = TIERS.find(t => t.tier === score.tier)!
+  const tierInfo = TIERS.find(t => t.tier === score.tier) ?? TIERS[0]
   const nextTier = TIERS.find(t => t.min > score.total)
   const progressRef = useRef<HTMLDivElement>(null)
   const inView = useInView(progressRef, { once: true, amount: 0.2 })

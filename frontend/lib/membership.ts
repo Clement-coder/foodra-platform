@@ -42,13 +42,14 @@ export const STEPS = [
 
 export function computeMembership(input: MembershipInput): MembershipScore {
   const profileComplete = (input.hasName && input.hasPhone && input.hasLocation && input.hasAvatar) ? 20 : 0
-  const weeksOld = Math.floor((Date.now() - new Date(input.createdAt).getTime()) / (7 * 24 * 60 * 60 * 1000))
+  const createdMs = input.createdAt ? new Date(input.createdAt).getTime() : Date.now()
+  const weeksOld = isNaN(createdMs) ? 0 : Math.floor((Date.now() - createdMs) / (7 * 24 * 60 * 60 * 1000))
   const accountAge = Math.min(weeksOld * 2, 20)
   const orders = Math.min(input.ordersCount * 5, 30)
   const noDisputes = input.hasDisputes ? 0 : 20
   const verified = input.isVerified ? 10 : 0
 
-  const total = profileComplete + accountAge + orders + noDisputes + verified
+  const total = Math.min(100, Math.max(0, profileComplete + accountAge + orders + noDisputes + verified))
   const tier = TIERS.find(t => total >= t.min && total <= t.max)?.tier ?? "Seed"
   const isAutoVerified = total >= 80
 

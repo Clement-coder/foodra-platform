@@ -175,7 +175,8 @@ function ProfilePage() {
 
   const displayName = getDisplayName()
   const profileCompletion = calculateProfileCompletion(user)
-  const joinedDate = new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+  const createdAtDate = user.createdAt ? new Date(user.createdAt) : new Date()
+  const joinedDate = isNaN(createdAtDate.getTime()) ? "Unknown" : createdAtDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })
 
   // Use server-side membership data if available, otherwise show loading/fallback
   const membershipScore = membership || computeMembership({
@@ -218,7 +219,7 @@ function ProfilePage() {
               <div className="w-32 h-32 rounded-2xl border-[5px] border-background overflow-hidden bg-muted shadow-2xl">
                 {user.avatar
                   ? <img src={user.avatar} className="w-full h-full object-cover" referrerPolicy="no-referrer" alt={displayName} />
-                  : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#118C4C] to-[#063d1e] text-white text-5xl font-black">{displayName[0].toUpperCase()}</div>
+                  : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#118C4C] to-[#063d1e] text-white text-5xl font-black">{(displayName[0] || "U").toUpperCase()}</div>
                 }
               </div>
               <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -395,7 +396,7 @@ function ProfilePage() {
               <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#118C4C]">
                 {user.avatar
                   ? <img src={user.avatar} className="w-full h-full object-cover" referrerPolicy="no-referrer" alt="" />
-                  : <div className="w-full h-full flex items-center justify-center bg-[#118C4C] text-white text-2xl font-bold">{displayName[0].toUpperCase()}</div>
+                  : <div className="w-full h-full flex items-center justify-center bg-[#118C4C] text-white text-2xl font-bold">{(displayName[0] || "U").toUpperCase()}</div>
                 }
               </div>
               <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
