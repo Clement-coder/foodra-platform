@@ -120,14 +120,14 @@ export default function LandingPage() {
       {communityUsers.length > 0 && (
         <section className="py-8 px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#118C4C]/10 px-2.5 py-1 text-xs font-semibold text-[#118C4C]">
+            <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#118C4C]/10 px-2.5 py-1 text-xs font-semibold text-[#118C4C] flex-shrink-0">
                   <Users className="h-3 w-3" /> Community
                 </span>
-                <h2 className="text-base font-bold text-foreground">Meet Our Farmers & Buyers</h2>
+                <h2 className="text-sm sm:text-base font-bold text-foreground truncate">Meet Our Farmers & Buyers</h2>
               </div>
-              <Link href="/users" className="flex items-center gap-1 text-xs font-medium text-[#118C4C] hover:underline">
+              <Link href="/users" className="flex items-center gap-1 text-xs font-medium text-[#118C4C] hover:underline flex-shrink-0">
                 View all <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
@@ -142,9 +142,9 @@ export default function LandingPage() {
                 <Link
                   key={`${user.id}-${i}`}
                   href={`/users/${user.id}`}
-                  className="flex-shrink-0 flex flex-col items-center gap-1.5 w-16 group"
+                  className="flex-shrink-0 flex flex-col items-center gap-1.5 w-14 sm:w-16 group"
                 >
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#118C4C]/20 bg-muted group-hover:border-[#118C4C] transition-colors">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-[#118C4C]/20 bg-muted group-hover:border-[#118C4C] transition-colors">
                     {user.avatar ? (
                       <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     ) : (
