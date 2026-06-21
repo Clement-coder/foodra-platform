@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/lib/toast"
 import { usePrivy } from "@privy-io/react-auth"
 import { authFetch } from "@/lib/authFetch"
-import { Loader2, Search, X, CheckCircle2, User } from "lucide-react"
+import { Loader2, Search, X, CheckCircle2 } from "lucide-react"
 import { useDebounce } from "@/lib/useDebounce"
 
 interface Recipient {
@@ -162,8 +162,11 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
                     onMouseDown={() => selectRecipient(r)}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/60 transition-colors text-left"
                   >
-                    <div className="w-9 h-9 rounded-full bg-[#118C4C] text-white flex items-center justify-center text-sm font-bold shrink-0">
-                      {r.name?.[0]?.toUpperCase() ?? <User className="h-4 w-4" />}
+                    <div className="w-9 h-9 rounded-full shrink-0 overflow-hidden bg-[#118C4C] text-white flex items-center justify-center text-sm font-bold">
+                      {r.avatar
+                        ? <img src={r.avatar} alt={r.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+                        : r.name?.[0]?.toUpperCase()
+                      }
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate">{r.name}</p>
@@ -181,8 +184,11 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
           {/* Selected recipient card */}
           {recipient && (
             <div className="mt-2.5 flex items-center gap-3 p-3 rounded-xl bg-[#118C4C]/8 border border-[#118C4C]/25">
-              <div className="w-10 h-10 rounded-full bg-[#118C4C] text-white flex items-center justify-center font-bold shrink-0">
-                {recipient.name?.[0]?.toUpperCase()}
+              <div className="w-10 h-10 rounded-full shrink-0 overflow-hidden bg-[#118C4C] text-white flex items-center justify-center font-bold">
+                {recipient.avatar
+                  ? <img src={recipient.avatar} alt={recipient.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
+                  : recipient.name?.[0]?.toUpperCase()
+                }
               </div>
               <div>
                 <p className="text-sm font-semibold">{recipient.name}</p>
