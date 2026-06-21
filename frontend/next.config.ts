@@ -41,6 +41,9 @@ const nextConfig: NextConfig = {
     '@walletconnect/universal-provider',
     '@walletconnect/logger',
     '@walletconnect/utils',
+    '@solana/web3.js',
+    '@solana/spl-token',
+    '@coral-xyz/anchor',
   ],
   
   // Empty turbopack config to silence the webpack warning
@@ -54,6 +57,9 @@ const nextConfig: NextConfig = {
       'tap': false,
       'tape': false,
       'why-is-node-running': false,
+      '@solana/web3.js': false,
+      '@solana/spl-token': false,
+      '@coral-xyz/anchor': false,
     };
 
     // Exclude test files from being bundled
