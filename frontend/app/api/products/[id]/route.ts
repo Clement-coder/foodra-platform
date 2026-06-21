@@ -1,34 +1,22 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
 import { notifyWishlistPriceDrop } from '@/lib/wishlistServer'
 
-const FOODRA_OWNER_ID = '292d7db3-2fd6-4dd2-9fac-d8c3b08b521d'
-const FOODRA_LOGO = 'https://foodramarket.com/foodra_logo.jpeg'
-
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  console.log("Fetching product with ID:", id)
-  
   try {
-    const { data: product, error } = await supabase
+    const supabaseAdmin = getSupabaseAdminClient()
+    if (!supabaseAdmin) return NextResponse.json({ error: 'Server error' }, { status: 500 })
+
+    const { data: product, error } = await supabaseAdmin
       .from('products')
       .select(`*, users!products_farmer_id_fkey (id, name, avatar_url, role, is_verified)`)
       .eq('id', id)
       .single()
 
-    console.log("Product query result:", { product, error })
-
-    if (error) {
-      console.error("Product fetch error:", error)
-      throw error
-    }
-
-    if (!product) {
-      console.log("No product found for ID:", id)
+    if (error || !product)
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
-    }
 
     return NextResponse.json({
       id: product.id,
@@ -40,14 +28,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       description: product.description || '',
       image: product.image_url || '',
       location: product.location || '',
-      farmerId: FOODRA_OWNER_ID,
-      farmerName: 'Foodra',
-      farmerAvatar: FOODRA_LOGO,
-      farmerIsVerified: true,
+      farmerId: product.farmer_id || product.users?.id || null,
+      farmerName: product.users?.name || 'Foodra',
+      farmerAvatar: product.users?.avatar_url || '/foodra_logo.jpeg',
+      farmerIsVerified: product.users?.is_verified ?? true,
       createdAt: product.created_at,
     })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch product' }, { status: 404 })
+    console.error('Product fetch error:', error)
+    return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 })
   }
 }
 
@@ -66,20 +55,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { data: existingProduct } = await supabaseAdmin.from('products').select('farmer_id, price, name').eq('id', id).single()
     if (!existingProduct) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
-    if (!['admin', 'owner'].includes(auth.user.role)) {
-      if (existingProduct.farmer_id !== auth.user.id)
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
-      if ('is_available' in updates && !updates.is_available) {
-        const { data: activeItems } = await supabaseAdmin
-          .from('order_items')
-          .select('order_id, orders!inner(escrow_status, status)')
-          .eq('product_id', id)
-          .in('orders.escrow_status', ['locked'])
-        if (activeItems && activeItems.length > 0)
-          return NextResponse.json({ error: 'Cannot deactivate — this product has active escrow orders in progress.' }, { status: 409 })
-      }
-    }
+    if (!['admin', 'owner'].includes(auth.user.role))
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     // Remap frontend field names to DB column names
     const { image, productName, pricePerUnit, ...rest } = updates
@@ -117,19 +94,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     const auth = await requireAuthenticatedUser(request)
 
-    if (!['admin', 'owner'].includes(auth.user.role)) {
-      const { data: product } = await supabaseAdmin.from('products').select('farmer_id').eq('id', id).single()
-      if (!product || product.farmer_id !== auth.user.id)
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
-      const { data: activeItems } = await supabaseAdmin
-        .from('order_items')
-        .select('order_id, orders!inner(status, escrow_status)')
-        .eq('product_id', id)
-        .or('orders.status.in.(Pending,Processing,Shipped),orders.escrow_status.in.(locked)')
-      if (activeItems && activeItems.length > 0)
-        return NextResponse.json({ error: 'Cannot delete — this product has active orders that must be fulfilled first.' }, { status: 409 })
-    }
+    if (!['admin', 'owner'].includes(auth.user.role))
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { error } = await supabaseAdmin.from('products').delete().eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

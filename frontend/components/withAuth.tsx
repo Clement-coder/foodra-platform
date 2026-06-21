@@ -15,8 +15,8 @@ import SignupButton from "./SignupButton";
 const perks = [
   { icon: Leaf, text: "Buy & sell fresh farm produce directly" },
   { icon: TrendingUp, text: "Apply for funding and grow your farm" },
-  { icon: Wallet, text: "Blockchain-powered secure payments" },
-  { icon: ShieldCheck, text: "Verified farmers and trusted buyers" },
+  { icon: Wallet, text: "Secure NGN wallet powered by Paystack" },
+  { icon: ShieldCheck, text: "Verified sellers and trusted buyers" },
 ];
 
 const LoadingScreen = ({ message = "Loading..." }: { message?: string }) => (
@@ -117,8 +117,8 @@ const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
                 <h2 className="text-4xl font-bold text-white leading-tight mb-4">
                   Empowering<br />African Farmers
                 </h2>
-                <p className="text-white/70 text-base leading-relaxed mb-10">
-                  Connect directly with buyers, access funding, and grow your farm with blockchain-powered tools built for Africa.
+                <p className="text-muted-foreground text-base leading-relaxed mb-10">
+                  Connect directly with buyers, access funding, and grow your farm with tools built for Africa.
                 </p>
                 <div className="space-y-4">
                   {perks.map(({ icon: Icon, text }) => (
@@ -167,7 +167,7 @@ const withAuth = <P extends object>(WrappedComponent: React.ComponentType<P>) =>
                 </div>
 
                 <p className="text-sm text-muted-foreground text-center">
-                  Signing in creates your account automatically. No password needed — we use secure wallet-based authentication.
+                  Signing in creates your account automatically. No password needed — we use secure email and social login.
                 </p>
 
                 {/* Mobile perks */}

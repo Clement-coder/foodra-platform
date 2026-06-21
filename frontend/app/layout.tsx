@@ -5,13 +5,11 @@ import { Analytics } from "@vercel/analytics/next"
 import { NavBar } from "@/components/NavBar"
 import { BottomTabBar } from "@/components/BottomTableBar"
 import Footer from "@/components/Footer"
-import { CartProvider } from "@/lib/useCart"
 import AppLoader from "@/components/AppLoader"
 import PWAManager from "@/components/PWAManager"
 import "./globals.css"
 import Providers from "./Provider"
 import { SupportChat } from "@/components/SupportChat"
-import { ToastProvider } from "@/lib/toast"
 import { CommodityTicker } from "@/components/CommodityTicker"
 import { OfflineBanner } from "@/components/OfflineBanner"
 import { organizationJsonLd } from "@/lib/seo"
@@ -49,23 +47,20 @@ export const viewport: Viewport = {
 // ---- METADATA ----
 export const metadata: Metadata = {
   title: "Foodra — Nigeria's #1 Farm Marketplace | Buy & Sell Fresh Farm Produce",
-  description: "Foodra is Nigeria's leading AgriTech marketplace where farmers sell fresh produce directly to buyers. Buy rice, yam, tomatoes, vegetables & more. Access farm loans, training programs, and blockchain-powered payments. Join 5,000+ farmers across Africa.",
+  description: "Foodra is Nigeria's leading AgriTech marketplace. Buy fresh produce, access farm training, apply for funding, and manage payments with an NGN digital wallet. Join thousands of buyers across Africa.",
   keywords: [
     "Foodra", "Foodra Market", "foodramarket.com",
-    "buy farm produce Nigeria", "sell farm produce online Nigeria",
-    "farmer marketplace Nigeria", "agricultural marketplace Africa",
+    "buy farm produce Nigeria", "agricultural marketplace Africa",
     "fresh vegetables online Nigeria", "buy rice Nigeria", "buy yam online",
     "buy tomatoes Nigeria", "buy cassava Nigeria", "buy maize Nigeria",
     "buy groundnut Nigeria", "buy palm oil Nigeria", "buy plantain Nigeria",
     "Nigerian farm market", "Benue State farm produce", "Abuja farm market",
-    "smallholder farmer platform Nigeria", "farmer empowerment Africa",
     "agribusiness Nigeria", "AgriTech Nigeria", "AgriTech Africa",
     "agricultural training Nigeria", "farming courses online Nigeria",
     "farm loans Nigeria", "agricultural grants Nigeria", "farmer funding Nigeria",
-    "blockchain agriculture Nigeria", "Web3 farm marketplace",
     "food security Nigeria", "food security Africa",
     "African food supply chain", "buy organic produce Nigeria",
-    "direct from farmer Nigeria", "farm to table Nigeria",
+    "farm to table Nigeria", "NGN wallet Nigeria",
   ],
   authors: [{ name: "Foodra", url: "https://foodramarket.com" }],
   creator: "Foodra Technologies Ltd",
@@ -155,8 +150,6 @@ export default function RootLayout({
           }}
         />
         <Providers>
-          <ToastProvider>
-          <CartProvider>
             <AppLoader>
               <NavBar />
               <CommodityTicker />
@@ -169,8 +162,6 @@ export default function RootLayout({
               <PWAManager />
               <OfflineBanner />
             </AppLoader>
-          </CartProvider>
-          </ToastProvider>
           <Analytics />
         </Providers>
       </body>

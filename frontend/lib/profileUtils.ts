@@ -21,7 +21,7 @@ export function calculateProfileCompletion(user: User): number {
   }
 
   // Account type field
-  if (user.role && (user.role === "farmer" || user.role === "buyer" || user.role === "admin")) {
+  if (user.role && (user.role === "buyer" || user.role === "admin" || user.role === "owner")) {
     completedFields++;
   }
 

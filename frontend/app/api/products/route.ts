@@ -4,9 +4,6 @@ import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
 import { createNotification } from '@/lib/notify'
 import { AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
 
-const FOODRA_OWNER_ID = '292d7db3-2fd6-4dd2-9fac-d8c3b08b521d'
-const FOODRA_LOGO = 'https://foodramarket.com/foodra_logo.jpeg'
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -36,10 +33,10 @@ export async function GET(request: Request) {
       description: p.description || '',
       image: p.image_url || '',
       location: p.location || '',
-      farmerId: FOODRA_OWNER_ID,
-      farmerName: 'Foodra',
-      farmerAvatar: FOODRA_LOGO,
-      farmerIsVerified: true,
+      farmerId: p.farmer_id || p.users?.id || null,
+      farmerName: p.users?.name || 'Foodra',
+      farmerAvatar: p.users?.avatar_url || '/foodra_logo.jpeg',
+      farmerIsVerified: p.users?.is_verified ?? true,
       createdAt: p.created_at,
     })) || []
 
@@ -52,27 +49,18 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return NextResponse.json(
-        { error: 'SUPABASE_SERVICE_ROLE_KEY is not configured' },
-        { status: 500 }
-      )
-    }
-
     const supabaseAdmin = getSupabaseAdminClient()
-    if (!supabaseAdmin) {
-      return NextResponse.json(
-        { error: 'Failed to initialize Supabase admin client' },
-        { status: 500 }
-      )
-    }
+    if (!supabaseAdmin)
+      return NextResponse.json({ error: 'Failed to initialize Supabase admin client' }, { status: 500 })
 
     const auth = await requireAuthenticatedUser(request)
+
+    // Only admins and owners can list products
+    if (!['admin', 'owner'].includes(auth.user.role))
+      return NextResponse.json({ error: 'Only admins can list products' }, { status: 403 })
+
     const body = await request.json()
-    if (auth.user.role !== "farmer" && auth.user.role !== "admin" && auth.user.role !== "owner") {
-      return NextResponse.json({ error: "Only farmers can list products" }, { status: 403 })
-    }
-    
+
     const { data, error } = await supabaseAdmin
       .from('products')
       .insert({
@@ -91,28 +79,19 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    // Notify farmer of successful listing
     await createNotification({
       userId: auth.user.id,
-      type: "system",
-      title: "Product Listed Successfully ✅",
+      type: 'system',
+      title: 'Product Listed Successfully ✅',
       message: `"${body.productName}" is now live on the marketplace.`,
       link: `/marketplace/${data.id}`,
     })
 
     return NextResponse.json(data)
   } catch (error: any) {
-    if (error instanceof AuthError) {
+    if (error instanceof AuthError)
       return NextResponse.json({ error: error.message }, { status: error.status })
-    }
     console.error('Error creating product:', error)
-    const hint =
-      error?.code === '42501'
-        ? 'Permission denied. Ensure SUPABASE_SERVICE_ROLE_KEY is set and server restarted.'
-        : undefined
-    return NextResponse.json(
-      { error: error?.message || 'Failed to create product', code: error?.code, hint },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: error?.message || 'Failed to create product' }, { status: 500 })
   }
 }

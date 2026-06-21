@@ -1,0 +1,31 @@
+-- ============================================================
+-- 13_seed.sql — Sample Data (optional, for development only)
+-- Run last, only in dev/staging
+-- ============================================================
+
+INSERT INTO trainings (title, summary, description, date, mode, location, instructor_name, capacity, image_url)
+VALUES
+  ('Modern Crop Rotation Techniques',
+   'Learn how to maximize yield through strategic crop rotation',
+   'Covers soil health, nitrogen fixation, pest management, and seasonal planning for Nigerian smallholder farmers.',
+   NOW() + INTERVAL '14 days', 'online', NULL, 'Dr. Amaka Okonkwo', 100,
+   'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800'),
+
+  ('Drip Irrigation for Small Farms',
+   'Cost-effective water management for dry season farming',
+   'Hands-on training on installing and maintaining drip irrigation systems for farms under 5 hectares.',
+   NOW() + INTERVAL '21 days', 'offline', 'Ibadan, Oyo State', 'Engr. Bello Musa', 30,
+   'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800'),
+
+  ('Poultry Business Fundamentals',
+   'Start and scale a profitable poultry operation',
+   'From day-old chicks to market — housing, feeding, disease prevention, and marketing strategies.',
+   NOW() + INTERVAL '7 days', 'online', NULL, 'Mrs. Chidinma Eze', 200,
+   'https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=800'),
+
+  ('Organic Farming Certification',
+   'Get certified and access premium organic markets',
+   'Principles of organic farming, certification requirements, composting and natural pest control.',
+   NOW() + INTERVAL '30 days', 'offline', 'Abuja, FCT', 'Prof. Taiwo Adeyemi', 50,
+   'https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800')
+ON CONFLICT DO NOTHING;

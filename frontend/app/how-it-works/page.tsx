@@ -13,21 +13,21 @@ export default function HowItWorksPage() {
       number: "1",
       icon: UserPlus,
       title: "Create Your Account",
-      description: "Sign up in seconds with Privy — no paperwork, no stress. Just connect and you're in.",
+      description: "Sign up in seconds with your email or social login. No paperwork, no stress.",
       color: "bg-blue-100 dark:bg-blue-900/20 text-blue-600",
     },
     {
       number: "2",
       icon: ShoppingBag,
       title: "Browse Fresh Products",
-      description: "Explore hundreds of farm-fresh products listed directly by verified farmers across Nigeria.",
+      description: "Explore quality agricultural products from Foodra. Filter by category, price, and location.",
       color: "bg-green-100 dark:bg-green-900/20 text-green-600",
     },
     {
       number: "3",
       icon: TrendingUp,
-      title: "Buy with Confidence",
-      description: "Add to cart, pay securely via escrow, and get your order delivered straight to your door.",
+      title: "Pay & Get Delivered",
+      description: "Fund your Foodra wallet, pay securely in NGN, and get your order delivered to your door.",
       color: "bg-purple-100 dark:bg-purple-900/20 text-purple-600",
     },
   ]
@@ -37,10 +37,10 @@ export default function HowItWorksPage() {
       icon: ShoppingBag,
       title: "Marketplace",
       steps: [
-        "Browse hundreds of fresh farm products",
+        "Browse quality fresh agricultural products",
         "Filter by category, price, and location",
-        "Buy directly from verified farmers",
-        "Secure escrow payment — pay only when satisfied",
+        "Pay from your Foodra NGN wallet",
+        "Track your order from processing to delivery",
       ],
     },
     {
@@ -50,7 +50,7 @@ export default function HowItWorksPage() {
         "Browse available training programs",
         "Choose online or in-person sessions",
         "Learn from expert instructors",
-        "Get certificates upon completion",
+        "Get certified upon completion",
       ],
     },
     {
@@ -59,7 +59,7 @@ export default function HowItWorksPage() {
       steps: [
         "Submit funding applications online",
         "Track application status in real-time",
-        "Access various funding sources",
+        "Access loans and grants",
         "Receive guidance on fund management",
       ],
     },
@@ -72,7 +72,7 @@ export default function HowItWorksPage() {
     },
     {
       question: "How does payment work?",
-      answer: "Payments are secured in escrow — your money is held safely until you confirm delivery. Once you're happy with your order, the farmer gets paid. If something goes wrong, you can raise a dispute.",
+      answer: "Fund your Foodra wallet via Paystack using your debit card or bank transfer. When you order, the amount is deducted from your wallet balance. If your order is cancelled, the amount is refunded back to your wallet instantly.",
     },
     {
       question: "Can I track my order?",
@@ -80,7 +80,11 @@ export default function HowItWorksPage() {
     },
     {
       question: "What if I'm not satisfied with my order?",
-      answer: "No worries. You can raise a dispute directly from your order page. Our team reviews every dispute and ensures a fair resolution within 3–5 business days.",
+      answer: "You can raise a dispute directly from your order page. Our team reviews every dispute and ensures a fair resolution within 3–5 business days.",
+    },
+    {
+      question: "How do I withdraw money from my wallet?",
+      answer: "Go to your Wallet page, tap Withdraw, enter your Nigerian bank account details, and confirm with your wallet PIN. Funds arrive within 1–2 business days.",
     },
   ]
 
@@ -199,7 +203,7 @@ export default function HowItWorksPage() {
               <div className="text-center md:text-left">
                 <h2 className="text-3xl md:text-4xl font-bold mb-3">Ready to Get Started?</h2>
                 <p className="text-lg text-white/90 max-w-2xl">
-                  Join Foodra today and take your farming business to the next level.
+                  Join Foodra today and access fresh produce, training, and funding — all in one place.
                 </p>
               </div>
               <div className="flex-shrink-0">

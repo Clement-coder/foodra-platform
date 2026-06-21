@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const auth = await requireAuthenticatedUser(request)
     const body = await request.json()
 
-    if (auth.user.role !== "farmer" && auth.user.role !== "admin") {
+    if (auth.user.role !== "buyer" && auth.user.role !== "admin") {
       return NextResponse.json({ error: "Only farmers can request verification" }, { status: 403 })
     }
 

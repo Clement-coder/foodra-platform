@@ -73,7 +73,7 @@ function ProfilePage() {
       setValue("name", user.name || "")
       setValue("phone", user.phone || "")
       setValue("location", user.location || "")
-      setValue("accountType", user.role === "farmer" || user.role === "admin" ? "Farmer" : "Buyer")
+      setValue("accountType", user.role === "admin" || user.role === "owner" ? "Farmer" : "Buyer")
     }
   }, [user, setValue])
 
@@ -157,7 +157,7 @@ function ProfilePage() {
     try {
       const payload: Partial<User> = { name: data.name, phone: data.phone, location: data.location }
       if (data.accountType) {
-        payload.role = data.accountType === "Farmer" ? "farmer" : "buyer"
+        payload.role = data.accountType === "Farmer" ? "admin" : "buyer"
       }
       const ok = await updateUser(payload)
       if (!ok) throw new Error()
@@ -271,7 +271,7 @@ function ProfilePage() {
 
           {/* Edit / Admin / Logout actions */}
           <div className="flex flex-wrap gap-2 mt-4">
-            <Button onClick={() => { setValue("name", user.name || displayName); setValue("phone", user.phone || ""); setValue("location", user.location || ""); setValue("accountType", user.role === "farmer" || user.role === "admin" ? "Farmer" : "Buyer"); setIsEditModalOpen(true) }}
+            <Button onClick={() => { setValue("name", user.name || displayName); setValue("phone", user.phone || ""); setValue("location", user.location || ""); setValue("accountType", user.role === "admin" || user.role === "owner" ? "Farmer" : "Buyer"); setIsEditModalOpen(true) }}
               size="sm" className="rounded-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1.5">
               <Edit className="h-3.5 w-3.5" />
               {profileCompletion < 100 ? `Complete (${profileCompletion}%)` : "Edit Profile"}

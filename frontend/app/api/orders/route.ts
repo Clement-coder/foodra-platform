@@ -42,17 +42,11 @@ export async function GET(request: Request) {
         pricePerUnit: item.price,
         quantity: item.quantity,
         image: item.image_url || '',
-        escrowOrderId: item.escrow_order_id || null,
-        farmerWallet: item.farmer_wallet || null,
-        escrowStatus: item.escrow_status || 'none',
       })) || [],
       totalAmount: o.total_amount,
       status: o.status,
       createdAt: o.created_at,
       updatedAt: o.updated_at,
-      escrowTxHash: o.escrow_tx_hash || null,
-      escrowStatus: o.escrow_status || 'none',
-      usdcAmount: o.usdc_amount || null,
       // Deduplicated farmer list from order items
       farmers: Array.from(
         new Map(
@@ -140,27 +134,11 @@ export async function POST(request: Request) {
       quantity: item.quantity,
       price: item.pricePerUnit,
       image_url: item.image,
-      farmer_wallet: item.farmerWallet || null,
-      escrow_status: 'none',
     }))
 
     let { error: itemsError } = await supabaseAdmin
       .from('order_items')
       .insert(orderItems)
-
-    // If escrow columns don't exist yet (migration not run), retry without them
-    if (itemsError && (itemsError.code === '42703' || String(itemsError.message).includes('does not exist'))) {
-      console.warn('Escrow columns missing, retrying without them:', itemsError.message)
-      const baseItems = body.items.map((item: any) => ({
-        order_id: order.id,
-        product_id: item.productId,
-        product_name: item.productName,
-        quantity: item.quantity,
-        price: item.pricePerUnit,
-        image_url: item.image,
-      }));
-      ({ error: itemsError } = await supabaseAdmin.from('order_items').insert(baseItems))
-    }
 
     if (itemsError) {
       console.error('Order items insert error:', JSON.stringify(itemsError))

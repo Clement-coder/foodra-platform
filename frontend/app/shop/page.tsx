@@ -4,18 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Loader2, ShieldCheck, Truck, Tag, PackageOpen } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Loader2, ShieldCheck, Truck, Tag, PackageOpen, Wallet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/Modal";
 import { useToast } from "@/lib/toast";
-import { EscrowPaymentModal, type EscrowResult } from "@/components/EscrowPaymentModal";
 import { DeliveryAddressModal } from "@/components/DeliveryAddressModal";
+import { FundWalletModal } from "@/components/FundWalletModal";
 import withAuth from "../../components/withAuth";
 import { useCart, useOrders } from "@/lib/useCart";
 import { usePrivy } from "@privy-io/react-auth";
 import { useUser } from "@/lib/useUser";
 import { calculateProfileCompletion } from "@/lib/profileUtils";
-import type { CartItem, DeliveryAddress } from "@/lib/types";
+import type { DeliveryAddress } from "@/lib/types";
 import { authFetch } from "@/lib/authFetch";
 
 function ShopPage() {
@@ -25,21 +26,14 @@ function ShopPage() {
   const { currentUser } = useUser();
   const router = useRouter();
   const { toast, confirm } = useToast();
-  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const [isPayConfirmOpen, setIsPayConfirmOpen] = useState(false);
+  const [isFundOpen, setIsFundOpen] = useState(false);
   const [preparingCheckout, setPreparingCheckout] = useState(false);
+  const [paying, setPaying] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
-  const [enrichedCartItems, setEnrichedCartItems] = useState<(CartItem & { farmerWallet: string })[]>([]);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryAddress | null>(null);
-
-  const handleEscrowError = async (orderId: string) => {
-    await authFetch(getAccessToken, "/api/orders/payment-failed", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId }),
-    }).catch(() => {});
-    setPendingOrderId(null);
-  };
 
   const handleProceedToCheckout = async () => {
     if (currentUser && calculateProfileCompletion(currentUser) < 100) {
@@ -54,60 +48,71 @@ function ShopPage() {
     setSelectedDelivery(address);
     setIsDeliveryModalOpen(false);
     setPreparingCheckout(true);
+    try {
+      // Fetch wallet balance
+      const balRes = await authFetch(getAccessToken, "/api/wallet/balance");
+      const balData = await balRes.json();
+      const balance = parseFloat(balData.balance_ngn ?? "0");
+      setWalletBalance(balance);
 
-    const enrichedCart = await Promise.all(
-      cart.map(async (item) => {
-        try {
-          const res = await fetch(`/api/products/${item.productId}`);
-          const product = await res.json();
-          const userRes = await fetch(`/api/users/${product.farmerId}`);
-          const farmer = await userRes.json();
-          return { ...item, farmerWallet: farmer.wallet || "" };
-        } catch {
-          return { ...item, farmerWallet: "" };
-        }
-      })
-    );
+      // Create order (Pending, unpaid)
+      const order = await createOrder(cart, totalAmount);
+      if (!order) { toast.error("Failed to create order. Please try again."); return; }
 
-    const missingWallet = enrichedCart.find((i) => !i.farmerWallet);
-    if (missingWallet) {
+      // Attach delivery address to order
+      await authFetch(getAccessToken, `/api/orders/${order.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deliveryFullName: address.fullName,
+          deliveryPhone: address.phone,
+          deliveryAddress: address.addressLine,
+          deliveryStreet2: address.streetLine2,
+          deliveryLandmark: address.landmark,
+          deliveryCity: address.city,
+          deliveryState: address.state,
+          deliveryCountry: address.country,
+        }),
+      });
+      setPendingOrderId(order.id);
+      setIsPayConfirmOpen(true);
+    } finally {
       setPreparingCheckout(false);
-      toast.error(`Farmer wallet not found for "${missingWallet.productName}".`);
-      return;
     }
-
-    const order = await createOrder(enrichedCart, totalAmount);
-    setPreparingCheckout(false);
-    if (!order) {
-      toast.error("Failed to create order. Please try again.");
-      return;
-    }
-    setEnrichedCartItems(enrichedCart);
-    setPendingOrderId(order.id);
-    setIsCheckoutModalOpen(true);
   };
 
-  const handleEscrowSuccess = async (results: EscrowResult[]) => {
+  const handleConfirmPayment = async () => {
     if (!pendingOrderId) return;
-    await authFetch(getAccessToken, `/api/orders/${pendingOrderId}/escrow`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        escrowTxHash: results[0]?.txHash,
-        escrowStatus: "locked",
-        usdcAmount: Number(results[0]?.usdcAmount) / 1_000_000,
-        items: results.map((r) => ({ productId: r.productId, escrowOrderId: r.orderId, farmerWallet: r.farmerWallet })),
-        deliveryFullName: selectedDelivery?.fullName,
-        deliveryPhone: selectedDelivery?.phone,
-        deliveryAddress: selectedDelivery?.addressLine,
-        deliveryStreet2: selectedDelivery?.streetLine2,
-        deliveryLandmark: selectedDelivery?.landmark,
-        deliveryCity: selectedDelivery?.city,
-        deliveryState: selectedDelivery?.state,
-        deliveryCountry: selectedDelivery?.country,
-      }),
-    });
-    clearCart();
+    setPaying(true);
+    try {
+      const res = await authFetch(getAccessToken, `/api/orders/${pendingOrderId}/pay-wallet`, { method: "PATCH" });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.balance !== undefined) {
+          // Insufficient balance
+          setIsPayConfirmOpen(false);
+          setIsFundOpen(true);
+        } else {
+          toast.error(data.error || "Payment failed");
+        }
+        return;
+      }
+      clearCart();
+      setIsPayConfirmOpen(false);
+      router.push("/orders");
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (pendingOrderId) {
+      await authFetch(getAccessToken, `/api/orders?orderId=${pendingOrderId}&userId=${currentUser?.id}`, { method: "DELETE" }).catch(() => {});
+    }
+    setIsPayConfirmOpen(false);
+    setPendingOrderId(null);
   };
 
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
@@ -305,8 +310,8 @@ function ShopPage() {
               {/* Trust badges */}
               <div className="grid grid-cols-2 gap-2 pt-1">
                 {[
-                  { icon: <ShieldCheck className="h-3.5 w-3.5" />, label: "Escrow Protected" },
-                  { icon: <Truck className="h-3.5 w-3.5" />, label: "Direct from Farmers" },
+                  { icon: <ShieldCheck className="h-3.5 w-3.5" />, label: "Wallet Protected" },
+                  { icon: <Truck className="h-3.5 w-3.5" />, label: "Direct from Foodra" },
                 ].map((b) => (
                   <div key={b.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/50 rounded-lg px-2.5 py-2">
                     <span className="text-[#118C4C]">{b.icon}</span> {b.label}
@@ -329,29 +334,48 @@ function ShopPage() {
         />
       )}
 
-      {/* Escrow Payment Modal */}
-      {pendingOrderId && (
-        <EscrowPaymentModal
-          isOpen={isCheckoutModalOpen}
-          onClose={async () => {
-            if (pendingOrderId) {
-              await authFetch(getAccessToken, `/api/orders?orderId=${pendingOrderId}&userId=${currentUser?.id}`, { method: "DELETE" }).catch(() => {});
-            }
-            setIsCheckoutModalOpen(false);
-            setPendingOrderId(null);
-          }}
-          onSuccessClose={() => {
-            setIsCheckoutModalOpen(false);
-            setPendingOrderId(null);
-            router.push("/orders");
-          }}
-          cart={enrichedCartItems}
-          totalNgn={totalAmount}
-          supabaseOrderId={pendingOrderId}
-          onSuccess={handleEscrowSuccess}
-          onError={handleEscrowError}
-        />
-      )}
+      {/* Wallet Pay Confirmation Modal */}
+      <Modal isOpen={isPayConfirmOpen} onClose={handleCancelOrder} title="Confirm Payment">
+        <div className="space-y-4 p-1">
+          <div className="rounded-xl bg-[#118C4C]/8 border border-[#118C4C]/20 p-4 text-center">
+            <p className="text-sm text-muted-foreground mb-1">Amount to pay</p>
+            <p className="text-3xl font-black text-[#118C4C]">₦{totalAmount.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
+              <Wallet className="h-3.5 w-3.5" /> from your Foodra Wallet
+            </p>
+          </div>
+          <div className="flex justify-between text-sm px-1">
+            <span className="text-muted-foreground">Current balance</span>
+            <span className="font-semibold">₦{walletBalance.toLocaleString()}</span>
+          </div>
+          {walletBalance >= totalAmount && (
+            <div className="flex justify-between text-sm px-1">
+              <span className="text-muted-foreground">Balance after</span>
+              <span className="font-semibold text-[#118C4C]">₦{(walletBalance - totalAmount).toLocaleString()}</span>
+            </div>
+          )}
+          {walletBalance < totalAmount && (
+            <div className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200/60 p-3 text-sm text-red-600 dark:text-red-400">
+              Insufficient balance. You need ₦{(totalAmount - walletBalance).toLocaleString()} more.
+            </div>
+          )}
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={handleCancelOrder} className="flex-1">Cancel</Button>
+            {walletBalance >= totalAmount ? (
+              <Button onClick={handleConfirmPayment} disabled={paying} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+                {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pay Now ✓"}
+              </Button>
+            ) : (
+              <Button onClick={() => { setIsPayConfirmOpen(false); setIsFundOpen(true); }} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+                Fund Wallet
+              </Button>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Fund Wallet Modal (when balance insufficient) */}
+      <FundWalletModal isOpen={isFundOpen} onClose={() => setIsFundOpen(false)} />
     </div>
   );
 }

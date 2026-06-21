@@ -6,12 +6,13 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Handshake, Globe, Mail, ArrowRight, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-// ── Real brand logos (inline SVG, accurate shapes + colors) ─────────────────
-function LogoBase({ size = 36 }: { size?: number }) {
+function LogoPaystack({ size = 36 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 111 111" fill="none">
-      <circle cx="55.5" cy="55.5" r="55.5" fill="#0052FF" />
-      <path d="M55.7 80.8a25.4 25.4 0 1 0 0-50.8c-12.5 0-22.9 9-24.9 20.8h33.2v9.2H30.8c2 11.8 12.4 20.8 24.9 20.8z" fill="white" />
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
+      <rect width="100" height="100" rx="22" fill="#00C3F7" />
+      <rect x="22" y="28" width="56" height="10" rx="5" fill="white" />
+      <rect x="22" y="45" width="56" height="10" rx="5" fill="white" opacity="0.75" />
+      <rect x="22" y="62" width="36" height="10" rx="5" fill="white" opacity="0.5" />
     </svg>
   )
 }
@@ -31,32 +32,32 @@ function LogoSupabase({ size = 36 }: { size?: number }) {
     </svg>
   )
 }
-function LogoMoonPay({ size = 36 }: { size?: number }) {
+function LogoVercel({ size = 36 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
-      <rect width="100" height="100" rx="22" fill="#7B2FF7" />
-      <path d="M66 22a28 28 0 1 1-35.5 35.5A21 21 0 0 0 66 22z" fill="white" />
+      <rect width="100" height="100" rx="22" fill="#000" />
+      <path d="M50 20L82 72H18L50 20z" fill="white" />
     </svg>
   )
 }
 
 const PARTNERS = [
   {
-    name: "Base",
-    sub: "Coinbase L2",
-    category: "Blockchain Infrastructure",
-    description: "Foodra is built on Base — Coinbase's Ethereum L2 — enabling fast, low-cost USDC payments and on-chain escrow for every transaction.",
-    url: "https://base.org",
-    Logo: LogoBase,
-    accent: "#0052FF",
+    name: "Paystack",
+    sub: "NGN Payments",
+    category: "Payments",
+    description: "Foodra's payment backbone — powering wallet funding, withdrawals, and secure NGN transactions for every user.",
+    url: "https://paystack.com",
+    Logo: LogoPaystack,
+    accent: "#00C3F7",
     ring: 0,
     startDeg: 0,
   },
   {
     name: "Privy",
-    sub: "Auth & Wallets",
+    sub: "Auth & Identity",
     category: "Authentication",
-    description: "Seamless wallet-based sign-in — no prior crypto knowledge needed. Farmers and buyers log in with a tap.",
+    description: "Simple, secure sign-in with email or social login. No crypto knowledge needed — just tap and you're in.",
     url: "https://privy.io",
     Logo: LogoPrivy,
     accent: "#F03A3A",
@@ -67,7 +68,7 @@ const PARTNERS = [
     name: "Supabase",
     sub: "PostgreSQL",
     category: "Data Infrastructure",
-    description: "Secure, scalable storage for all platform data — products, orders, users — with real-time updates.",
+    description: "Secure, scalable storage for all platform data — products, orders, users, wallet ledger — with real-time updates.",
     url: "https://supabase.com",
     Logo: LogoSupabase,
     accent: "#3ECF8E",
@@ -75,19 +76,18 @@ const PARTNERS = [
     startDeg: 180,
   },
   {
-    name: "MoonPay",
-    sub: "Fiat On-Ramp",
-    category: "Finance",
-    description: "Convert Naira to USDC directly inside the Foodra wallet — no exchange or bank account needed.",
-    url: "https://moonpay.com",
-    Logo: LogoMoonPay,
-    accent: "#7B2FF7",
+    name: "Vercel",
+    sub: "Hosting",
+    category: "Infrastructure",
+    description: "Fast, global deployment ensuring Foodra loads instantly for users across Nigeria and beyond.",
+    url: "https://vercel.com",
+    Logo: LogoVercel,
+    accent: "#888",
     ring: 1,
     startDeg: 270,
   },
 ]
 
-// Two rings: inner shorter duration = faster orbit
 const RINGS = [
   { r: 115, duration: "14s" },
   { r: 190, duration: "22s" },
@@ -95,15 +95,13 @@ const RINGS = [
 
 const partnerTypes = [
   { icon: Globe, title: "Technology Partners", description: "Infrastructure, tools, and APIs powering the Foodra platform." },
-  { icon: Handshake, title: "Agricultural Partners", description: "NGOs, cooperatives, and government bodies supporting smallholder farmers." },
+  { icon: Handshake, title: "Agricultural Partners", description: "NGOs, cooperatives, and government bodies supporting food security." },
   { icon: Mail, title: "Funding Partners", description: "Investors, grants, and financial institutions fuelling our growth." },
 ]
 
-// Inject global keyframe once
 const ORBIT_CSS = `
 @keyframes orbit-cw  { from { transform: rotate(0deg);   } to { transform: rotate(360deg);  } }
 @keyframes orbit-ccw { from { transform: rotate(0deg);   } to { transform: rotate(-360deg); } }
-@keyframes ring-spin { from { transform: rotate(0deg) scaleX(1.06); } to { transform: rotate(360deg) scaleX(1.06); } }
 @keyframes core-pulse { 0%,100% { box-shadow: 0 0 30px 6px rgba(17,140,76,.5); } 50% { box-shadow: 0 0 55px 14px rgba(17,140,76,.7); } }
 @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
 `
@@ -116,22 +114,16 @@ export default function PartnersPage() {
     <div className="min-h-screen overflow-x-hidden">
       <style>{ORBIT_CSS}</style>
 
-      {/* ══ HERO ══════════════════════════════════════════════════════════════ */}
       <section
         className="relative py-20 px-4 overflow-hidden"
         style={{ background: "linear-gradient(135deg,#020d05 0%,#051509 50%,#020d05 100%)" }}
       >
-        {/* Grid */}
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "linear-gradient(#22c55e 1px,transparent 1px),linear-gradient(90deg,#22c55e 1px,transparent 1px)", backgroundSize: "52px 52px" }} />
-        {/* Radial glow centre */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 55% 55% at 72% 50%, rgba(17,140,76,.22) 0%, transparent 65%)" }} />
-        {/* Scan line */}
         <div className="absolute left-0 right-0 h-[1px] pointer-events-none"
           style={{ background: "linear-gradient(90deg,transparent,rgba(17,140,76,.7),transparent)", animation: "scan 7s linear infinite" }} />
 
         <div className="relative container mx-auto max-w-6xl flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-
-          {/* ── Left copy ── */}
           <motion.div className="flex-1 text-center lg:text-left z-10 order-2 lg:order-1"
             initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#118C4C]/40 bg-[#118C4C]/10 px-3 py-1 text-xs font-semibold text-[#118C4C] mb-5">
@@ -144,31 +136,25 @@ export default function PartnersPage() {
             <p className="text-white/50 text-base max-w-md mx-auto lg:mx-0 leading-relaxed mb-8">
               Foodra's ecosystem is powered by world-class technology partners who share our vision for African food security.
             </p>
-            <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-              <button
-                onClick={() => setPaused(p => !p)}
-                className="inline-flex items-center gap-2 text-xs border border-[#118C4C]/40 text-[#118C4C] px-4 py-2 rounded-full hover:bg-[#118C4C]/10 transition-colors"
-              >
-                <span className={`w-2 h-2 rounded-full ${paused ? "bg-amber-400" : "bg-[#118C4C] animate-pulse"}`} />
-                {paused ? "Resume Orbits" : "Pause Orbits"}
-              </button>
-            </div>
+            <button
+              onClick={() => setPaused(p => !p)}
+              className="inline-flex items-center gap-2 text-xs border border-[#118C4C]/40 text-[#118C4C] px-4 py-2 rounded-full hover:bg-[#118C4C]/10 transition-colors"
+            >
+              <span className={`w-2 h-2 rounded-full ${paused ? "bg-amber-400" : "bg-[#118C4C] animate-pulse"}`} />
+              {paused ? "Resume Orbits" : "Pause Orbits"}
+            </button>
           </motion.div>
 
-          {/* ── Orbit diagram ── */}
           <div
             className="relative flex-shrink-0 order-1 lg:order-2"
             style={{ width: 420, height: 420 }}
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => { setPaused(false); setHovered(null) }}
           >
-            {/* Orbit ring tracks */}
             {RINGS.map((ring, i) => (
               <div key={i} className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                {/* Static ring */}
                 <div className="absolute rounded-full border border-[#118C4C]/15"
                   style={{ width: ring.r * 2, height: ring.r * 2 }} />
-                {/* Spinning dashed ring */}
                 <div className="absolute rounded-full"
                   style={{
                     width: ring.r * 2, height: ring.r * 2,
@@ -176,20 +162,9 @@ export default function PartnersPage() {
                     animation: `orbit-cw ${parseInt(ring.duration) * 5}s linear infinite`,
                     animationPlayState: paused ? "paused" : "running",
                   }} />
-                {/* Tick dots */}
-                {Array.from({ length: 16 }).map((_, t) => {
-                  const a = (t / 16) * 2 * Math.PI
-                  const cx = 210 + ring.r * Math.sin(a)
-                  const cy = 210 - ring.r * Math.cos(a)
-                  return (
-                    <div key={t} className="absolute w-1 h-1 rounded-full bg-[#118C4C]/25"
-                      style={{ left: cx - 2, top: cy - 2 }} />
-                  )
-                })}
               </div>
             ))}
 
-            {/* Orbiting partner nodes */}
             {PARTNERS.map((p) => {
               const ring = RINGS[p.ring]
               const isHov = hovered === p.name
@@ -203,7 +178,6 @@ export default function PartnersPage() {
                     animationPlayState: paused ? "paused" : "running",
                   }}
                 >
-                  {/* counter-rotate so logo stays upright */}
                   <div style={{
                     position: "absolute",
                     top: `calc(50% - ${ring.r}px - 24px)`,
@@ -211,28 +185,20 @@ export default function PartnersPage() {
                     animation: `orbit-ccw ${ring.duration} linear infinite`,
                     animationPlayState: paused ? "paused" : "running",
                   }}>
-                    <Link
-                      href={p.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link href={p.url} target="_blank" rel="noopener noreferrer"
                       onMouseEnter={() => setHovered(p.name)}
-                      onMouseLeave={() => setHovered(null)}
-                    >
-                      <div
-                        className="relative w-12 h-12 rounded-full flex items-center justify-center cursor-pointer"
+                      onMouseLeave={() => setHovered(null)}>
+                      <div className="relative w-12 h-12 rounded-full flex items-center justify-center cursor-pointer"
                         style={{
                           background: "rgba(5,14,8,0.85)",
                           border: `2px solid ${isHov ? p.accent : "rgba(17,140,76,0.4)"}`,
-                          boxShadow: isHov ? `0 0 20px 4px ${p.accent}55, 0 0 40px 8px ${p.accent}22` : "0 0 10px 2px rgba(17,140,76,.15)",
+                          boxShadow: isHov ? `0 0 20px 4px ${p.accent}55` : "0 0 10px 2px rgba(17,140,76,.15)",
                           transition: "all .2s",
                           transform: isHov ? "scale(1.4)" : "scale(1)",
-                        }}
-                      >
+                        }}>
                         <p.Logo size={26} />
-                        {/* Tooltip */}
                         {isHov && (
-                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 pointer-events-none z-50 whitespace-nowrap"
-                            style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,.5))" }}>
+                          <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 pointer-events-none z-50 whitespace-nowrap">
                             <div className="rounded-xl px-3 py-2 text-center"
                               style={{ background: "rgba(5,14,8,.95)", border: `1px solid ${p.accent}55` }}>
                               <p className="text-white text-xs font-bold">{p.name}</p>
@@ -250,9 +216,7 @@ export default function PartnersPage() {
               )
             })}
 
-            {/* Centre core */}
             <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-              {/* Expanding pulse rings */}
               {[0, 1, 2].map((n) => (
                 <motion.div key={n} className="absolute rounded-full border border-[#118C4C]/30"
                   animate={{ scale: [1, 2.2], opacity: [0.5, 0] }}
@@ -260,10 +224,7 @@ export default function PartnersPage() {
                   style={{ width: 72, height: 72 }} />
               ))}
               <div className="w-16 h-16 rounded-full flex items-center justify-center relative z-10"
-                style={{
-                  background: "linear-gradient(135deg, #118C4C, #0a5c30)",
-                  animation: "core-pulse 2.5s ease-in-out infinite",
-                }}>
+                style={{ background: "linear-gradient(135deg, #118C4C, #0a5c30)", animation: "core-pulse 2.5s ease-in-out infinite" }}>
                 <span className="text-white text-[8px] font-black tracking-[0.2em]">FOODRA</span>
               </div>
             </div>
@@ -271,7 +232,6 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      {/* ══ PARTNER TYPE CARDS ════════════════════════════════════════════════ */}
       <section className="py-16 px-4 bg-background">
         <div className="container mx-auto max-w-5xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-16">
@@ -289,16 +249,14 @@ export default function PartnersPage() {
 
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-foreground mb-3">Our Current Partners</h2>
-            <p className="text-muted-foreground">The platforms and protocols that make Foodra possible.</p>
+            <p className="text-muted-foreground">The platforms and services that make Foodra possible.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {PARTNERS.map((p, i) => (
               <motion.div key={p.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
                 <Link href={p.url} target="_blank" rel="noopener noreferrer"
-                  className="group block rounded-2xl border border-border bg-card p-6 hover:shadow-xl transition-all"
-                  style={{ "--accent": p.accent } as React.CSSProperties}
-                >
+                  className="group block rounded-2xl border border-border bg-card p-6 hover:shadow-xl transition-all">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
                       <p.Logo size={28} />
@@ -321,7 +279,6 @@ export default function PartnersPage() {
         </div>
       </section>
 
-      {/* ══ CTA ══════════════════════════════════════════════════════════════ */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="container mx-auto max-w-3xl text-center">
           <div className="rounded-2xl bg-gradient-to-br from-[#118C4C] to-[#0d6d3a] p-10 relative overflow-hidden">
@@ -333,7 +290,7 @@ export default function PartnersPage() {
               Are you an organisation, investor, or technology provider aligned with our mission? We'd love to grow together.
             </p>
             <Link href="/contact" className="relative z-10 inline-block">
-              <Button variant="white">Get in Touch</Button>
+              <Button variant="white" className="bg-white text-[#118C4C] hover:bg-white/90">Get in Touch</Button>
             </Link>
           </div>
         </div>

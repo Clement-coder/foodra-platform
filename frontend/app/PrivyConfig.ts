@@ -1,18 +1,9 @@
-import type { PrivyClientConfig } from '@privy-io/react-auth';
-import { baseSepolia } from 'viem/chains';
+import type { PrivyClientConfig } from "@privy-io/react-auth"
 
 export const privyConfig: PrivyClientConfig = {
-  embeddedWallets: {
-    ethereum: {
-      createOnLogin: 'users-without-wallets',
-    },
-    showWalletUIs: true,
-  },
-  defaultChain: baseSepolia,
-  supportedChains: [baseSepolia],
-  loginMethods: ['email', 'google'],
+  loginMethods: ["email", "google"],
   appearance: {
     showWalletLoginFirst: false,
-    logo: '/foodra_logo.jpeg',
+    logo: "/foodra_logo.jpeg",
   },
-};
+}

@@ -7,9 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 interface SaleOrder {
   id: string
   status: string
-  escrowStatus: string
   totalAmount: number
-  usdcAmount: number | null
   createdAt: string
   items: { productId: string; productName: string; quantity: number; pricePerUnit: number }[]
 }
@@ -20,12 +18,11 @@ interface Props {
 
 export function FarmerAnalyticsDashboard({ sales }: Props) {
   const stats = useMemo(() => {
-    const completed = sales.filter((s) => s.escrowStatus === "released" || s.status === "Delivered")
-    const pending = sales.filter((s) => ["locked", "none"].includes(s.escrowStatus) && s.status !== "Cancelled")
+    const completed = sales.filter((s) => s.status === "Delivered")
+    const pending = sales.filter((s) => ["Processing", "Shipped"].includes(s.status))
     const totalRevenue = completed.reduce((sum, s) => sum + s.totalAmount, 0)
     const pendingRevenue = pending.reduce((sum, s) => sum + s.totalAmount, 0)
 
-    // Product performance
     const productMap: Record<string, { name: string; units: number; revenue: number }> = {}
     for (const sale of sales) {
       for (const item of sale.items) {
@@ -40,7 +37,6 @@ export function FarmerAnalyticsDashboard({ sales }: Props) {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5)
 
-    // Monthly revenue (last 6 months)
     const now = new Date()
     const months = Array.from({ length: 6 }, (_, i) => {
       const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
@@ -57,14 +53,6 @@ export function FarmerAnalyticsDashboard({ sales }: Props) {
     }))
     const maxMonthly = Math.max(...monthlyRevenue.map((m) => m.amount), 1)
 
-    // Escrow breakdown
-    const escrowBreakdown = {
-      locked: sales.filter((s) => s.escrowStatus === "locked").length,
-      released: sales.filter((s) => s.escrowStatus === "released").length,
-      disputed: sales.filter((s) => s.escrowStatus === "disputed").length,
-      refunded: sales.filter((s) => s.escrowStatus === "refunded").length,
-    }
-
     return {
       totalOrders: sales.length,
       completedOrders: completed.length,
@@ -74,7 +62,6 @@ export function FarmerAnalyticsDashboard({ sales }: Props) {
       topProducts,
       monthlyRevenue,
       maxMonthly,
-      escrowBreakdown,
       completionRate: sales.length > 0 ? Math.round((completed.length / sales.length) * 100) : 0,
     }
   }, [sales])
@@ -192,27 +179,6 @@ export function FarmerAnalyticsDashboard({ sales }: Props) {
         </Card>
       </div>
 
-      {/* Escrow Status Breakdown */}
-      {Object.values(stats.escrowBreakdown).some((v) => v > 0) && (
-        <Card>
-          <CardContent className="p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Escrow Status Breakdown</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { label: "Locked", count: stats.escrowBreakdown.locked, color: "blue" },
-                { label: "Released", count: stats.escrowBreakdown.released, color: "green" },
-                { label: "Disputed", count: stats.escrowBreakdown.disputed, color: "red" },
-                { label: "Refunded", count: stats.escrowBreakdown.refunded, color: "yellow" },
-              ].map(({ label, count, color }) => (
-                <div key={label} className={`p-3 rounded-xl bg-${color}-50 dark:bg-${color}-900/20 border border-${color}-100 dark:border-${color}-800 text-center`}>
-                  <p className={`text-2xl font-bold text-${color}-600 dark:text-${color}-400`}>{count}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

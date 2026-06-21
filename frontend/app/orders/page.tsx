@@ -10,7 +10,6 @@ import { useToast } from "@/lib/toast";
 import { DisputeModal } from "@/components/DisputeModal";
 import withAuth from "../../components/withAuth";
 import { useOrders } from "@/lib/useCart";
-import { useEscrow } from "@/lib/useEscrow";
 import { useUser } from "@/lib/useUser";
 import { RatingModal } from "@/components/RatingModal";
 import { authFetch } from "@/lib/authFetch";
@@ -23,7 +22,6 @@ type Tab = typeof TABS[number];
 
 function OrdersPage() {
   const { orders, refreshOrders, loading: ordersLoading } = useOrders();
-  const { confirmDelivery, raiseDispute, loading } = useEscrow();
   const { currentUser } = useUser();
   const { getAccessToken } = usePrivy();
   const router = useRouter();
@@ -33,7 +31,6 @@ function OrdersPage() {
   const [disputeOrder, setDisputeOrder] = useState<Order | null>(null);
   const [ratingTarget, setRatingTarget] = useState<{ orderId: string; farmerId: string; farmerName: string } | null>(null);
 
-  // Poll for status updates every 30 s so UI reflects cron-driven changes
   useEffect(() => {
     const interval = setInterval(refreshOrders, 30_000);
     return () => clearInterval(interval);
@@ -51,38 +48,13 @@ function OrdersPage() {
     refreshOrders();
   };
 
-  const handleConfirmDelivery = async (orderId: string, escrowOrderId: string) => {
-    const ok = await confirm({ title: "Confirm Delivery", message: "Confirm you received this order? This releases payment to the farmer.", confirmLabel: "Confirm Delivery" });
-    if (!ok) return;
-    setActiveOrderId(orderId);
-    const success = await confirmDelivery(escrowOrderId);
-    if (success) {
-      // Update escrow_status + order status to Delivered in one call
-      await authFetch(getAccessToken, `/api/orders/${orderId}/escrow`, {
-        method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ escrowStatus: "released" }),
-      });
-      await authFetch(getAccessToken, `/api/orders/${orderId}`, {
-        method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "Delivered" }),
-      });
-      toast.success("Delivery confirmed! Payment released to farmer.");
-      refreshOrders();
-      const order = orders.find(o => o.id === orderId);
-      const farmer = order?.farmers?.[0];
-      if (farmer) setRatingTarget({ orderId, farmerId: farmer.id, farmerName: farmer.name });
-    } else {
-      toast.error("Failed to confirm delivery. Please try again.");
-    }
-    setActiveOrderId(null);
-  };
-
-  const handleConfirmDeliverySimple = async (orderId: string) => {
+  const handleConfirmDelivery = async (orderId: string) => {
     const ok = await confirm({ title: "Confirm Delivery", message: "Confirm you received this order?", confirmLabel: "Confirm Delivery" });
     if (!ok) return;
     setActiveOrderId(orderId);
     const res = await authFetch(getAccessToken, `/api/orders/${orderId}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "Delivered" }),
     });
     if (res.ok) {
@@ -92,23 +64,24 @@ function OrdersPage() {
       const farmer = order?.farmers?.[0];
       if (farmer) setRatingTarget({ orderId, farmerId: farmer.id, farmerName: farmer.name });
     } else {
-      toast.error("Failed to confirm delivery. Please try again.");
+      toast.error("Failed to confirm delivery.");
     }
     setActiveOrderId(null);
   };
 
   const handleRaiseDispute = async (reason: string, details: string) => {
     if (!disputeOrder) return;
-    const escrowOrderId = disputeOrder.items?.find(i => i.escrowOrderId)?.escrowOrderId;
     setActiveOrderId(disputeOrder.id);
-    const ok = await raiseDispute(escrowOrderId!);
-    if (ok) {
-      await authFetch(getAccessToken, `/api/orders/${disputeOrder.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "disputed" }) });
-      await authFetch(getAccessToken, `/api/orders/${disputeOrder.id}/dispute`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason, details }) }).catch(() => {});
+    const res = await authFetch(getAccessToken, `/api/orders/${disputeOrder.id}/dispute`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason, details }),
+    });
+    if (res.ok) {
       toast.success("Dispute raised. Our team will review within 3–5 business days.");
       refreshOrders();
     } else {
-      toast.error("Failed to raise dispute. Please try again.");
+      toast.error("Failed to submit dispute.");
     }
     setActiveOrderId(null);
     setDisputeOrder(null);
@@ -118,7 +91,6 @@ function OrdersPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-3xl">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#118C4C]/10 flex items-center justify-center">
@@ -129,13 +101,12 @@ function OrdersPage() {
             <p className="text-xs text-muted-foreground">{orders.length} total order{orders.length !== 1 ? "s" : ""}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => router.back()} className="gap-1.5 border-[#118C4C]/30 hover:bg-[#118C4C]/5">
+        <Button variant="outline" size="sm" onClick={() => router.back()} className="gap-1.5 border-[#118C4C]/30">
           <ArrowLeft className="h-4 w-4" /> Back
         </Button>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 mb-5 scrollbar-none">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 mb-5">
         {TABS.map((tab) => {
           const count = tabCount(tab);
           const active = activeTab === tab;
@@ -143,8 +114,7 @@ function OrdersPage() {
           return (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border flex-shrink-0
-                ${active ? "bg-[#118C4C] text-white border-[#118C4C] shadow-sm" : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"}`}
-            >
+                ${active ? "bg-[#118C4C] text-white border-[#118C4C]" : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"}`}>
               {s && <span className={active ? "text-white/80" : s.text}>{s.icon}</span>}
               {tab}
               {count > 0 && (
@@ -164,7 +134,7 @@ function OrdersPage() {
           </div>
           <h2 className="text-lg font-semibold mb-2">{activeTab === "All" ? "No Orders Yet" : `No ${activeTab} Orders`}</h2>
           <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-5">
-            {activeTab === "All" ? "Head to the marketplace to find fresh products from local farmers." : `You have no orders with "${activeTab}" status.`}
+            {activeTab === "All" ? "Head to the marketplace to find fresh products." : `No orders with "${activeTab}" status.`}
           </p>
           {activeTab === "All" && (
             <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white" onClick={() => router.push("/marketplace")}>
@@ -180,9 +150,8 @@ function OrdersPage() {
                 exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.22, delay: index * 0.04 }}>
                 <OrderCard
                   order={order}
-                  isProcessing={activeOrderId === order.id && loading}
+                  isProcessing={activeOrderId === order.id}
                   onConfirmDelivery={handleConfirmDelivery}
-                  onConfirmDeliverySimple={handleConfirmDeliverySimple}
                   onRaiseDispute={(o) => setDisputeOrder(o)}
                   onDelete={handleDelete}
                 />
@@ -197,7 +166,7 @@ function OrdersPage() {
           isOpen={!!disputeOrder}
           onClose={() => setDisputeOrder(null)}
           orderId={disputeOrder.id}
-          loading={activeOrderId === disputeOrder.id && loading}
+          loading={activeOrderId === disputeOrder.id}
           onConfirm={handleRaiseDispute}
         />
       )}

@@ -70,7 +70,7 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
               <h3 className="text-xl font-bold text-foreground dark:text-white">{user.name || "—"}</h3>
               <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                 user.role === "admin" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                : user.role === "farmer" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                : user.role === "owner" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
                 : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
               }`}>{user.role || "buyer"}</span>
             </div>

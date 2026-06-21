@@ -16,7 +16,7 @@ export type Database = {
           name: string | null
           email: string | null
           phone: string | null
-          role: 'farmer' | 'buyer' | 'admin' | null
+          role: 'buyer' | 'admin' | 'owner' | null
           avatar_url: string | null
           location: string | null
           created_at: string
@@ -28,7 +28,7 @@ export type Database = {
           name?: string | null
           email?: string | null
           phone?: string | null
-          role?: 'farmer' | 'buyer' | 'admin' | null
+          role?: 'buyer' | 'admin' | 'owner' | null
           avatar_url?: string | null
           location?: string | null
           created_at?: string
@@ -40,7 +40,7 @@ export type Database = {
           name?: string | null
           email?: string | null
           phone?: string | null
-          role?: 'farmer' | 'buyer' | 'admin' | null
+          role?: 'buyer' | 'admin' | 'owner' | null
           avatar_url?: string | null
           location?: string | null
           created_at?: string

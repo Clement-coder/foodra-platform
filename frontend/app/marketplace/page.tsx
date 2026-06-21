@@ -124,14 +124,14 @@ function MarketplacePage() {
               </Button>
             </Link>
           )}
-          {currentUser?.role === "admin" && (
+          {currentUser?.role === "admin" || currentUser?.role === "owner" ? (
             <Link href="/listing/new">
               <Button size="sm" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1.5 shadow-md shadow-[#118C4C]/20">
                 <Plus className="h-4 w-4" />
                 <span>List Product</span>
               </Button>
             </Link>
-          )}
+          ) : null}
         </div>
       </div>
 

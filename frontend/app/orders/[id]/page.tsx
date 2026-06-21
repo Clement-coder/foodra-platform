@@ -5,18 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { usePrivy } from "@privy-io/react-auth";
-import {
-   ArrowLeft, MapPin, Phone, User, Package,
-   Calendar, ExternalLink, Loader2, CheckCircle, AlertTriangle, Download, Hash,
-} from "lucide-react";
+import { ArrowLeft, MapPin, Phone, User, Package, Calendar, Loader2, CheckCircle, AlertTriangle, Download, Hash } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { EscrowStatusBadge } from "@/components/EscrowStatusBadge";
 import { DisputeModal } from "@/components/DisputeModal";
 import { StatusPill, JourneyBar } from "@/components/OrderCard";
 import withAuth from "@/components/withAuth";
-import { WrongAccountBanner } from "@/components/WrongAccountBanner";
-import { useEscrow } from "@/lib/useEscrow";
 import { useToast } from "@/lib/toast";
 import { downloadReceiptImage, maskSensitive } from "@/lib/receipt";
 import type { Order } from "@/lib/types";
@@ -30,55 +24,55 @@ function OrderDetailPage() {
   const { getAccessToken } = usePrivy();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
-  const { confirmDelivery, raiseDispute, loading: escrowLoading, error: escrowError } = useEscrow();
 
   const fetchOrder = () =>
-    authFetch(getAccessToken, `/api/orders/${id}`).then((r) => r.json()).then(setOrder).finally(() => setLoading(false));
+    authFetch(getAccessToken, `/api/orders/${id}`)
+      .then((r) => r.json())
+      .then(setOrder)
+      .finally(() => setLoading(false));
 
-  useEffect(() => { fetchOrder(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchOrder(); }, [id]); // eslint-disable-line
 
-  // Poll every 30 s so status updates from the cron are reflected without a manual refresh
+  // Poll every 30 s so cron status updates reflect without manual refresh
   useEffect(() => {
     const interval = setInterval(fetchOrder, 30_000);
     return () => clearInterval(interval);
-  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id]); // eslint-disable-line
 
-  const escrowOrderId = order?.items.find((i) => i.escrowOrderId)?.escrowOrderId;
-  // Escrow actions (confirm/dispute on-chain) require locked escrow
-  const canEscrowAct = order && (order.escrowStatus === "locked" || (!!order.escrowTxHash && order.escrowStatus === "none")) && !!escrowOrderId;
-  // Dispute can be raised any time the order is not already cancelled/disputed
-  const canDispute = order && !["Cancelled", "disputed"].includes(order.escrowStatus ?? "") && order.status !== "Cancelled";
+  const canConfirm = order?.status === "Shipped";
+  const canDispute = order && order.status !== "Cancelled" && order.status !== "Delivered";
 
-  const handleConfirm = async () => {
-    if (!order || !escrowOrderId) return;
-    const ok = await confirm({ title: "Confirm Delivery", message: "Confirm you received this order? This will release payment to the farmer.", confirmLabel: "Confirm Delivery" });
+  const handleConfirmDelivery = async () => {
+    if (!order) return;
+    const ok = await confirm({
+      title: "Confirm Delivery",
+      message: "Confirm you received this order? This will mark it as Delivered.",
+      confirmLabel: "Confirm Delivery",
+    });
     if (!ok) return;
-    const success = await confirmDelivery(escrowOrderId);
-    if (success) {
-      await authFetch(getAccessToken, `/api/orders/${order.id}/escrow`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ escrowStatus: "released" }) });
-      await authFetch(getAccessToken, `/api/orders/${order.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "Delivered" }) });
-      toast.success("Delivery confirmed! Payment released to farmer.");
-      fetchOrder();
-    } else {
-      toast.error(escrowError || "Failed to confirm delivery. Please try again.");
+    setConfirming(true);
+    try {
+      const res = await authFetch(getAccessToken, `/api/orders/${order.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Delivered" }),
+      });
+      if (res.ok) {
+        toast.success("Delivery confirmed!");
+        fetchOrder();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || "Failed to confirm delivery.");
+      }
+    } finally {
+      setConfirming(false);
     }
   };
 
   const handleDispute = async (reason: string, details: string) => {
     if (!order) return;
-    // Try to raise on-chain dispute if escrow exists
-    if (escrowOrderId) {
-      const success = await raiseDispute(escrowOrderId);
-      if (success) {
-        await authFetch(getAccessToken, `/api/orders/${order.id}/escrow`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ escrowStatus: "disputed" }),
-        });
-      }
-    }
-    // Always save dispute record in DB
     const res = await authFetch(getAccessToken, `/api/orders/${order.id}/dispute`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -94,54 +88,43 @@ function OrderDetailPage() {
     }
   };
 
-  if (loading) {
-    return <OrderDetailSkeleton />;
-  }
-
-  if (!order) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <p className="text-muted-foreground">Order not found.</p>
-        <Button onClick={() => router.push("/orders")} className="mt-4 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">Back to Orders</Button>
-      </div>
-    );
-  }
-
-  const hasDelivery = order.deliveryFullName || order.deliveryAddress;
-
-  const downloadInvoice = async () => {
-    const farmerNames = [...new Set(order.farmers?.map(f => f.name).filter(Boolean) || [])]
-    const lines = [
-      { label: "Order ID", value: `#${order.id.slice(-6).toUpperCase()}` },
-      { label: "Date", value: new Date(order.createdAt).toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" }) },
-      { label: "Status", value: order.status },
-      ...(farmerNames.length ? [{ label: "Sold by", value: farmerNames.join(", ") }] : []),
-      { label: "", value: "" },
-      ...order.items.map(i => ({
-        label: `${i.productName} ×${i.quantity}`,
-        value: `₦${(i.pricePerUnit * i.quantity).toLocaleString()}`,
-      })),
-      { label: "", value: "" },
-      { label: "Total", value: `₦${Number(order.totalAmount).toLocaleString()}`, bold: true, green: true },
-      ...(order.usdcAmount ? [{ label: "USDC equivalent", value: `${order.usdcAmount.toFixed(2)} USDC`, small: true }] : []),
-      ...(order.escrowStatus && order.escrowStatus !== "none" ? [{ label: "Payment status", value: order.escrowStatus, small: true }] : []),
-      { label: "", value: "" },
-      // Delivery — mask sensitive fields
-      ...(order.deliveryFullName ? [{ label: "Recipient", value: maskSensitive(order.deliveryFullName), small: true }] : []),
-      ...(order.deliveryPhone ? [{ label: "Phone", value: maskSensitive(order.deliveryPhone), small: true }] : []),
-      ...(order.deliveryAddress ? [{ label: "Address", value: `${order.deliveryCity || ""}, ${order.deliveryState || ""}`, small: true }] : []),
-    ]
+  const downloadInvoice = () => {
+    if (!order) return;
+    const farmerNames = [...new Set(order.farmers?.map((f) => f.name).filter(Boolean) || [])];
     downloadReceiptImage({
       title: "ORDER RECEIPT",
       subtitle: `Receipt #${order.id.slice(-6).toUpperCase()}`,
-      lines,
+      lines: [
+        { label: "Order ID", value: `#${order.id.slice(-6).toUpperCase()}` },
+        { label: "Date", value: new Date(order.createdAt).toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" }) },
+        { label: "Status", value: order.status },
+        ...(farmerNames.length ? [{ label: "Sold by", value: farmerNames.join(", ") }] : []),
+        { label: "", value: "" },
+        ...order.items.map((i) => ({ label: `${i.productName} ×${i.quantity}`, value: `₦${(i.pricePerUnit * i.quantity).toLocaleString()}` })),
+        { label: "", value: "" },
+        { label: "Total", value: `₦${Number(order.totalAmount).toLocaleString()}`, bold: true, green: true },
+        { label: "", value: "" },
+        ...(order.deliveryFullName ? [{ label: "Recipient", value: maskSensitive(order.deliveryFullName), small: true }] : []),
+        ...(order.deliveryPhone    ? [{ label: "Phone",     value: maskSensitive(order.deliveryPhone),    small: true }] : []),
+        ...(order.deliveryAddress  ? [{ label: "Address",   value: `${order.deliveryCity || ""}, ${order.deliveryState || ""}`, small: true }] : []),
+      ],
       filename: `foodra-order-${order.id.slice(-6).toUpperCase()}`,
-    })
+    });
   };
+
+  if (loading) return <OrderDetailSkeleton />;
+
+  if (!order) return (
+    <div className="container mx-auto px-4 py-16 text-center">
+      <p className="text-muted-foreground">Order not found.</p>
+      <Button onClick={() => router.push("/orders")} className="mt-4 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">Back to Orders</Button>
+    </div>
+  );
+
+  const hasDelivery = order.deliveryFullName || order.deliveryAddress;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <WrongAccountBanner />
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
@@ -151,17 +134,17 @@ function OrderDetailPage() {
           <p className="text-muted-foreground text-sm mt-1">#{order.id.slice(-10).toUpperCase()}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => router.push("/orders")} className="gap-2 border-[#118C4C]/30 hover:bg-[#118C4C]/5">
+          <Button variant="outline" onClick={() => router.push("/orders")} className="gap-2 border-[#118C4C]/30">
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
-          <Button variant="outline" onClick={downloadInvoice} className="gap-2 border-[#118C4C]/30 hover:bg-[#118C4C]/5">
+          <Button variant="outline" onClick={downloadInvoice} className="gap-2 border-[#118C4C]/30">
             <Download className="h-4 w-4" /> Receipt
           </Button>
         </div>
       </div>
 
       <div className="space-y-5">
-        {/* Status row */}
+        {/* Status card */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="border-border overflow-hidden">
             <div className="px-5 py-3 bg-muted/30 border-b border-border flex items-center justify-between flex-wrap gap-2">
@@ -169,46 +152,38 @@ function OrderDetailPage() {
                 <Hash className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="font-bold text-sm tracking-widest">{order.id.slice(-6).toUpperCase()}</span>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <StatusPill status={order.status} />
-                <EscrowStatusBadge status={order.escrowStatus} />
-              </div>
+              <StatusPill status={order.status} />
             </div>
             <CardContent className="p-5">
               {order.status !== "Cancelled" && <JourneyBar status={order.status} />}
               <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
                 <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  {new Date(order.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                  {new Date(order.createdAt).toLocaleDateString("en-NG", { year: "numeric", month: "long", day: "numeric" })}
                 </span>
-                <div className="text-right">
-                  <p className="font-black text-[#118C4C] text-xl">₦{Number(order.totalAmount).toLocaleString()}</p>
-                  {order.usdcAmount ? <p className="text-xs text-muted-foreground">{Number(order.usdcAmount).toFixed(4)} USDC</p> : null}
-                </div>
+                <p className="font-black text-[#118C4C] text-xl">₦{Number(order.totalAmount).toLocaleString()}</p>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
         {/* Action buttons */}
-        {(canEscrowAct || canDispute) && (
+        {(canConfirm || canDispute) && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
             <Card className="border-[#118C4C]/30 bg-[#118C4C]/5">
               <CardContent className="p-4">
                 <p className="text-sm font-medium mb-3">
-                  {canEscrowAct
-                    ? "Your payment is secured in escrow. Have you received your items?"
-                    : "Have an issue with this order?"}
+                  {canConfirm ? "Have you received your items?" : "Have an issue with this order?"}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  {canEscrowAct && (
-                    <Button onClick={handleConfirm} disabled={escrowLoading} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 w-full">
-                      {escrowLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                      {escrowLoading ? "Processing..." : "Confirm Delivery"}
+                  {canConfirm && (
+                    <Button onClick={handleConfirmDelivery} disabled={confirming} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
+                      {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                      {confirming ? "Processing..." : "Confirm Delivery"}
                     </Button>
                   )}
                   {canDispute && (
-                    <Button onClick={() => setDisputeOpen(true)} disabled={escrowLoading} variant="outline" className="flex-1 border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2 w-full">
+                    <Button onClick={() => setDisputeOpen(true)} variant="outline" className="flex-1 border-red-500/30 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 gap-2">
                       <AlertTriangle className="h-4 w-4" /> Raise Dispute
                     </Button>
                   )}
@@ -256,36 +231,24 @@ function OrderDetailPage() {
                   <MapPin className="h-4 w-4 text-[#118C4C]" /> Delivery Address
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-5 space-y-2">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-semibold">{order.deliveryFullName}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-4 w-4" />{order.deliveryPhone}
-                </div>
-                <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>{order.deliveryAddress}, {order.deliveryCity}, {order.deliveryState}</span>
-                </div>
-                <p className="text-xs text-amber-600 dark:text-amber-400 pt-1 border-t border-border mt-2">
-                  🚚 A small delivery fee applies when your order arrives — we'll keep you posted on the details.
-                </p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Escrow tx */}
-        {order.escrowTxHash && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Card className="border-[#118C4C]/20">
-              <CardContent className="p-5">
-                <p className="text-sm text-muted-foreground mb-1">Escrow Transaction</p>
-                <a href={`https://${process.env.NEXT_PUBLIC_CHAIN_ID === "8453" ? "" : "sepolia."}basescan.org/tx/${order.escrowTxHash}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#118C4C] text-sm font-mono hover:underline">
-                  {order.escrowTxHash.slice(0, 14)}...{order.escrowTxHash.slice(-8)}
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
+              <CardContent className="p-5 space-y-2 text-sm">
+                {order.deliveryFullName && (
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-semibold">{order.deliveryFullName}</span>
+                  </div>
+                )}
+                {order.deliveryPhone && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4" />{order.deliveryPhone}
+                  </div>
+                )}
+                {order.deliveryAddress && (
+                  <div className="flex items-start gap-2 text-muted-foreground">
+                    <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>{order.deliveryAddress}{order.deliveryCity ? `, ${order.deliveryCity}` : ""}{order.deliveryState ? `, ${order.deliveryState}` : ""}</span>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -296,7 +259,7 @@ function OrderDetailPage() {
         isOpen={disputeOpen}
         onClose={() => setDisputeOpen(false)}
         orderId={order.id}
-        loading={escrowLoading}
+        loading={false}
         onConfirm={handleDispute}
       />
     </div>

@@ -17,12 +17,12 @@ function SignupButtonInner() {
 
   return (
     <button
-      onClick={() => login()}
-      disabled={!ready || authenticated}
+      onClick={() => !authenticated && login()}
+      disabled={authenticated}
       className="w-full flex items-center justify-center gap-2 bg-[#118C4C] hover:bg-[#0d6d3a] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 rounded-xl text-sm transition-colors"
     >
       <LogIn className="h-4 w-4" />
-      {authenticated ? "Signed In" : "Sign In to Foodra"}
+      {authenticated ? "Signed In" : !ready ? "Loading..." : "Sign In to Foodra"}
     </button>
   );
 }

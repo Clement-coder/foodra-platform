@@ -58,9 +58,6 @@ export async function GET(request: Request) {
       ordersMap.set(o.id, {
         id: o.id,
         status: o.status,
-        escrowStatus: o.escrow_status || "none",
-        escrowTxHash: o.escrow_tx_hash || null,
-        usdcAmount: o.usdc_amount || null,
         totalAmount: o.total_amount,
         createdAt: o.created_at,
         buyer: u ? {
@@ -81,8 +78,6 @@ export async function GET(request: Request) {
       quantity: item.quantity,
       pricePerUnit: item.price,
       image: item.image_url || "",
-      escrowStatus: item.escrow_status || "none",
-      escrowOrderId: item.escrow_order_id || null,
     });
   }
 

@@ -16,7 +16,7 @@ type SyncBody = {
 type UpdateBody = {
   phone?: string
   location?: string
-  role?: "farmer" | "buyer" | "admin"
+  role?: "buyer" | "admin" | "owner"
   avatar_url?: string
   terms_accepted_at?: string | null
 }

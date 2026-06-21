@@ -53,6 +53,22 @@ export function useUser() {
     const syncUser = async () => {
       if (authenticated && privyUser) {
         try {
+          // Wait for a valid token — Privy may need a moment to restore it after refresh
+          let token = await getAccessToken()
+          if (!token) {
+            // Retry up to 3 times with 500ms delay
+            for (let i = 0; i < 3; i++) {
+              await new Promise((r) => setTimeout(r, 500))
+              token = await getAccessToken()
+              if (token) break
+            }
+          }
+          if (!token) {
+            setCurrentUser(buildFallbackUser())
+            setIsLoading(false)
+            return
+          }
+
           const response = await authFetch(getAccessToken, "/api/users/sync", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

@@ -7,7 +7,7 @@ export interface User {
   createdAt: string
   phone?: string
   location?: string
-  role?: "farmer" | "buyer" | "admin" | "owner"
+  role?: "buyer" | "admin" | "owner"
   isVerified?: boolean
   linked_accounts?: Array<{ type: string }>
   termsAcceptedAt?: string | null
@@ -77,7 +77,6 @@ export interface CartItem {
   pricePerUnit: number
   quantity: number
   image: string
-  farmerWallet?: string
 }
 
 export interface DeliveryAddress {
@@ -104,15 +103,10 @@ export interface Order {
   status: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled"
   createdAt: string
   updatedAt: string
-  escrowTxHash?: string
-  escrowStatus?: "none" | "locked" | "released" | "refunded" | "disputed"
-  usdcAmount?: number
-  // Seller info (visible to buyer)
   farmers?: Array<{ id: string; name: string; email: string; phone: string; avatar: string; location: string }>
   buyerName?: string
   buyerPhone?: string
   buyerEmail?: string
-  // Delivery address snapshot
   deliveryFullName?: string
   deliveryPhone?: string
   deliveryAddress?: string
@@ -129,7 +123,4 @@ export interface OrderItem {
   pricePerUnit: number
   quantity: number
   image: string
-  escrowOrderId?: string
-  farmerWallet?: string
-  escrowStatus?: "none" | "locked" | "released" | "refunded" | "disputed"
 }
