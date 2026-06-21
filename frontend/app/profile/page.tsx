@@ -207,28 +207,27 @@ function ProfilePage() {
 
         {/* Cover + Avatar — matches /users/[id] layout */}
         <div className="relative">
-          <div className="h-48 sm:h-56 w-full overflow-hidden bg-gradient-to-br from-[#063d1e] via-[#118C4C] to-[#20c46a] relative">
-            <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/5" />
-            <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full bg-white/5" />
-            <div className="absolute top-8 right-1/3 w-20 h-20 rounded-full bg-white/5" />
+          <div className="relative h-36 sm:h-48 w-full rounded-b-3xl overflow-hidden bg-gradient-to-br from-[#118C4C] via-[#0d7a42] to-[#1a5c35] shadow-2xl">
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5" />
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5" />
+            <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-white/5" />
           </div>
 
           {/* Avatar */}
-          <div className="absolute left-5 -bottom-16">
+          <div className="absolute left-4 sm:left-6 -bottom-12">
             <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-              <div className="w-32 h-32 rounded-2xl border-[5px] border-background overflow-hidden bg-muted shadow-2xl">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-background overflow-hidden bg-muted shadow-lg">
                 {user.avatar
                   ? <img src={user.avatar} className="w-full h-full object-cover" referrerPolicy="no-referrer" alt={displayName} />
-                  : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#118C4C] to-[#063d1e] text-white text-5xl font-black">{(displayName[0] || "U").toUpperCase()}</div>
+                  : <div className="w-full h-full flex items-center justify-center bg-[#118C4C] text-white text-3xl font-bold">{(displayName[0] || "U").toUpperCase()}</div>
                 }
               </div>
-              <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 {avatarUploading ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Camera className="w-6 h-6 text-white" />}
               </div>
               <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-              {/* verified badge */}
-              <div className={`absolute -bottom-2 -right-2 w-9 h-9 rounded-full border-2 border-background flex items-center justify-center shadow-lg ${user.isVerified ? "bg-[#118C4C]" : "bg-muted"}`}>
-                {user.isVerified ? <BadgeCheck className="h-5 w-5 text-white" /> : <ShieldCheck className="h-4 w-4 text-muted-foreground" />}
+              <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 border-background flex items-center justify-center shadow ${user.isVerified ? "bg-[#118C4C]" : "bg-muted"}`}>
+                {user.isVerified ? <BadgeCheck className="h-4 w-4 text-white" /> : <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />}
               </div>
             </div>
           </div>
@@ -245,7 +244,7 @@ function ProfilePage() {
         </div>
 
         {/* Name + identity — matches /users/[id] layout */}
-        <div className="px-5 mt-20">
+        <div className="px-4 sm:px-6 mt-16">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">

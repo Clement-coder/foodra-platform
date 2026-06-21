@@ -119,17 +119,7 @@ export default function UserProfileClient({ user, membership, products, ordersCo
             <MembershipBadge score={membership} />
           </div>
 
-          {/* Wallet */}
-          {shortWallet && !isFoodra && (
-            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/70 border border-border text-xs font-mono text-muted-foreground">
-              <Wallet className="h-3.5 w-3.5 text-[#118C4C] flex-shrink-0" />
-              <span>{shortWallet}</span>
-              <a href={`https://basescan.org/address/${user.wallet}`} target="_blank" rel="noopener noreferrer"
-                className="text-[#118C4C] hover:opacity-70 transition-opacity">
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-          )}
+          {/* Foodra Tag placeholder — fetched client-side if needed */}
         </div>
 
         {/* Divider */}
@@ -137,10 +127,7 @@ export default function UserProfileClient({ user, membership, products, ordersCo
 
         {/* Tabs */}
         <div className="flex border-b border-border mt-1 px-4">
-          {(isFoodra
-            ? [{ key: "products", label: "Products" }, { key: "about", label: "About" }]
-            : [{ key: "products", label: "Listings" }, { key: "about", label: "About" }]
-          ).map(t => (
+          {[{ key: "products", label: "Products" }, { key: "about", label: "About" }].map(t => (
             <button key={t.key} onClick={() => setTab(t.key as any)}
               className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === t.key ? "border-[#118C4C] text-[#118C4C]" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
               {t.label}

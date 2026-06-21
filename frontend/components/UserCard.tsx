@@ -1,10 +1,11 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ArrowUpRight, BadgeCheck, Copy, User as UserIcon } from "lucide-react"
+import { ArrowUpRight, BadgeCheck, User as UserIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { User } from "@/lib/types"
 import { RatingSummary } from "@/components/RatingSummary"
+import { useEffect, useState } from "react"
 
 interface UserCardProps {
   user: User
@@ -12,16 +13,17 @@ interface UserCardProps {
 
 export function UserCard({ user }: UserCardProps) {
   const router = useRouter()
+  const [foodraTag, setFoodraTag] = useState<string | null>(null)
 
-  const shortWallet =
-    user.wallet && user.wallet.length > 10
-      ? `${user.wallet.slice(0, 6)}...${user.wallet.slice(-4)}`
-      : user.wallet
-
-  const copyWallet = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    navigator.clipboard.writeText(user.wallet)
-  }
+  useEffect(() => {
+    fetch(`/api/users/search?q=${encodeURIComponent(user.name || user.id)}`)
+      .then(r => r.json())
+      .then((data: { id: string; foodra_tag: string | null }[]) => {
+        const match = data.find(u => u.id === user.id)
+        if (match?.foodra_tag) setFoodraTag(match.foodra_tag)
+      })
+      .catch(() => {})
+  }, [user.id, user.name])
 
   return (
     <motion.div
@@ -47,17 +49,11 @@ export function UserCard({ user }: UserCardProps) {
       <div className="flex items-center gap-4 mb-5">
         <div className="w-14 h-14 rounded-2xl overflow-hidden border border-[#118C4C]/20 bg-muted flex items-center justify-center shadow-sm">
           {user.avatar ? (
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
+            <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           ) : (
             <UserIcon className="h-6 w-6 text-muted-foreground" />
           )}
         </div>
-
         <div className="min-w-0 flex-1">
           <h3 className="font-bold text-base text-foreground truncate">{user.name || "Unnamed User"}</h3>
           <p className="text-sm text-muted-foreground truncate mt-0.5">{user.email || "No email provided"}</p>
@@ -66,14 +62,8 @@ export function UserCard({ user }: UserCardProps) {
 
       <div className="flex items-center justify-between rounded-xl border border-border bg-muted px-3 py-2.5">
         <span className="text-xs font-mono text-muted-foreground">
-          {shortWallet || "No wallet"}
+          {foodraTag ?? "Loading..."}
         </span>
-        {user.wallet && (
-          <Copy
-            onClick={copyWallet}
-            className="h-4 w-4 text-[#118C4C] hover:scale-110 transition cursor-pointer"
-          />
-        )}
       </div>
 
       <div className="mt-3 px-1">
