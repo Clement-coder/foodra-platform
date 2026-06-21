@@ -162,11 +162,14 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
                     onMouseDown={() => selectRecipient(r)}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/60 transition-colors text-left"
                   >
-                    <div className="w-9 h-9 rounded-full shrink-0 overflow-hidden bg-[#118C4C] text-white flex items-center justify-center text-sm font-bold">
-                      {r.avatar
-                        ? <img src={r.avatar} alt={r.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
-                        : r.name?.[0]?.toUpperCase()
-                      }
+                    <div className="w-9 h-9 rounded-full shrink-0 overflow-hidden bg-[#118C4C] text-white flex items-center justify-center text-sm font-bold relative">
+                      <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">
+                        {r.name?.[0]?.toUpperCase()}
+                      </span>
+                      {r.avatar && (
+                        <img src={r.avatar} alt={r.name} className="absolute inset-0 w-full h-full object-cover" referrerPolicy="no-referrer"
+                          onError={(e) => { (e.target as HTMLImageElement).remove() }} />
+                      )}
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate">{r.name}</p>
@@ -184,11 +187,14 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
           {/* Selected recipient card */}
           {recipient && (
             <div className="mt-2.5 flex items-center gap-3 p-3 rounded-xl bg-[#118C4C]/8 border border-[#118C4C]/25">
-              <div className="w-10 h-10 rounded-full shrink-0 overflow-hidden bg-[#118C4C] text-white flex items-center justify-center font-bold">
-                {recipient.avatar
-                  ? <img src={recipient.avatar} alt={recipient.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }} />
-                  : recipient.name?.[0]?.toUpperCase()
-                }
+              <div className="w-10 h-10 rounded-full shrink-0 overflow-hidden bg-[#118C4C] text-white flex items-center justify-center font-bold relative">
+                <span className="absolute inset-0 flex items-center justify-center font-bold">
+                  {recipient.name?.[0]?.toUpperCase()}
+                </span>
+                {recipient.avatar && (
+                  <img src={recipient.avatar} alt={recipient.name} className="absolute inset-0 w-full h-full object-cover" referrerPolicy="no-referrer"
+                    onError={(e) => { (e.target as HTMLImageElement).remove() }} />
+                )}
               </div>
               <div>
                 <p className="text-sm font-semibold">{recipient.name}</p>

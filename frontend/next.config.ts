@@ -60,6 +60,9 @@ const nextConfig: NextConfig = {
       '@solana/web3.js': false,
       '@solana/spl-token': false,
       '@coral-xyz/anchor': false,
+      '@solana-program/system': false,
+      '@solana-program/token': false,
+      '@solana/kit': false,
     };
 
     // Exclude test files from being bundled

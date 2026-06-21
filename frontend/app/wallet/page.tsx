@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft,
-  Banknote, Copy, Check, RefreshCcw, ShieldCheck, TrendingUp, Clock,
+  Banknote, Copy, Check, RefreshCcw, ShieldCheck, TrendingUp, Clock, Eye, EyeOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/lib/toast"
@@ -55,6 +55,7 @@ function WalletPage() {
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [pinOpen, setPinOpen] = useState(false)
   const [hasPin, setHasPin] = useState(false)
+  const [balanceVisible, setBalanceVisible] = useState(true)
 
   const loadWallet = useCallback(async () => {
     if (!currentUser) return
@@ -102,11 +103,7 @@ function WalletPage() {
       <div className="container mx-auto max-w-2xl px-4 py-8 space-y-5">
 
         {/* Balance Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#118C4C] via-[#0f7a41] to-[#0a5c31] p-6 text-white shadow-xl"
-        >
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#118C4C] via-[#0f7a41] to-[#0a5c31] p-6 text-white shadow-xl">
           {/* decorative circles */}
           <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/5 pointer-events-none" />
           <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5 pointer-events-none" />
@@ -126,9 +123,19 @@ function WalletPage() {
             </div>
 
             <p className="text-sm opacity-70 mb-1">Available Balance</p>
-            <h1 className="text-4xl font-black tracking-tight mb-5">
-              ₦{balance.toLocaleString("en-NG", { minimumFractionDigits: 2 })}
-            </h1>
+            <div className="flex items-center gap-3 mb-5">
+              <h1 className="text-4xl font-black tracking-tight tabular-nums">
+                {balanceVisible
+                  ? `₦${balance.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`
+                  : "₦••••••"}
+              </h1>
+              <button
+                onClick={() => setBalanceVisible(v => !v)}
+                className="opacity-60 hover:opacity-100 transition-opacity mt-1"
+              >
+                {balanceVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
 
             <div className="flex items-center justify-between">
               <button
@@ -143,9 +150,7 @@ function WalletPage() {
               </button>
             </div>
           </div>
-        </motion.div>
-
-        {/* Stats row */}
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
