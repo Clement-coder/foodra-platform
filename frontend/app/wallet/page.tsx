@@ -56,6 +56,23 @@ function WalletPage() {
   const [pinOpen, setPinOpen] = useState(false)
   const [hasPin, setHasPin] = useState(false)
   const [balanceVisible, setBalanceVisible] = useState(true)
+  const [leafBurst, setLeafBurst] = useState(false)
+
+  const LEAVES = [
+    { id: 1, emoji: "🌿", x: -28, y: -24, rotate: -40, size: "14px" },
+    { id: 2, emoji: "🍃", x: 24,  y: -30, rotate: 30,  size: "13px" },
+    { id: 3, emoji: "🌱", x: -20, y: 22,  rotate: -20, size: "12px" },
+    { id: 4, emoji: "🍀", x: 30,  y: 18,  rotate: 50,  size: "13px" },
+    { id: 5, emoji: "🌾", x: 0,   y: -34, rotate: 10,  size: "14px" },
+    { id: 6, emoji: "🌿", x: -34, y: 4,   rotate: -60, size: "12px" },
+    { id: 7, emoji: "🍃", x: 32,  y: -10, rotate: 70,  size: "13px" },
+  ]
+
+  const handleToggleVisibility = () => {
+    setLeafBurst(true)
+    setTimeout(() => setLeafBurst(false), 750)
+    setBalanceVisible(v => !v)
+  }
 
   const loadWallet = useCallback(async () => {
     if (!currentUser) return
@@ -124,17 +141,58 @@ function WalletPage() {
 
             <p className="text-sm opacity-70 mb-1">Available Balance</p>
             <div className="flex items-center gap-3 mb-5">
-              <h1 className="text-4xl font-black tracking-tight tabular-nums">
-                {balanceVisible
-                  ? `₦${balance.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`
-                  : "₦••••••"}
-              </h1>
-              <button
-                onClick={() => setBalanceVisible(v => !v)}
-                className="opacity-60 hover:opacity-100 transition-opacity mt-1"
-              >
-                {balanceVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              <div className="relative">
+                <AnimatePresence mode="wait">
+                  {balanceVisible ? (
+                    <motion.h1
+                      key="amount"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.25 }}
+                      className="text-4xl font-black tracking-tight tabular-nums"
+                    >
+                      ₦{balance.toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                    </motion.h1>
+                  ) : (
+                    <motion.h1
+                      key="hidden"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.25 }}
+                      className="text-4xl font-black tracking-tight tabular-nums"
+                    >
+                      ₦••••••
+                    </motion.h1>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Visibility toggle with plant burst animation */}
+              <div className="relative mt-1">
+                <AnimatePresence>
+                  {leafBurst && LEAVES.map((leaf) => (
+                    <motion.span
+                      key={leaf.id}
+                      className="absolute pointer-events-none select-none"
+                      style={{ fontSize: leaf.size, originX: "50%", originY: "50%", left: "50%", top: "50%" }}
+                      initial={{ x: 0, y: 0, scale: 0, opacity: 1, rotate: 0 }}
+                      animate={{ x: leaf.x, y: leaf.y, scale: 1.4, opacity: 0, rotate: leaf.rotate }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.7, ease: "easeOut" }}
+                    >
+                      {leaf.emoji}
+                    </motion.span>
+                  ))}
+                </AnimatePresence>
+                <button
+                  onClick={handleToggleVisibility}
+                  className="opacity-60 hover:opacity-100 transition-opacity"
+                >
+                  {balanceVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between">
