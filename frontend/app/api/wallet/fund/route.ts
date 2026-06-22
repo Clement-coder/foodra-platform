@@ -3,7 +3,7 @@ import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { requireAuthenticatedUser, AuthError } from "@/lib/serverAuth"
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY!
-const APP_URL = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://foodramarket.com"
 
 function generateRef() {
   return "FDR-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7).toUpperCase()
