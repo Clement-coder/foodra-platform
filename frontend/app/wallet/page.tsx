@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -57,20 +57,53 @@ function WalletPage() {
   const [hasPin, setHasPin] = useState(false)
   const [balanceVisible, setBalanceVisible] = useState(true)
   const [leafBurst, setLeafBurst] = useState(false)
+  const [displayBalance, setDisplayBalance] = useState(0)
+  const countRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Count-up when balance becomes visible
+  useEffect(() => {
+    if (!balanceVisible) { setDisplayBalance(0); return }
+    if (balance === 0) { setDisplayBalance(0); return }
+    const duration = 900
+    const steps = 50
+    const increment = balance / steps
+    let current = 0
+    let step = 0
+    const tick = () => {
+      step++
+      current = step >= steps ? balance : current + increment
+      setDisplayBalance(current)
+      if (step < steps) countRef.current = setTimeout(tick, duration / steps)
+    }
+    countRef.current = setTimeout(tick, 60)
+    return () => { if (countRef.current) clearTimeout(countRef.current) }
+  }, [balanceVisible, balance])
 
   const LEAVES = [
-    { id: 1, emoji: "🌿", x: -28, y: -24, rotate: -40, size: "14px" },
-    { id: 2, emoji: "🍃", x: 24,  y: -30, rotate: 30,  size: "13px" },
-    { id: 3, emoji: "🌱", x: -20, y: 22,  rotate: -20, size: "12px" },
-    { id: 4, emoji: "🍀", x: 30,  y: 18,  rotate: 50,  size: "13px" },
-    { id: 5, emoji: "🌾", x: 0,   y: -34, rotate: 10,  size: "14px" },
-    { id: 6, emoji: "🌿", x: -34, y: 4,   rotate: -60, size: "12px" },
-    { id: 7, emoji: "🍃", x: 32,  y: -10, rotate: 70,  size: "13px" },
+    { id: 1, emoji: "🌿", x: -40, y: -35, rotate: -45, size: "18px" },
+    { id: 2, emoji: "🍃", x: 38,  y: -42, rotate: 30,  size: "16px" },
+    { id: 3, emoji: "🌱", x: -30, y: 38,  rotate: -20, size: "15px" },
+    { id: 4, emoji: "🍀", x: 44,  y: 28,  rotate: 55,  size: "17px" },
+    { id: 5, emoji: "🌾", x: 8,   y: -50, rotate: 10,  size: "16px" },
+    { id: 6, emoji: "🌿", x: -50, y: 5,   rotate: -70, size: "15px" },
+    { id: 7, emoji: "🍃", x: 48,  y: -15, rotate: 80,  size: "16px" },
+    { id: 8, emoji: "🌱", x: -18, y: 52,  rotate: 25,  size: "14px" },
+    { id: 9, emoji: "🍃", x: 20,  y: 50,  rotate: -35, size: "15px" },
+  ]
+
+  // Floating leaves shown when balance is hidden
+  const FLOAT_LEAVES = [
+    { id: "f1", emoji: "🍃", x: 0,   delay: 0 },
+    { id: "f2", emoji: "🌿", x: 28,  delay: 0.3 },
+    { id: "f3", emoji: "🍀", x: 56,  delay: 0.6 },
+    { id: "f4", emoji: "🌾", x: 84,  delay: 0.9 },
+    { id: "f5", emoji: "🌱", x: 112, delay: 1.2 },
+    { id: "f6", emoji: "🍃", x: 140, delay: 0.15 },
   ]
 
   const handleToggleVisibility = () => {
     setLeafBurst(true)
-    setTimeout(() => setLeafBurst(false), 750)
+    setTimeout(() => setLeafBurst(false), 800)
     setBalanceVisible(v => !v)
   }
 
@@ -141,46 +174,55 @@ function WalletPage() {
 
             <p className="text-sm opacity-70 mb-1">Available Balance</p>
             <div className="flex items-center gap-3 mb-5">
-              <div className="relative">
+              <div className="relative min-w-[180px] h-12 flex items-center">
                 <AnimatePresence mode="wait">
                   {balanceVisible ? (
                     <motion.h1
                       key="amount"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.25 }}
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.85 }}
+                      transition={{ duration: 0.3 }}
                       className="text-4xl font-black tracking-tight tabular-nums"
                     >
-                      ₦{balance.toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                      ₦{displayBalance.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </motion.h1>
                   ) : (
-                    <motion.h1
-                      key="hidden"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.25 }}
-                      className="text-4xl font-black tracking-tight tabular-nums"
+                    <motion.div
+                      key="leaves"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex items-center gap-0.5"
                     >
-                      ₦••••••
-                    </motion.h1>
+                      {FLOAT_LEAVES.map((leaf) => (
+                        <motion.span
+                          key={leaf.id}
+                          className="text-xl select-none"
+                          animate={{ y: [0, -6, 0], rotate: [-8, 8, -8] }}
+                          transition={{ duration: 2.4, repeat: Infinity, delay: leaf.delay, ease: "easeInOut" }}
+                        >
+                          {leaf.emoji}
+                        </motion.span>
+                      ))}
+                    </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              {/* Visibility toggle with plant burst animation */}
-              <div className="relative mt-1">
+              {/* Toggle button with burst */}
+              <div className="relative mt-1 shrink-0">
                 <AnimatePresence>
                   {leafBurst && LEAVES.map((leaf) => (
                     <motion.span
                       key={leaf.id}
                       className="absolute pointer-events-none select-none"
-                      style={{ fontSize: leaf.size, originX: "50%", originY: "50%", left: "50%", top: "50%" }}
+                      style={{ fontSize: leaf.size, left: "50%", top: "50%" }}
                       initial={{ x: 0, y: 0, scale: 0, opacity: 1, rotate: 0 }}
-                      animate={{ x: leaf.x, y: leaf.y, scale: 1.4, opacity: 0, rotate: leaf.rotate }}
+                      animate={{ x: leaf.x, y: leaf.y, scale: 1.5, opacity: 0, rotate: leaf.rotate }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.7, ease: "easeOut" }}
+                      transition={{ duration: 0.75, ease: "easeOut" }}
                     >
                       {leaf.emoji}
                     </motion.span>
