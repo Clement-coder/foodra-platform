@@ -2,7 +2,16 @@
 
 AgriTech Platform for Food Security and Buyer Empowerment
 
-Foodra is an agricultural technology platform that connects buyers with quality agricultural products, provides training programs, funding opportunities, and an NGN digital wallet. The platform is designed to drive financial inclusion, improve access to food, and support the African food supply chain, starting with Nigeria.
+Foodra is an agricultural technology platform that sells quality farm commodities directly to buyers, provides agricultural training programs, funding opportunities, and an NGN digital wallet. Foodra owns and manages all products on the platform — there are no third-party sellers or farmer listings. When a buyer places an order, Foodra ships the goods directly to them.
+
+The platform is designed to drive financial inclusion, improve access to food, and support the African food supply chain, starting with Nigeria.
+
+## Business Model
+
+- **Foodra is the sole merchant.** All products listed on the platform are owned and managed by Foodra.
+- **No third-party sellers.** There are no farmer or vendor accounts that list products.
+- **Direct fulfilment.** Foodra ships farm commodities directly to buyers upon order confirmation.
+- **Buyers only.** Users on the platform are buyers. Product management is handled exclusively by Foodra admins.
 
 ## Vision
 
@@ -15,26 +24,33 @@ To offer value through sustainable agricultural practices and a fair supply chai
 ## Core Features
 
 ### 1. Marketplace
-- Browse and purchase fresh agricultural products
+- Browse and purchase fresh agricultural products owned and sold by Foodra
 - Advanced filtering: category, price range, location, sort order
 - Related products on product detail pages
 - Wishlist with price alerts
 - Product view tracking for analytics
 - Search with debounce and full-text support
+- All products managed by Foodra admins — no third-party listings
 
-### 2. Training Programs
+### 2. Shopping & Checkout
+- Shopping cart with quantity management
+- Checkout directly from wallet balance (NGN)
+- Order tracking from placement to delivery
+- Dispute resolution for order issues
+
+### 3. Training Programs
 - Access to online and offline agricultural training sessions
 - Expert instructors teaching modern farming techniques
 - Enrollment system with capacity tracking
 - Training categories covering various farming practices
 
-### 3. Funding Applications
-- Apply for loans and grants
+### 4. Funding Applications
+- Apply for agricultural loans and grants
 - **AI Credit Scoring** — explainable rule-based engine scoring 0–100 with tier and recommendation
 - Application tracking (Pending, Approved, Rejected)
 - Admin review with credit score breakdown
 
-### 4. NGN Digital Wallet
+### 5. NGN Digital Wallet
 - Paystack-powered NGN wallet (custodial ledger model)
 - Fund wallet via Paystack (debit/credit card, bank transfer)
 - Send NGN to other Foodra users by Foodra Tag (e.g. FDR-A1B2C3)
@@ -42,26 +58,27 @@ To offer value through sustainable agricultural practices and a fair supply chai
 - Full transaction history
 - Pay for marketplace orders directly from wallet balance
 
-### 5. User Authentication & Profiles
+### 6. User Authentication & Profiles
 - Authentication via Privy (email, social login)
 - User profiles with avatar generation
 - Profile completion tracking
 - Membership tier system (Seed → Champion)
 
-### 6. Multi-Language Support
+### 7. Multi-Language Support
 - English, Yoruba (Yorùbá), Hausa, Igbo
 - Language switcher in NavBar
 - Persistent locale preference
 
-### 7. Admin Dashboard
-- Users, products, funding, orders, disputes, trainings, support
+### 8. Admin Dashboard
+- Full product management (create, edit, delete) — admins are the only ones who manage listings
+- Users, funding, orders, disputes, trainings, support management
 - Analytics with revenue charts, user growth, category breakdown
 - Broadcast notifications to all users
 - CSV export for orders, users, and funding data
 - AI credit score visible on each funding application
 - Withdrawal approvals and Paystack transfer management
 
-### 8. Sales Dashboard
+### 9. Sales Dashboard
 - Revenue analytics with monthly charts
 - Top products by revenue
 - Order management with shipping workflow
@@ -98,7 +115,7 @@ To offer value through sustainable agricultural practices and a fair supply chai
 foodra-platform/
 ├── frontend/
 │   ├── app/
-│   │   ├── marketplace/        # Product listings, detail, edit
+│   │   ├── marketplace/        # Product listings and detail pages
 │   │   ├── training/           # Training programs
 │   │   ├── funding/            # Funding applications
 │   │   ├── wallet/             # NGN wallet (fund, send, withdraw)
@@ -107,7 +124,7 @@ foodra-platform/
 │   │   ├── orders/             # Order management
 │   │   ├── sales/              # Sales analytics dashboard
 │   │   ├── wishlist/           # Wishlist with price alerts
-│   │   ├── admin/              # Admin dashboard
+│   │   ├── admin/              # Admin dashboard (product & platform management)
 │   │   ├── users/              # User directory
 │   │   ├── search/             # Search functionality
 │   │   └── api/                # API routes
@@ -168,13 +185,13 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
 PAYSTACK_SECRET_KEY=sk_live_xxxx
 NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY=pk_live_xxxx
-NEXT_PUBLIC_APP_URL=https://yourdomain.com
+NEXT_PUBLIC_APP_URL=https://foodramarket.com
 ```
 
 ## Implementation Status
 
 ### ✅ Complete
-- Marketplace with advanced filtering, related products, wishlist, price alerts
+- Marketplace (Foodra-owned products) with advanced filtering, related products, wishlist, price alerts
 - Training program enrollment system
 - Funding applications with AI credit scoring
 - NGN digital wallet (fund, send, withdraw) powered by Paystack
@@ -183,7 +200,7 @@ NEXT_PUBLIC_APP_URL=https://yourdomain.com
 - Shopping cart and order management
 - Transaction history tracking
 - Sales analytics dashboard
-- Admin dashboard (users, products, funding, orders, disputes, analytics, CSV export)
+- Admin dashboard (product management, users, funding, orders, disputes, analytics, CSV export)
 - Notification system (in-app + push)
 - Dispute resolution workflow
 - Multi-language support (EN, YO, HA, IG)
