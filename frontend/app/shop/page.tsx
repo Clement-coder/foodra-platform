@@ -11,6 +11,7 @@ import { Modal } from "@/components/Modal";
 import { useToast } from "@/lib/toast";
 import { DeliveryAddressModal } from "@/components/DeliveryAddressModal";
 import { FundWalletModal } from "@/components/FundWalletModal";
+import { WalletSuccessScreen } from "@/components/WalletSuccessScreen";
 import withAuth from "../../components/withAuth";
 import { useCart, useOrders } from "@/lib/useCart";
 import { usePrivy } from "@privy-io/react-auth";
@@ -34,6 +35,8 @@ function ShopPage() {
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryAddress | null>(null);
+  const [payStep, setPayStep] = useState<"confirm" | "pin" | "success">("confirm");
+  const [payPin, setPayPin] = useState("");
 
   const handleProceedToCheckout = async () => {
     if (currentUser && calculateProfileCompletion(currentUser) < 100) {
@@ -83,13 +86,17 @@ function ShopPage() {
 
   const handleConfirmPayment = async () => {
     if (!pendingOrderId) return;
+    if (!payPin || payPin.length !== 4) { toast.error("Enter your 4-digit wallet PIN"); return; }
     setPaying(true);
     try {
-      const res = await authFetch(getAccessToken, `/api/orders/${pendingOrderId}/pay-wallet`, { method: "PATCH" });
+      const res = await authFetch(getAccessToken, `/api/orders/${pendingOrderId}/pay-wallet`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: payPin }),
+      });
       const data = await res.json();
       if (!res.ok) {
         if (data.balance !== undefined) {
-          // Insufficient balance
           setIsPayConfirmOpen(false);
           setIsFundOpen(true);
         } else {
@@ -98,8 +105,7 @@ function ShopPage() {
         return;
       }
       clearCart();
-      setIsPayConfirmOpen(false);
-      router.push("/orders");
+      setPayStep("success");
     } catch {
       toast.error("Something went wrong");
     } finally {
@@ -112,6 +118,8 @@ function ShopPage() {
       await authFetch(getAccessToken, `/api/orders?orderId=${pendingOrderId}&userId=${currentUser?.id}`, { method: "DELETE" }).catch(() => {});
     }
     setIsPayConfirmOpen(false);
+    setPayStep("confirm");
+    setPayPin("");
     setPendingOrderId(null);
   };
 
@@ -335,56 +343,99 @@ function ShopPage() {
       )}
 
       {/* Wallet Pay Confirmation Modal */}
-      <Modal isOpen={isPayConfirmOpen} onClose={handleCancelOrder} title="Confirm Payment">
-        <div className="space-y-4 p-1">
-          {/* Zero-fee notice — shown before they see the amount */}
-          <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 rounded-xl px-3 py-2.5">
-            <Wallet className="h-3.5 w-3.5 text-green-600 dark:text-green-400 shrink-0" />
-            <p className="text-xs font-semibold text-green-700 dark:text-green-400">
-              No charges · Wallet payments on Foodra are 100% free of fees.
-            </p>
-          </div>
-          <div className="rounded-xl bg-[#118C4C]/8 border border-[#118C4C]/20 p-4 text-center">
-            <p className="text-sm text-muted-foreground mb-1">Amount to pay</p>
-            <p className="text-3xl font-black text-[#118C4C]">₦{totalAmount.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
-              <Wallet className="h-3.5 w-3.5" /> from your Foodra Wallet
-            </p>
-          </div>
-          <div className="flex justify-between text-sm px-1">
-            <span className="text-muted-foreground">Current balance</span>
-            <span className="font-semibold">₦{walletBalance.toLocaleString()}</span>
-          </div>
-          {walletBalance >= totalAmount && (
-            <div className="flex justify-between text-sm px-1">
-              <span className="text-muted-foreground">Balance after</span>
-              <span className="font-semibold text-[#118C4C]">₦{(walletBalance - totalAmount).toLocaleString()}</span>
-            </div>
+      <Modal isOpen={isPayConfirmOpen} onClose={payStep === "success" ? () => { setIsPayConfirmOpen(false); setPayStep("confirm"); setPayPin(""); router.push("/orders"); } : handleCancelOrder} title={payStep === "pin" ? "Confirm with PIN" : "Confirm Payment"}>
+        <div className="p-1">
+
+          {payStep === "success" && (
+            <WalletSuccessScreen
+              title="Order Paid! 🛒"
+              subtitle={`₦${totalAmount.toLocaleString()} deducted from your wallet. Your order is being processed.`}
+              doneLabel="View Orders"
+              onDone={() => { setIsPayConfirmOpen(false); setPayStep("confirm"); setPayPin(""); router.push("/orders"); }}
+            />
           )}
-          {walletBalance < totalAmount && (
-            <div className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200/60 p-3 text-sm text-red-600 dark:text-red-400">
-              Insufficient balance. You need ₦{(totalAmount - walletBalance).toLocaleString()} more.
-            </div>
-          )}
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleCancelOrder} className="flex-1">Cancel</Button>
-            {walletBalance >= totalAmount ? (
-              <Button onClick={handleConfirmPayment} disabled={paying} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
-                {paying ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+
+          {payStep === "confirm" && (
+            <div className="space-y-4">
+              {/* Zero-fee notice */}
+              <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 rounded-xl px-3 py-2.5">
+                <Wallet className="h-3.5 w-3.5 text-green-600 dark:text-green-400 shrink-0" />
+                <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+                  No charges · Wallet payments on Foodra are 100% free of fees.
+                </p>
+              </div>
+              <div className="rounded-xl bg-[#118C4C]/8 border border-[#118C4C]/20 p-4 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Amount to pay</p>
+                <p className="text-3xl font-black text-[#118C4C]">₦{totalAmount.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
+                  <Wallet className="h-3.5 w-3.5" /> from your Foodra Wallet
+                </p>
+              </div>
+              <div className="flex justify-between text-sm px-1">
+                <span className="text-muted-foreground">Current balance</span>
+                <span className="font-semibold">₦{walletBalance.toLocaleString()}</span>
+              </div>
+              {walletBalance >= totalAmount && (
+                <div className="flex justify-between text-sm px-1">
+                  <span className="text-muted-foreground">Balance after</span>
+                  <span className="font-semibold text-[#118C4C]">₦{(walletBalance - totalAmount).toLocaleString()}</span>
+                </div>
+              )}
+              {walletBalance < totalAmount && (
+                <div className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200/60 p-3 text-sm text-red-600 dark:text-red-400">
+                  Insufficient balance. You need ₦{(totalAmount - walletBalance).toLocaleString()} more.
+                </div>
+              )}
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handleCancelOrder} className="flex-1">Cancel</Button>
+                {walletBalance >= totalAmount ? (
+                  <Button onClick={() => setPayStep("pin")} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+                    <span className="flex items-center gap-1.5">
+                      Continue
+                      <span className="bg-white/20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">FREE</span>
+                    </span>
+                  </Button>
                 ) : (
-                  <span className="flex items-center gap-1.5">
-                    Pay Now ✓
-                    <span className="bg-white/20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">FREE</span>
-                  </span>
+                  <Button onClick={() => { setIsPayConfirmOpen(false); setIsFundOpen(true); }} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+                    Fund Wallet
+                  </Button>
                 )}
-              </Button>
-            ) : (
-              <Button onClick={() => { setIsPayConfirmOpen(false); setIsFundOpen(true); }} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
-                Fund Wallet
-              </Button>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
+
+          {payStep === "pin" && (
+            <div className="space-y-5">
+              <div className="rounded-xl bg-[#118C4C]/8 border border-[#118C4C]/20 p-4 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Paying for your order</p>
+                <p className="text-3xl font-black text-[#118C4C]">₦{totalAmount.toLocaleString()}</p>
+                <p className="text-xs text-green-600 font-semibold mt-1">✨ No fees applied</p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold mb-1.5 flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4 text-[#118C4C]" /> Wallet PIN
+                </label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={payPin}
+                  autoFocus
+                  onChange={(e) => setPayPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  placeholder="••••"
+                  className="w-full border rounded-xl px-4 py-3 text-center text-2xl tracking-[0.6em] bg-background focus:outline-none focus:ring-2 focus:ring-[#118C4C]/30 focus:border-[#118C4C]"
+                />
+                <p className="text-xs text-muted-foreground mt-1.5 text-center">Enter your 4-digit wallet PIN to confirm payment</p>
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => { setPayStep("confirm"); setPayPin(""); }} className="flex-1">Back</Button>
+                <Button onClick={handleConfirmPayment} disabled={paying || payPin.length !== 4} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
+                  {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pay Now →"}
+                </Button>
+              </div>
+            </div>
+          )}
+
         </div>
       </Modal>
 
