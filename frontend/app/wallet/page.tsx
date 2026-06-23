@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Wallet, PlusCircle, ArrowUpRight, ArrowDownLeft,
   Banknote, Copy, Check, RefreshCcw, ShieldCheck, TrendingUp, Clock, Eye, EyeOff,
+  X, Download, ExternalLink,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { useToast } from "@/lib/toast"
 import { useUser } from "@/lib/useUser"
 import { authFetch } from "@/lib/authFetch"
@@ -17,6 +17,7 @@ import { FundWalletModal } from "@/components/FundWalletModal"
 import { WalletSendModal } from "@/components/WalletSendModal"
 import { WalletWithdrawModal } from "@/components/WalletWithdrawModal"
 import { WalletPinModal } from "@/components/WalletPinModal"
+import { downloadReceiptImage } from "@/lib/receipt"
 import withAuth from "@/components/withAuth"
 
 interface WalletTx {
@@ -27,15 +28,27 @@ interface WalletTx {
   balance_after: number
   note: string | null
   created_at: string
+  reference?: string | null
+  related_user_id?: string | null
+  order_id?: string | null
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  fund: "Wallet Funded",
-  transfer_in: "Money Received",
-  transfer_out: "Money Sent",
-  withdrawal: "Bank Withdrawal",
+  fund:     "Wallet Funded",
+  send:     "Money Sent",
+  receive:  "Money Received",
+  withdraw: "Bank Withdrawal",
   purchase: "Purchase",
-  refund: "Refund",
+  refund:   "Refund",
+}
+
+const CATEGORY_ICONS: Record<string, string> = {
+  fund:     "💳",
+  send:     "↗️",
+  receive:  "↙️",
+  withdraw: "🏦",
+  purchase: "🛒",
+  refund:   "↩️",
 }
 
 function WalletPage() {
@@ -55,6 +68,7 @@ function WalletPage() {
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [pinOpen, setPinOpen] = useState(false)
   const [hasPin, setHasPin] = useState(false)
+  const [selectedTx, setSelectedTx] = useState<WalletTx | null>(null)
   const [balanceVisible, setBalanceVisible] = useState(() => {
     if (typeof window === "undefined") return true
     return localStorage.getItem("balanceVisible") !== "false"
@@ -279,7 +293,7 @@ function WalletPage() {
         <div className="flex items-center gap-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200/70 dark:border-green-800/40 rounded-2xl px-4 py-3">
           <span className="text-base shrink-0">🎉</span>
           <p className="text-xs font-semibold text-green-700 dark:text-green-400 leading-snug">
-            All wallet actions on Foodra are <span className="underline underline-offset-2">completely free</span> — no hidden fees, no transaction charges, ever.
+            Sending money to Foodra users &amp; paying for orders are <span className="underline underline-offset-2">completely free</span> — no hidden fees, no charges, ever.
           </p>
         </div>
 
@@ -330,22 +344,21 @@ function WalletPage() {
           ) : (
             <AnimatePresence>
               {transactions.map((tx, i) => (
-                <motion.div
+                <motion.button
                   key={tx.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.03 }}
-                  className="flex items-center justify-between px-5 py-4 border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors"
+                  onClick={() => setSelectedTx(tx)}
+                  className="w-full flex items-center justify-between px-5 py-4 border-b border-border/60 last:border-0 hover:bg-muted/30 transition-colors text-left"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg ${
                       tx.type === "credit"
-                        ? "bg-green-100 dark:bg-green-900/30 text-green-600"
-                        : "bg-red-100 dark:bg-red-900/30 text-red-500"
+                        ? "bg-green-100 dark:bg-green-900/30"
+                        : "bg-red-100 dark:bg-red-900/30"
                     }`}>
-                      {tx.type === "credit"
-                        ? <ArrowDownLeft className="h-4 w-4" />
-                        : <ArrowUpRight className="h-4 w-4" />}
+                      {CATEGORY_ICONS[tx.category] ?? (tx.type === "credit" ? "↙️" : "↗️")}
                     </div>
                     <div>
                       <p className="text-sm font-semibold">
@@ -369,7 +382,7 @@ function WalletPage() {
                       Bal: ₦{tx.balance_after.toLocaleString()}
                     </p>
                   </div>
-                </motion.div>
+                </motion.button>
               ))}
             </AnimatePresence>
           )}
@@ -395,6 +408,99 @@ function WalletPage() {
         onClose={() => { setPinOpen(false); loadWallet() }}
         hasPin={hasPin}
       />
+
+      {/* Transaction Detail Sheet */}
+      <AnimatePresence>
+        {selectedTx && (
+          <>
+            <motion.div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setSelectedTx(null)} />
+            <motion.div
+              className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-2xl max-w-lg mx-auto"
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            >
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-border" />
+              </div>
+              <div className="px-6 pt-2 pb-10 space-y-6">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold">Transaction Details</h2>
+                  <button onClick={() => setSelectedTx(null)} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Amount hero */}
+                <div className={`rounded-2xl p-5 text-center space-y-1 ${selectedTx.type === "credit" ? "bg-green-50 dark:bg-green-900/20 border border-green-200/60 dark:border-green-800/30" : "bg-red-50 dark:bg-red-900/20 border border-red-200/60 dark:border-red-800/30"}`}>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {CATEGORY_LABELS[selectedTx.category] ?? selectedTx.category}
+                  </p>
+                  <p className={`text-4xl font-black ${selectedTx.type === "credit" ? "text-green-600" : "text-red-500"}`}>
+                    {selectedTx.type === "credit" ? "+" : "-"}₦{selectedTx.amount_ngn.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(selectedTx.created_at).toLocaleString("en-NG", { dateStyle: "long", timeStyle: "short" })}
+                  </p>
+                </div>
+
+                {/* Details rows */}
+                <div className="rounded-2xl border border-border divide-y divide-border overflow-hidden">
+                  {[
+                    { label: "Type", value: selectedTx.type === "credit" ? "Credit" : "Debit" },
+                    { label: "Category", value: CATEGORY_LABELS[selectedTx.category] ?? selectedTx.category },
+                    { label: "Balance After", value: `₦${selectedTx.balance_after.toLocaleString()}` },
+                    ...(selectedTx.note ? [{ label: "Note", value: selectedTx.note }] : []),
+                    ...(selectedTx.reference ? [{ label: "Reference", value: selectedTx.reference }] : []),
+                    ...(selectedTx.order_id ? [{ label: "Order ID", value: selectedTx.order_id.slice(0, 8).toUpperCase() }] : []),
+                    { label: "Transaction ID", value: selectedTx.id.slice(0, 16).toUpperCase() },
+                  ].map(row => (
+                    <div key={row.label} className="flex items-center justify-between px-4 py-3">
+                      <span className="text-xs text-muted-foreground">{row.label}</span>
+                      <span className="text-sm font-semibold text-right max-w-[200px] truncate">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  {selectedTx.order_id && (
+                    <a href={`/orders/${selectedTx.order_id}`}
+                      className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-border font-semibold text-sm hover:bg-muted/50 transition-colors">
+                      <ExternalLink className="h-4 w-4" /> View Order
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      downloadReceiptImage({
+                        title: "WALLET RECEIPT",
+                        subtitle: CATEGORY_LABELS[selectedTx.category] ?? selectedTx.category,
+                        lines: [
+                          { label: "Type", value: selectedTx.type === "credit" ? "Credit ↙" : "Debit ↗" },
+                          { label: "Category", value: CATEGORY_LABELS[selectedTx.category] ?? selectedTx.category },
+                          { label: "Amount", value: `${selectedTx.type === "credit" ? "+" : "-"}₦${selectedTx.amount_ngn.toLocaleString()}`, bold: true, green: selectedTx.type === "credit" },
+                          { label: "Balance After", value: `₦${selectedTx.balance_after.toLocaleString()}`, bold: true },
+                          { label: "", value: "" },
+                          ...(selectedTx.note ? [{ label: "Note", value: selectedTx.note, small: true }] : []),
+                          ...(selectedTx.reference ? [{ label: "Reference", value: selectedTx.reference, small: true }] : []),
+                          { label: "Transaction ID", value: selectedTx.id.slice(0, 16).toUpperCase(), small: true },
+                          { label: "Date", value: new Date(selectedTx.created_at).toLocaleString("en-NG", { dateStyle: "medium", timeStyle: "short" }), small: true },
+                        ],
+                        filename: `foodra-wallet-${selectedTx.id.slice(0, 8)}`,
+                      })
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#118C4C] hover:bg-[#0d6d3a] text-white font-bold text-sm transition-colors"
+                  >
+                    <Download className="h-4 w-4" /> Download Receipt
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin'
-import { createNotification } from '@/lib/notify'
 import { assertSelfOrAdmin, AuthError, requireAuthenticatedUser } from '@/lib/serverAuth'
-import { sendOrderConfirmationEmail, sendFarmerNewOrderEmail } from '@/lib/email'
 import { computeMembership } from '@/lib/membership'
-import { checkAndNotifyMembershipUpgrade } from '@/lib/membershipNotify'
 
 export async function GET(request: Request) {
   try {
@@ -117,7 +114,7 @@ export async function POST(request: Request) {
       .insert({
         buyer_id: buyerId,
         total_amount: body.totalAmount,
-        status: 'Pending',
+        status: 'awaiting_payment',
       })
       .select()
       .single()
@@ -136,12 +133,13 @@ export async function POST(request: Request) {
       image_url: item.image,
     }))
 
-    let { error: itemsError } = await supabaseAdmin
+    const { error: itemsError } = await supabaseAdmin
       .from('order_items')
       .insert(orderItems)
 
     if (itemsError) {
       console.error('Order items insert error:', JSON.stringify(itemsError))
+      await supabaseAdmin.from('orders').delete().eq('id', order.id)
       throw itemsError
     }
 
@@ -160,37 +158,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Notify buyer of order placement
-    if (buyerId) {
-      await createNotification({
-        userId: buyerId,
-        type: "order",
-        title: "Order Placed Successfully",
-        message: `Your order of ₦${Number(body.totalAmount).toLocaleString()} has been placed and is being processed.`,
-        link: `/orders/${order.id}`,
-      })
-
-      // Email buyer
-      const { data: buyer } = await supabaseAdmin.from("users").select("email, name").eq("id", buyerId).single()
-      if (buyer?.email) {
-        const emailItems = body.items.map((i: any) => ({ name: i.productName, qty: i.quantity, price: i.pricePerUnit }))
-        sendOrderConfirmationEmail(buyer.email, buyer.name || "Customer", order.id, Number(body.totalAmount), emailItems, buyerId).catch(() => {})
-      }
-
-      // Email each unique farmer
-      const farmerIds = [...new Set<string>(body.items.map((i: any) => i.farmerId).filter(Boolean))] as string[]
-      for (const fid of farmerIds) {
-        const { data: farmer } = await supabaseAdmin.from("users").select("email, name").eq("id", fid).single()
-        if (farmer?.email) {
-          const farmerItems = body.items.filter((i: any) => i.farmerId === fid).map((i: any) => ({ name: i.productName, qty: i.quantity }))
-          sendFarmerNewOrderEmail(farmer.email, farmer.name || "Farmer", order.id, farmerItems, Number(body.totalAmount)).catch(() => {})
-        }
-      }
-
-      // Check if placing this order pushed buyer to a new membership tier
-      checkAndNotifyMembershipUpgrade(supabaseAdmin, buyerId, previousTier)
-    }
-
+    // No notifications or emails until payment is confirmed via pay-wallet
     return NextResponse.json(order)
   } catch (error: any) {
     if (error instanceof AuthError) {
@@ -216,16 +184,16 @@ export async function DELETE(request: Request) {
     if (!orderId) return NextResponse.json({ error: 'orderId required' }, { status: 400 })
     assertSelfOrAdmin(auth.user, userId)
 
-    // Only allow deleting own pending orders with no escrow
+    // Only allow deleting own pending/unpaid orders
     const { data: order } = await supabaseAdmin
       .from('orders')
-      .select('id, buyer_id, status, escrow_status')
+      .select('id, buyer_id, status, wallet_paid')
       .eq('id', orderId)
       .eq('buyer_id', userId)
       .single()
 
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
-    if (order.escrow_status === 'locked') return NextResponse.json({ error: 'Cannot delete locked escrow order' }, { status: 403 })
+    if (order.wallet_paid) return NextResponse.json({ error: 'Cannot delete a paid order' }, { status: 403 })
 
     // Restore stock before deleting
     const { data: items } = await supabaseAdmin
