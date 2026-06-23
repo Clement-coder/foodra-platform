@@ -874,3 +874,163 @@ export async function sendCryptoReceivedEmail(
   `)
   await send(to, `🎉 You received ${amount} ${token} on Foodra`, html)
 }
+
+// ─── W1. Wallet funded via Paystack ──────────────────────────────────────────
+export async function sendWalletFundedEmail(
+  to: string, name: string,
+  amount_ngn: number, reference: string,
+  balance_after: number, userId?: string
+) {
+  const ref = `WF-${reference.slice(-10).toUpperCase()}`
+  const html = layout(`
+    ${heading("Wallet Funded Successfully 💳")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, your Paystack payment was confirmed and your Foodra wallet has been topped up.
+    </p>
+    ${moneyBox([
+      { label: "Amount Added",    value: `₦${amount_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, bold: true, green: true },
+      { label: "New Balance",     value: `₦${balance_after.toLocaleString("en-NG", { minimumFractionDigits: 2 })}` },
+      { label: "Payment Method",  value: "Paystack" },
+      { label: "Reference",       value: reference },
+    ])}
+    ${receiptBlock([
+      { label: "Type",         value: "Wallet Top-Up" },
+      { label: "Amount",       value: `₦${amount_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, bold: true, green: true },
+      { label: "Balance After",value: `₦${balance_after.toLocaleString("en-NG", { minimumFractionDigits: 2 })}` },
+      { label: "Reference",    value: reference },
+      { label: "Status",       value: "Confirmed ✅" },
+    ], ref)}
+    ${btn("View Wallet", appUrl("/wallet", userId))}
+  `)
+  await send(to, `✅ ₦${amount_ngn.toLocaleString()} added to your Foodra wallet`, html)
+}
+
+// ─── W2. Money sent to another user ──────────────────────────────────────────
+export async function sendWalletSentEmail(
+  to: string, name: string,
+  amount_ngn: number, to_tag: string, to_name: string | null,
+  balance_after: number, note?: string | null, userId?: string
+) {
+  const ref = `WST-${Date.now().toString(36).toUpperCase()}`
+  const html = layout(`
+    ${heading("Money Sent 📤")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, your wallet transfer has been completed successfully.
+    </p>
+    ${moneyBox([
+      { label: "Amount Sent",  value: `₦${amount_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, bold: true },
+      { label: "Sent To",      value: to_name ? `${to_name} (${to_tag})` : to_tag },
+      ...(note ? [{ label: "Note", value: note }] : []),
+      { label: "Balance After",value: `₦${balance_after.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, green: true },
+    ])}
+    ${receiptBlock([
+      { label: "Type",         value: "Wallet Transfer" },
+      { label: "Amount Sent",  value: `₦${amount_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, bold: true },
+      { label: "To",           value: to_name ? `${to_name} (${to_tag})` : to_tag },
+      ...(note ? [{ label: "Note", value: note }] : []),
+      { label: "Balance After",value: `₦${balance_after.toLocaleString("en-NG", { minimumFractionDigits: 2 })}` },
+      { label: "Status",       value: "Completed ✅" },
+    ], ref)}
+    <div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:0 8px 8px 0;margin:16px 0;">
+      <p style="margin:0;font-size:13px;color:#92400e;">If you did not initiate this transfer, please contact <a href="mailto:support@foodramarket.com" style="color:#1a6b2e;">support@foodramarket.com</a> immediately.</p>
+    </div>
+    ${btn("View Wallet", appUrl("/wallet", userId))}
+  `)
+  await send(to, `📤 You sent ₦${amount_ngn.toLocaleString()} on Foodra`, html)
+}
+
+// ─── W3. Money received from another user ────────────────────────────────────
+export async function sendWalletReceivedEmail(
+  to: string, name: string,
+  amount_ngn: number, from_tag: string, from_name: string | null,
+  balance_after: number, note?: string | null, userId?: string
+) {
+  const ref = `WRV-${Date.now().toString(36).toUpperCase()}`
+  const html = layout(`
+    ${heading("Money Received 💰")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, someone just sent money to your Foodra wallet.
+    </p>
+    ${moneyBox([
+      { label: "Amount Received", value: `₦${amount_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, bold: true, green: true },
+      { label: "From",            value: from_name ? `${from_name} (${from_tag})` : from_tag },
+      ...(note ? [{ label: "Note", value: note }] : []),
+      { label: "New Balance",     value: `₦${balance_after.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, green: true },
+    ])}
+    ${receiptBlock([
+      { label: "Type",            value: "Wallet Credit" },
+      { label: "Amount Received", value: `₦${amount_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, bold: true, green: true },
+      { label: "From",            value: from_name ? `${from_name} (${from_tag})` : from_tag },
+      ...(note ? [{ label: "Note", value: note }] : []),
+      { label: "New Balance",     value: `₦${balance_after.toLocaleString("en-NG", { minimumFractionDigits: 2 })}` },
+      { label: "Status",          value: "Received ✅" },
+    ], ref)}
+    ${btn("View Wallet", appUrl("/wallet", userId))}
+  `)
+  await send(to, `💰 You received ₦${amount_ngn.toLocaleString()} on Foodra`, html)
+}
+
+// ─── W4. Withdrawal initiated ─────────────────────────────────────────────────
+export async function sendWalletWithdrawalEmail(
+  to: string, name: string,
+  amount_ngn: number, bank_name: string, account_number: string,
+  balance_after: number, userId?: string
+) {
+  const masked = `****${account_number.slice(-4)}`
+  const ref = `WDR-${Date.now().toString(36).toUpperCase()}`
+  const html = layout(`
+    ${heading("Withdrawal Initiated 🏦")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, your withdrawal request has been submitted and is being processed by Paystack. Funds typically arrive within <strong>minutes to a few hours</strong>.
+    </p>
+    ${moneyBox([
+      { label: "Amount",          value: `₦${amount_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, bold: true },
+      { label: "Bank",            value: bank_name },
+      { label: "Account",         value: masked },
+      { label: "Remaining Balance",value: `₦${balance_after.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, green: true },
+    ])}
+    ${receiptBlock([
+      { label: "Type",             value: "Bank Withdrawal" },
+      { label: "Amount",           value: `₦${amount_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, bold: true },
+      { label: "Bank",             value: bank_name },
+      { label: "Account",          value: masked },
+      { label: "Balance After",    value: `₦${balance_after.toLocaleString("en-NG", { minimumFractionDigits: 2 })}` },
+      { label: "Status",           value: "Processing ⏳" },
+    ], ref)}
+    <div style="background:#fff8e1;border-left:4px solid #f59e0b;padding:14px 18px;border-radius:0 8px 8px 0;margin:16px 0;">
+      <p style="margin:0;font-size:13px;color:#92400e;">If you did not request this withdrawal, contact <a href="mailto:support@foodramarket.com" style="color:#1a6b2e;">support@foodramarket.com</a> immediately.</p>
+    </div>
+    ${btn("View Wallet", appUrl("/wallet", userId))}
+  `)
+  await send(to, `🏦 ₦${amount_ngn.toLocaleString()} withdrawal initiated from Foodra`, html)
+}
+
+// ─── W5. Wallet purchase (order payment) ─────────────────────────────────────
+export async function sendWalletPurchaseEmail(
+  to: string, name: string,
+  amount_ngn: number, orderId: string,
+  balance_after: number, userId?: string
+) {
+  const ref = `WPR-${orderId.slice(-8).toUpperCase()}`
+  const html = layout(`
+    ${heading("Order Payment Successful 🛒")}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 24px;">
+      Hi <strong>${name}</strong>, your wallet was charged and your order is now confirmed.
+    </p>
+    ${moneyBox([
+      { label: "Amount Paid",      value: `₦${amount_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, bold: true },
+      { label: "Order ID",         value: `#${orderId.slice(-8).toUpperCase()}` },
+      { label: "Payment Method",   value: "Foodra Wallet" },
+      { label: "Remaining Balance",value: `₦${balance_after.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, green: true },
+    ])}
+    ${receiptBlock([
+      { label: "Type",          value: "Order Payment" },
+      { label: "Amount",        value: `₦${amount_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`, bold: true },
+      { label: "Order ID",      value: `#${orderId.slice(-8).toUpperCase()}` },
+      { label: "Balance After", value: `₦${balance_after.toLocaleString("en-NG", { minimumFractionDigits: 2 })}` },
+      { label: "Status",        value: "Paid ✅" },
+    ], ref)}
+    ${btn("Track Your Order", appUrl(`/orders/${orderId}`, userId))}
+  `)
+  await send(to, `✅ Payment of ₦${amount_ngn.toLocaleString()} confirmed — Order #${orderId.slice(-8).toUpperCase()}`, html)
+}

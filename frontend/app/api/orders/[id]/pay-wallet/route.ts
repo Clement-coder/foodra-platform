@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { requireAuthenticatedUser, AuthError } from "@/lib/serverAuth"
 import { createNotification } from "@/lib/notify"
-import { sendOrderStatusEmail } from "@/lib/email"
+import { sendWalletPurchaseEmail } from "@/lib/email"
 
 export async function PATCH(
   request: Request,
@@ -71,9 +71,16 @@ export async function PATCH(
       link: `/orders/${orderId}`,
     })
 
-    // Email (send basic order status email instead)
+    // Email the user with wallet purchase receipt
     if (auth.user.email) {
-      sendOrderStatusEmail(auth.user.email, auth.user.name || "Customer", orderId, "Processing", auth.user.id).catch(() => {})
+      sendWalletPurchaseEmail(
+        auth.user.email,
+        auth.user.name || "Customer",
+        amount,
+        orderId,
+        new_balance,
+        auth.user.id,
+      ).catch(() => {})
     }
 
     return NextResponse.json({ success: true, new_balance })

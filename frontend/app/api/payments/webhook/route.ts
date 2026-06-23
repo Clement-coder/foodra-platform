@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import crypto from "crypto"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { createNotification } from "@/lib/notify"
+import { sendWalletFundedEmail } from "@/lib/email"
 
 export async function POST(request: Request) {
   const rawBody = await request.text()
@@ -39,6 +40,15 @@ export async function POST(request: Request) {
 
   if (result === "duplicate") return NextResponse.json({ received: true })
 
+  // Fetch user details and new balance for the email
+  const [userRes, walletRes] = await Promise.all([
+    supabase.from("users").select("email, name").eq("id", user_id).single(),
+    supabase.from("wallet_accounts").select("balance_ngn").eq("user_id", user_id).single(),
+  ])
+
+  const balance_after = parseFloat(walletRes.data?.balance_ngn ?? "0")
+
+  // In-app notification
   await createNotification({
     userId: user_id,
     type: "system",
@@ -46,6 +56,18 @@ export async function POST(request: Request) {
     message: `₦${amount_ngn.toLocaleString()} has been added to your Foodra wallet.`,
     link: "/wallet",
   })
+
+  // Email the user
+  if (userRes.data?.email) {
+    sendWalletFundedEmail(
+      userRes.data.email,
+      userRes.data.name || "Customer",
+      amount_ngn,
+      reference,
+      balance_after,
+      user_id,
+    ).catch(() => {})
+  }
 
   return NextResponse.json({ received: true })
 }

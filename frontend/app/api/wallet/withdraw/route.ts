@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { requireAuthenticatedUser, AuthError } from "@/lib/serverAuth"
 import { createNotification } from "@/lib/notify"
+import { sendWalletWithdrawalEmail } from "@/lib/email"
 import bcrypt from "bcryptjs"
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY!
@@ -176,6 +177,19 @@ export async function POST(request: Request) {
       message: `₦${amount_ngn.toLocaleString()} withdrawal to ${bank_name} is being processed.`,
       link: "/wallet",
     })
+
+    // Email the user
+    if (auth.user.email) {
+      sendWalletWithdrawalEmail(
+        auth.user.email,
+        auth.user.name || "Customer",
+        amount_ngn,
+        bank_name,
+        account_number,
+        new_balance,
+        auth.user.id,
+      ).catch(() => {})
+    }
 
     return NextResponse.json({ success: true, new_balance })
   } catch (e) {

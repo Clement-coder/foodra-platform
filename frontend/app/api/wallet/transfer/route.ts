@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { requireAuthenticatedUser, AuthError } from "@/lib/serverAuth"
 import { createNotification } from "@/lib/notify"
+import { sendWalletSentEmail, sendWalletReceivedEmail } from "@/lib/email"
 
 export async function POST(request: Request) {
   try {
@@ -15,10 +16,10 @@ export async function POST(request: Request) {
 
     const supabase = getSupabaseAdminClient()!
 
-    // Find recipient
+    // Find recipient wallet + user details in one query
     const { data: recipientWallet } = await supabase
       .from("wallet_accounts")
-      .select("user_id, foodra_tag")
+      .select("user_id, foodra_tag, users(email, name)")
       .eq("foodra_tag", to_foodra_tag.toUpperCase())
       .single()
 
@@ -42,7 +43,18 @@ export async function POST(request: Request) {
     }
 
     const transfer = Array.isArray(result) ? result[0] : result
-    const senderNew = parseFloat(transfer.sender_balance)
+    const senderNew    = parseFloat(transfer.sender_balance)
+    const receiverNew  = parseFloat(transfer.receiver_balance)
+
+    // Fetch sender's foodra_tag for the receiver email
+    const { data: senderWallet } = await supabase
+      .from("wallet_accounts")
+      .select("foodra_tag")
+      .eq("user_id", auth.user.id)
+      .single()
+
+    const senderTag    = senderWallet?.foodra_tag ?? auth.user.id
+    const recipientUser = Array.isArray(recipientWallet.users) ? recipientWallet.users[0] : recipientWallet.users as any
 
     // Ledger entries
     await Promise.all([
@@ -60,12 +72,13 @@ export async function POST(request: Request) {
         type: "credit",
         category: "receive",
         amount_ngn,
-        balance_after: parseFloat(transfer.receiver_balance),
+        balance_after: receiverNew,
         related_user_id: auth.user.id,
         note: note || `Received from ${auth.user.name || "a Foodra user"}`,
       }),
     ])
 
+    // In-app notification for recipient
     await createNotification({
       userId: recipientWallet.user_id,
       type: "system",
@@ -73,6 +86,43 @@ export async function POST(request: Request) {
       message: `${auth.user.name || "Someone"} sent you ₦${amount_ngn.toLocaleString()}.`,
       link: "/wallet",
     })
+
+    // In-app notification for sender
+    await createNotification({
+      userId: auth.user.id,
+      type: "system",
+      title: "Transfer Sent ✅",
+      message: `₦${amount_ngn.toLocaleString()} sent to ${to_foodra_tag}.`,
+      link: "/wallet",
+    })
+
+    // Email sender
+    if (auth.user.email) {
+      sendWalletSentEmail(
+        auth.user.email,
+        auth.user.name || "Customer",
+        amount_ngn,
+        to_foodra_tag,
+        recipientUser?.name ?? null,
+        senderNew,
+        note,
+        auth.user.id,
+      ).catch(() => {})
+    }
+
+    // Email recipient
+    if (recipientUser?.email) {
+      sendWalletReceivedEmail(
+        recipientUser.email,
+        recipientUser.name || "Customer",
+        amount_ngn,
+        senderTag,
+        auth.user.name ?? null,
+        receiverNew,
+        note,
+        recipientWallet.user_id,
+      ).catch(() => {})
+    }
 
     return NextResponse.json({ success: true, new_balance: senderNew })
   } catch (e) {
