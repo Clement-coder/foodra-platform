@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/lib/toast"
 import { usePrivy } from "@privy-io/react-auth"
 import { authFetch } from "@/lib/authFetch"
-import { Loader2, Search, X, CheckCircle2 } from "lucide-react"
+import { Loader2, Search, X, CheckCircle2, Sparkles } from "lucide-react"
 import { useDebounce } from "@/lib/useDebounce"
 
 interface Recipient {
@@ -121,6 +121,14 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Send Money">
       <div className="space-y-5 p-1">
+
+        {/* Zero-fee banner — shown upfront so users see it immediately */}
+        <div className="flex items-center gap-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 rounded-xl px-4 py-2.5">
+          <Sparkles className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0" />
+          <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+            100% Free · No fees, no charges — ever. Sending to any Foodra user is completely free.
+          </p>
+        </div>
 
         {/* Recipient search */}
         <div>
@@ -262,7 +270,14 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
             disabled={loading || !isValid}
             className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white font-semibold"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send Money →"}
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <span className="flex items-center gap-1.5">
+                Send Money
+                <span className="bg-white/20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">FREE</span>
+              </span>
+            )}
           </Button>
         </div>
       </div>

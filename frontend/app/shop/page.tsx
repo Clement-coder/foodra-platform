@@ -337,6 +337,13 @@ function ShopPage() {
       {/* Wallet Pay Confirmation Modal */}
       <Modal isOpen={isPayConfirmOpen} onClose={handleCancelOrder} title="Confirm Payment">
         <div className="space-y-4 p-1">
+          {/* Zero-fee notice — shown before they see the amount */}
+          <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/40 rounded-xl px-3 py-2.5">
+            <Wallet className="h-3.5 w-3.5 text-green-600 dark:text-green-400 shrink-0" />
+            <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+              No charges · Wallet payments on Foodra are 100% free of fees.
+            </p>
+          </div>
           <div className="rounded-xl bg-[#118C4C]/8 border border-[#118C4C]/20 p-4 text-center">
             <p className="text-sm text-muted-foreground mb-1">Amount to pay</p>
             <p className="text-3xl font-black text-[#118C4C]">₦{totalAmount.toLocaleString()}</p>
@@ -363,7 +370,14 @@ function ShopPage() {
             <Button variant="outline" onClick={handleCancelOrder} className="flex-1">Cancel</Button>
             {walletBalance >= totalAmount ? (
               <Button onClick={handleConfirmPayment} disabled={paying} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">
-                {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pay Now ✓"}
+                {paying ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    Pay Now ✓
+                    <span className="bg-white/20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">FREE</span>
+                  </span>
+                )}
               </Button>
             ) : (
               <Button onClick={() => { setIsPayConfirmOpen(false); setIsFundOpen(true); }} className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">

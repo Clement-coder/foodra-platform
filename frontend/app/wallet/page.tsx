@@ -55,7 +55,10 @@ function WalletPage() {
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [pinOpen, setPinOpen] = useState(false)
   const [hasPin, setHasPin] = useState(false)
-  const [balanceVisible, setBalanceVisible] = useState(true)
+  const [balanceVisible, setBalanceVisible] = useState(() => {
+    if (typeof window === "undefined") return true
+    return localStorage.getItem("balanceVisible") !== "false"
+  })
   const [leafBurst, setLeafBurst] = useState(false)
   const [displayBalance, setDisplayBalance] = useState(0)
   const countRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -272,19 +275,32 @@ function WalletPage() {
           </div>
         </div>
 
+        {/* Zero-fee notice */}
+        <div className="flex items-center gap-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200/70 dark:border-green-800/40 rounded-2xl px-4 py-3">
+          <span className="text-base shrink-0">🎉</span>
+          <p className="text-xs font-semibold text-green-700 dark:text-green-400 leading-snug">
+            All wallet actions on Foodra are <span className="underline underline-offset-2">completely free</span> — no hidden fees, no transaction charges, ever.
+          </p>
+        </div>
+
         {/* Actions */}
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: "Fund", icon: <PlusCircle className="h-5 w-5" />, onClick: () => setFundOpen(true), color: "text-[#118C4C]", bg: "bg-[#118C4C]/10" },
-            { label: "Send", icon: <ArrowUpRight className="h-5 w-5" />, onClick: () => setSendOpen(true), color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20" },
-            { label: "Withdraw", icon: <Banknote className="h-5 w-5" />, onClick: () => setWithdrawOpen(true), color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/20" },
-            { label: hasPin ? "Change PIN" : "Set PIN", icon: <ShieldCheck className="h-5 w-5" />, onClick: () => setPinOpen(true), color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20" },
+            { label: "Fund", icon: <PlusCircle className="h-5 w-5" />, onClick: () => setFundOpen(true), color: "text-[#118C4C]", bg: "bg-[#118C4C]/10", free: false },
+            { label: "Send", icon: <ArrowUpRight className="h-5 w-5" />, onClick: () => setSendOpen(true), color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", free: true },
+            { label: "Withdraw", icon: <Banknote className="h-5 w-5" />, onClick: () => setWithdrawOpen(true), color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/20", free: false },
+            { label: hasPin ? "Change PIN" : "Set PIN", icon: <ShieldCheck className="h-5 w-5" />, onClick: () => setPinOpen(true), color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20", free: false },
           ].map((a) => (
             <button
               key={a.label}
               onClick={a.onClick}
-              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-card border border-border hover:border-[#118C4C]/40 hover:shadow-sm transition-all active:scale-95"
+              className="relative flex flex-col items-center gap-2 p-4 rounded-2xl bg-card border border-border hover:border-[#118C4C]/40 hover:shadow-sm transition-all active:scale-95"
             >
+              {a.free && (
+                <span className="absolute -top-1.5 -right-1.5 bg-green-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none uppercase tracking-wide shadow-sm">
+                  FREE
+                </span>
+              )}
               <span className={`w-10 h-10 rounded-full ${a.bg} ${a.color} flex items-center justify-center`}>
                 {a.icon}
               </span>
