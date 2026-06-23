@@ -114,7 +114,7 @@ export async function POST(request: Request) {
       .insert({
         buyer_id: buyerId,
         total_amount: body.totalAmount,
-        status: 'awaiting_payment',
+        status: 'Pending',
       })
       .select()
       .single()

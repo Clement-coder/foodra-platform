@@ -36,7 +36,7 @@ export function DeliveryAddressModal({ isOpen, onClose, userId, prefill, onConfi
 
   // Load countries once
   useEffect(() => {
-    fetch("https://restcountries.com/v3.1/all?fields=name,cca2")
+    fetch("/api/countries")
       .then((r) => r.json())
       .then((data: any[]) => {
         const sorted = data
