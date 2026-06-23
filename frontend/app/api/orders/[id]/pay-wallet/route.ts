@@ -103,6 +103,9 @@ export async function PATCH(
       paid_at: new Date().toISOString(),
     }).eq("id", orderId)
 
+    // Clear cart abandonment reminder — user has paid
+    await supabase.from("cart_abandonment_reminders").delete().eq("user_id", auth.user.id)
+
     // ── Notify + email only after payment ─────────────────────
     await createNotification({
       userId: auth.user.id,

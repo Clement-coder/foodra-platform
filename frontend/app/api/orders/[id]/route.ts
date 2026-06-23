@@ -15,8 +15,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       .from("orders")
       .select(`
         *, 
-        users!orders_buyer_id_fkey(id, name, email, phone, avatar_url, wallet_address),
-        order_items(*, products(farmer_id, users!products_farmer_id_fkey(id, name, email, phone, avatar_url, location)))
+        users!orders_buyer_id_fkey(id, name, email, phone, avatar_url),
+        order_items(*, products(users!products_farmer_id_fkey(id, name, email, phone, avatar_url, location)))
       `)
       .eq("id", id)
       .single();
