@@ -337,7 +337,17 @@ function ShopPage() {
       )}
 
       {/* Wallet Pay Confirmation Modal */}
-      <Modal isOpen={isPayConfirmOpen} onClose={payStep === "success" ? () => { setIsPayConfirmOpen(false); setPayStep("confirm"); setPayPin(""); router.push("/orders"); } : handleCancelOrder} title={payStep === "pin" ? "Confirm with PIN" : "Confirm Payment"}>
+      <Modal
+        isOpen={isPayConfirmOpen}
+        onClose={
+          payStep === "success"
+            ? () => { setIsPayConfirmOpen(false); setPayStep("confirm"); setPayPin(""); router.push("/orders"); }
+            : payStep === "pin"
+            ? () => { setPayStep("confirm"); setPayPin(""); }
+            : handleCancelOrder
+        }
+        title={payStep === "pin" ? "Confirm with PIN" : "Confirm Payment"}
+      >
         <div className="p-1">
 
           {payStep === "success" && (
