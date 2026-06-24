@@ -97,13 +97,17 @@ export async function POST(request: Request) {
 
     // If client retries after a network drop, return the already-created order
     if (idempotencyKey) {
-      const { data: existing } = await supabaseAdmin
-        .from('orders')
-        .select('*')
-        .eq('buyer_id', buyerId)
-        .eq('idempotency_key', idempotencyKey)
-        .maybeSingle()
-      if (existing) return NextResponse.json(existing)
+      try {
+        const { data: existing } = await supabaseAdmin
+          .from('orders')
+          .select('*')
+          .eq('buyer_id', buyerId)
+          .eq('idempotency_key', idempotencyKey)
+          .maybeSingle()
+        if (existing) return NextResponse.json(existing)
+      } catch {
+        // Column doesn't exist yet — skip idempotency check
+      }
     }
 
     // Snapshot tier before this order so we can detect upgrades after
@@ -121,24 +125,31 @@ export async function POST(request: Request) {
       isVerified: !!bu.is_verified,
     }).tier : "Seed"
     
-    const { data: order, error: orderError } = await supabaseAdmin
-      .from('orders')
-      .insert({
-        buyer_id: buyerId,
-        total_amount: body.totalAmount,
-        status: 'Pending',
-        idempotency_key: idempotencyKey ?? null,
-        delivery_full_name:  body.delivery?.fullName    || null,
-        delivery_phone:      body.delivery?.phone       || null,
-        delivery_address:    body.delivery?.addressLine || null,
-        delivery_street2:    body.delivery?.streetLine2 || null,
-        delivery_landmark:   body.delivery?.landmark    || null,
-        delivery_city:       body.delivery?.city        || null,
-        delivery_state:      body.delivery?.state       || null,
-        delivery_country:    body.delivery?.country     || null,
-      })
-      .select()
-      .single()
+    const insertPayload: Record<string, any> = {
+      buyer_id: buyerId,
+      total_amount: body.totalAmount,
+      status: 'Pending',
+      delivery_full_name:  body.delivery?.fullName    || null,
+      delivery_phone:      body.delivery?.phone       || null,
+      delivery_address:    body.delivery?.addressLine || null,
+      delivery_street2:    body.delivery?.streetLine2 || null,
+      delivery_landmark:   body.delivery?.landmark    || null,
+      delivery_city:       body.delivery?.city        || null,
+      delivery_state:      body.delivery?.state       || null,
+      delivery_country:    body.delivery?.country     || null,
+    }
+    if (idempotencyKey) insertPayload.idempotency_key = idempotencyKey
+
+    let order: any
+    let orderError: any
+
+    // Try with idempotency_key first; if column doesn't exist yet, retry without it
+    ;({ data: order, error: orderError } = await supabaseAdmin.from('orders').insert(insertPayload).select().single())
+    if (orderError?.code === '42703' && idempotencyKey) {
+      // Column doesn't exist yet — fall back to insert without it
+      delete insertPayload.idempotency_key
+      ;({ data: order, error: orderError } = await supabaseAdmin.from('orders').insert(insertPayload).select().single())
+    }
 
     if (orderError) {
       console.error('Order insert error:', JSON.stringify(orderError))
