@@ -64,13 +64,16 @@ export async function PATCH(
       .upsert({ user_id: auth.user.id, fail_count: 0, locked_until: null, updated_at: new Date().toISOString() }, { onConflict: "user_id" })
 
     // ── Load order ─────────────────────────────────────────────
-    const { data: order } = await supabase
+    const { data: order, error: orderFetchError } = await supabase
       .from("orders")
       .select("id, buyer_id, total_amount, status, wallet_paid, order_items(product_name, quantity, price)")
       .eq("id", orderId)
       .single()
 
-    if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 })
+    if (!order) {
+      console.error(`pay-wallet: order ${orderId} not found. fetchError=${JSON.stringify(orderFetchError)}`)
+      return NextResponse.json({ error: "Order not found", orderId, fetchError: orderFetchError?.message }, { status: 404 })
+    }
     if (order.buyer_id !== auth.user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     if (order.wallet_paid) return NextResponse.json({ error: "Order already paid" }, { status: 400 })
     if (!["awaiting_payment", "Pending"].includes(order.status))
