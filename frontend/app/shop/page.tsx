@@ -71,25 +71,6 @@ function ShopPage() {
       });
       if (!order) { toast.error("Failed to create order. Please try again."); return; }
 
-      // Attach delivery address to order (non-blocking — order can proceed without it)
-      try {
-        await authFetch(getAccessToken, `/api/orders/${order.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            deliveryFullName: address.fullName,
-            deliveryPhone: address.phone,
-            deliveryAddress: address.addressLine,
-            deliveryStreet2: address.streetLine2,
-            deliveryLandmark: address.landmark,
-            deliveryCity: address.city,
-            deliveryState: address.state,
-            deliveryCountry: address.country,
-          }),
-        })
-      } catch {
-        // Non-fatal — delivery address can be updated by admin later
-      }
       setPendingOrderId(order.id);
       setIsPayConfirmOpen(true);
     } finally {

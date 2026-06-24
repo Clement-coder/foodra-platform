@@ -136,15 +136,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
     }
 
-    // Guard: nothing to update
-    if (Object.keys(updateData).length === 0) {
+    // Always include updated_at to satisfy the trigger and PostgREST
+    updateData.updated_at = new Date().toISOString()
+
+    // Guard: nothing meaningful to update
+    if (Object.keys(updateData).length <= 1) {
       return NextResponse.json({ success: true })
     }
 
-    const { error } = await supabase.from("orders").update(updateData).eq("id", id)
+    const { error, data: updated } = await supabase
+      .from("orders")
+      .update(updateData)
+      .eq("id", id)
+      .select("id")
     if (error) {
-      console.error("Order PATCH error:", JSON.stringify(error))
-      return NextResponse.json({ error: error.message, details: error }, { status: 500 })
+      console.error("Order PATCH DB error:", JSON.stringify(error))
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    if (!updated?.length) {
+      console.error("Order PATCH: no rows updated for id", id)
+      return NextResponse.json({ error: "Order not found" }, { status: 404 })
     }
 
     // Notify buyer of status change
