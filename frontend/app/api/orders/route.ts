@@ -93,6 +93,18 @@ export async function POST(request: Request) {
     const auth = await requireAuthenticatedUser(request)
     const body = await request.json()
     const buyerId = auth.user.id
+    const idempotencyKey = request.headers.get('Idempotency-Key')
+
+    // If client retries after a network drop, return the already-created order
+    if (idempotencyKey) {
+      const { data: existing } = await supabaseAdmin
+        .from('orders')
+        .select('*')
+        .eq('buyer_id', buyerId)
+        .eq('idempotency_key', idempotencyKey)
+        .maybeSingle()
+      if (existing) return NextResponse.json(existing)
+    }
 
     // Snapshot tier before this order so we can detect upgrades after
     const [buyerSnap, prevOrdersSnap, prevDisputesSnap] = await Promise.all([
@@ -115,6 +127,7 @@ export async function POST(request: Request) {
         buyer_id: buyerId,
         total_amount: body.totalAmount,
         status: 'Pending',
+        idempotency_key: idempotencyKey ?? null,
         delivery_full_name:  body.delivery?.fullName    || null,
         delivery_phone:      body.delivery?.phone       || null,
         delivery_address:    body.delivery?.addressLine || null,

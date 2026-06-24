@@ -36,6 +36,8 @@ function ShopPage() {
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryAddress | null>(null);
   const [payStep, setPayStep] = useState<"confirm" | "pin" | "success">("confirm");
   const [payPin, setPayPin] = useState("");
+  // Stable key for idempotent order creation — regenerated each time the modal opens
+  const [orderKey, setOrderKey] = useState(() => crypto.randomUUID());
 
   const handleProceedToCheckout = async () => {
     if (currentUser && calculateProfileCompletion(currentUser) < 100) {
@@ -55,6 +57,7 @@ function ShopPage() {
       const balData = await balRes.json();
       setWalletBalance(parseFloat(balData.balance_ngn ?? "0"));
       setIsPayConfirmOpen(true);
+    setOrderKey(crypto.randomUUID()); // fresh key each time the payment modal opens
     } finally {
       setPreparingCheckout(false);
     }
@@ -75,7 +78,7 @@ function ShopPage() {
         city:        selectedDelivery.city,
         state:       selectedDelivery.state,
         country:     selectedDelivery.country,
-      });
+      }, orderKey);
       if (!order) { toast.error("Failed to create order. Please try again."); return; }
 
       const res = await authFetch(getAccessToken, `/api/orders/${order.id}/pay-wallet`, {

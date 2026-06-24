@@ -213,13 +213,13 @@ export function useOrders() {
     }
   }
 
-  const createOrder = async (items: CartItem[], totalAmount: number, delivery?: Record<string, string>) => {
+  const createOrder = async (items: CartItem[], totalAmount: number, delivery?: Record<string, string>, idempotencyKey?: string) => {
     if (!currentUser) return null
 
     try {
       const res = await authFetch(getAccessToken, '/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
         body: JSON.stringify({ items, totalAmount, delivery }),
       })
 
