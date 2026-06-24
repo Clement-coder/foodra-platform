@@ -58,30 +58,37 @@ function ShopPage() {
       const balance = parseFloat(balData.balance_ngn ?? "0");
       setWalletBalance(balance);
 
-      // Create order (Pending, unpaid)
-      const order = await createOrder(cart, totalAmount);
+      // Create order with delivery address in one shot
+      const order = await createOrder(cart, totalAmount, {
+        fullName:    address.fullName,
+        phone:       address.phone,
+        addressLine: address.addressLine,
+        streetLine2: address.streetLine2 || "",
+        landmark:    address.landmark || "",
+        city:        address.city,
+        state:       address.state,
+        country:     address.country,
+      });
       if (!order) { toast.error("Failed to create order. Please try again."); return; }
 
-      // Attach delivery address to order
-      const patchRes = await authFetch(getAccessToken, `/api/orders/${order.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deliveryFullName: address.fullName,
-          deliveryPhone: address.phone,
-          deliveryAddress: address.addressLine,
-          deliveryStreet2: address.streetLine2,
-          deliveryLandmark: address.landmark,
-          deliveryCity: address.city,
-          deliveryState: address.state,
-          deliveryCountry: address.country,
-        }),
-      });
-      if (!patchRes.ok) {
-        // Delete the unpaid order so stock is restored
-        await authFetch(getAccessToken, `/api/orders?orderId=${order.id}&userId=${currentUser?.id}`, { method: "DELETE" }).catch(() => {});
-        toast.error("Failed to save delivery address. Please try again.");
-        return;
+      // Attach delivery address to order (non-blocking — order can proceed without it)
+      try {
+        await authFetch(getAccessToken, `/api/orders/${order.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deliveryFullName: address.fullName,
+            deliveryPhone: address.phone,
+            deliveryAddress: address.addressLine,
+            deliveryStreet2: address.streetLine2,
+            deliveryLandmark: address.landmark,
+            deliveryCity: address.city,
+            deliveryState: address.state,
+            deliveryCountry: address.country,
+          }),
+        })
+      } catch {
+        // Non-fatal — delivery address can be updated by admin later
       }
       setPendingOrderId(order.id);
       setIsPayConfirmOpen(true);

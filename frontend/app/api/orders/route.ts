@@ -115,6 +115,14 @@ export async function POST(request: Request) {
         buyer_id: buyerId,
         total_amount: body.totalAmount,
         status: 'Pending',
+        delivery_full_name:  body.delivery?.fullName    || null,
+        delivery_phone:      body.delivery?.phone       || null,
+        delivery_address:    body.delivery?.addressLine || null,
+        delivery_street2:    body.delivery?.streetLine2 || null,
+        delivery_landmark:   body.delivery?.landmark    || null,
+        delivery_city:       body.delivery?.city        || null,
+        delivery_state:      body.delivery?.state       || null,
+        delivery_country:    body.delivery?.country     || null,
       })
       .select()
       .single()

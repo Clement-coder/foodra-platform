@@ -213,17 +213,14 @@ export function useOrders() {
     }
   }
 
-  const createOrder = async (items: CartItem[], totalAmount: number) => {
+  const createOrder = async (items: CartItem[], totalAmount: number, delivery?: Record<string, string>) => {
     if (!currentUser) return null
 
     try {
       const res = await authFetch(getAccessToken, '/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items,
-          totalAmount,
-        }),
+        body: JSON.stringify({ items, totalAmount, delivery }),
       })
 
       if (!res.ok) {
