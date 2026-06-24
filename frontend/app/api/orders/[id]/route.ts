@@ -89,40 +89,57 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (!supabase) return NextResponse.json({ error: "DB unavailable" }, { status: 500 })
 
     const body = await request.json()
-    const { actorPrivyId, status } = body
-    void actorPrivyId
+    const { status,
+      deliveryFullName, deliveryPhone, deliveryAddress,
+      deliveryStreet2, deliveryLandmark, deliveryCity,
+      deliveryState, deliveryCountry,
+    } = body
 
-    if (auth.user.role !== "admin") {
-      if (status === "Delivered") {
-        // Only the buyer can confirm delivery
-        const { data: order } = await supabase.from("orders").select("buyer_id").eq("id", id).single()
-        if (order?.buyer_id !== auth.user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-      } else if (status === "Shipped") {
-        const { data: items } = await supabase
-          .from("order_items")
-          .select("products!inner(farmer_id)")
-          .eq("order_id", id)
-        const isFarmerOnOrder = (items ?? []).some((i: any) => i.products?.farmer_id === auth.user.id)
-        if (!isFarmerOnOrder) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-      } else {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    // Build update payload
+    const updateData: Record<string, any> = { updated_at: new Date().toISOString() }
+
+    // Delivery fields — any authenticated user on their own order can set these
+    if (deliveryFullName !== undefined) updateData.delivery_full_name = deliveryFullName
+    if (deliveryPhone !== undefined)    updateData.delivery_phone     = deliveryPhone
+    if (deliveryAddress !== undefined)  updateData.delivery_address   = deliveryAddress
+    if (deliveryStreet2 !== undefined)  updateData.delivery_street2   = deliveryStreet2
+    if (deliveryLandmark !== undefined) updateData.delivery_landmark  = deliveryLandmark
+    if (deliveryCity !== undefined)     updateData.delivery_city      = deliveryCity
+    if (deliveryState !== undefined)    updateData.delivery_state     = deliveryState
+    if (deliveryCountry !== undefined)  updateData.delivery_country   = deliveryCountry
+
+    if (status) {
+      updateData.status = status
+      const STATUS_ORDER = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"]
+
+      if (auth.user.role !== "admin") {
+        const { data: order } = await supabase.from("orders").select("buyer_id, status").eq("id", id).single()
+        if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 })
+
+        if (status === "Delivered") {
+          if (order.buyer_id !== auth.user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+        } else if (status === "Shipped") {
+          const { data: items } = await supabase.from("order_items").select("products!inner(farmer_id)").eq("order_id", id)
+          const isFarmer = (items ?? []).some((i: any) => i.products?.farmer_id === auth.user.id)
+          if (!isFarmer) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+        } else if (!["Cancelled"].includes(status)) {
+          // Buyers can only cancel or confirm delivery
+          if (order.buyer_id !== auth.user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+        }
+
+        // Prevent backward movement for non-admins
+        const currentIdx = STATUS_ORDER.indexOf(order.status)
+        const targetIdx  = STATUS_ORDER.indexOf(status)
+        if (targetIdx < currentIdx && status !== "Cancelled") {
+          return NextResponse.json({ error: "Cannot move order backwards" }, { status: 400 })
+        }
       }
     }
 
-    const STATUS_ORDER = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"]
-
-    const { error } = await supabase
-      .from("orders")
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      // Never move status backward (except admin can do anything)
-      .in("status", auth.user.role === "admin"
-        ? STATUS_ORDER
-        : STATUS_ORDER.slice(0, STATUS_ORDER.indexOf(status))
-      )
+    const { error } = await supabase.from("orders").update(updateData).eq("id", id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Notify buyer of status change
+    // Notify buyer of status change
     if (status) {
       const { data: order } = await supabase.from("orders").select("buyer_id").eq("id", id).single()
       if (order?.buyer_id) {
@@ -134,26 +151,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         }
         if (statusMessages[status]) {
           await createNotification({
-            userId: order.buyer_id,
-            type: "order",
-            title: `Order ${status}`,
-            message: statusMessages[status],
-            link: `/orders/${id}`,
+            userId: order.buyer_id, type: "order",
+            title: `Order ${status}`, message: statusMessages[status], link: `/orders/${id}`,
           })
-          // Email buyer
           const { data: buyer } = await supabase.from("users").select("email, name").eq("id", order.buyer_id).single()
           if (buyer?.email) sendOrderStatusEmail(buyer.email, buyer.name || "Customer", id, status, order.buyer_id).catch(() => {})
         }
       }
     }
 
-  // Notify on escrow resolution — removed (no blockchain)
-
     return NextResponse.json({ success: true })
   } catch (error) {
-    if (error instanceof AuthError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
-    }
-    return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
+    if (error instanceof AuthError) return NextResponse.json({ error: error.message }, { status: error.status })
+    return NextResponse.json({ error: "Failed to update order" }, { status: 500 })
   }
 }

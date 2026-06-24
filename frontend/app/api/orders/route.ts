@@ -145,13 +145,26 @@ export async function POST(request: Request) {
 
     // Atomically decrement product quantity and validate stock
     for (const item of body.items) {
-      const { data: updated, error: stockError } = await supabaseAdmin.rpc('decrement_product_stock', {
+      // Try the RPC (available after 17_order_fixes.sql), fall back to direct update
+      const { data: rpcOk, error: rpcError } = await supabaseAdmin.rpc('decrement_product_stock', {
         product_id: item.productId,
-        decrement_by: item.quantity
+        decrement_by: item.quantity,
       })
-      
-      if (stockError || !updated) {
-        // Rollback order if stock validation fails
+
+      if (rpcError) {
+        // RPC not deployed yet — do it directly
+        const { data: prod } = await supabaseAdmin
+          .from('products').select('quantity').eq('id', item.productId).single()
+        if (!prod || prod.quantity < item.quantity) {
+          await supabaseAdmin.from('order_items').delete().eq('order_id', order.id)
+          await supabaseAdmin.from('orders').delete().eq('id', order.id)
+          return NextResponse.json({ error: `Insufficient stock for ${item.productName}` }, { status: 400 })
+        }
+        await supabaseAdmin.from('products').update({
+          quantity: prod.quantity - item.quantity,
+          is_available: (prod.quantity - item.quantity) > 0,
+        }).eq('id', item.productId)
+      } else if (!rpcOk) {
         await supabaseAdmin.from('order_items').delete().eq('order_id', order.id)
         await supabaseAdmin.from('orders').delete().eq('id', order.id)
         return NextResponse.json({ error: `Insufficient stock for ${item.productName}` }, { status: 400 })
