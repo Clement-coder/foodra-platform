@@ -95,8 +95,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       deliveryState, deliveryCountry,
     } = body
 
-    // Build update payload
-    const updateData: Record<string, any> = { updated_at: new Date().toISOString() }
+    // Build update payload — no updated_at, the DB trigger sets it automatically
+    const updateData: Record<string, any> = {}
 
     // Delivery fields — any authenticated user on their own order can set these
     if (deliveryFullName !== undefined) updateData.delivery_full_name = deliveryFullName

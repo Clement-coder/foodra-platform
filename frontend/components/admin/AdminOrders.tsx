@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { X, MapPin, Phone, Calendar, ExternalLink, ShoppingBag, Download } from "lucide-react"
+import { X, MapPin, Phone, Calendar, ShoppingBag, Download } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
 import { CustomSelect } from "@/components/CustomSelect"
@@ -86,33 +86,7 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
             </button>
           </div>
 
-          {/* Escrow dispute resolution */}
-          {order.escrow_status === "disputed" && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl space-y-3 border border-red-200 dark:border-red-800">
-              <p className="text-xs font-semibold text-red-600">⚠️ Disputed Escrow — Resolve</p>
-              <div className="flex gap-2">
-                <button onClick={() => resolveEscrow("release")} disabled={saving}
-                  className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium disabled:opacity-40">
-                  Release to Farmer
-                </button>
-                <button onClick={() => resolveEscrow("refund")} disabled={saving}
-                  className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium disabled:opacity-40">
-                  Refund Buyer
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Escrow tx */}
-          {order.escrow_tx_hash && (
-            <div className="p-3 bg-card rounded-xl">
-              <p className="text-xs text-muted-foreground mb-1">Escrow Tx</p>
-              <a href={`https://sepolia.basescan.org/tx/${order.escrow_tx_hash}`} target="_blank" rel="noopener noreferrer"
-                className="text-xs text-green-600 underline flex items-center gap-1 break-all">
-                {order.escrow_tx_hash.slice(0, 14)}…{order.escrow_tx_hash.slice(-8)}<ExternalLink className="w-3 h-3 flex-shrink-0" />
-              </a>
-            </div>
-          )}
+          {/* Escrow dispute resolution — removed (NGN wallet model, no blockchain) */}
 
           {/* Buyer */}
           {buyer && (
@@ -230,7 +204,7 @@ export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
               <th className="px-4 py-3 text-left hidden md:table-cell">Buyer</th>
               <th className="px-4 py-3 text-left">Amount</th>
               <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-left hidden sm:table-cell">Escrow</th>
+              <th className="px-4 py-3 text-left hidden sm:table-cell">Paid</th>
               <th className="px-4 py-3 text-left hidden sm:table-cell">Date</th>
               <th className="px-4 py-3 text-left">View</th>
             </tr>
@@ -256,9 +230,9 @@ export default function AdminOrders({ data, privyId, onRefresh, onNotify }: {
                       : "bg-blue-100 text-blue-700"}`}>{o.status}</span>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    {o.escrow_status && o.escrow_status !== "none"
-                      ? <span className={`text-xs px-2 py-1 rounded-full font-medium ${o.escrow_status === "released" ? "bg-green-100 text-green-700" : o.escrow_status === "disputed" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>{o.escrow_status}</span>
-                      : <span className="text-xs text-muted-foreground">—</span>}
+                    {o.wallet_paid
+                      ? <span className="text-xs px-2 py-1 rounded-full font-medium bg-green-100 text-green-700">Paid</span>
+                      : <span className="text-xs px-2 py-1 rounded-full font-medium bg-yellow-100 text-yellow-700">Unpaid</span>}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs hidden sm:table-cell">{new Date(o.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3">

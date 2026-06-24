@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { usePrivy } from "@privy-io/react-auth"
 import { useUser } from "@/lib/useUser"
 import withAuth from "@/components/withAuth"
-import { Users, Package, DollarSign, ShoppingBag, MessageSquare, BookOpen, BarChart2, Wallet, AlertTriangle, ShieldCheck } from "lucide-react"
+import { Users, Package, DollarSign, ShoppingBag, MessageSquare, BookOpen, BarChart2, Wallet, AlertTriangle } from "lucide-react"
 import AdminUsers from "@/components/admin/AdminUsers"
 import AdminProducts from "@/components/admin/AdminProducts"
 import AdminFunding from "@/components/admin/AdminFunding"
@@ -14,7 +14,6 @@ import AdminTrainings from "@/components/admin/AdminTrainings"
 import AdminAnalytics from "@/components/admin/AdminAnalytics"
 import AdminWalletRequests from "@/components/admin/AdminWalletRequests"
 import AdminDisputes from "@/components/admin/AdminDisputes"
-import AdminVerification from "@/components/admin/AdminVerification"
 import { useToast } from "@/lib/toast"
 import { authFetch } from "@/lib/authFetch"
 
@@ -28,16 +27,18 @@ export type AdminData = {
   trainings: any[]
   walletRequests: any[]
   disputes: any[]
-  verificationRequests: any[]
+  walletTransactions: any[]
+  walletAccounts: any[]
+  paystackPayments: any[]
 }
 
-type Tab = "users" | "products" | "funding" | "orders" | "disputes" | "support" | "trainings" | "analytics" | "wallet" | "verification"
+type Tab = "analytics" | "users" | "products" | "orders" | "wallet" | "funding" | "disputes" | "trainings" | "support"
 
 function AdminPage() {
   const { user: privyUser, getAccessToken } = usePrivy()
   const { currentUser } = useUser()
   const { toast } = useToast()
-  const [tab, setTab] = useState<Tab>("users")
+  const [tab, setTab] = useState<Tab>("analytics")
   const [data, setData] = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -53,66 +54,74 @@ function AdminPage() {
     refresh().finally(() => setLoading(false))
   }, [privyUser?.id])
 
-  const notify = (msg: string) => toast.success(msg)
-
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#118C4C]" />
     </div>
   )
 
-  if (!data || currentUser?.role !== "admin") return (
+  if (!data || (currentUser?.role !== "admin" && currentUser?.role !== "owner")) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center p-8">
         <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-foreground mb-2">Access Denied</h2>
+        <h2 className="text-xl font-bold mb-2">Access Denied</h2>
         <p className="text-muted-foreground">You don't have permission to view this page.</p>
       </div>
     </div>
   )
 
-  const tabs: { key: Tab; label: string; icon: any; count: number | string; unread?: number }[] = [
-    { key: "users", label: "Users", icon: Users, count: data.users.length },
-    { key: "products", label: "Products", icon: Package, count: data.products.length },
-    { key: "funding", label: "Funding", icon: DollarSign, count: data.funding.length },
-    { key: "orders", label: "Orders", icon: ShoppingBag, count: data.orders.length },
-    { key: "verification", label: "Verification", icon: ShieldCheck, count: (data.verificationRequests || []).filter((r: any) => r.status === "Pending").length, unread: (data.verificationRequests || []).filter((r: any) => r.status === "Pending").length },
-    { key: "disputes", label: "Disputes", icon: AlertTriangle, count: (data.disputes || []).filter((d: any) => d.status === "open").length, unread: (data.disputes || []).filter((d: any) => d.status === "open").length },
-    { key: "trainings", label: "Trainings", icon: BookOpen, count: data.trainings.length },
-    { key: "support", label: "Support", icon: MessageSquare, count: [...new Set(data.supportMessages.map((m: any) => m.user_id))].length, unread: getUnreadSupportCount(data.supportMessages) },
-    { key: "wallet", label: "Wallet", icon: Wallet, count: (data.walletRequests || []).filter((r: any) => r.status === "Pending").length, unread: (data.walletRequests || []).filter((r: any) => r.status === "Pending").length },
-    { key: "analytics", label: "Analytics", icon: BarChart2, count: "—" },
+  const pendingWithdrawals = (data.walletRequests || []).filter((r: any) => r.status === "pending").length
+  const pendingFunding = data.funding.filter((f: any) => f.status === "Pending").length
+  const openDisputes = (data.disputes || []).filter((d: any) => d.status === "open").length
+  const unreadSupport = getUnreadSupportCount(data.supportMessages)
+
+  const tabs: { key: Tab; label: string; icon: any; badge?: number }[] = [
+    { key: "analytics",  label: "Analytics",  icon: BarChart2 },
+    { key: "users",      label: "Users",       icon: Users },
+    { key: "products",   label: "Products",    icon: Package },
+    { key: "orders",     label: "Orders",      icon: ShoppingBag },
+    { key: "wallet",     label: "Withdrawals", icon: Wallet,        badge: pendingWithdrawals },
+    { key: "funding",    label: "Funding",     icon: DollarSign,    badge: pendingFunding },
+    { key: "disputes",   label: "Disputes",    icon: AlertTriangle, badge: openDisputes },
+    { key: "trainings",  label: "Trainings",   icon: BookOpen },
+    { key: "support",    label: "Support",     icon: MessageSquare, badge: unreadSupport },
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Admin Panel</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-3 md:p-6">
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-xl font-bold">Admin Panel</h1>
+        <button onClick={refresh} className="text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-1.5 transition-colors">↺ Refresh</button>
+      </div>
 
-      <div className="grid grid-cols-4 sm:grid-cols-9 gap-2 mb-6">
-        {tabs.map(({ key, label, icon: Icon, count, unread }) => (
+      {/* Tab bar */}
+      <div className="flex gap-1.5 mb-5 overflow-x-auto pb-1 scrollbar-none">
+        {tabs.map(({ key, label, icon: Icon, badge }) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`relative p-3 rounded-xl text-left transition-all ${tab === key ? "bg-green-600 text-white shadow-lg" : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-gray-800"}`}>
-            <Icon className="w-4 h-4 mb-1" />
-            <div className="text-lg font-bold">{count}</div>
-            <div className="text-xs opacity-80 truncate">{label}</div>
-            {unread != null && unread > 0 && (
-              <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unread}</span>
+            className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+              tab === key
+                ? "bg-[#118C4C] text-white shadow-md"
+                : "bg-white dark:bg-gray-900 text-muted-foreground hover:text-foreground border border-border"
+            }`}>
+            <Icon className="w-3.5 h-3.5" />
+            {label}
+            {badge != null && badge > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1">{badge}</span>
             )}
           </button>
         ))}
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow overflow-hidden">
-        {tab === "users" && <AdminUsers data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
-        {tab === "products" && <AdminProducts data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
-        {tab === "funding" && <AdminFunding data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
-        {tab === "orders" && <AdminOrders data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
-        {tab === "verification" && <AdminVerification data={data} onRefresh={refresh} />}
-        {tab === "disputes" && <AdminDisputes data={data} privyId={privyUser?.id} onRefresh={refresh} />}
-        {tab === "trainings" && <AdminTrainings data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={notify} />}
-        {tab === "support" && <AdminSupport data={data} privyId={privyUser?.id} onRefresh={refresh} />}
-        {tab === "wallet" && <AdminWalletRequests data={data} privyId={privyUser?.id} onRefresh={refresh} />}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-border overflow-hidden">
         {tab === "analytics" && <AdminAnalytics data={data} privyId={privyUser?.id} />}
+        {tab === "users"     && <AdminUsers data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={msg => toast.success(msg)} />}
+        {tab === "products"  && <AdminProducts data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={msg => toast.success(msg)} />}
+        {tab === "orders"    && <AdminOrders data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={msg => toast.success(msg)} />}
+        {tab === "wallet"    && <AdminWalletRequests data={data} privyId={privyUser?.id} onRefresh={refresh} />}
+        {tab === "funding"   && <AdminFunding data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={msg => toast.success(msg)} />}
+        {tab === "disputes"  && <AdminDisputes data={data} privyId={privyUser?.id} onRefresh={refresh} />}
+        {tab === "trainings" && <AdminTrainings data={data} privyId={privyUser?.id} onRefresh={refresh} onNotify={msg => toast.success(msg)} />}
+        {tab === "support"   && <AdminSupport data={data} privyId={privyUser?.id} onRefresh={refresh} />}
       </div>
     </div>
   )

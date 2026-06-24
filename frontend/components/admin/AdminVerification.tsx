@@ -13,7 +13,7 @@ export default function AdminVerification({ data, onRefresh }: { data: AdminData
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [notes, setNotes] = useState<Record<string, string>>({})
 
-  const requests = data.verificationRequests || []
+  const requests = (data as any).verificationRequests || []
 
   const updateStatus = async (requestId: string, status: "Approved" | "Rejected") => {
     const res = await authFetch(getAccessToken, "/api/verification", {
