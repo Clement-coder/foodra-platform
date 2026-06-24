@@ -32,7 +32,6 @@ function ShopPage() {
   const [isFundOpen, setIsFundOpen] = useState(false);
   const [preparingCheckout, setPreparingCheckout] = useState(false);
   const [paying, setPaying] = useState(false);
-  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryAddress | null>(null);
   const [payStep, setPayStep] = useState<"confirm" | "pin" | "success">("confirm");
@@ -52,26 +51,9 @@ function ShopPage() {
     setIsDeliveryModalOpen(false);
     setPreparingCheckout(true);
     try {
-      // Fetch wallet balance
       const balRes = await authFetch(getAccessToken, "/api/wallet/balance");
       const balData = await balRes.json();
-      const balance = parseFloat(balData.balance_ngn ?? "0");
-      setWalletBalance(balance);
-
-      // Create order with delivery address in one shot
-      const order = await createOrder(cart, totalAmount, {
-        fullName:    address.fullName,
-        phone:       address.phone,
-        addressLine: address.addressLine,
-        streetLine2: address.streetLine2 || "",
-        landmark:    address.landmark || "",
-        city:        address.city,
-        state:       address.state,
-        country:     address.country,
-      });
-      if (!order) { toast.error("Failed to create order. Please try again."); return; }
-
-      setPendingOrderId(order.id);
+      setWalletBalance(parseFloat(balData.balance_ngn ?? "0"));
       setIsPayConfirmOpen(true);
     } finally {
       setPreparingCheckout(false);
@@ -79,22 +61,38 @@ function ShopPage() {
   };
 
   const handleConfirmPayment = async () => {
-    if (!pendingOrderId) return;
+    if (!selectedDelivery) return;
     if (!payPin || payPin.length !== 4) { toast.error("Enter your 4-digit wallet PIN"); return; }
     setPaying(true);
     try {
-      const res = await authFetch(getAccessToken, `/api/orders/${pendingOrderId}/pay-wallet`, {
+      // Create order then pay — both happen only when user confirms with PIN
+      const order = await createOrder(cart, totalAmount, {
+        fullName:    selectedDelivery.fullName,
+        phone:       selectedDelivery.phone,
+        addressLine: selectedDelivery.addressLine,
+        streetLine2: selectedDelivery.streetLine2 || "",
+        landmark:    selectedDelivery.landmark || "",
+        city:        selectedDelivery.city,
+        state:       selectedDelivery.state,
+        country:     selectedDelivery.country,
+      });
+      if (!order) { toast.error("Failed to create order. Please try again."); return; }
+
+      const res = await authFetch(getAccessToken, `/api/orders/${order.id}/pay-wallet`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pin: payPin }),
       });
       const data = await res.json();
       if (!res.ok) {
+        // Payment failed — delete the just-created order to avoid orphans
+        await authFetch(getAccessToken, `/api/orders?orderId=${order.id}&userId=${currentUser?.id}`, { method: "DELETE" }).catch(() => {});
         if (data.balance !== undefined) {
           setIsPayConfirmOpen(false);
           setIsFundOpen(true);
         } else {
           toast.error(data.error || "Payment failed");
+          setPayStep("pin");
         }
         return;
       }
@@ -107,14 +105,10 @@ function ShopPage() {
     }
   };
 
-  const handleCancelOrder = async () => {
-    if (pendingOrderId) {
-      await authFetch(getAccessToken, `/api/orders?orderId=${pendingOrderId}&userId=${currentUser?.id}`, { method: "DELETE" }).catch(() => {});
-    }
+  const handleCancelOrder = () => {
     setIsPayConfirmOpen(false);
     setPayStep("confirm");
     setPayPin("");
-    setPendingOrderId(null);
   };
 
   const totalItems = cart.reduce((s, i) => s + i.quantity, 0);
