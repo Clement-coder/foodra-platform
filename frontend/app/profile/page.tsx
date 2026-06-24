@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { BadgeCheck, Edit, LogOut, Share2, UserIcon, Wallet, Copy, Check, MapPin, CalendarDays, ShieldCheck, Camera, Loader2, Package, ShoppingBag, LayoutGrid, List } from "lucide-react"
+import { BadgeCheck, Edit, LogOut, Share2, UserIcon, Wallet, Copy, Check, MapPin, CalendarDays, ShieldCheck, Camera, Loader2, Package, ShoppingBag, LayoutGrid, List, Settings } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { FormInput } from "@/components/FormInput"
@@ -28,7 +28,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { MembershipBadge } from "@/components/MembershipBadge"
 import { computeMembership } from "@/lib/membership"
 import { ProfilePageSkeleton, OrderCardSkeleton } from "@/components/Skeleton"
-type Tab = "orders" | "wishlist" | "membership"
+type Tab = "orders" | "wishlist" | "membership" | "settings"
 const ORDER_TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"] as const
 type OTab = typeof ORDER_TABS[number]
 
@@ -194,6 +194,7 @@ function ProfilePage() {
     { key: "orders", label: "Orders" },
     { key: "wishlist", label: "Wishlist" },
     { key: "membership", label: "Membership" },
+    { key: "settings", label: "Settings" },
   ]
 
   return (
@@ -379,9 +380,56 @@ function ProfilePage() {
                 {wishlist.map(p => <ProductCard key={p.id} product={p} />)}
               </div>
             )
-          ) : (
+          ) : tab === "membership" ? (
             <div className="py-4">
               <MembershipBadge score={membershipScore} showProgress />
+            </div>
+          ) : (
+            /* Settings tab */
+            <div className="py-4 space-y-3">
+              <div className="rounded-2xl border border-border overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Appearance</p>
+                </div>
+                <div className="divide-y divide-border">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-sm font-medium">Theme</span>
+                    <ThemeToggle />
+                  </div>
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-sm font-medium">Language</span>
+                    <LanguageSwitcher compact />
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border overflow-hidden">
+                <div className="px-4 py-3 bg-muted/30">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Account</p>
+                </div>
+                <div className="divide-y divide-border">
+                  <a href="/wallet" className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors">
+                    <span className="text-sm font-medium">Wallet</span>
+                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                  </a>
+                  {(user.role === "admin" || user.role === "owner") && (
+                    <a href="/admin" className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors">
+                      <span className="text-sm font-medium">Admin Dashboard</span>
+                      <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-red-200 dark:border-red-900/40 overflow-hidden">
+                <button
+                  onClick={() => setIsSignOutModalOpen(true)}
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-red-500"
+                >
+                  <span className="text-sm font-medium">Sign Out</span>
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>

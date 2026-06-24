@@ -330,44 +330,74 @@ export function MembershipBadge({ score, showProgress = false, prevTier }: Membe
       {/* Modal — for public profile click */}
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-md" 
-              onClick={() => setOpen(false)} 
-            />
+          <>
+            <div className="fixed inset-0 z-40 backdrop-blur-sm" />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 350 }}
-              className="relative w-full max-w-sm bg-card rounded-3xl shadow-2xl border border-border overflow-hidden max-h-[85vh] flex flex-col"
-            >
-              <div className={`h-1.5 w-full bg-gradient-to-r ${TIER_GRADIENT[score.tier]}`} />
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/60"
+              onClick={() => setOpen(false)}
+            />
 
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl drop-shadow-sm">{tierInfo.emoji}</span>
-                  <div>
-                    <h2 className="font-bold text-foreground text-sm tracking-tight">Foodra Membership</h2>
-                    <p className={`text-xs font-bold ${tierInfo.color}`}>{score.tier} · {score.total}/100 pts</p>
-                  </div>
+            {/* Mobile: bottom sheet */}
+            <div className="fixed inset-0 z-50 flex items-end sm:hidden pointer-events-none">
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0, transition: { type: "spring", damping: 30, stiffness: 300 } }}
+                exit={{ y: "100%", transition: { type: "spring", damping: 35, stiffness: 300 } }}
+                className="pointer-events-auto w-full bg-card rounded-t-3xl shadow-2xl max-h-[92vh] flex flex-col"
+              >
+                <div className="flex justify-center pt-3 pb-2 shrink-0">
+                  <div className="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
                 </div>
-                <button onClick={() => setOpen(false)} className="p-2 rounded-full hover:bg-muted transition-colors">
-                  <X className="h-4 w-4 text-muted-foreground" />
-                </button>
-              </div>
+                <div className={`h-1.5 w-full bg-gradient-to-r ${TIER_GRADIENT[score.tier]} shrink-0`} />
+                <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl drop-shadow-sm">{tierInfo.emoji}</span>
+                    <div>
+                      <h2 className="font-bold text-foreground text-sm tracking-tight">Foodra Membership</h2>
+                      <p className={`text-xs font-bold ${tierInfo.color}`}>{score.tier} · {score.total}/100 pts</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setOpen(false)} className="p-2 rounded-full hover:bg-muted transition-colors">
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </div>
+                <div className="overflow-y-auto flex-1 px-5 pb-5">
+                  <TierLadder score={score} inView={true} isModal />
+                  <Checklist score={score} inView={true} isModal />
+                </div>
+              </motion.div>
+            </div>
 
-              {/* Scrollable content */}
-              <div className="overflow-y-auto flex-1 px-5 pb-5">
-                <TierLadder score={score} inView={true} isModal />
-                <Checklist score={score} inView={true} isModal />
-              </div>
-            </motion.div>
-          </div>
+            {/* Desktop: centered dialog */}
+            <div className="fixed inset-0 z-50 hidden sm:flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 350 }}
+                className="relative w-full max-w-sm bg-card rounded-3xl shadow-2xl border border-border overflow-hidden max-h-[85vh] flex flex-col"
+              >
+                <div className={`h-1.5 w-full bg-gradient-to-r ${TIER_GRADIENT[score.tier]}`} />
+                <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl drop-shadow-sm">{tierInfo.emoji}</span>
+                    <div>
+                      <h2 className="font-bold text-foreground text-sm tracking-tight">Foodra Membership</h2>
+                      <p className={`text-xs font-bold ${tierInfo.color}`}>{score.tier} · {score.total}/100 pts</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setOpen(false)} className="p-2 rounded-full hover:bg-muted transition-colors">
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </div>
+                <div className="overflow-y-auto flex-1 px-5 pb-5">
+                  <TierLadder score={score} inView={true} isModal />
+                  <Checklist score={score} inView={true} isModal />
+                </div>
+              </motion.div>
+            </div>
+          </>
         )}
       </AnimatePresence>
     </>
