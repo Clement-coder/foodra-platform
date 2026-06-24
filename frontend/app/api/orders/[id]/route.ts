@@ -136,6 +136,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
     }
 
+    // Guard: nothing to update
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ success: true })
+    }
+
     const { error } = await supabase.from("orders").update(updateData).eq("id", id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

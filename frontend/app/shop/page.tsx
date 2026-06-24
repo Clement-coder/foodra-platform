@@ -63,7 +63,7 @@ function ShopPage() {
       if (!order) { toast.error("Failed to create order. Please try again."); return; }
 
       // Attach delivery address to order
-      await authFetch(getAccessToken, `/api/orders/${order.id}`, {
+      const patchRes = await authFetch(getAccessToken, `/api/orders/${order.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -77,6 +77,12 @@ function ShopPage() {
           deliveryCountry: address.country,
         }),
       });
+      if (!patchRes.ok) {
+        // Delete the unpaid order so stock is restored
+        await authFetch(getAccessToken, `/api/orders?orderId=${order.id}&userId=${currentUser?.id}`, { method: "DELETE" }).catch(() => {});
+        toast.error("Failed to save delivery address. Please try again.");
+        return;
+      }
       setPendingOrderId(order.id);
       setIsPayConfirmOpen(true);
     } finally {
