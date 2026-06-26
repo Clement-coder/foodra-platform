@@ -89,7 +89,7 @@ function ShopPage() {
           setIsPayConfirmOpen(false);
           setIsFundOpen(true);
         } else {
-          toast.error(data.error || "Payment failed");
+          toast.error(data.detail || data.error || "Payment failed");
           setPayStep("pin");
         }
         return;

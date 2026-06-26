@@ -241,7 +241,8 @@ export async function POST(request: Request) {
   return NextResponse.json({ success: true, orderId: order.id, new_balance })
   } catch (e) {
     if (e instanceof AuthError) return NextResponse.json({ error: e.message }, { status: e.status })
+    const msg = e instanceof Error ? e.message : String(e)
     console.error("checkout error:", e)
-    return NextResponse.json({ error: "Checkout failed" }, { status: 500 })
+    return NextResponse.json({ error: "Checkout failed", detail: msg }, { status: 500 })
   }
 }
