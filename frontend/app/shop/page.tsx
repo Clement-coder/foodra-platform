@@ -13,7 +13,7 @@ import { DeliveryAddressModal } from "@/components/DeliveryAddressModal";
 import { FundWalletModal } from "@/components/FundWalletModal";
 import { WalletSuccessScreen } from "@/components/WalletSuccessScreen";
 import withAuth from "../../components/withAuth";
-import { useCart, useOrders } from "@/lib/useCart";
+import { useCart } from "@/lib/useCart";
 import { usePrivy } from "@privy-io/react-auth";
 import { useUser } from "@/lib/useUser";
 import { calculateProfileCompletion } from "@/lib/profileUtils";
@@ -22,7 +22,6 @@ import { authFetch } from "@/lib/authFetch";
 
 function ShopPage() {
   const { cart, removeFromCart, updateQuantity, clearCart, totalAmount } = useCart();
-  const { createOrder } = useOrders();
   const { authenticated, getAccessToken } = usePrivy();
   const { currentUser } = useUser();
   const router = useRouter();
@@ -36,8 +35,6 @@ function ShopPage() {
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryAddress | null>(null);
   const [payStep, setPayStep] = useState<"confirm" | "pin" | "success">("confirm");
   const [payPin, setPayPin] = useState("");
-  // Stable key for idempotent order creation — regenerated each time the modal opens
-  const [orderKey, setOrderKey] = useState(() => crypto.randomUUID());
 
   const handleProceedToCheckout = async () => {
     if (currentUser && calculateProfileCompletion(currentUser) < 100) {
@@ -57,7 +54,6 @@ function ShopPage() {
       const balData = await balRes.json();
       setWalletBalance(parseFloat(balData.balance_ngn ?? "0"));
       setIsPayConfirmOpen(true);
-    setOrderKey(crypto.randomUUID()); // fresh key each time the payment modal opens
     } finally {
       setPreparingCheckout(false);
     }
@@ -68,28 +64,27 @@ function ShopPage() {
     if (!payPin || payPin.length !== 4) { toast.error("Enter your 4-digit wallet PIN"); return; }
     setPaying(true);
     try {
-      // Create order then pay — both happen only when user confirms with PIN
-      const order = await createOrder(cart, totalAmount, {
-        fullName:    selectedDelivery.fullName,
-        phone:       selectedDelivery.phone,
-        addressLine: selectedDelivery.addressLine,
-        streetLine2: selectedDelivery.streetLine2 || "",
-        landmark:    selectedDelivery.landmark || "",
-        city:        selectedDelivery.city,
-        state:       selectedDelivery.state,
-        country:     selectedDelivery.country,
-      }, orderKey);
-      if (!order) { toast.error("Failed to create order. Please try again."); return; }
-
-      const res = await authFetch(getAccessToken, `/api/orders/${order.id}/pay-wallet`, {
-        method: "PATCH",
+      const res = await authFetch(getAccessToken, "/api/orders/checkout", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: payPin }),
+        body: JSON.stringify({
+          pin: payPin,
+          totalAmount,
+          items: cart,
+          delivery: {
+            fullName:    selectedDelivery.fullName,
+            phone:       selectedDelivery.phone,
+            addressLine: selectedDelivery.addressLine,
+            streetLine2: selectedDelivery.streetLine2 || "",
+            landmark:    selectedDelivery.landmark || "",
+            city:        selectedDelivery.city,
+            state:       selectedDelivery.state,
+            country:     selectedDelivery.country,
+          },
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        // Payment failed — delete the just-created order to avoid orphans
-        await authFetch(getAccessToken, `/api/orders?orderId=${order.id}&userId=${currentUser?.id}`, { method: "DELETE" }).catch(() => {});
         if (data.balance !== undefined) {
           setIsPayConfirmOpen(false);
           setIsFundOpen(true);
