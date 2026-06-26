@@ -20,7 +20,8 @@ import bcrypt from "bcryptjs"
  * Body: { pin, totalAmount, items, delivery }
  */
 export async function POST(request: Request) {
-  const auth = await requireAuthenticatedUser(request).catch(() => null)
+  try {
+  const auth = await requireAuthenticatedUser(request).catch((e) => { throw e })
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const supabase = getSupabaseAdminClient()!
@@ -238,4 +239,9 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ success: true, orderId: order.id, new_balance })
+  } catch (e) {
+    if (e instanceof AuthError) return NextResponse.json({ error: e.message }, { status: e.status })
+    console.error("checkout error:", e)
+    return NextResponse.json({ error: "Checkout failed" }, { status: 500 })
+  }
 }
