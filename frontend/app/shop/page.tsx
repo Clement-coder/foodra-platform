@@ -168,7 +168,7 @@ function ShopPage() {
             {cart.map((item) => (
               <motion.div key={item.productId} layout
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -40, scale: 0.95 }} transition={{ duration: 0.2 }}
+                exit={{ opacity: 0 }} transition={{ duration: 0 }}
               >
                 <div className="bg-card rounded-2xl border border-[#118C4C]/15 p-4 flex gap-4 hover:border-[#118C4C]/40 hover:shadow-sm transition-all">
                   {/* Image */}
