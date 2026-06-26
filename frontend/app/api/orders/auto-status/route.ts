@@ -37,7 +37,7 @@ async function run(request: Request) {
   // ── Processing → Shipped (24h after updated_at) ──────────────────────────
   const { data: toShipped } = await supabase
     .from("orders")
-    .update({ status: "Shipped", updated_at: now.toISOString() })
+    .update({ status: "Shipped", updated_at: now.toISOString(), shipped_at: now.toISOString() })
     .eq("status", "Processing")
     .lte("updated_at", h24ago)
     .select("id, buyer_id")
