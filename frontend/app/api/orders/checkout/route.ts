@@ -140,7 +140,7 @@ export async function POST(request: Request) {
 
   if (orderError || !order) {
     console.error("checkout: order insert error", orderError)
-    return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to create order", detail: orderError?.message, code: orderError?.code }, { status: 500 })
   }
 
   // ── Insert order items ───────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
   if (itemsError) {
     console.error("checkout: order_items insert error", itemsError)
     await supabase.from("orders").delete().eq("id", order.id)
-    return NextResponse.json({ error: "Failed to save order items" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to save order items", detail: itemsError?.message, code: itemsError?.code }, { status: 500 })
   }
 
   // ── Decrement stock ──────────────────────────────────────────────────────────
