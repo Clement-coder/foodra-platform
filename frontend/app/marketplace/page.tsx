@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Plus, PackageOpen, Heart } from "lucide-react";
+import { Plus, PackageOpen, Heart, LayoutGrid, Grid3x3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
@@ -32,6 +32,7 @@ function MarketplacePage() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [gridCols, setGridCols] = useState<2 | 3>(2);
 
   useEffect(() => {
     fetch('/api/products')
@@ -109,6 +110,17 @@ function MarketplacePage() {
 
         {/* Secondary actions — wrap on small screens */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Grid layout toggle */}
+          <button
+            onClick={() => setGridCols(c => c === 2 ? 3 : 2)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium text-muted-foreground transition-colors"
+            title={gridCols === 2 ? "Switch to compact view" : "Switch to normal view"}
+          >
+            {gridCols === 2
+              ? <><Grid3x3 className="h-3.5 w-3.5" /> Compact</>
+              : <><LayoutGrid className="h-3.5 w-3.5" /> Normal</>
+            }
+          </button>
           <Link href="/wishlist" aria-label="Wishlist">
             <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 gap-1.5">
               <Heart className="h-4 w-4" />
@@ -185,7 +197,7 @@ function MarketplacePage() {
 
       {/* Products Grid */}
       {loading ? (
-        <GridLayout>
+        <GridLayout cols={gridCols}>
           {[...Array(PAGE_SIZE)].map((_, i) => <ProductCardSkeleton key={i} />)}
         </GridLayout>
       ) : filteredProducts.length === 0 ? (
@@ -217,7 +229,7 @@ function MarketplacePage() {
       ) : (
         <>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-            <GridLayout>
+            <GridLayout cols={gridCols}>
               {paginatedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
