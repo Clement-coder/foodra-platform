@@ -78,8 +78,8 @@ export default function LandingPage() {
   ]
 
   const missionAndVision = [
-    { icon: Eye, title: "Vision", description: "To contribute towards an Africa that does not depend on the outside world to feed her. Using the least available resources to maximize the capacity of the African food production and supply chain. Through the application of technology, available financial support, and market availability, smallholder farmers will boost in capacity and in turn boost the African food capacity." },
-    { icon: Target, title: "Mission", description: "To offer value to African farmers through sustainable practices and a sustainable supply chain. This includes sustainable practices that protect our environment, a sustainable supply chain that ensures fair value distribution, and farmer empowerment through technology and market access." },
+    { icon: Eye, title: "Vision", description: "To contribute towards an Africa that does not depend on the outside world to feed her. Using the least available resources to maximize the capacity of the African food production and supply chain. Through the application of technology, available financial support, and market availability, food security will improve across Africa." },
+    { icon: Target, title: "Mission", description: "To offer value through sustainable agricultural practices and a fair supply chain. This includes practices that protect our environment, fair value distribution, and empowering people through technology and market access." },
   ]
 
   return (

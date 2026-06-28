@@ -9,8 +9,8 @@ export const metadata = buildMetadata({
     "modern farming techniques", "crop management training",
     "free farming courses Nigeria", "agribusiness training Africa",
     "irrigation farming Nigeria", "pest control farming Nigeria",
-    "online farming classes Nigeria", "farmer education Nigeria",
+    "online farming classes Nigeria", "agricultural education Nigeria",
     "Foodra training", "agricultural education Africa",
-    "smallholder farmer training", "farming skills Nigeria",
+    "farming skills Nigeria",
   ],
 })

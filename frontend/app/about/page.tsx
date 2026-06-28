@@ -3,12 +3,12 @@ import Link from "next/link"
 import { Shield, Users, Leaf, MapPin, FileText, Sparkles, Quote, Target, Lightbulb, Info } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "About Foodra — Nigeria's Blockchain-Powered Farm Marketplace",
-  description: "Learn about Foodra Technologies Ltd, Nigeria's leading AgriTech platform. We connect smallholder farmers directly with buyers, provide agricultural training, farm loans, and blockchain-powered payments to drive food security across Africa.",
+  title: "About Foodra — Nigeria's AgriTech Farm Store",
+  description: "Learn about Foodra Technologies Ltd, Nigeria's leading AgriTech platform. Foodra is the sole merchant — we sell quality farm commodities directly to buyers, provide agricultural training, farm loans, and an NGN digital wallet to drive food security across Africa.",
   alternates: { canonical: "https://foodramarket.com/about" },
   openGraph: {
-    title: "About Foodra — Nigeria's Blockchain-Powered Farm Marketplace",
-    description: "Foodra Technologies Ltd is building Africa's most trusted agricultural marketplace. Fair market access, farmer empowerment, and food security — starting with Nigeria.",
+    title: "About Foodra — Nigeria's AgriTech Farm Store",
+    description: "Foodra Technologies Ltd is building Africa's most trusted direct-to-consumer agricultural platform. Quality farm produce, fair pricing, and food security — starting with Nigeria.",
     url: "https://foodramarket.com/about",
     siteName: "Foodra",
     images: [{ url: "https://foodramarket.com/foodra.png", width: 1200, height: 630, alt: "About Foodra" }],
@@ -22,10 +22,10 @@ const sections = [
     icon: Target,
     title: "Our Mission",
     body: [
-      "To offer value to African farmers through sustainable practices and a sustainable supply chain.",
-      "We ensure fair value distribution across the agricultural supply chain, eliminating unnecessary middlemen.",
-      "We empower farmers through technology, market access, and financial inclusion tools.",
-      "We protect the environment by promoting sustainable farming practices across our platform.",
+      "To offer value through sustainable agricultural practices and a fair supply chain.",
+      "We ensure fair value distribution across the agricultural supply chain.",
+      "We empower people through technology, market access, and financial inclusion tools.",
+      "We protect the environment by promoting sustainable farming practices.",
     ],
   },
   {
@@ -34,28 +34,28 @@ const sections = [
     body: [
       "To contribute towards an Africa that does not depend on the outside world to feed her.",
       "Using the least available resources to maximise the capacity of African food production and supply chains.",
-      "Through technology, financial support, and market availability, smallholder farmers will boost their capacity and in turn boost Africa's food capacity.",
-      "We envision a future where every African farmer has the tools, funding, and market access to thrive.",
+      "Through technology, financial support, and market availability, food security will improve across Africa.",
+      "We envision a future where every African buyer has direct access to quality farm produce at fair prices.",
     ],
   },
   {
     icon: Leaf,
-    title: "Fair Market Access",
+    title: "Direct-to-Consumer Model",
     body: [
-      "We help farmers connect directly with buyers, improving pricing visibility and reducing middleman friction.",
-      "Farmers can list, manage, and sell agricultural products to a wide network of verified buyers.",
-      "Our blockchain-based escrow system ensures every transaction is secure and funds are released only on confirmed delivery.",
-      "Advanced search and filtering tools help buyers find exactly what they need from local farmers.",
+      "Foodra is the sole merchant — all products on the platform are owned, managed, and sold by Foodra.",
+      "There are no third-party sellers or vendor listings. Buyers purchase directly from Foodra.",
+      "Our platform ensures every product meets quality standards before it reaches a buyer.",
+      "Advanced search and filtering tools help buyers find exactly what they need.",
     ],
   },
   {
     icon: Shield,
     title: "Trust and Transparency",
     body: [
-      "Profiles, listings, and platform features are built to make transactions and relationships more reliable.",
+      "All listings and platform features are built to make transactions reliable and transparent.",
       "Our AI-powered credit scoring engine provides explainable, fair assessments for funding applications.",
-      "All financial transactions are recorded on the Base blockchain, providing an immutable audit trail.",
-      "Dispute resolution is handled transparently by our admin team with evidence from both parties.",
+      "Buyers can raise disputes within 7 days of delivery — reviewed and resolved by the Foodra team.",
+      "Dispute resolutions may include a replacement or full/partial wallet credit.",
     ],
   },
   {
@@ -110,7 +110,7 @@ export default function AboutPage() {
         <div className="flex items-start gap-3 rounded-2xl border border-blue-200 dark:border-blue-900/40 bg-blue-50 dark:bg-blue-950/20 p-5 mb-8">
           <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
           <p className="text-sm text-blue-800 dark:text-blue-300 leading-relaxed">
-            <strong>In short:</strong> Foodra connects smallholder farmers directly with buyers, provides agricultural training, funding access, and blockchain-powered payments — all in one platform built for Africa.
+            <strong>In short:</strong> Foodra is a direct-to-consumer agricultural platform — we sell quality farm commodities directly to buyers, provide training, funding access, and an NGN digital wallet, all in one platform built for Africa.
           </p>
         </div>
 
@@ -162,7 +162,7 @@ export default function AboutPage() {
                 </p>
               </div>
               <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                A Nigerian entrepreneur and technologist from Benue State with a deep passion for solving Africa's food security crisis through technology. Driven by firsthand experience of the challenges smallholder farmers face — from market access to financial exclusion — he founded Foodra to bridge the gap between farmers and buyers using blockchain, AI, and modern web technology.
+                A Nigerian entrepreneur and technologist from Benue State with a deep passion for solving Africa's food security crisis through technology. He founded Foodra to build a direct-to-consumer agricultural platform that brings quality farm produce directly to buyers, backed by AI, modern web technology, and financial inclusion tools.
               </p>
             </div>
           </div>
@@ -172,7 +172,7 @@ export default function AboutPage() {
         <div className="mt-8 rounded-2xl border border-[#118C4C]/20 bg-[#118C4C]/5 dark:bg-[#118C4C]/10 p-6 md:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1">
             <h3 className="font-semibold text-foreground mb-1">Want to partner with us?</h3>
-            <p className="text-sm text-muted-foreground">We're open to partnerships, collaborations, and farmer outreach programmes across Africa.</p>
+            <p className="text-sm text-muted-foreground">We're open to partnerships, collaborations, and community outreach programmes across Africa.</p>
           </div>
           <Link
             href="/contact"

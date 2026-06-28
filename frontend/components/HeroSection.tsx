@@ -96,7 +96,7 @@ export default function LandingHero() {
               transition={{ delay: 0.2, duration: 0.4 }}
               className="text-white/80 text-sm sm:text-base md:text-lg mt-3 max-w-xl"
             >
-              Africa's blockchain-powered marketplace for farmers and buyers.
+              Africa's AgriTech platform selling quality farm commodities directly to buyers.
             </motion.p>
             <motion.div
               initial={{ y: 30, opacity: 0 }}

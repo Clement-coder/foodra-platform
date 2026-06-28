@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Foodra - Empowering Nigerian Farmers",
     short_name: "Foodra",
-    description: "Blockchain-powered AgriTech platform connecting farmers with markets, training, and funding across Africa.",
+    description: "Nigeria's AgriTech platform selling quality farm commodities directly to buyers, with training, funding, and an NGN wallet across Africa.",
     start_url: "/",
     display: "standalone",
     background_color: "#f5faf6",

@@ -65,7 +65,7 @@ export default function ImpactPage() {
           </span>
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Growing Africa, One Farm at a Time</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Foodra is more than a marketplace — it's a movement to build food security, empower smallholder farmers, and create a fairer agricultural economy across Africa.
+            Foodra is more than a marketplace — it's a movement to build food security, improve access to quality farm produce, and create a fairer agricultural economy across Africa.
           </p>
         </div>
       </section>

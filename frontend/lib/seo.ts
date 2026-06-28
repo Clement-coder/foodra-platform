@@ -7,14 +7,14 @@ export const SITE_KEYWORDS = [
   // Brand
   "Foodra", "Foodra Market", "foodramarket.com", "Foodra Nigeria", "Foodra AgriTech",
   // Core product
-  "buy farm produce Nigeria", "sell agricultural products online Nigeria",
-  "farmer marketplace Nigeria", "agricultural marketplace Africa",
-  "fresh farm produce online", "buy vegetables online Nigeria",
-  "buy grains Nigeria", "buy rice online Nigeria", "buy tomatoes online Nigeria",
+  "buy farm produce Nigeria", "buy agricultural products online Nigeria",
+  "agricultural marketplace Africa", "buy fresh farm produce online Nigeria",
+  "buy vegetables online Nigeria", "buy grains Nigeria",
+  "buy rice online Nigeria", "buy tomatoes online Nigeria",
   "buy yam online Nigeria", "buy cassava Nigeria", "buy maize Nigeria",
-  // Farmer empowerment
-  "smallholder farmer platform", "farmer empowerment Nigeria",
-  "farmer income Nigeria", "farming business Nigeria",
+  "farm commodities Nigeria", "Foodra farm store",
+  // Buyers
+  "buy directly from farm Nigeria", "affordable farm produce Nigeria",
   "agribusiness Nigeria", "agribusiness Africa",
   // Training
   "agricultural training Nigeria", "farming training online Nigeria",
@@ -23,17 +23,16 @@ export const SITE_KEYWORDS = [
   // Funding
   "farm loans Nigeria", "agricultural grants Nigeria",
   "farming funding Nigeria", "agri loans Africa",
-  "agricultural credit Nigeria", "farmer loan application",
+  "agricultural credit Nigeria", "farm loan application Nigeria",
   // Tech
-  "AgriTech Nigeria", "AgriTech Africa", "blockchain agriculture",
-  "Web3 agriculture", "decentralized marketplace Nigeria",
-  "crypto wallet farmers", "Base blockchain Nigeria",
+  "AgriTech Nigeria", "AgriTech Africa",
+  "NGN wallet Nigeria", "Paystack wallet Nigeria",
   // Food security
   "food security Nigeria", "food security Africa",
   "African food supply chain", "Nigerian food market",
   // Location
-  "Benue State farm produce", "Benue farmer marketplace", "Abuja farm market", "Nigerian farmers online",
-  "African farmers marketplace",
+  "Benue State farm produce", "Abuja farm market", "Nigerian farm produce online",
+  "African agricultural platform",
 ]
 
 export function buildMetadata({
@@ -100,7 +99,7 @@ export function productJsonLd(product: {
       price: product.pricePerUnit,
       priceCurrency: "NGN",
       availability: "https://schema.org/InStock",
-      seller: { "@type": "Person", name: product.farmerName },
+      seller: { "@type": "Organization", name: "Foodra" },
     },
     brand: { "@type": "Brand", name: "Foodra" },
   }
@@ -114,7 +113,7 @@ export function organizationJsonLd() {
     alternateName: ["Foodra Market", "Foodra Nigeria", "FoodraMarket"],
     url: BASE_URL,
     logo: `${BASE_URL}/foodra_logo.jpeg`,
-    description: "Nigeria's leading blockchain-powered AgriTech marketplace connecting smallholder farmers with buyers, training programs, and agricultural funding across Africa.",
+    description: "Nigeria's leading AgriTech platform selling quality farm commodities directly to buyers, with training programs, agricultural funding, and an NGN digital wallet — built for Africa.",
     foundingLocation: { "@type": "Place", name: "Benue State, Nigeria" },
     areaServed: ["Nigeria", "Africa"],
     email: "support@foodramarket.com",

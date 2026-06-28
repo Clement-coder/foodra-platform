@@ -30,7 +30,7 @@ To offer value through sustainable agricultural practices and a fair supply chai
 - Wishlist with price alerts
 - Product view tracking for analytics
 - Search with debounce and full-text support
-- All products managed by Foodra admins — no third-party listings
+- All products listed and managed exclusively by Foodra admins
 
 ### 2. Shopping & Checkout
 - Shopping cart with quantity management

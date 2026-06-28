@@ -36,7 +36,7 @@ const Footer = () => {
               <Image src="/foodra_logo.jpeg" alt="Foodra Logo" width={36} height={36} className="rounded-bl-xl rounded-tr-xl" />
               <span className="font-bold text-foreground text-base">FOODRA</span>
             </div>
-            <p className="text-xs leading-relaxed">Africa's blockchain-powered AgriTech platform connecting farmers with markets, training, and funding.</p>
+            <p className="text-xs leading-relaxed">Africa's AgriTech platform selling quality farm produce directly to buyers, with training, funding, and an NGN wallet.</p>
           </div>
           {/* Platform */}
           <div>

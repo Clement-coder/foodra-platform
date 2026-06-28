@@ -55,7 +55,7 @@ const sections = [
       "We welcome partnerships with agricultural organisations, NGOs, and government agencies.",
       "If you represent a buyer network or cooperative, reach out to discuss bulk purchasing arrangements.",
       "For media enquiries, press coverage, or speaking opportunities, email support@foodramarket.com.",
-      "We are open to collaborations that advance food security and farmer empowerment across Africa.",
+      "We are open to collaborations that advance food security and agricultural access across Africa.",
     ],
   },
   {
