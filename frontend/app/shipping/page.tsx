@@ -7,7 +7,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Shipping Policy | Foodra",
-  description: "Foodra's Shipping Policy — delivery coverage, timelines, fees, and fulfilment process for farm commodity orders.",
+  description: "Foodra ships farm commodities directly to buyers across Nigeria. Learn about our delivery coverage, processing timelines, delivery fees, and fulfilment process. Foodra is the sole merchant — no third-party vendors.",
   alternates: { canonical: "https://foodramarket.com/shipping" },
 }
 

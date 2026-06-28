@@ -7,7 +7,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Returns & Refunds Policy | Foodra",
-  description: "Foodra's Returns and Refunds Policy — how to raise disputes, request refunds, and resolve order issues.",
+  description: "Foodra is the sole merchant — we sell and ship all farm commodities directly to buyers. Learn how to raise a dispute, request a refund to your Foodra wallet, and resolve order issues within 7 days of delivery.",
   alternates: { canonical: "https://foodramarket.com/returns" },
 }
 
