@@ -5,7 +5,18 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin", "/api/", "/wallet", "/profile", "/orders", "/sales", "/shop"],
+      disallow: [
+        "/admin",
+        "/api/",
+        "/wallet",
+        "/profile",
+        "/orders",
+        "/sales",
+        "/shop",
+        "/wishlist",
+        "/listing",
+        "/search",
+      ],
     },
     sitemap: "https://foodramarket.com/sitemap.xml",
   };
