@@ -38,14 +38,14 @@ export function UserCard({ user }: UserCardProps) {
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 rounded-full bg-muted text-muted-foreground text-[11px] px-2.5 py-1 font-semibold">
-            {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
+            Member
           </span>
         )}
         <ArrowUpRight className="h-4 w-4 text-[#118C4C] opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
 
-      <div className="flex items-center gap-4 mb-5">
-        <div className="w-14 h-14 rounded-2xl overflow-hidden border border-[#118C4C]/20 bg-muted flex items-center justify-center shadow-sm">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="w-14 h-14 rounded-2xl overflow-hidden border border-[#118C4C]/20 bg-muted flex items-center justify-center shadow-sm flex-shrink-0">
           {user.avatar ? (
             <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           ) : (
@@ -54,14 +54,10 @@ export function UserCard({ user }: UserCardProps) {
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="font-bold text-base text-foreground truncate">{user.name || "Unnamed User"}</h3>
-          <p className="text-sm text-muted-foreground truncate mt-0.5">{user.email || "No email provided"}</p>
+          {foodraTag && (
+            <p className="text-xs text-[#118C4C] font-semibold mt-0.5">{foodraTag}</p>
+          )}
         </div>
-      </div>
-
-      <div className="flex items-center justify-between rounded-xl border border-border bg-muted px-3 py-2.5">
-        <span className="text-xs font-mono text-muted-foreground">
-          {foodraTag ?? "—"}
-        </span>
       </div>
     </motion.div>
   )
