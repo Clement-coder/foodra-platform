@@ -26,13 +26,13 @@ export async function GET(
   const { count: ordersCount } = await supabaseAdmin
     .from("orders")
     .select("id", { count: "exact" })
-    .eq("user_id", id)
+    .eq("buyer_id", id)
 
   // Check for disputes
   const { count: disputesCount } = await supabaseAdmin
     .from("orders")
     .select("id", { count: "exact" })
-    .eq("user_id", id)
+    .eq("buyer_id", id)
     .eq("has_dispute", true)
 
   const membership = computeMembership({
