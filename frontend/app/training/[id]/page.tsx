@@ -67,19 +67,24 @@ function TrainingDetailPage() {
       const res = await authFetch(getAccessToken, "/api/trainings/enroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trainingId: training.id }),
+        body: JSON.stringify({
+          trainingId: training.id,
+          fullName: currentUser.name || "Unknown",
+          phoneNumber: currentUser.phone || "",
+          location: currentUser.location || "",
+        }),
       })
       if (!res.ok) {
         const e = await res.json().catch(() => ({}))
         if (e.error === "Already enrolled") { setIsEnrolled(true); return }
-        throw new Error("Enrollment failed")
+        throw new Error(e.error || "Enrollment failed")
       }
       setIsEnrolled(true)
       // Refresh training to get accurate enrolled count from DB
       fetch(`/api/trainings/${training.id}`).then(r => r.ok ? r.json() : null).then(d => { if (d) setTraining(d) }).catch(() => {})
       toast.success(`You've enrolled in "${training.title}"!`)
-    } catch {
-      toast.error("Failed to enroll. Please try again.")
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to enroll. Please try again.")
     }
   }
 

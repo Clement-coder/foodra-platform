@@ -56,13 +56,14 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      if (error.message === 'CAPACITY_FULL') {
-        return NextResponse.json({ error: 'Training is at full capacity' }, { status: 400 })
+      const msg = error.message || ""
+      if (msg.includes("CAPACITY_FULL")) {
+        return NextResponse.json({ error: "Training is at full capacity" }, { status: 400 })
       }
-      if (error.message === 'ALREADY_ENROLLED') {
-        return NextResponse.json({ error: 'Already enrolled' }, { status: 400 })
+      if (msg.includes("ALREADY_ENROLLED")) {
+        return NextResponse.json({ error: "Already enrolled" }, { status: 400 })
       }
-      console.error('Enrollment error:', error)
+      console.error("Enrollment error:", error)
       throw error
     }
 
