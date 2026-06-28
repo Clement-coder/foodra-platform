@@ -14,13 +14,25 @@ function mapUser(u: any, wallet?: any) {
 
 // GET /api/users/search?q=name
 // GET /api/users/search?foodra_tag=FDR-XXX
+// GET /api/users/search?foodra_tag_for=userId
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const q = searchParams.get("q")?.trim()
   const foodra_tag = searchParams.get("foodra_tag")?.trim()?.toUpperCase()
+  const foodra_tag_for = searchParams.get("foodra_tag_for")?.trim()
 
   const supabase = getSupabaseAdminClient()
   if (!supabase) return NextResponse.json([])
+
+  // Look up foodra_tag for a specific user ID
+  if (foodra_tag_for) {
+    const { data: wallet } = await supabase
+      .from("wallet_accounts")
+      .select("foodra_tag")
+      .eq("user_id", foodra_tag_for)
+      .maybeSingle()
+    return NextResponse.json({ foodra_tag: wallet?.foodra_tag || null })
+  }
 
   // Foodra tag lookup
   if (foodra_tag) {

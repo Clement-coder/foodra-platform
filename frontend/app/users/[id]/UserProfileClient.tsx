@@ -2,12 +2,10 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import Image from "next/image"
-import Link from "next/link"
 import { motion } from "framer-motion"
 import {
-  ArrowLeft, Share2, MapPin, CalendarDays, ShieldCheck, Package,
-  Wallet, BadgeCheck, ExternalLink, Sprout, Phone, ShoppingBag, Mail,
+  ArrowLeft, Share2, MapPin, CalendarDays, ShieldCheck,
+  BadgeCheck, Sprout, Phone, ShoppingBag, Mail,
 } from "lucide-react"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import { MembershipBadge } from "@/components/MembershipBadge"
@@ -24,11 +22,9 @@ interface Props {
 export default function UserProfileClient({ user, membership, products, ordersCount }: Props) {
   const router = useRouter()
   const [shareOpen, setShareOpen] = useState(false)
-  const [tab, setTab] = useState<"products" | "about">("products")
 
   const joinedDate = new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
-  const isFoodra = user.role === "admin" || user.role === "owner"
-  const shortWallet = user.wallet ? `${user.wallet.slice(0, 6)}…${user.wallet.slice(-4)}` : null
+  const isFoodra = user.role === "owner"
 
   return (
     <div className="max-w-2xl mx-auto pb-12">
@@ -125,73 +121,17 @@ export default function UserProfileClient({ user, membership, products, ordersCo
         {/* Divider */}
         <div className="border-t border-border mt-5 mx-4" />
 
-        {/* Tabs */}
+        {/* Tabs — single About tab for all users (Foodra is the sole merchant) */}
         <div className="flex border-b border-border mt-1 px-4">
-          {[{ key: "products", label: "Products" }, { key: "about", label: "About" }].map(t => (
-            <button key={t.key} onClick={() => setTab(t.key as any)}
-              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === t.key ? "border-[#118C4C] text-[#118C4C]" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              {t.label}
-              {t.key === "products" && (
-                <span className="ml-1.5 text-[10px] bg-muted px-1.5 py-0.5 rounded-full">{products.length}</span>
-              )}
-            </button>
-          ))}
+          <button className="px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px border-[#118C4C] text-[#118C4C]">
+            About
+          </button>
         </div>
 
         {/* Tab content */}
         <div className="px-4 pt-5">
-          {tab === "products" ? (
-            products.length === 0 ? (
-              <div className="text-center py-16 text-muted-foreground">
-                <Package className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No listings yet</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {products.map((p) => (
-                  <Link key={p.id} href={`/marketplace/${p.id}`}>
-                    <div className="group rounded-2xl border border-border overflow-hidden hover:border-[#118C4C]/50 hover:shadow-lg transition-all bg-card">
-                      <div className="relative h-32 bg-muted overflow-hidden">
-                        {p.image ? (
-                          <Image src={p.image} alt={p.productName} fill className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="h-8 w-8 text-muted-foreground/30" />
-                          </div>
-                        )}
-                        <div className="absolute top-2 left-2 flex flex-col gap-1">
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-black/50 text-white backdrop-blur-sm">
-                            {p.category}
-                          </span>
-                          {isFoodra && (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[#118C4C] text-white flex items-center gap-0.5">
-                              <Sprout className="h-2.5 w-2.5" /> Foodra
-                            </span>
-                          )}
-                        </div>
-                        {p.quantity === 0 && (
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">Out of stock</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <p className="font-bold text-sm truncate leading-tight">{p.productName}</p>
-                        <p className="text-xs text-[#118C4C] font-bold mt-0.5">₦{Number(p.pricePerUnit).toLocaleString()}<span className="font-normal text-muted-foreground"> / {p.unit}</span></p>
-                        {p.location && (
-                          <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 truncate">
-                            <MapPin className="h-2.5 w-2.5 flex-shrink-0" />{p.location}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )
-          ) : (
-            /* About tab */
-            <div className="space-y-4">
+          {/* About tab */}
+          <div className="space-y-4">
               {isFoodra ? (
                 <>
                   <div className="p-4 rounded-2xl border border-[#118C4C]/25 bg-gradient-to-br from-[#118C4C]/8 to-transparent">
@@ -250,7 +190,6 @@ export default function UserProfileClient({ user, membership, products, ordersCo
                 </div>
               )}
             </div>
-          )}
         </div>
 
       </motion.div>

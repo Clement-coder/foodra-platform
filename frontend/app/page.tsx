@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ShoppingBag, GraduationCap, DollarSign, Users, TrendingUp, Shield, ArrowRight, Target, Eye, Sparkles } from "lucide-react"
+import { ShoppingBag, GraduationCap, DollarSign, Users, TrendingUp, Shield, ArrowRight, Target, Eye, Sparkles, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { User } from "@/lib/types"
@@ -29,22 +29,23 @@ export default function LandingPage() {
       .catch(() => {})
   }, [])
 
-  // Auto-scroll carousel
+  // Auto-scroll carousel — pauses on hover/touch
   useEffect(() => {
     const el = carouselRef.current
     if (!el || communityUsers.length === 0) return
     let frame: number
-    let pos = 0
+    let paused = false
     const speed = 0.5
     const scroll = () => {
-      pos += speed
-      if (pos >= el.scrollWidth / 2) pos = 0
-      el.scrollLeft = pos
+      if (!paused) {
+        el.scrollLeft += speed
+        if (el.scrollLeft >= el.scrollWidth / 2) el.scrollLeft = 0
+      }
       frame = requestAnimationFrame(scroll)
     }
     frame = requestAnimationFrame(scroll)
-    const pause = () => cancelAnimationFrame(frame)
-    const resume = () => { frame = requestAnimationFrame(scroll) }
+    const pause = () => { paused = true }
+    const resume = () => { paused = false }
     el.addEventListener("mouseenter", pause)
     el.addEventListener("mouseleave", resume)
     el.addEventListener("touchstart", pause, { passive: true })
@@ -127,15 +128,31 @@ export default function LandingPage() {
                 </span>
                 <h2 className="text-sm sm:text-base font-bold text-foreground truncate">Meet Our Farmers & Buyers</h2>
               </div>
-              <Link href="/users" className="flex items-center gap-1 text-xs font-medium text-[#118C4C] hover:underline flex-shrink-0">
-                View all <ArrowRight className="h-3 w-3" />
-              </Link>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => carouselRef.current && (carouselRef.current.scrollLeft -= 160)}
+                  className="w-7 h-7 rounded-full border border-border bg-card flex items-center justify-center hover:bg-muted transition-colors"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </button>
+                <button
+                  onClick={() => carouselRef.current && (carouselRef.current.scrollLeft += 160)}
+                  className="w-7 h-7 rounded-full border border-border bg-card flex items-center justify-center hover:bg-muted transition-colors"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+                <Link href="/users" className="flex items-center gap-1 text-xs font-medium text-[#118C4C] hover:underline flex-shrink-0">
+                  View all <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
             </div>
 
             {/* Carousel track — duplicated for seamless loop */}
             <div
               ref={carouselRef}
-              className="flex gap-3 overflow-x-auto scrollbar-hide"
+              className="flex gap-3 overflow-x-auto scroll-smooth"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {[...communityUsers, ...communityUsers].map((user, i) => (

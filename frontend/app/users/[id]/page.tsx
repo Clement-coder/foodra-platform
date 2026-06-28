@@ -20,21 +20,19 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
   const [
     { count: buyerOrdersCount },
     { count: totalProductsCount },
-    { count: disputesCount },
     { data: rawProducts },
   ] = await Promise.all([
     supabase.from("orders").select("*", { count: "exact", head: true }).eq("buyer_id", id),
-    // For admin: count ALL products on the platform
     isAdmin
       ? supabase.from("products").select("*", { count: "exact", head: true })
-      : supabase.from("products").select("*", { count: "exact", head: true }).eq("farmer_id", id),
-    // Check for disputes
-    supabase.from("orders").select("*", { count: "exact", head: true }).eq("user_id", id).eq("has_dispute", true),
+      : supabase.from("products").select("*", { count: "exact", head: true }).eq("is_available", true),
     supabase.from("products").select("*")
-      .eq(isAdmin ? "is_available" : "farmer_id", isAdmin ? true : id)
+      .eq("is_available", true)
       .order("created_at", { ascending: false })
       .limit(12),
   ])
+
+  const disputesCount = 0
 
   const user: User = {
     id: rawUser.id,

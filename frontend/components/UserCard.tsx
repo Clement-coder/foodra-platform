@@ -4,7 +4,6 @@ import { motion } from "framer-motion"
 import { ArrowUpRight, BadgeCheck, User as UserIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { User } from "@/lib/types"
-import { RatingSummary } from "@/components/RatingSummary"
 import { useEffect, useState } from "react"
 
 interface UserCardProps {
@@ -16,14 +15,13 @@ export function UserCard({ user }: UserCardProps) {
   const [foodraTag, setFoodraTag] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch(`/api/users/search?q=${encodeURIComponent(user.name || user.id)}`)
+    fetch(`/api/users/search?foodra_tag_for=${user.id}`)
       .then(r => r.json())
-      .then((data: { id: string; foodra_tag: string | null }[]) => {
-        const match = data.find(u => u.id === user.id)
-        if (match?.foodra_tag) setFoodraTag(match.foodra_tag)
+      .then((data: { foodra_tag: string | null }) => {
+        if (data?.foodra_tag) setFoodraTag(data.foodra_tag)
       })
       .catch(() => {})
-  }, [user.id, user.name])
+  }, [user.id])
 
   return (
     <motion.div
@@ -62,12 +60,8 @@ export function UserCard({ user }: UserCardProps) {
 
       <div className="flex items-center justify-between rounded-xl border border-border bg-muted px-3 py-2.5">
         <span className="text-xs font-mono text-muted-foreground">
-          {foodraTag ?? "Loading..."}
+          {foodraTag ?? "—"}
         </span>
-      </div>
-
-      <div className="mt-3 px-1">
-        <RatingSummary farmerId={user.id} />
       </div>
     </motion.div>
   )

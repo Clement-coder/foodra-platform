@@ -97,21 +97,11 @@ function ProfilePage() {
     if (!user?.id) return
     fetch(`/api/users/${user.id}/membership`)
       .then(r => r.json())
-      .then(d => setMembership(d))
-      .catch(() => {
-        // Fallback to client-side calculation if API fails
-        const fallback = computeMembership({
-          hasName: !!user.name,
-          hasPhone: !!user.phone,
-          hasLocation: !!user.location,
-          hasAvatar: !!user.avatar,
-          createdAt: user.createdAt,
-          ordersCount: 0, // Will be 0 without server data
-          hasDisputes: false,
-          isVerified: !!user.isVerified,
-        })
-        setMembership(fallback)
+      .then(d => {
+        // Only use the response if it's a valid MembershipScore (has a tier field)
+        if (d && d.tier && d.breakdown) setMembership(d)
       })
+      .catch(() => {})
   }, [user?.id])
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -178,17 +168,19 @@ function ProfilePage() {
   const createdAtDate = user.createdAt ? new Date(user.createdAt) : new Date()
   const joinedDate = isNaN(createdAtDate.getTime()) ? "Unknown" : createdAtDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })
 
-  // Use server-side membership data if available, otherwise show loading/fallback
-  const membershipScore = membership || computeMembership({
-    hasName: !!user.name,
-    hasPhone: !!user.phone,
-    hasLocation: !!user.location,
-    hasAvatar: !!user.avatar,
-    createdAt: user.createdAt,
-    ordersCount: 0,
-    hasDisputes: false,
-    isVerified: !!user.isVerified,
-  })
+  // Use server-side membership data if available, otherwise compute client-side
+  const membershipScore = (membership && membership.tier && membership.breakdown)
+    ? membership
+    : computeMembership({
+        hasName: !!user.name,
+        hasPhone: !!user.phone,
+        hasLocation: !!user.location,
+        hasAvatar: !!user.avatar,
+        createdAt: user.createdAt,
+        ordersCount: 0,
+        hasDisputes: false,
+        isVerified: !!user.isVerified,
+      })
 
   const TABS: { key: Tab; label: string }[] = [
     { key: "orders", label: "Orders" },

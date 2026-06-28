@@ -47,7 +47,7 @@ export default function UsersPage() {
             </p>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">Explore Users</h1>
             <p className="text-muted-foreground mt-2 text-sm md:text-base">
-              Discover buyers and farmers, open profiles, and explore their listed products.
+              Discover members of the Foodra community across Nigeria.
             </p>
           </div>
         </div>

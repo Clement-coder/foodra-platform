@@ -12,15 +12,11 @@ export async function GET(
   if (!supabaseAdmin) return NextResponse.json({ error: "Server error" }, { status: 500 })
 
   // Get user profile
-  const { data: user, error: userError } = await supabaseAdmin
+  const { data: user } = await supabaseAdmin
     .from("users")
-    .select("name, phone, location, avatar, created_at, is_verified")
+    .select("name, phone, location, avatar_url, created_at, is_verified")
     .eq("id", id)
     .single()
-
-  if (userError || !user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 })
-  }
 
   // Get orders count
   const { count: ordersCount } = await supabaseAdmin
@@ -36,14 +32,14 @@ export async function GET(
     .eq("has_dispute", true)
 
   const membership = computeMembership({
-    hasName: !!user.name,
-    hasPhone: !!user.phone,
-    hasLocation: !!user.location,
-    hasAvatar: !!user.avatar,
-    createdAt: user.created_at,
+    hasName: !!user?.name,
+    hasPhone: !!user?.phone,
+    hasLocation: !!user?.location,
+    hasAvatar: !!user?.avatar_url,
+    createdAt: user?.created_at || new Date().toISOString(),
     ordersCount: ordersCount || 0,
     hasDisputes: (disputesCount || 0) > 0,
-    isVerified: !!user.is_verified,
+    isVerified: !!user?.is_verified,
   })
 
   return NextResponse.json(membership)
