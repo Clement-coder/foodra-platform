@@ -46,6 +46,7 @@ function ProfilePage() {
   const [wishlist, setWishlist] = useState<Product[]>([])
   const [membership, setMembership] = useState<any>(null)
   const [loadingTab, setLoadingTab] = useState(true)
+  const [processingOrderId, setProcessingOrderId] = useState<string | null>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const { register, handleSubmit, formState: { errors }, setValue, reset, watch } = useForm<ProfileUpdateFormData>({
@@ -123,6 +124,22 @@ function ProfilePage() {
   const getEmail = () => {
     const linked = privyUser?.linkedAccounts?.find((a: any) => a.type === "google_oauth") as any
     return linked?.email || privyUser?.email?.address || user?.email || ""
+  }
+
+  const handleConfirmDelivery = async (orderId: string) => {
+    setProcessingOrderId(orderId)
+    const res = await authFetch(getAccessToken, `/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "Delivered" }),
+    })
+    if (res.ok) {
+      toast.success("Delivery confirmed!")
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: "Delivered" } : o))
+    } else {
+      toast.error("Failed to confirm delivery.")
+    }
+    setProcessingOrderId(null)
   }
 
   const onSubmit = async (data: ProfileUpdateFormData) => {
@@ -331,7 +348,10 @@ function ProfilePage() {
                 ) : (
                   <div className="space-y-3">
                     {(orderTab === "All" ? orders : orders.filter((o: Order) => o.status === orderTab)).map((o: Order) => (
-                      <OrderCard key={o.id} order={o} compact={orderLayout === "compact"} />
+                      <OrderCard key={o.id} order={o} compact={orderLayout === "compact"}
+                        onConfirmDelivery={handleConfirmDelivery}
+                        isProcessing={processingOrderId === o.id}
+                      />
                     ))}
                   </div>
                 )}
