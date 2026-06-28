@@ -1034,3 +1034,74 @@ export async function sendWalletPurchaseEmail(
   `)
   await send(to, `✅ Payment of ₦${amount_ngn.toLocaleString()} confirmed — Order #${orderId.slice(-8).toUpperCase()}`, html)
 }
+
+// ─── Weather Alert / Daily Forecast ──────────────────────────────────────────
+export async function sendWeatherEmail(
+  to: string,
+  name: string,
+  city: string,
+  temp: number,
+  feelsLike: number,
+  description: string,
+  icon: string,
+  humidity: number,
+  windSpeed: number,
+  uvIndex: number,
+  advisory: string,
+  isExtreme: boolean,
+  forecast: { date: string; maxTemp: number; minTemp: number; icon: string; label: string }[]
+) {
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  const forecastRows = forecast.map(d => {
+    const day = DAYS[new Date(d.date).getUTCDay()]
+    return `<td style="text-align:center;padding:8px 4px;">
+      <div style="font-size:11px;color:#888;font-weight:600;">${day}</div>
+      <div style="font-size:20px;margin:4px 0;">${d.icon}</div>
+      <div style="font-size:12px;font-weight:700;color:#1a1a1a;">${d.maxTemp}°</div>
+      <div style="font-size:11px;color:#aaa;">${d.minTemp}°</div>
+    </td>`
+  }).join("")
+
+  const extremeBanner = isExtreme ? `
+    <div style="background:#fff3cd;border:1px solid #f5c842;border-radius:10px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:20px;">⚠️</span>
+      <span style="font-size:13px;font-weight:700;color:#856404;">Extreme weather alert — ${description} in ${city}. Take precautions.</span>
+    </div>` : ""
+
+  const subjectPrefix = isExtreme ? `⚠️ Weather Alert: ${description} in ${city}` : `🌤️ Your Daily Weather Forecast — ${city}`
+
+  const html = layout(`
+    ${heading(isExtreme ? `⚠️ Extreme Weather Alert` : `🌤️ Today's Weather Forecast`)}
+    <p style="color:#555;font-size:15px;line-height:1.7;margin:16px 0 20px;">
+      Hi <strong>${name}</strong>, here's your weather update for <strong>${city}</strong>.
+    </p>
+    ${extremeBanner}
+    <div style="background:#f0f7f4;border-radius:12px;padding:20px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;">
+        <span style="font-size:48px;">${icon}</span>
+        <div>
+          <div style="font-size:32px;font-weight:800;color:#1a1a1a;">${temp}°C</div>
+          <div style="font-size:13px;color:#666;">Feels like ${feelsLike}°C · ${description}</div>
+          <div style="font-size:13px;color:#888;margin-top:2px;">📍 ${city}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:20px;font-size:12px;color:#666;">
+        <span>💧 ${humidity}% humidity</span>
+        <span>💨 ${windSpeed} km/h wind</span>
+        <span>☀️ UV ${uvIndex}</span>
+      </div>
+    </div>
+    <div style="background:#fffdf0;border:1px solid #f5e642;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;font-weight:600;color:#555;">
+      🌾 <strong>Crop Advisory:</strong> ${advisory}
+    </div>
+    <div style="margin-bottom:24px;">
+      <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:10px;">7-Day Forecast</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8faf5;border-radius:10px;overflow:hidden;">
+        <tr>${forecastRows}</tr>
+      </table>
+    </div>
+    ${btn("View Full Forecast", "https://foodramarket.com/marketplace")}
+  `)
+
+  await send(to, subjectPrefix, html)
+}
