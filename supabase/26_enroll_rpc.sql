@@ -1,6 +1,7 @@
 -- 26_enroll_rpc.sql
 -- Creates the atomic enrollment function used by /api/trainings/enroll
--- Checks capacity, prevents duplicates, and inserts the enrollment row atomically.
+
+DROP FUNCTION IF EXISTS enroll_with_capacity_check(UUID, UUID, TEXT, TEXT, TEXT);
 
 CREATE OR REPLACE FUNCTION enroll_with_capacity_check(
   p_training_id  UUID,
