@@ -7,7 +7,7 @@ import { BadgeCheck, Edit, LogOut, Share2, UserIcon, Wallet, Copy, Check, MapPin
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { FormInput } from "@/components/FormInput"
-import { FormSelect } from "@/components/FormSelector"
+import { PhoneInput } from "@/components/PhoneInput"
 import { useToast } from "@/lib/toast"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import { profileUpdateSchema, type ProfileUpdateFormData } from "@/lib/schemas"
@@ -16,12 +16,9 @@ import withAuth from "@/components/withAuth"
 import { SignOutModal } from "@/components/SignOutModal"
 import { ProfileCompletionModal } from "@/components/ProfileCompletionModal"
 import { useUser } from "@/lib/useUser"
-import { supabase } from "@/lib/supabase"
 import { ProductCard } from "@/components/ProductCard"
 import { OrderCard, ORDER_STATUS } from "@/components/OrderCard"
 import type { Product, Order, User } from "@/lib/types"
-import { calculateProfileCompletion } from "@/lib/profileUtils"
-import { africanCountries } from "@/lib/countries"
 import ThemeToggle from "@/components/ThemeToggle"
 import { authFetch } from "@/lib/authFetch"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
@@ -55,25 +52,10 @@ function ProfilePage() {
     resolver: zodResolver(profileUpdateSchema),
   })
 
-  const locationValue = watch("location")
-  const [selectedCountry, setSelectedCountry] = useState("")
-  useEffect(() => {
-    if (locationValue && locationValue !== selectedCountry) {
-      setSelectedCountry(locationValue)
-      const country = africanCountries.find(c => c.name === locationValue)
-      if (country) {
-        const currentPhone = watch("phone") || ""
-        if (!currentPhone || !currentPhone.startsWith("+")) setValue("phone", country.dialCode)
-      }
-    }
-  }, [locationValue, selectedCountry, setValue, watch])
-
   useEffect(() => {
     if (user) {
       setValue("name", user.name || "")
       setValue("phone", user.phone || "")
-      setValue("location", user.location || "")
-      setValue("accountType", user.role === "admin" || user.role === "owner" ? "Farmer" : "Buyer")
     }
   }, [user, setValue])
 
@@ -145,11 +127,7 @@ function ProfilePage() {
 
   const onSubmit = async (data: ProfileUpdateFormData) => {
     try {
-      const payload: Partial<User> = { name: data.name, phone: data.phone, location: data.location }
-      if (data.accountType) {
-        payload.role = data.accountType === "Farmer" ? "admin" : "buyer"
-      }
-      const ok = await updateUser(payload)
+      const ok = await updateUser({ name: data.name, phone: data.phone, role: "buyer" })
       if (!ok) throw new Error()
       setIsEditModalOpen(false)
       reset()
@@ -164,7 +142,6 @@ function ProfilePage() {
   }
 
   const displayName = getDisplayName()
-  const profileCompletion = calculateProfileCompletion(user)
   const createdAtDate = user.createdAt ? new Date(user.createdAt) : new Date()
   const joinedDate = isNaN(createdAtDate.getTime()) ? "Unknown" : createdAtDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })
 
@@ -263,10 +240,10 @@ function ProfilePage() {
 
           {/* Edit / Admin / Logout actions */}
           <div className="flex flex-wrap gap-2 mt-4">
-            <Button onClick={() => { setValue("name", user.name || displayName); setValue("phone", user.phone || ""); setValue("location", user.location || ""); setValue("accountType", user.role === "admin" || user.role === "owner" ? "Farmer" : "Buyer"); setIsEditModalOpen(true) }}
+            <Button onClick={() => { setValue("name", user.name || displayName); setValue("phone", user.phone || ""); setIsEditModalOpen(true) }}
               size="sm" className="rounded-full bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-1.5">
               <Edit className="h-3.5 w-3.5" />
-              {profileCompletion < 100 ? `Complete (${profileCompletion}%)` : "Edit Profile"}
+              Edit Profile
             </Button>
             {(user.role === "admin" || user.role === "owner") && (
               <a href="/admin">
@@ -446,11 +423,12 @@ function ProfilePage() {
           </div>
           <FormInput label="Full Name" {...register("name")} error={errors.name?.message} placeholder="Your full name" required />
           <FormInput label="Email" value={getEmail()} placeholder="Your email" required readOnly />
-          <FormInput label="Phone Number" {...register("phone")} error={errors.phone?.message} placeholder="+234XXXXXXXXX" required />
-          <FormSelect label="Country" {...register("location")} value={watch("location") ?? ""} error={errors.location?.message}
-            options={africanCountries.map(c => ({ value: c.name, label: c.name }))} required />
-          <FormSelect label="Account Type" {...register("accountType")} value={watch("accountType") ?? ""} error={errors.accountType?.message}
-            options={[{ value: "Farmer", label: "Farmer" }, { value: "Buyer", label: "Buyer" }]} required />
+          <PhoneInput
+            value={watch("phone") || ""}
+            onChange={v => setValue("phone", v, { shouldValidate: true })}
+            error={errors.phone?.message}
+            required
+          />
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)} className="flex-1">Cancel</Button>
             <Button type="submit" className="flex-1 bg-[#118C4C] hover:bg-[#0d6d3a] text-white">Save Changes</Button>

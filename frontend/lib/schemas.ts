@@ -128,8 +128,7 @@ export const profileUpdateSchema = z.object({
     .string()
     .trim()
     .regex(/^\+?[0-9\s-]{10,16}$/, "Please enter a valid phone number"),
-  location: z.string().trim().min(2, "Location must be at least 2 characters"),
-  accountType: z.enum(["Farmer", "Buyer"]).optional(),
+  location: z.string().trim().optional(),
 })
 
 export type ProfileUpdateFormData = z.infer<typeof profileUpdateSchema>
