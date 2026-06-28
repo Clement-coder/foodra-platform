@@ -9,7 +9,7 @@
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Remove existing job if present
+-- Safely remove existing job if present
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'weather-daily-email') THEN

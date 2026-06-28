@@ -1,27 +1,25 @@
 /**
  * POST /api/weather-email
  * Called by Supabase pg_cron daily at 6AM WAT.
- * Fetches weather for every user with a saved location and sends:
- *   - Immediate alert if extreme weather
- *   - Daily morning digest otherwise
+ * Sends daily weather forecast + crop advisory to all users with a saved location.
+ * Extreme weather (thunderstorm, heavy showers, etc.) gets an alert banner.
  */
 import { NextResponse } from "next/server"
 import { getSupabaseAdminClient } from "@/lib/supabaseAdmin"
 import { sendWeatherEmail } from "@/lib/email"
 
-// Open-Meteo weather code helpers (matches WeatherWidget)
 function describeWeather(code: number): { label: string; icon: string; extreme: boolean } {
-  if (code === 0)  return { label: "Clear sky",      icon: "☀️",  extreme: false }
-  if (code <= 2)   return { label: "Partly cloudy",  icon: "⛅",  extreme: false }
-  if (code === 3)  return { label: "Overcast",        icon: "☁️",  extreme: false }
-  if (code <= 49)  return { label: "Foggy",           icon: "🌫️", extreme: false }
-  if (code <= 59)  return { label: "Drizzle",         icon: "🌦️", extreme: false }
-  if (code <= 67)  return { label: "Rain",            icon: "🌧️", extreme: false }
-  if (code <= 69)  return { label: "Freezing rain",   icon: "🌨️", extreme: true  }
-  if (code <= 79)  return { label: "Snow",            icon: "❄️",  extreme: true  }
-  if (code <= 82)  return { label: "Rain showers",    icon: "🌧️", extreme: false }
-  if (code <= 84)  return { label: "Heavy showers",   icon: "⛈️", extreme: true  }
-  if (code <= 99)  return { label: "Thunderstorm",    icon: "⛈️", extreme: true  }
+  if (code === 0)  return { label: "Clear sky",     icon: "☀️",  extreme: false }
+  if (code <= 2)   return { label: "Partly cloudy", icon: "⛅",  extreme: false }
+  if (code === 3)  return { label: "Overcast",       icon: "☁️",  extreme: false }
+  if (code <= 49)  return { label: "Foggy",          icon: "🌫️", extreme: false }
+  if (code <= 59)  return { label: "Drizzle",        icon: "🌦️", extreme: false }
+  if (code <= 67)  return { label: "Rain",           icon: "🌧️", extreme: false }
+  if (code <= 69)  return { label: "Freezing rain",  icon: "🌨️", extreme: true  }
+  if (code <= 79)  return { label: "Snow",           icon: "❄️",  extreme: true  }
+  if (code <= 82)  return { label: "Rain showers",   icon: "🌧️", extreme: false }
+  if (code <= 84)  return { label: "Heavy showers",  icon: "⛈️", extreme: true  }
+  if (code <= 99)  return { label: "Thunderstorm",   icon: "⛈️", extreme: true  }
   return { label: "Unknown", icon: "🌡️", extreme: false }
 }
 
@@ -37,7 +35,7 @@ function cropAdvisory(code: number, uvIndex: number): string {
   return "🌾 Moderate conditions — normal farm activities are fine."
 }
 
-// Geocode a city/country name to lat/lon using Nominatim
+// Geocode location name → lat/lon (Nominatim, 1 req/s limit)
 async function geocode(location: string): Promise<{ lat: number; lon: number } | null> {
   try {
     const res = await fetch(
@@ -63,7 +61,6 @@ async function run(request: Request) {
   const supabase = getSupabaseAdminClient()
   if (!supabase) return NextResponse.json({ error: "DB unavailable" }, { status: 500 })
 
-  // Fetch all users with email + saved location
   const { data: users } = await supabase
     .from("users")
     .select("id, name, email, location")
@@ -73,29 +70,48 @@ async function run(request: Request) {
 
   if (!users?.length) return NextResponse.json({ sent: 0 })
 
-  let sent = 0
-  let failed = 0
+  // Deduplicate geocoding — one Nominatim call per unique location string
+  const uniqueLocations = [...new Set(users.map(u => u.location as string))]
+  const coordsCache: Record<string, { lat: number; lon: number } | null> = {}
 
-  for (const user of users) {
+  for (const loc of uniqueLocations) {
+    coordsCache[loc] = await geocode(loc)
+    await new Promise(r => setTimeout(r, 1100)) // Nominatim: max 1 req/s
+  }
+
+  // Fetch weather once per unique location
+  const weatherCache: Record<string, any> = {}
+  for (const loc of uniqueLocations) {
+    const coords = coordsCache[loc]
+    if (!coords) continue
     try {
-      const coords = await geocode(user.location)
-      if (!coords) continue
-
-      const weatherRes = await fetch(
+      const res = await fetch(
         `https://api.open-meteo.com/v1/forecast` +
         `?latitude=${coords.lat}&longitude=${coords.lon}` +
         `&current_weather=true` +
         `&hourly=relativehumidity_2m,apparent_temperature,uv_index` +
         `&daily=weathercode,temperature_2m_max,temperature_2m_min` +
-        `&wind_speed_unit=kmh&timezone=auto&forecast_days=7`
+        `&wind_speed_unit=kmh&timezone=UTC&forecast_days=7`
       )
-      const wd = await weatherRes.json()
+      weatherCache[loc] = await res.json()
+    } catch {
+      // skip this location
+    }
+  }
 
+  let sent = 0
+  let failed = 0
+  const utcHour = new Date().getUTCHours() // index into hourly array (hour 0–23 of today)
+
+  for (const user of users) {
+    const wd = weatherCache[user.location]
+    if (!wd?.current_weather) { failed++; continue }
+
+    try {
       const { temperature, weathercode, windspeed } = wd.current_weather
-      const hourIndex = new Date().getHours()
-      const humidity   = wd.hourly?.relativehumidity_2m?.[hourIndex] ?? 0
-      const feelsLike  = Math.round(wd.hourly?.apparent_temperature?.[hourIndex] ?? temperature)
-      const uvIndex    = Math.round(wd.hourly?.uv_index?.[hourIndex] ?? 0)
+      const humidity  = wd.hourly?.relativehumidity_2m?.[utcHour] ?? 0
+      const feelsLike = Math.round(wd.hourly?.apparent_temperature?.[utcHour] ?? temperature)
+      const uvIndex   = Math.round(wd.hourly?.uv_index?.[utcHour] ?? 0)
       const { label, icon, extreme } = describeWeather(weathercode)
       const advisory = cropAdvisory(weathercode, uvIndex)
 
@@ -126,9 +142,6 @@ async function run(request: Request) {
         forecast
       )
       sent++
-
-      // Small delay to avoid rate-limiting Nominatim & Open-Meteo
-      await new Promise(r => setTimeout(r, 300))
     } catch {
       failed++
     }
