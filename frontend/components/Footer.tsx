@@ -60,7 +60,7 @@ const Footer = () => {
           <div>
             <p className="font-semibold text-foreground mb-3 text-xs uppercase tracking-wide">Legal</p>
             <ul className="space-y-2">
-              {([["Privacy Policy", "/privacy"], ["Terms of Service", "/terms"]] as [string, string][]).map(([label, href]) => (
+              {([["Privacy Policy", "/privacy"], ["Terms of Service", "/terms"], ["Shipping Policy", "/shipping"], ["Returns & Refunds", "/returns"]] as [string, string][]).map(([label, href]) => (
                 <li key={href}><Link href={href} className="hover:text-foreground transition-colors">{label}</Link></li>
               ))}
             </ul>
