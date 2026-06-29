@@ -82,9 +82,12 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
   }
 
   const handleClose = () => {
-    setStep("form"); setQuery(""); setRecipient(null); setResults([])
-    setAmount(""); setNote(""); setPin("")
     onClose()
+    // reset after sheet exit animation (~350ms)
+    setTimeout(() => {
+      setStep("form"); setQuery(""); setRecipient(null); setResults([])
+      setAmount(""); setNote(""); setPin("")
+    }, 400)
   }
 
   const amt = parseFloat(amount) || 0

@@ -124,7 +124,7 @@ export function WalletWithdrawModal({ isOpen, onClose, currentBalance, onSuccess
   }
 
   const reset = () => { setStep(1); setBankCode(""); setBankName(""); setAccountNumber(""); setAccountName(""); setAmount(""); setPin("") }
-  const handleClose = () => { onClose(); reset() }
+  const handleClose = () => { onClose(); setTimeout(reset, 400) }
 
   const amt = parseFloat(amount) || 0
   const youReceive = Math.max(0, amt - 50)
