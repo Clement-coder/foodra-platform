@@ -35,6 +35,7 @@
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "react-hook-form": "^7.68.0",
+    "recharts": "^2.15.3",
     "resend": "^6.12.4",
     "web-push": "^3.6.7"
   },
