@@ -1,14 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
-import { X, ShoppingBag } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { X, ShoppingBag, TrendingUp, TrendingDown, Minus, BarChart3, MapPin, Calendar } from "lucide-react"
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts"
 import type { CommodityPrice } from "@/app/api/commodity-prices/route"
 import type { CommodityHistory } from "@/app/api/commodity-history/route"
 import { buyAsset } from "@/lib/assetStore"
+import { WalletSuccessScreen } from "@/components/WalletSuccessScreen"
+import { Modal } from "@/components/Modal"
 
 export const META: Record<string, { emoji: string; color: string; bg: string; desc: string }> = {
   "Rice (local)":    { emoji: "🌾", color: "#b45309", bg: "#fef3c7", desc: "Locally grown rice, staple across Nigeria" },
@@ -30,170 +32,267 @@ export const META: Record<string, { emoji: string; color: string; bg: string; de
 }
 export const DEFAULT_META = { emoji: "🌱", color: "#118C4C", bg: "#d1fae5", desc: "Agricultural commodity" }
 
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
-function ChartTooltip({ active, payload, label, unit }: { active?: boolean; payload?: { value: number }[]; label?: string; unit: string }) {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+export function getChange(hist: CommodityHistory["history"] | undefined, currentPrice: number) {
+  if (!hist || hist.length < 2) return null
+  const prev = hist[hist.length - 2].price
+  return { value: ((currentPrice - prev) / prev) * 100, prev }
+}
+
+// ─── Chart tooltip ────────────────────────────────────────────────────────────
+function ChartTooltip({ active, payload, label, unit }: { active?: boolean; payload?: {value:number}[]; label?: string; unit: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-card border border-border rounded-xl px-3 py-2 shadow-xl text-xs">
-      <p className="text-muted-foreground mb-1">
+    <div className="bg-background border border-border rounded-xl px-3 py-2 shadow-xl text-xs">
+      <p className="text-muted-foreground mb-0.5">
         {label ? new Date(label).toLocaleDateString("en-NG", { month: "short", year: "numeric" }) : ""}
       </p>
-      <p className="font-bold text-foreground text-sm">₦{payload[0].value.toLocaleString()}<span className="text-muted-foreground font-normal">/{unit}</span></p>
+      <p className="font-bold text-sm">₦{payload[0].value.toLocaleString()}<span className="text-muted-foreground font-normal">/{unit}</span></p>
     </div>
   )
 }
 
-// ─── Price Chart ──────────────────────────────────────────────────────────────
-export function PriceChart({ history, color, unit }: { history: CommodityHistory["history"]; color: string; unit: string }) {
+// ─── Reusable price chart ─────────────────────────────────────────────────────
+export function PriceChart({ history, color, unit, height = "100%" }: {
+  history: CommodityHistory["history"]
+  color: string
+  unit: string
+  height?: string | number
+}) {
   if (!history.length) return (
-    <div className="h-full flex items-center justify-center text-xs text-muted-foreground opacity-50">No history</div>
+    <div className="h-full flex items-center justify-center text-xs text-muted-foreground opacity-40">No data</div>
   )
   const isUp = history.length > 1 && history[history.length - 1].price >= history[0].price
-  const chartColor = isUp ? "#22c55e" : "#ef4444"
-  const gradId = `grad-${color.replace("#", "")}`
-
+  const lineColor = isUp ? "#22c55e" : "#ef4444"
+  const gradId = `g${color.replace(/[^a-z0-9]/gi, "")}`
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={history} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+    <ResponsiveContainer width="100%" height={height}>
+      <AreaChart data={history} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={chartColor} stopOpacity={0.3} />
-            <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+            <stop offset="5%" stopColor={lineColor} stopOpacity={0.25} />
+            <stop offset="95%" stopColor={lineColor} stopOpacity={0} />
           </linearGradient>
         </defs>
         <XAxis dataKey="date" hide />
         <YAxis domain={["auto", "auto"]} hide />
         <Tooltip content={<ChartTooltip unit={unit} />} />
         {history.length > 1 && (
-          <ReferenceLine y={history[0].price} stroke={chartColor} strokeDasharray="3 3" strokeOpacity={0.4} />
+          <ReferenceLine y={history[0].price} stroke={lineColor} strokeDasharray="3 3" strokeOpacity={0.3} />
         )}
-        <Area
-          type="monotone" dataKey="price" stroke={chartColor} strokeWidth={2}
-          fill={`url(#${gradId})`} dot={false} activeDot={{ r: 4, fill: chartColor, strokeWidth: 0 }}
-          isAnimationActive={false}
-        />
+        <Area type="monotone" dataKey="price" stroke={lineColor} strokeWidth={2}
+          fill={`url(#${gradId})`} dot={false}
+          activeDot={{ r: 4, fill: lineColor, strokeWidth: 0 }}
+          isAnimationActive={false} />
       </AreaChart>
     </ResponsiveContainer>
   )
 }
 
-// ─── Buy Modal ────────────────────────────────────────────────────────────────
-export function BuyModal({
-  item, meta, history, onClose
+// ─── Detail + Buy modal (uses platform's bottom-sheet Modal) ─────────────────
+export function CommodityDetailModal({
+  item, history, onClose, onBought
 }: {
   item: CommodityPrice
-  meta: typeof DEFAULT_META
-  history: CommodityHistory["history"]
+  history: CommodityHistory | undefined
   onClose: () => void
+  onBought: () => void
 }) {
+  const meta = META[item.commodity] ?? DEFAULT_META
+  const hist = history?.history ?? []
+  const change = getChange(hist, item.price)
+  const isUp = !change || change.value >= 0
+
+  const [range, setRange] = useState<"3m"|"6m"|"1y"|"all">("all")
   const [qty, setQty] = useState("1")
-  const [done, setDone] = useState(false)
+  const [step, setStep] = useState<"detail"|"buy"|"success">("detail")
+
   const q = parseFloat(qty) || 0
   const total = q * item.price
+  const min = hist.length ? Math.min(...hist.map(h => h.price)) : 0
+  const max = hist.length ? Math.max(...hist.map(h => h.price)) : 0
+  const rangeMap = { "3m": -3, "6m": -6, "1y": -12, "all": 0 }
+  const sliced = rangeMap[range] ? hist.slice(rangeMap[range]) : hist
 
-  // compute change vs last month
-  const prev = history.length > 1 ? history[history.length - 2].price : null
-  const change = prev ? ((item.price - prev) / prev) * 100 : null
-  const isUp = change != null && change >= 0
-
-  const confirm = () => {
+  const confirmBuy = () => {
     if (q <= 0) return
     buyAsset(item.commodity, item.displayName, meta.emoji, item.unit, q, item.price)
-    setDone(true)
+    setStep("success")
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4"
-      onClick={onClose}>
-      <motion.div
-        initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-        className="bg-card border border-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
-        onClick={e => e.stopPropagation()}
-      >
-        {done ? (
-          <div className="p-6 text-center">
-            <p className="text-5xl mb-3">✅</p>
-            <p className="font-bold text-xl">Asset Purchased!</p>
-            <p className="text-sm text-muted-foreground mt-1 mb-5">
-              {q} {item.unit} of {item.displayName} added to your portfolio.
+    <Modal isOpen title={step === "buy" ? `Buy ${item.displayName}` : item.displayName} onClose={onClose}>
+      <AnimatePresence mode="wait">
+        {step === "success" ? (
+          <WalletSuccessScreen
+            key="success"
+            title="Asset Purchased! 🎉"
+            subtitle={`${q} ${item.unit} of ${item.displayName} added to your portfolio at ₦${item.price.toLocaleString()}/${item.unit}`}
+            onDone={() => { onBought(); onClose() }}
+            doneLabel="View Portfolio"
+          />
+        ) : step === "buy" ? (
+          <motion.div key="buy" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5 pb-4">
+            {/* Commodity summary */}
+            <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ background: meta.bg }}>
+              <span className="text-4xl">{meta.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold">{item.displayName}</p>
+                <p className="text-xs mt-0.5" style={{ color: meta.color }}>{meta.desc}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="font-extrabold text-lg">₦{item.price.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">per {item.unit}</p>
+              </div>
+            </div>
+
+            {/* Mini chart */}
+            <div className="h-20 w-full">
+              <PriceChart history={hist.slice(-6)} color={meta.color} unit={item.unit} />
+            </div>
+
+            {/* Quantity */}
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Quantity ({item.unit})
+              </label>
+              <input
+                type="number" min="0.1" step="0.1" value={qty}
+                onChange={e => setQty(e.target.value)}
+                className="w-full mt-2 rounded-2xl border border-border bg-background px-4 py-3 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#118C4C]"
+              />
+              {/* Quick qty buttons */}
+              <div className="flex gap-2 mt-2">
+                {[1, 5, 10, 25, 50].map(n => (
+                  <button key={n} onClick={() => setQty(String(n))}
+                    className={`flex-1 py-1.5 rounded-xl text-xs font-semibold border transition-colors
+                      ${qty === String(n) ? "bg-[#118C4C] text-white border-[#118C4C]" : "border-border text-muted-foreground hover:bg-muted"}`}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Cost breakdown */}
+            <div className="rounded-2xl border border-border bg-muted/40 divide-y divide-border">
+              <div className="flex justify-between px-4 py-3 text-sm">
+                <span className="text-muted-foreground">Unit price</span>
+                <span className="font-semibold">₦{item.price.toLocaleString()} / {item.unit}</span>
+              </div>
+              <div className="flex justify-between px-4 py-3 text-sm">
+                <span className="text-muted-foreground">Quantity</span>
+                <span className="font-semibold">{q} {item.unit}</span>
+              </div>
+              {item.usdPrice > 0 && (
+                <div className="flex justify-between px-4 py-3 text-sm">
+                  <span className="text-muted-foreground">USD equivalent</span>
+                  <span className="font-semibold">${(item.usdPrice * q).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between px-4 py-3">
+                <span className="font-bold">Total cost</span>
+                <span className="font-extrabold text-[#118C4C] text-lg">₦{Math.round(total).toLocaleString()}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-2xl px-4 py-3 flex items-start gap-2">
+              <span className="text-base shrink-0">🔒</span>
+              <span>Prototype mode — assets stored locally in your browser. No real money moves.</span>
             </p>
-            <div className="flex gap-2">
-              <button onClick={onClose} className="flex-1 rounded-xl border border-border py-2.5 text-sm font-semibold">Close</button>
-              <a href="/assets" className="flex-1 rounded-xl bg-[#118C4C] text-white py-2.5 text-sm font-semibold text-center">View Portfolio →</a>
+
+            <div className="flex gap-3">
+              <button onClick={() => setStep("detail")}
+                className="flex-1 rounded-2xl border border-border py-3 font-semibold text-sm hover:bg-muted transition-colors">
+                ← Back
+              </button>
+              <button onClick={confirmBuy} disabled={q <= 0}
+                className="flex-1 rounded-2xl bg-[#118C4C] text-white py-3 font-bold text-sm disabled:opacity-40 hover:bg-[#0d7a42] transition-colors flex items-center justify-center gap-2">
+                <ShoppingBag className="h-4 w-4" />
+                Confirm Buy
+              </button>
             </div>
-          </div>
+          </motion.div>
         ) : (
-          <>
-            {/* Modal chart header */}
-            <div className="relative h-32" style={{ background: `linear-gradient(135deg, ${meta.bg}, ${meta.bg}99)` }}>
-              <div className="absolute inset-0 px-4 py-3">
-                <PriceChart history={history} color={meta.color} unit={item.unit} />
-              </div>
-              <div className="absolute top-3 left-4 flex items-center gap-2">
-                <span className="text-2xl">{meta.emoji}</span>
-                <div>
-                  <p className="font-bold text-sm">{item.displayName}</p>
-                  {change != null && (
-                    <p className={`text-xs font-semibold ${isUp ? "text-green-600" : "text-red-500"}`}>
-                      {isUp ? "▲" : "▼"} {Math.abs(change).toFixed(1)}% vs last month
-                    </p>
-                  )}
-                </div>
-              </div>
-              <button onClick={onClose} className="absolute top-3 right-3 bg-white/60 dark:bg-black/30 rounded-full p-1">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4">
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className="text-xs text-muted-foreground">Current price</p>
-                  <p className="text-3xl font-extrabold">₦{item.price.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">per {item.unit}</p>
-                </div>
-                {item.usdPrice > 0 && (
-                  <p className="text-sm text-muted-foreground">≈ ${item.usdPrice.toFixed(2)} USD</p>
-                )}
-              </div>
-
+          <motion.div key="detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5 pb-4">
+            {/* Price hero */}
+            <div className="flex items-end justify-between">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Quantity ({item.unit})
-                </label>
-                <input
-                  type="number" min="0.1" step="0.1" value={qty}
-                  onChange={e => setQty(e.target.value)}
-                  className="w-full mt-1.5 rounded-xl border border-border bg-background px-3 py-2.5 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-[#118C4C]"
-                />
-              </div>
-
-              <div className="bg-muted/60 rounded-xl p-3 space-y-1.5 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">₦{item.price.toLocaleString()} × {q || 0} {item.unit}</span>
-                  <span className="font-bold">₦{Math.round(total).toLocaleString()}</span>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-3xl">{meta.emoji}</span>
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: meta.bg, color: meta.color }}>
+                    /{item.unit}
+                  </span>
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground pt-1 border-t border-border">
-                  <span>Avg of {item.marketCount} Nigerian markets</span>
-                  <span>WFP data</span>
-                </div>
+                <p className="text-4xl font-extrabold tracking-tight">₦{item.price.toLocaleString()}</p>
+                {item.usdPrice > 0 && <p className="text-sm text-muted-foreground mt-0.5">≈ ${item.usdPrice.toFixed(2)} USD</p>}
               </div>
-
-              <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-xl px-3 py-2">
-                🔒 Prototype — assets stored locally. No real money moves.
-              </p>
-
-              <button
-                onClick={confirm} disabled={q <= 0}
-                className="w-full rounded-xl bg-[#118C4C] text-white py-3 font-bold text-base disabled:opacity-40 hover:bg-[#0d7a42] transition-colors"
-              >
-                <ShoppingBag className="inline h-4 w-4 mr-2 -mt-0.5" />
-                Buy {q || 0} {item.unit} · ₦{Math.round(total).toLocaleString()}
-              </button>
+              {change && (
+                <div className={`text-right px-3 py-2 rounded-2xl ${isUp ? "bg-green-50 dark:bg-green-900/20" : "bg-red-50 dark:bg-red-900/20"}`}>
+                  <p className={`text-xl font-extrabold ${isUp ? "text-green-600" : "text-red-500"}`}>
+                    {isUp ? "▲" : "▼"} {Math.abs(change.value).toFixed(1)}%
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">vs last month</p>
+                </div>
+              )}
             </div>
-          </>
+
+            {/* Range selector + Chart */}
+            <div>
+              <div className="flex gap-1.5 mb-3">
+                {(["3m","6m","1y","all"] as const).map(r => (
+                  <button key={r} onClick={() => setRange(r)}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-colors ${range === r ? "bg-[#118C4C] text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}>
+                    {r.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <div className="h-44 w-full">
+                <PriceChart history={sliced} color={meta.color} unit={item.unit} />
+              </div>
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "All-time High", value: `₦${max.toLocaleString()}`, icon: "📈" },
+                { label: "All-time Low",  value: `₦${min.toLocaleString()}`, icon: "📉" },
+                { label: "Months of data", value: `${hist.length}`, icon: "📅" },
+                { label: "Markets tracked", value: `${item.marketCount}`, icon: "🏪" },
+              ].map(s => (
+                <div key={s.label} className="flex items-center gap-3 bg-muted/50 rounded-2xl p-3">
+                  <span className="text-xl">{s.icon}</span>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                    <p className="font-bold text-sm">{s.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Description */}
+            <div className="flex items-start gap-3 bg-muted/40 rounded-2xl p-4">
+              <BarChart3 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: meta.color }} />
+              <p className="text-sm text-muted-foreground leading-relaxed">{meta.desc}. Prices are monthly retail averages across {item.marketCount} WFP-monitored Nigerian markets.</p>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Calendar className="h-3 w-3" />
+              <span>Latest data: {new Date(item.date).toLocaleDateString("en-NG", { month: "long", year: "numeric" })}</span>
+              <span>·</span>
+              <MapPin className="h-3 w-3" />
+              <span>{item.marketCount} markets</span>
+            </div>
+
+            <button
+              onClick={() => setStep("buy")}
+              className="w-full rounded-2xl bg-[#118C4C] text-white py-4 font-bold text-base hover:bg-[#0d7a42] transition-colors flex items-center justify-center gap-2"
+            >
+              <ShoppingBag className="h-5 w-5" />
+              Buy {item.displayName} as Asset
+            </button>
+          </motion.div>
         )}
-      </motion.div>
-    </div>
+      </AnimatePresence>
+    </Modal>
   )
 }
