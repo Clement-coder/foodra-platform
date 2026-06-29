@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { TrendingUp, RefreshCcw, MapPin, Calendar, BarChart3, Wheat } from "lucide-react"
-import { motion } from "framer-motion"
+import { TrendingUp, RefreshCcw, MapPin, Calendar, BarChart3, Wheat, ShoppingBag, X } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import type { CommodityPrice } from "@/app/api/commodity-prices/route"
+import { buyAsset, getPositions } from "@/lib/assetStore"
 
 // Emoji + color + description for each commodity
 const META: Record<string, { emoji: string; color: string; bg: string; desc: string }> = {
@@ -27,70 +28,179 @@ const META: Record<string, { emoji: string; color: string; bg: string; desc: str
 
 const DEFAULT_META = { emoji: "🌱", color: "#118C4C", bg: "#d1fae5", desc: "Agricultural commodity" }
 
-function CommodityCard({ item, index }: { item: CommodityPrice; index: number }) {
-  const meta = META[item.commodity] ?? DEFAULT_META
+// ─── Buy Modal ────────────────────────────────────────────────────────────────
+function BuyModal({ item, meta, onClose }: { item: CommodityPrice; meta: typeof DEFAULT_META; onClose: () => void }) {
+  const [qty, setQty] = useState("1")
+  const [done, setDone] = useState(false)
+  const q = parseFloat(qty) || 0
+  const total = q * item.price
+
+  const confirm = () => {
+    if (q <= 0) return
+    buyAsset(item.commodity, item.displayName, meta.emoji, item.unit, q, item.price)
+    setDone(true)
+  }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.3 }}
-      className="group rounded-2xl border border-border bg-card overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-default"
-    >
-      {/* Colored top strip + emoji */}
-      <div className="relative h-24 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${meta.bg}, ${meta.bg}cc)` }}>
-        <span className="text-5xl drop-shadow-sm select-none">{meta.emoji}</span>
-        <div className="absolute top-2 right-2">
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: meta.color + "22", color: meta.color }}>
-            /{item.unit}
-          </span>
-        </div>
-        {/* Market count badge */}
-        <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-white/70 dark:bg-black/30 backdrop-blur-sm rounded-full px-2 py-0.5">
-          <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">{item.marketCount} markets</span>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="p-4 space-y-3">
-        <div>
-          <h3 className="font-bold text-foreground text-base leading-tight">{item.displayName}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{meta.desc}</p>
-        </div>
-
-        {/* Price */}
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-2xl font-extrabold text-foreground tracking-tight">
-              ₦{item.price.toLocaleString()}
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+        className="bg-card border border-border rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        {done ? (
+          <div className="text-center py-4">
+            <p className="text-4xl mb-3">✅</p>
+            <p className="font-bold text-lg">Asset Purchased!</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {q} {item.unit} of {item.displayName} added to your portfolio.
             </p>
-            {item.usdPrice > 0 && (
-              <p className="text-xs text-muted-foreground font-medium">≈ ${item.usdPrice.toFixed(2)} <span className="text-muted-foreground/60">USD</span></p>
-            )}
-          </div>
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              <span>{new Date(item.date).toLocaleDateString("en-NG", { month: "short", year: "numeric" })}</span>
-            </div>
-            <div className="h-6 w-16 flex items-end gap-0.5">
-              {/* Mini sparkline bars — decorative, shows relative market activity */}
-              {[0.4, 0.7, 0.5, 0.9, 0.6, 0.8, 1.0].map((h, i) => (
-                <div key={i} className="flex-1 rounded-sm opacity-30 group-hover:opacity-60 transition-opacity"
-                  style={{ height: `${h * 100}%`, background: meta.color }} />
-              ))}
+            <div className="flex gap-2 mt-4">
+              <button onClick={onClose} className="flex-1 rounded-xl border border-border py-2 text-sm font-semibold">Close</button>
+              <a href="/assets" className="flex-1 rounded-xl bg-[#118C4C] text-white py-2 text-sm font-semibold text-center">View Portfolio →</a>
             </div>
           </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg">💰 Buy Asset</h3>
+              <button onClick={onClose}><X className="h-5 w-5 text-muted-foreground" /></button>
+            </div>
+
+            <div className="rounded-xl p-3 mb-4 flex items-center gap-3" style={{ background: meta.bg }}>
+              <span className="text-3xl">{meta.emoji}</span>
+              <div>
+                <p className="font-semibold">{item.displayName}</p>
+                <p className="text-xs" style={{ color: meta.color }}>₦{item.price.toLocaleString()} / {item.unit} · Live WFP price</p>
+              </div>
+            </div>
+
+            <label className="text-sm font-medium text-muted-foreground">Quantity ({item.unit})</label>
+            <input
+              type="number" min="0.1" step="0.1" value={qty}
+              onChange={e => setQty(e.target.value)}
+              className="w-full mt-1 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#118C4C]"
+            />
+
+            <div className="mt-3 bg-muted/50 rounded-xl p-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Price per {item.unit}</span>
+                <span className="font-medium">₦{item.price.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between mt-1 font-bold border-t border-border pt-1">
+                <span>Total cost</span>
+                <span>₦{Math.round(total).toLocaleString()}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground mt-2 mb-4">
+              🔒 This is a <strong>prototype</strong> — assets are stored locally. No real money moves.
+            </p>
+
+            <button
+              onClick={confirm}
+              disabled={q <= 0}
+              className="w-full rounded-xl bg-[#118C4C] text-white py-2.5 font-semibold disabled:opacity-40 hover:bg-[#0d7a42] transition-colors"
+            >
+              Buy {q || 0} {item.unit} for ₦{Math.round(total).toLocaleString()}
+            </button>
+          </>
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
+function CommodityCard({ item, index }: { item: CommodityPrice; index: number }) {
+  const meta = META[item.commodity] ?? DEFAULT_META
+  const [buying, setBuying] = useState(false)
+  const [heldQty, setHeldQty] = useState<number | undefined>(undefined)
+
+  useEffect(() => {
+    const pos = getPositions().find(p => p.commodity === item.commodity)
+    setHeldQty(pos?.quantity)
+  }, [item.commodity])
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.04, duration: 0.3 }}
+        className="group rounded-2xl border border-border bg-card overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
+      >
+        {/* Colored top strip + emoji */}
+        <div className="relative h-24 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${meta.bg}, ${meta.bg}cc)` }}>
+          <span className="text-5xl drop-shadow-sm select-none">{meta.emoji}</span>
+          <div className="absolute top-2 right-2">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: meta.color + "22", color: meta.color }}>
+              /{item.unit}
+            </span>
+          </div>
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-white/70 dark:bg-black/30 backdrop-blur-sm rounded-full px-2 py-0.5">
+            <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">{item.marketCount} markets</span>
+          </div>
+          {heldQty != null && (
+            <div className="absolute bottom-2 right-2 bg-[#118C4C]/90 text-white rounded-full px-2 py-0.5 text-xs font-semibold">
+              {heldQty} {item.unit} held
+            </div>
+          )}
         </div>
 
-        {/* Bottom tag */}
-        <div className="pt-2 border-t border-border flex items-center gap-1.5">
-          <BarChart3 className="h-3 w-3" style={{ color: meta.color }} />
-          <span className="text-xs text-muted-foreground">Avg across {item.marketCount} Nigerian markets</span>
+        {/* Content */}
+        <div className="p-4 space-y-3">
+          <div>
+            <h3 className="font-bold text-foreground text-base leading-tight">{item.displayName}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{meta.desc}</p>
+          </div>
+
+          {/* Price */}
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-2xl font-extrabold text-foreground tracking-tight">
+                ₦{item.price.toLocaleString()}
+              </p>
+              {item.usdPrice > 0 && (
+                <p className="text-xs text-muted-foreground font-medium">≈ ${item.usdPrice.toFixed(2)} <span className="text-muted-foreground/60">USD</span></p>
+              )}
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3" />
+                <span>{new Date(item.date).toLocaleDateString("en-NG", { month: "short", year: "numeric" })}</span>
+              </div>
+              <div className="h-6 w-16 flex items-end gap-0.5">
+                {[0.4, 0.7, 0.5, 0.9, 0.6, 0.8, 1.0].map((h, i) => (
+                  <div key={i} className="flex-1 rounded-sm opacity-30 group-hover:opacity-60 transition-opacity"
+                    style={{ height: `${h * 100}%`, background: meta.color }} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom actions */}
+          <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <BarChart3 className="h-3 w-3" style={{ color: meta.color }} />
+              <span className="text-xs text-muted-foreground">{item.marketCount} markets</span>
+            </div>
+            <button
+              onClick={() => setBuying(true)}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-colors hover:opacity-90"
+              style={{ background: meta.color }}
+            >
+              <ShoppingBag className="h-3 w-3" />
+              Buy Asset
+            </button>
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+
+      <AnimatePresence>
+        {buying && <BuyModal item={item} meta={meta} onClose={() => { setBuying(false); const pos = getPositions().find(p => p.commodity === item.commodity); setHeldQty(pos?.quantity) }} />}
+      </AnimatePresence>
+    </>
   )
 }
 
@@ -98,6 +208,9 @@ export default function MarketPricesPage() {
   const [prices, setPrices] = useState<CommodityPrice[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchedAt, setFetchedAt] = useState<string | null>(null)
+  const [assetCount, setAssetCount] = useState(0)
+
+  useEffect(() => { setAssetCount(getPositions().length) }, [])
 
   const load = async () => {
     setLoading(true)
@@ -168,6 +281,18 @@ export default function MarketPricesPage() {
           )}
         </div>
       </div>
+
+      {/* Portfolio CTA */}
+      {assetCount > 0 && (
+        <div className="bg-[#0d7a42]/10 border-b border-[#118C4C]/20">
+          <div className="container mx-auto px-4 py-3 max-w-5xl flex items-center justify-between gap-3">
+            <p className="text-sm text-[#118C4C] font-medium">📊 You hold {assetCount} commodity asset{assetCount > 1 ? "s" : ""}</p>
+            <a href="/assets" className="text-xs font-bold text-[#118C4C] bg-[#118C4C]/10 hover:bg-[#118C4C]/20 rounded-lg px-3 py-1.5 transition-colors">
+              View Portfolio →
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* Cards */}
       <div className="container mx-auto px-4 py-8 max-w-5xl">
