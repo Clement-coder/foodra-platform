@@ -7,6 +7,7 @@ import { usePrivy } from "@privy-io/react-auth"
 import { authFetch } from "@/lib/authFetch"
 import { Loader2, CheckCircle2, ChevronDown, Search, Building2, Banknote, ShieldCheck, Sparkles, X } from "lucide-react"
 import { WalletSuccessScreen } from "@/components/WalletSuccessScreen"
+import { useScrollLock } from "@/lib/useScrollLock"
 
 interface Props {
   isOpen: boolean
@@ -74,6 +75,8 @@ function BankDropdown({ banks, value, onChange }: {
 export function WalletWithdrawModal({ isOpen, onClose, currentBalance, onSuccess }: Props) {
   const { getAccessToken } = usePrivy()
   const { toast } = useToast()
+
+  useScrollLock(isOpen)
 
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [banks, setBanks] = useState<{ code: string; name: string }[]>([])

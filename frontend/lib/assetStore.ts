@@ -101,10 +101,17 @@ export function deliverAsset(commodity: string, qty: number, pricePerUnit: numbe
   return positions
 }
 
-export function setPriceAlert(commodity: string, alertPrice: number) {
+export function setPriceAlert(commodity: string, alertPrice: number | null) {
   const positions = getPositions()
   const pos = positions.find(p => p.commodity === commodity)
-  if (pos) { pos.priceAlert = alertPrice; savePositions(positions) }
+  if (pos) {
+    if (alertPrice === null) {
+      delete pos.priceAlert
+    } else {
+      pos.priceAlert = alertPrice
+    }
+    savePositions(positions)
+  }
 }
 
 // ─── Trades ───────────────────────────────────────────────────────────────────

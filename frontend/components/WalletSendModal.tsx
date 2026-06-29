@@ -8,6 +8,7 @@ import { authFetch } from "@/lib/authFetch"
 import { Loader2, Search, X, CheckCircle2, ArrowUpRight, ShieldCheck, Sparkles } from "lucide-react"
 import { useDebounce } from "@/lib/useDebounce"
 import { WalletSuccessScreen } from "@/components/WalletSuccessScreen"
+import { useScrollLock } from "@/lib/useScrollLock"
 
 interface Recipient { id: string; name: string; avatar: string; foodra_tag: string | null }
 
@@ -23,6 +24,8 @@ const QUICK_AMOUNTS = [500, 1000, 2000, 5000]
 export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: Props) {
   const { getAccessToken } = usePrivy()
   const { toast } = useToast()
+
+  useScrollLock(isOpen)
 
   const [step, setStep] = useState<"form" | "pin" | "success">("form")
   const [query, setQuery] = useState("")

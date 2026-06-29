@@ -2,15 +2,15 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Home, ShoppingBag, GraduationCap, DollarSign, Package } from "lucide-react"
+import { Home, ShoppingBag, GraduationCap, TrendingUp, Package } from "lucide-react"
 import { motion } from "framer-motion"
 
 const tabs = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Market", href: "/marketplace", icon: ShoppingBag },
-  { name: "Orders", href: "/orders", icon: Package },
-  { name: "Funding", href: "/funding", icon: DollarSign },
-  { name: "Training", href: "/training", icon: GraduationCap },
+  { name: "Home",     href: "/",              icon: Home },
+  { name: "Market",   href: "/marketplace",   icon: ShoppingBag },
+  { name: "Orders",   href: "/orders",        icon: Package },
+  { name: "Prices",   href: "/market-prices", icon: TrendingUp },
+  { name: "Training", href: "/training",      icon: GraduationCap },
 ]
 
 export function BottomTabBar() {

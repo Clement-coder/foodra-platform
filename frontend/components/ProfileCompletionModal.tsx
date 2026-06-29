@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react"
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion"
 import { X } from "lucide-react"
+import { useScrollLock } from "@/lib/useScrollLock"
 
 interface ProfileCompletionModalProps {
   isOpen: boolean
@@ -15,10 +16,7 @@ export function ProfileCompletionModal({ isOpen, onClose, children }: ProfileCom
   const backdropOpacity = useTransform(y, [0, 60, 260], [0.6, 0.6, 0])
   const contentRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : ""
-    return () => { document.body.style.overflow = "" }
-  }, [isOpen])
+  useScrollLock(isOpen)
 
   useEffect(() => { if (isOpen) y.set(0) }, [isOpen, y])
 

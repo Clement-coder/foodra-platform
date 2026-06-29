@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Bell, BellOff, Package, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { Bell, BellOff, Package, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, BrainCircuit, LineChart } from "lucide-react"
 import { Modal } from "@/components/Modal"
 import { WalletSuccessScreen } from "@/components/WalletSuccessScreen"
 import { PriceChart, META, DEFAULT_META } from "@/app/market-prices/components"
+import { CommodityIcon } from "@/app/market-prices/page"
 import {
   sellAsset, deliverAsset, setPriceAlert, getPriceHistory,
   predictNextPrice, type AssetPosition,
@@ -36,7 +37,7 @@ export function SellModal({ pos, livePrice, onClose, onDone }: {
         {step === "success" ? (
           <WalletSuccessScreen
             key="ok"
-            title="Asset Sold! 💹"
+            title="Asset Sold!"
             subtitle={`You sold ${q} ${pos.unit} of ${pos.displayName} for ₦${Math.round(proceeds).toLocaleString()}`}
             onDone={() => { onDone(); onClose() }}
             doneLabel="Done"
@@ -44,7 +45,9 @@ export function SellModal({ pos, livePrice, onClose, onDone }: {
         ) : (
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-4">
             <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ background: meta.bg }}>
-              <span className="text-4xl">{meta.emoji}</span>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: meta.color + "22" }}>
+                <CommodityIcon commodity={pos.commodity} className="h-6 w-6" style={{ color: meta.color }} />
+              </div>
               <div>
                 <p className="font-bold">{pos.displayName}</p>
                 <p className="text-xs text-muted-foreground">You hold {pos.quantity} {pos.unit}</p>
@@ -126,7 +129,7 @@ export function DeliverModal({ pos, livePrice, onClose, onDone }: {
         {step === "success" ? (
           <WalletSuccessScreen
             key="ok"
-            title="Delivery Requested! 📦"
+            title="Delivery Requested!"
             subtitle={`${q} ${pos.unit} of ${pos.displayName} will be delivered to your registered address.`}
             onDone={() => { onDone(); onClose() }}
             doneLabel="View Orders"
@@ -134,7 +137,9 @@ export function DeliverModal({ pos, livePrice, onClose, onDone }: {
         ) : (
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-4">
             <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ background: meta.bg }}>
-              <span className="text-4xl">{meta.emoji}</span>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: meta.color + "22" }}>
+                <CommodityIcon commodity={pos.commodity} className="h-6 w-6" style={{ color: meta.color }} />
+              </div>
               <div>
                 <p className="font-bold">{pos.displayName}</p>
                 <p className="text-xs text-muted-foreground">You hold {pos.quantity} {pos.unit}</p>
@@ -185,32 +190,119 @@ export function DeliverModal({ pos, livePrice, onClose, onDone }: {
 }
 
 // ─── Alert Modal ──────────────────────────────────────────────────────────────
-export function AlertModal({ pos, onClose, onDone }: {
-  pos: AssetPosition; onClose: () => void; onDone: () => void
+export function AlertModal({ pos, livePrice, onClose, onDone }: {
+  pos: AssetPosition; livePrice: number; onClose: () => void; onDone: () => void
 }) {
   const [price, setPrice] = useState(pos.priceAlert?.toString() ?? "")
+  const meta = META[pos.commodity] ?? DEFAULT_META
+  const alertVal = parseFloat(price)
+  const isAbove  = !isNaN(alertVal) && alertVal > livePrice
+  const diff     = !isNaN(alertVal) && alertVal > 0
+    ? Math.abs(((alertVal - livePrice) / livePrice) * 100)
+    : 0
 
   return (
     <Modal isOpen title="Price Alert" onClose={onClose}>
-      <div className="space-y-5 pb-4">
-        <p className="text-sm text-muted-foreground">
-          Get notified when <strong>{pos.displayName}</strong> reaches your target price.
-        </p>
+      <div className="space-y-4 pb-4">
+
+        {/* ── Current price hero ── */}
+        <div className="rounded-2xl border border-border overflow-hidden">
+          <div className="flex items-center gap-3 p-4" style={{ background: meta.bg }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: meta.color + "22" }}>
+              <CommodityIcon commodity={pos.commodity} className="h-6 w-6" style={{ color: meta.color }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Live price right now</p>
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <p className="text-3xl font-extrabold tracking-tight">₦{livePrice.toLocaleString()}</p>
+                <span className="text-sm font-semibold" style={{ color: meta.color }}>/{pos.unit}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">{pos.displayName}</p>
+            </div>
+          </div>
+          {/* active alert indicator */}
+          {pos.priceAlert && (
+            <div className="flex items-center justify-between px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200/60 dark:border-amber-800/40">
+              <p className="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5 font-medium">
+                <Bell className="h-3.5 w-3.5" />
+                Active alert at ₦{pos.priceAlert.toLocaleString()}/{pos.unit}
+              </p>
+              <button
+                onClick={() => { setPriceAlert(pos.commodity, null); onDone(); onClose() }}
+                className="text-[10px] font-bold text-red-500 hover:text-red-600 transition-colors uppercase tracking-wide"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ── Input ── */}
         <div>
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Alert at price (₦ per {pos.unit})
+            Alert when price reaches (₦ per {pos.unit})
           </label>
-          <input type="number" value={price} onChange={e => setPrice(e.target.value)}
-            placeholder="e.g. 1500"
-            className="w-full mt-2 rounded-2xl border border-border bg-background px-4 py-3 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#118C4C]" />
+          <div className="relative mt-2">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-lg pointer-events-none">₦</span>
+            <input
+              type="number"
+              value={price}
+              onChange={e => setPrice(e.target.value)}
+              placeholder={`e.g. ${Math.round(livePrice * 0.9).toLocaleString()}`}
+              className="w-full pl-8 pr-4 py-3 rounded-2xl border border-border bg-background text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#118C4C]"
+            />
+          </div>
+
+          {/* Quick presets */}
+          <div className="flex gap-2 mt-2">
+            {[
+              { label: "−10%", val: Math.round(livePrice * 0.9) },
+              { label: "−5%",  val: Math.round(livePrice * 0.95) },
+              { label: "+5%",  val: Math.round(livePrice * 1.05) },
+              { label: "+10%", val: Math.round(livePrice * 1.1) },
+            ].map(p => (
+              <button key={p.label} onClick={() => setPrice(String(p.val))}
+                className={`flex-1 py-1.5 rounded-xl text-[10px] font-bold border transition-colors
+                  ${price === String(p.val)
+                    ? "bg-[#118C4C] text-white border-[#118C4C]"
+                    : "border-border text-muted-foreground hover:bg-muted"}`}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Context hint */}
+          {!isNaN(alertVal) && alertVal > 0 && (
+            <div className={`flex items-start gap-2 mt-2 px-3 py-2 rounded-xl text-xs font-medium
+              ${isAbove
+                ? "bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400"
+                : "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400"}`}>
+              <Bell className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <span>
+                {isAbove
+                  ? `You'll be alerted when the price rises ${diff.toFixed(1)}% above current (₦${livePrice.toLocaleString()} → ₦${alertVal.toLocaleString()})`
+                  : `You'll be alerted when the price drops ${diff.toFixed(1)}% below current (₦${livePrice.toLocaleString()} → ₦${alertVal.toLocaleString()})`}
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* ── CTA ── */}
         <button
-          onClick={() => { setPriceAlert(pos.commodity, parseFloat(price)); onDone(); onClose() }}
-          disabled={!price || isNaN(parseFloat(price))}
-          className="w-full rounded-2xl bg-[#118C4C] text-white py-4 font-bold disabled:opacity-40 hover:bg-[#0d7a42] transition-colors flex items-center justify-center gap-2">
-          <Bell className="h-5 w-5" />
-          Set Alert at ₦{parseFloat(price) ? parseFloat(price).toLocaleString() : "—"}
+          onClick={() => { setPriceAlert(pos.commodity, alertVal); onDone(); onClose() }}
+          disabled={!price || isNaN(alertVal) || alertVal <= 0}
+          className="w-full rounded-2xl bg-[#118C4C] text-white py-3.5 font-bold text-sm disabled:opacity-40 hover:bg-[#0d7a42] transition-colors flex items-center justify-center gap-2"
+        >
+          <Bell className="h-4 w-4" />
+          {pos.priceAlert
+            ? `Update alert to ₦${!isNaN(alertVal) ? alertVal.toLocaleString() : "—"}`
+            : `Set alert at ₦${!isNaN(alertVal) && alertVal > 0 ? alertVal.toLocaleString() : "—"}`}
+          {!isNaN(alertVal) && alertVal > 0 && (
+            <span className="text-white/60 font-normal text-xs">/{pos.unit}</span>
+          )}
         </button>
+
       </div>
     </Modal>
   )
@@ -245,9 +337,9 @@ export function PositionCard({ pos, livePrice, history, onRefresh }: {
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                 style={{ background: meta.bg }}>
-                {meta.emoji}
+                <CommodityIcon commodity={pos.commodity} className="h-5 w-5" style={{ color: meta.color }} />
               </div>
               <div>
                 <p className="font-bold text-sm leading-tight">{pos.displayName}</p>
@@ -290,11 +382,17 @@ export function PositionCard({ pos, livePrice, history, onRefresh }: {
 
           {/* AI prediction */}
           {prediction !== null && (
-            <div className="flex items-center gap-2.5 bg-indigo-50 dark:bg-indigo-950/30 rounded-xl px-3 py-2.5 text-xs">
-              <span className="text-base">🤖</span>
-              <div>
-                <p className="font-semibold text-indigo-700 dark:text-indigo-300">AI Trend Estimate</p>
-                <p className="text-indigo-600 dark:text-indigo-400 mt-0.5">Next period: <strong>₦{prediction.toLocaleString()}</strong> <span className="opacity-60">· Linear projection</span></p>
+            <div className="flex items-start gap-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl px-3 py-2.5">
+              <BrainCircuit className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
+                  AI Trend Estimate
+                  <LineChart className="h-3 w-3" />
+                </p>
+                <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-0.5">
+                  Next period: <strong>₦{prediction.toLocaleString()}</strong>
+                  <span className="text-indigo-400 ml-1">· Linear projection</span>
+                </p>
               </div>
             </div>
           )}
@@ -331,7 +429,7 @@ export function PositionCard({ pos, livePrice, history, onRefresh }: {
       <AnimatePresence>
         {modal === "sell"    && <SellModal    key="sell"    pos={pos} livePrice={current} onClose={() => setModal(null)} onDone={close} />}
         {modal === "deliver" && <DeliverModal key="deliver" pos={pos} livePrice={current} onClose={() => setModal(null)} onDone={close} />}
-        {modal === "alert"   && <AlertModal   key="alert"   pos={pos}                    onClose={() => setModal(null)} onDone={close} />}
+        {modal === "alert"   && <AlertModal   key="alert"   pos={pos} livePrice={current} onClose={() => setModal(null)} onDone={close} />}
       </AnimatePresence>
     </>
   )

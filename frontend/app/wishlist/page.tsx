@@ -149,29 +149,48 @@ export default function WishlistPage() {
                     </p>
                   )}
 
-                  {/* Inline alert input */}
+                  {/* Inline alert input — shows current price */}
                   {alertInputId === item.productId && (
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <span className="text-xs text-muted-foreground">₦</span>
-                      <input
-                        type="number"
-                        min="1"
-                        autoFocus
-                        value={alertInputValue}
-                        onChange={(e) => setAlertInputValue(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") saveAlert(item.productId); if (e.key === "Escape") setAlertInputId(null); }}
-                        placeholder="Alert price"
-                        className="w-28 px-2 py-1 text-xs rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-[#118C4C]"
-                      />
-                      <button onClick={() => saveAlert(item.productId)} className="p-1 rounded-lg bg-[#118C4C] text-white hover:bg-[#0d6d3a]">
-                        <Check className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={() => setAlertInputId(null)} className="p-1 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
+                    <div className="mt-2 rounded-xl border border-border bg-muted/40 p-3 space-y-2">
+                      {/* Current price indicator */}
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Current price</span>
+                        <span className="font-bold text-[#118C4C]">
+                          ₦{Number(item.currentPrice ?? item.priceAtAdd).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">₦</span>
+                        <input
+                          type="number"
+                          min="1"
+                          autoFocus
+                          value={alertInputValue}
+                          onChange={(e) => setAlertInputValue(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") saveAlert(item.productId); if (e.key === "Escape") setAlertInputId(null); }}
+                          placeholder={`Alert below ₦${Number(item.currentPrice ?? item.priceAtAdd).toLocaleString()}`}
+                          className="flex-1 px-2 py-1.5 text-xs rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-[#118C4C]"
+                        />
+                        <button onClick={() => saveAlert(item.productId)} className="p-1.5 rounded-lg bg-[#118C4C] text-white hover:bg-[#0d6d3a]">
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => setAlertInputId(null)} className="p-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      {alertInputValue && !isNaN(Number(alertInputValue)) && Number(alertInputValue) > 0 && (
+                        <p className={`text-[10px] font-medium flex items-center gap-1 ${
+                          Number(alertInputValue) < Number(item.currentPrice ?? item.priceAtAdd)
+                            ? "text-amber-600" : "text-green-600"}`}>
+                          <Bell className="h-2.5 w-2.5" />
+                          {Number(alertInputValue) < Number(item.currentPrice ?? item.priceAtAdd)
+                            ? `Alert if price drops to ₦${Number(alertInputValue).toLocaleString()} (${(((Number(item.currentPrice ?? item.priceAtAdd) - Number(alertInputValue)) / Number(item.currentPrice ?? item.priceAtAdd)) * 100).toFixed(1)}% below current)`
+                            : `Alert if price rises to ₦${Number(alertInputValue).toLocaleString()}`}
+                        </p>
+                      )}
                       {item.alertPrice !== null && (
-                        <button onClick={() => saveAlert(item.productId, true)} className="text-xs text-red-500 hover:underline ml-1">
-                          Remove
+                        <button onClick={() => saveAlert(item.productId, true)} className="text-[10px] text-red-500 hover:underline">
+                          Remove current alert (₦{item.alertPrice.toLocaleString()})
                         </button>
                       )}
                     </div>

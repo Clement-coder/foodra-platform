@@ -15,6 +15,7 @@ import { useUser } from "@/lib/useUser";
 import { useNotifications } from "@/lib/useNotifications";
 import { NotificationSidebar } from "./NotificationSidebar";
 import { t } from "@/lib/i18n";
+import { useScrollLock } from "@/lib/useScrollLock";
 import type { Product, User } from "@/lib/types";
 
 type SearchFilter = "all" | "products" | "users";
@@ -45,6 +46,9 @@ export function NavBar() {
   const [users, setUsers] = useState<User[]>([]);
   const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
   const [hasLoadedSuggestions, setHasLoadedSuggestions] = useState(false);
+
+  // Prevent background scroll when search overlay or notifications are open
+  useScrollLock(isSearchOpen || notifOpen);
 
   useEffect(() => {
     try {
@@ -173,11 +177,8 @@ export function NavBar() {
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    document.body.style.overflow = "hidden";
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
     };
   }, [isSearchOpen]);
 
@@ -196,7 +197,7 @@ export function NavBar() {
 
           {/* Desktop nav links */}
           <div className="hidden lg:flex items-center gap-1 mx-4">
-            {([["Marketplace", "/marketplace"], ["Training", "/training"], ["Funding", "/funding"]] as [string, string][]).map(([label, href]) => (
+            {([["Marketplace", "/marketplace"], ["Training", "/training"], ["Funding", "/funding"], ["Market Prices", "/market-prices"]] as [string, string][]).map(([label, href]) => (
               <a key={href} href={href}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${pathname.startsWith(href) ? "bg-[#118C4C]/10 text-[#118C4C]" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}>
                 {label}

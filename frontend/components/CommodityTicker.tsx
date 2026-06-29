@@ -2,126 +2,154 @@
 
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
-import { TrendingUp, RefreshCcw, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { motion } from "framer-motion"
+import {
+  TrendingUp, TrendingDown, ArrowRight,
+  Wheat, Leaf, Drumstick, Fish, ShoppingBasket, Activity,
+} from "lucide-react"
 import type { CommodityPrice } from "@/app/api/commodity-prices/route"
+import type { CommodityHistory } from "@/app/api/commodity-history/route"
 
-function PriceTag({ item }: { item: CommodityPrice }) {
-  return (
-    <span className="inline-flex items-center gap-3 px-4 whitespace-nowrap shrink-0">
-      <span className="text-white/70 text-xs font-medium">{item.displayName}</span>
-      <span className="text-white font-bold text-xs">
-        ₦{item.price.toLocaleString()}
-        <span className="text-white/50 font-normal">/{item.unit}</span>
-      </span>
-      <span className="text-white/20 text-xs">•</span>
-    </span>
-  )
+interface TickerItem extends CommodityPrice {
+  change: number | null
+}
+
+function CommodityIcon({ commodity, className }: { commodity: string; className?: string }) {
+  const n = commodity.toLowerCase()
+  if (n.includes("rice") || n.includes("maize") || n.includes("millet") || n.includes("sorghum"))
+    return <Wheat className={className} />
+  if (n.includes("fish"))
+    return <Fish className={className} />
+  if (n.includes("meat") || n.includes("beef"))
+    return <Drumstick className={className} />
+  if (n.includes("bean") || n.includes("cowpea") || n.includes("groundnut") ||
+      n.includes("yam") || n.includes("tomato") || n.includes("onion") ||
+      n.includes("oil") || n.includes("palm"))
+    return <Leaf className={className} />
+  return <ShoppingBasket className={className} />
 }
 
 export function CommodityTicker() {
   const pathname = usePathname()
-  const [prices, setPrices] = useState<CommodityPrice[]>([])
+  const [items, setItems]     = useState<TickerItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [fetchedAt, setFetchedAt] = useState<string | null>(null)
-  const [paused, setPaused] = useState(false)
-  const hidden = pathname === "/wallet" || pathname === "/profile"
 
-  const load = () => {
-    setLoading(true)
-    fetch("/api/commodity-prices")
-      .then(r => {
-        if (r.ok) {
-          const at = r.headers.get("X-Fetched-At")
-          if (at) setFetchedAt(at)
-          return r.json()
-        }
-        return []
-      })
-      .then(data => setPrices(Array.isArray(data) ? data : []))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }
+  // Hide on pages that already have full market content or feel cluttered
+  const hidden = pathname === "/wallet" || pathname === "/profile" || pathname === "/market-prices"
 
   useEffect(() => {
-    if (!hidden) load()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hidden])
+    if (hidden) return
+    const load = async () => {
+      setLoading(true)
+      try {
+        const [pRes, hRes] = await Promise.all([
+          fetch("/api/commodity-prices"),
+          fetch("/api/commodity-history"),
+        ])
+        const prices: CommodityPrice[]      = pRes.ok ? await pRes.json() : []
+        const histories: CommodityHistory[] = hRes.ok ? await hRes.json() : []
+        const hMap: Record<string, CommodityHistory> = {}
+        histories.forEach(h => { hMap[h.commodity] = h })
+        setItems(prices.map(p => {
+          const hist = hMap[p.commodity]?.history ?? []
+          const prev = hist.length > 1 ? hist[hist.length - 2].price : null
+          return { ...p, change: prev ? ((p.price - prev) / prev) * 100 : null }
+        }))
+      } catch { /* silent */ }
+      finally { setLoading(false) }
+    }
+    load()
+  }, [hidden]) // eslint-disable-line
 
   if (hidden) return <style>{`:root { --ticker-height: 0px; }`}</style>
 
   if (loading) {
     return (
-      <div className="fixed left-0 right-0 z-40 h-9 bg-[#0d6d3a] flex items-center px-4 gap-2" style={{ top: "var(--navbar-height)" }}>
-        <TrendingUp className="h-3.5 w-3.5 text-white/60 animate-pulse shrink-0" />
-        <span className="text-white/50 text-xs">Loading market prices…</span>
+      <div
+        className="fixed left-0 right-0 z-40 h-10 bg-gradient-to-r from-[#0d6d3a] to-[#118C4C] flex items-center px-4 gap-3"
+        style={{ top: "var(--navbar-height)" }}
+      >
+        <Activity className="h-3.5 w-3.5 text-white/40 animate-pulse shrink-0" />
+        <div className="flex gap-4">
+          {[80, 100, 70, 90, 85].map((w, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <div className="h-2.5 rounded-full bg-white/15 animate-pulse" style={{ width: w }} />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
 
-  if (!prices.length) return null
+  if (!items.length) return null
 
-  // 4 copies = guaranteed seamless loop on all screen widths
-  const items = [...prices, ...prices, ...prices, ...prices]
-  // ~3s per item feels readable
-  const duration = `${prices.length * 3}s`
+  // Quadruple the items so the seamless loop works at any screen width
+  const track = [...items, ...items, ...items, ...items]
+  const duration = Math.max(28, items.length * 3.2)
 
   return (
     <div
-      className="fixed left-0 right-0 z-40 h-9 bg-[#0d6d3a] border-b border-[#118C4C]/40 flex items-center overflow-hidden"
-      style={{ top: "var(--navbar-height)" }}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={() => setPaused(true)}
-      onTouchEnd={() => setPaused(false)}
+      className="fixed left-0 right-0 z-40 h-10 overflow-hidden flex items-center"
+      style={{ top: "var(--navbar-height)", background: "linear-gradient(90deg, #0b5e33 0%, #0e7a42 40%, #118C4C 100%)" }}
     >
-      {/* Label badge */}
-      <div className="shrink-0 flex items-center gap-1.5 px-3 h-full bg-[#118C4C]/80 border-r border-white/10 z-10">
-        <TrendingUp className="h-3.5 w-3.5 text-white shrink-0" />
-        <span className="text-white text-xs font-bold tracking-wider hidden sm:block">LIVE</span>
+      {/* LIVE pill */}
+      <div className="shrink-0 flex items-center gap-1.5 pl-3 pr-3 h-full border-r border-white/10 bg-black/20 z-10">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+        </span>
+        <span className="text-white text-[10px] font-black tracking-widest hidden sm:block">LIVE</span>
       </div>
 
-      {/* Ticker track — translate -25% = one full copy with 4 copies */}
+      {/* Scrolling track — same motion approach as market-prices hero ticker */}
       <div className="flex-1 overflow-hidden">
-        <div
+        <motion.div
           className="flex items-center"
-          style={{
-            animationName: "commodity-scroll",
-            animationDuration: duration,
-            animationTimingFunction: "linear",
-            animationIterationCount: "infinite",
-            animationPlayState: paused ? "paused" : "running",
-          }}
+          animate={{ x: ["0%", "-25%"] }}
+          transition={{ duration, repeat: Infinity, ease: "linear" }}
         >
-          {items.map((item, i) => (
-            <PriceTag key={i} item={item} />
-          ))}
-        </div>
+          {track.map((item, i) => {
+            const isUp = item.change === null ? null : item.change >= 0
+            return (
+              <span
+                key={i}
+                className="flex items-center gap-1.5 px-3.5 border-r border-white/[0.08] h-10 shrink-0"
+              >
+                <CommodityIcon commodity={item.commodity} className="h-3 w-3 text-white/50 shrink-0" />
+                <span className="text-white/80 text-[11px] font-medium tracking-tight max-w-[80px] truncate">
+                  {item.displayName}
+                </span>
+                <span className="text-white font-bold text-[11px] tracking-tight">
+                  ₦{item.price.toLocaleString()}
+                  <span className="text-white/45 font-normal text-[9px] ml-0.5">/{item.unit}</span>
+                </span>
+                {item.change !== null && (
+                  <span
+                    className={`flex items-center gap-0.5 text-[10px] font-bold tabular-nums shrink-0 ${
+                      isUp ? "text-green-300" : "text-red-300"
+                    }`}
+                  >
+                    {isUp
+                      ? <TrendingUp className="h-2.5 w-2.5" />
+                      : <TrendingDown className="h-2.5 w-2.5" />}
+                    {Math.abs(item.change).toFixed(1)}%
+                  </span>
+                )}
+              </span>
+            )
+          })}
+        </motion.div>
       </div>
 
-      {/* Date + refresh + view all */}
-      <div className="shrink-0 flex items-center gap-2 px-3 h-full border-l border-white/10">
-        {fetchedAt && (
-          <span className="text-white/40 text-xs hidden lg:block">
-            {new Date(fetchedAt).toLocaleDateString("en-NG", { month: "short", day: "numeric" })}
-          </span>
-        )}
-        <button onClick={load} title="Refresh" className="text-white/50 hover:text-white transition-colors">
-          <RefreshCcw className="h-3 w-3" />
-        </button>
-        <Link href="/market-prices" title="View all prices"
-          className="flex items-center gap-1 text-white/70 hover:text-white transition-colors text-xs font-medium">
-          <span className="hidden sm:block">All</span>
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
-      </div>
-
-      <style>{`
-        @keyframes commodity-scroll {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-25%); }
-        }
-      `}</style>
+      {/* Markets link */}
+      <Link
+        href="/market-prices"
+        className="shrink-0 flex items-center gap-1.5 px-3 h-full border-l border-white/10 text-white/55 hover:text-white hover:bg-black/20 transition-all text-[11px] font-semibold"
+      >
+        <span className="hidden sm:block">Markets</span>
+        <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
     </div>
   )
 }

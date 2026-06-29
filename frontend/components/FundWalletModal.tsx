@@ -6,6 +6,7 @@ import { useToast } from "@/lib/toast"
 import { usePrivy } from "@privy-io/react-auth"
 import { authFetch } from "@/lib/authFetch"
 import { Loader2, X, CreditCard, Banknote, ChevronRight } from "lucide-react"
+import { useScrollLock } from "@/lib/useScrollLock"
 
 interface Props {
   isOpen: boolean
@@ -17,6 +18,8 @@ const QUICK_AMOUNTS = [1000, 2000, 5000, 10000, 20000, 50000]
 export function FundWalletModal({ isOpen, onClose }: Props) {
   const { getAccessToken } = usePrivy()
   const { toast } = useToast()
+
+  useScrollLock(isOpen)
   const [amount, setAmount] = useState("")
   const [loading, setLoading] = useState(false)
 

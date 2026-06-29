@@ -5,6 +5,7 @@ import { X, Bell, ShoppingBag, DollarSign, GraduationCap, MessageCircle, Megapho
 import { AnimatePresence, motion } from "framer-motion"
 import type { Notification } from "@/lib/useNotifications"
 import { formatTimeAgo } from "@/lib/timeUtils"
+import { useScrollLock } from "@/lib/useScrollLock"
 
 const FOODRA_TYPES = new Set(["broadcast", "system"])
 
@@ -36,6 +37,8 @@ interface Props {
 export function NotificationSidebar({ open, onClose, notifications, onMarkRead }: Props) {
   const ref = useRef<HTMLDivElement>(null)
 
+  useScrollLock(open)
+
   useEffect(() => {
     if (!open) return
     const handler = (e: MouseEvent) => {
@@ -44,12 +47,6 @@ export function NotificationSidebar({ open, onClose, notifications, onMarkRead }
     document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [open, onClose])
-
-  useEffect(() => {
-    if (open) document.body.style.overflow = "hidden"
-    else document.body.style.overflow = ""
-    return () => { document.body.style.overflow = "" }
-  }, [open])
 
   const handleClick = (n: Notification) => {
     if (!n.is_read) onMarkRead(n.id)

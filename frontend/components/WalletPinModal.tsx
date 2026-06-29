@@ -6,6 +6,7 @@ import { useToast } from "@/lib/toast"
 import { usePrivy } from "@privy-io/react-auth"
 import { authFetch } from "@/lib/authFetch"
 import { Loader2, ShieldCheck, X, CheckCircle2 } from "lucide-react"
+import { useScrollLock } from "@/lib/useScrollLock"
 
 interface Props {
   isOpen: boolean
@@ -16,6 +17,8 @@ interface Props {
 export function WalletPinModal({ isOpen, onClose, hasPin }: Props) {
   const { getAccessToken } = usePrivy()
   const { toast } = useToast()
+
+  useScrollLock(isOpen)
   const [currentPin, setCurrentPin] = useState("")
   const [newPin, setNewPin] = useState("")
   const [confirmPin, setConfirmPin] = useState("")

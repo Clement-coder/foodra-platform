@@ -1,36 +1,41 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, ShoppingBag, TrendingUp, TrendingDown, Minus, BarChart3, MapPin, Calendar } from "lucide-react"
+import {
+  ShoppingBag, TrendingUp, TrendingDown, BarChart3, MapPin, Calendar,
+  ArrowUpRight, ArrowDownRight, ChevronLeft, Lock, BrainCircuit,
+  LineChart, CandlestickChart, Building2, Flame, Snowflake,
+} from "lucide-react"
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts"
 import type { CommodityPrice } from "@/app/api/commodity-prices/route"
 import type { CommodityHistory } from "@/app/api/commodity-history/route"
-import { buyAsset } from "@/lib/assetStore"
+import { buyAsset, predictNextPrice } from "@/lib/assetStore"
 import { WalletSuccessScreen } from "@/components/WalletSuccessScreen"
 import { Modal } from "@/components/Modal"
+import { CommodityIcon } from "./page"
 
 export const META: Record<string, { emoji: string; color: string; bg: string; desc: string }> = {
-  "Rice (local)":    { emoji: "🌾", color: "#b45309", bg: "#fef3c7", desc: "Locally grown rice, staple across Nigeria" },
-  "Rice (imported)": { emoji: "🍚", color: "#1d4ed8", bg: "#dbeafe", desc: "Imported parboiled rice (Thailand/India)" },
-  "Maize flour":     { emoji: "🌽", color: "#d97706", bg: "#fef9c3", desc: "Ground white maize, base for ogi & tuwo" },
-  "Beans (white)":   { emoji: "🫘", color: "#7c3aed", bg: "#ede9fe", desc: "White/black-eyed beans (oloyin)" },
-  "Beans (red)":     { emoji: "🫘", color: "#dc2626", bg: "#fee2e2", desc: "Red kidney beans, popular in stews" },
-  "Cowpeas":         { emoji: "🟤", color: "#92400e", bg: "#fef3c7", desc: "Black-eyed peas, vital protein source" },
-  "Tomatoes":        { emoji: "🍅", color: "#dc2626", bg: "#fee2e2", desc: "Fresh tomatoes, essential for Nigerian cooking" },
-  "Yam":             { emoji: "🍠", color: "#b45309", bg: "#fef3c7", desc: "White yam, culturally important crop" },
-  "Onions":          { emoji: "🧅", color: "#d97706", bg: "#fef9c3", desc: "Red & yellow onions for soups and stews" },
-  "Groundnuts":      { emoji: "🥜", color: "#b45309", bg: "#fef3c7", desc: "Roasted or raw peanuts, oil & snack crop" },
-  "Millet":          { emoji: "🌾", color: "#059669", bg: "#d1fae5", desc: "Pearl millet, drought-resistant grain" },
-  "Sorghum":         { emoji: "🌿", color: "#065f46", bg: "#d1fae5", desc: "Versatile grain for pap & brewing" },
-  "Oil (palm)":      { emoji: "🫙", color: "#dc2626", bg: "#fee2e2", desc: "Red palm oil, cornerstone of Nigerian cuisine" },
-  "Oil (vegetable)": { emoji: "🛢️", color: "#d97706", bg: "#fef9c3", desc: "Refined vegetable oil for frying" },
-  "Meat (beef)":     { emoji: "🥩", color: "#dc2626", bg: "#fee2e2", desc: "Fresh beef from local cattle markets" },
-  "Fish":            { emoji: "🐟", color: "#1d4ed8", bg: "#dbeafe", desc: "Fresh/dried fish, key protein source" },
+  "Rice (local)":    { emoji: "🌾", color: "#b45309", bg: "#fef3c7", desc: "Locally grown white rice, a dietary staple across Nigeria" },
+  "Rice (imported)": { emoji: "🍚", color: "#1d4ed8", bg: "#dbeafe", desc: "Imported parboiled rice from Thailand and India" },
+  "Maize flour":     { emoji: "🌽", color: "#d97706", bg: "#fef9c3", desc: "Ground white maize flour, base for ogi and tuwo shinkafa" },
+  "Beans (white)":   { emoji: "🫘", color: "#7c3aed", bg: "#ede9fe", desc: "White-eyed beans (oloyin), rich in protein and widely consumed" },
+  "Beans (red)":     { emoji: "🫘", color: "#dc2626", bg: "#fee2e2", desc: "Red kidney beans, popular in stews and bean pottage" },
+  "Cowpeas":         { emoji: "🟤", color: "#92400e", bg: "#fef3c7", desc: "Black-eyed peas, a vital affordable protein source in Nigeria" },
+  "Tomatoes":        { emoji: "🍅", color: "#dc2626", bg: "#fee2e2", desc: "Fresh tomatoes, an essential base for Nigerian soups and stews" },
+  "Yam":             { emoji: "🍠", color: "#b45309", bg: "#fef3c7", desc: "White yam, a culturally significant and widely traded staple crop" },
+  "Onions":          { emoji: "🧅", color: "#d97706", bg: "#fef9c3", desc: "Red and yellow onions used in virtually every Nigerian dish" },
+  "Groundnuts":      { emoji: "🥜", color: "#b45309", bg: "#fef3c7", desc: "Peanuts used for cooking oil, groundnut soup, and as a snack" },
+  "Millet":          { emoji: "🌾", color: "#059669", bg: "#d1fae5", desc: "Pearl millet, a drought-resistant grain grown in northern Nigeria" },
+  "Sorghum":         { emoji: "🌿", color: "#065f46", bg: "#d1fae5", desc: "Versatile cereal grain used for tuwo, pap, and local brewing" },
+  "Oil (palm)":      { emoji: "🫙", color: "#dc2626", bg: "#fee2e2", desc: "Red palm oil extracted from oil palm fruit, cornerstone of Nigerian cuisine" },
+  "Oil (vegetable)": { emoji: "🛢️", color: "#d97706", bg: "#fef9c3", desc: "Refined vegetable oil for frying and general cooking" },
+  "Meat (beef)":     { emoji: "🥩", color: "#dc2626", bg: "#fee2e2", desc: "Fresh beef sourced from local cattle markets across Nigeria" },
+  "Fish":            { emoji: "🐟", color: "#1d4ed8", bg: "#dbeafe", desc: "Fresh and dried fish, a key protein source in coastal and inland markets" },
 }
-export const DEFAULT_META = { emoji: "🌱", color: "#118C4C", bg: "#d1fae5", desc: "Agricultural commodity" }
+export const DEFAULT_META = { emoji: "🌱", color: "#118C4C", bg: "#d1fae5", desc: "Agricultural commodity traded across Nigerian markets" }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 export function getChange(hist: CommodityHistory["history"] | undefined, currentPrice: number) {
@@ -40,7 +45,7 @@ export function getChange(hist: CommodityHistory["history"] | undefined, current
 }
 
 // ─── Chart tooltip ────────────────────────────────────────────────────────────
-function ChartTooltip({ active, payload, label, unit }: { active?: boolean; payload?: {value:number}[]; label?: string; unit: string }) {
+function ChartTooltip({ active, payload, label, unit }: { active?: boolean; payload?: { value: number }[]; label?: string; unit: string }) {
   if (!active || !payload?.length) return null
   return (
     <div className="bg-background border border-border rounded-xl px-3 py-2 shadow-xl text-xs">
@@ -54,13 +59,10 @@ function ChartTooltip({ active, payload, label, unit }: { active?: boolean; payl
 
 // ─── Reusable price chart ─────────────────────────────────────────────────────
 export function PriceChart({ history, color, unit, height = "100%" }: {
-  history: CommodityHistory["history"]
-  color: string
-  unit: string
-  height?: string | number
+  history: CommodityHistory["history"]; color: string; unit: string; height?: string | number
 }) {
   if (!history.length) return (
-    <div className="h-full flex items-center justify-center text-xs text-muted-foreground opacity-40">No data</div>
+    <div className="h-full flex items-center justify-center text-xs text-muted-foreground opacity-40">No chart data</div>
   )
   const isUp = history.length > 1 && history[history.length - 1].price >= history[0].price
   const lineColor = isUp ? "#22c55e" : "#ef4444"
@@ -89,23 +91,20 @@ export function PriceChart({ history, color, unit, height = "100%" }: {
   )
 }
 
-// ─── Detail + Buy modal (uses platform's bottom-sheet Modal) ─────────────────
+// ─── Detail + Buy modal ───────────────────────────────────────────────────────
 export function CommodityDetailModal({
   item, history, onClose, onBought
 }: {
-  item: CommodityPrice
-  history: CommodityHistory | undefined
-  onClose: () => void
-  onBought: () => void
+  item: CommodityPrice; history: CommodityHistory | undefined; onClose: () => void; onBought: () => void
 }) {
   const meta = META[item.commodity] ?? DEFAULT_META
   const hist = history?.history ?? []
   const change = getChange(hist, item.price)
   const isUp = !change || change.value >= 0
 
-  const [range, setRange] = useState<"3m"|"6m"|"1y"|"all">("all")
+  const [range, setRange] = useState<"3m" | "6m" | "1y" | "all">("all")
   const [qty, setQty] = useState("1")
-  const [step, setStep] = useState<"detail"|"buy"|"success">("detail")
+  const [step, setStep] = useState<"detail" | "buy" | "success">("detail")
 
   const q = parseFloat(qty) || 0
   const total = q * item.price
@@ -113,6 +112,7 @@ export function CommodityDetailModal({
   const max = hist.length ? Math.max(...hist.map(h => h.price)) : 0
   const rangeMap = { "3m": -3, "6m": -6, "1y": -12, "all": 0 }
   const sliced = rangeMap[range] ? hist.slice(rangeMap[range]) : hist
+  const prediction = predictNextPrice(hist.map(h => h.price))
 
   const confirmBuy = () => {
     if (q <= 0) return
@@ -123,45 +123,40 @@ export function CommodityDetailModal({
   return (
     <Modal isOpen title={step === "buy" ? `Buy ${item.displayName}` : item.displayName} onClose={onClose}>
       <AnimatePresence mode="wait">
+        {/* ── Success ── */}
         {step === "success" ? (
           <WalletSuccessScreen
             key="success"
-            title="Asset Purchased! 🎉"
+            title="Asset Purchased!"
             subtitle={`${q} ${item.unit} of ${item.displayName} added to your portfolio at ₦${item.price.toLocaleString()}/${item.unit}`}
             onDone={() => { onBought(); onClose() }}
             doneLabel="View Portfolio"
           />
         ) : step === "buy" ? (
+          /* ── Buy step ── */
           <motion.div key="buy" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5 pb-4">
-            {/* Commodity summary */}
-            <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ background: meta.bg }}>
-              <span className="text-4xl">{meta.emoji}</span>
+            <div className="rounded-2xl border border-border bg-muted/40 p-4 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: meta.bg }}>
+                <CommodityIcon commodity={item.commodity} className="h-6 w-6" style={{ color: meta.color }} />
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold">{item.displayName}</p>
-                <p className="text-xs mt-0.5" style={{ color: meta.color }}>{meta.desc}</p>
+                <p className="font-bold text-base">{item.displayName}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{meta.desc}</p>
               </div>
               <div className="text-right shrink-0">
-                <p className="font-extrabold text-lg">₦{item.price.toLocaleString()}</p>
+                <p className="font-extrabold text-xl">₦{item.price.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground">per {item.unit}</p>
               </div>
             </div>
 
-            {/* Mini chart */}
-            <div className="h-20 w-full">
+            <div className="h-16 w-full">
               <PriceChart history={hist.slice(-6)} color={meta.color} unit={item.unit} />
             </div>
 
-            {/* Quantity */}
             <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Quantity ({item.unit})
-              </label>
-              <input
-                type="number" min="0.1" step="0.1" value={qty}
-                onChange={e => setQty(e.target.value)}
-                className="w-full mt-2 rounded-2xl border border-border bg-background px-4 py-3 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#118C4C]"
-              />
-              {/* Quick qty buttons */}
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quantity ({item.unit})</label>
+              <input type="number" min="0.1" step="0.1" value={qty} onChange={e => setQty(e.target.value)}
+                className="w-full mt-2 rounded-2xl border border-border bg-background px-4 py-3 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-[#118C4C]" />
               <div className="flex gap-2 mt-2">
                 {[1, 5, 10, 25, 50].map(n => (
                   <button key={n} onClick={() => setQty(String(n))}
@@ -173,53 +168,54 @@ export function CommodityDetailModal({
               </div>
             </div>
 
-            {/* Cost breakdown */}
             <div className="rounded-2xl border border-border bg-muted/40 divide-y divide-border">
               <div className="flex justify-between px-4 py-3 text-sm">
-                <span className="text-muted-foreground">Unit price</span>
+                <span className="text-muted-foreground flex items-center gap-2"><BarChart3 className="h-3.5 w-3.5" />Unit price</span>
                 <span className="font-semibold">₦{item.price.toLocaleString()} / {item.unit}</span>
               </div>
               <div className="flex justify-between px-4 py-3 text-sm">
-                <span className="text-muted-foreground">Quantity</span>
+                <span className="text-muted-foreground flex items-center gap-2"><LineChart className="h-3.5 w-3.5" />Quantity</span>
                 <span className="font-semibold">{q} {item.unit}</span>
               </div>
               {item.usdPrice > 0 && (
                 <div className="flex justify-between px-4 py-3 text-sm">
-                  <span className="text-muted-foreground">USD equivalent</span>
+                  <span className="text-muted-foreground flex items-center gap-2"><Building2 className="h-3.5 w-3.5" />USD equivalent</span>
                   <span className="font-semibold">${(item.usdPrice * q).toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between px-4 py-3">
-                <span className="font-bold">Total cost</span>
-                <span className="font-extrabold text-[#118C4C] text-lg">₦{Math.round(total).toLocaleString()}</span>
+                <span className="font-bold text-sm">Total cost</span>
+                <span className="font-extrabold text-[#118C4C] text-xl">₦{Math.round(total).toLocaleString()}</span>
               </div>
             </div>
 
-            <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-2xl px-4 py-3 flex items-start gap-2">
-              <span className="text-base shrink-0">🔒</span>
-              <span>Prototype mode — assets stored locally in your browser. No real money moves.</span>
-            </p>
+            <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 flex items-start gap-3">
+              <Lock className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">Prototype — assets stored locally. No real money moves.</p>
+            </div>
 
             <div className="flex gap-3">
               <button onClick={() => setStep("detail")}
-                className="flex-1 rounded-2xl border border-border py-3 font-semibold text-sm hover:bg-muted transition-colors">
-                ← Back
+                className="flex items-center gap-1.5 rounded-2xl border border-border px-4 py-3 font-semibold text-sm hover:bg-muted transition-colors">
+                <ChevronLeft className="h-4 w-4" /> Back
               </button>
               <button onClick={confirmBuy} disabled={q <= 0}
                 className="flex-1 rounded-2xl bg-[#118C4C] text-white py-3 font-bold text-sm disabled:opacity-40 hover:bg-[#0d7a42] transition-colors flex items-center justify-center gap-2">
-                <ShoppingBag className="h-4 w-4" />
-                Confirm Buy
+                <ShoppingBag className="h-4 w-4" /> Confirm Purchase
               </button>
             </div>
           </motion.div>
         ) : (
+          /* ── Detail step ── */
           <motion.div key="detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5 pb-4">
             {/* Price hero */}
             <div className="flex items-end justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-3xl">{meta.emoji}</span>
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: meta.bg, color: meta.color }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: meta.bg }}>
+                    <CommodityIcon commodity={item.commodity} className="h-4 w-4" style={{ color: meta.color }} />
+                  </div>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full border" style={{ borderColor: meta.color + "40", background: meta.bg, color: meta.color }}>
                     /{item.unit}
                   </span>
                 </div>
@@ -227,19 +223,22 @@ export function CommodityDetailModal({
                 {item.usdPrice > 0 && <p className="text-sm text-muted-foreground mt-0.5">≈ ${item.usdPrice.toFixed(2)} USD</p>}
               </div>
               {change && (
-                <div className={`text-right px-3 py-2 rounded-2xl ${isUp ? "bg-green-50 dark:bg-green-900/20" : "bg-red-50 dark:bg-red-900/20"}`}>
-                  <p className={`text-xl font-extrabold ${isUp ? "text-green-600" : "text-red-500"}`}>
-                    {isUp ? "▲" : "▼"} {Math.abs(change.value).toFixed(1)}%
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">vs last month</p>
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-2xl ${isUp ? "bg-green-50 dark:bg-green-900/20" : "bg-red-50 dark:bg-red-900/20"}`}>
+                  {isUp ? <ArrowUpRight className="h-5 w-5 text-green-600" /> : <ArrowDownRight className="h-5 w-5 text-red-500" />}
+                  <div>
+                    <p className={`text-xl font-extrabold leading-none ${isUp ? "text-green-600" : "text-red-500"}`}>
+                      {isUp ? "+" : ""}{change.value.toFixed(1)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">vs last month</p>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Range selector + Chart */}
+            {/* Range + Chart */}
             <div>
               <div className="flex gap-1.5 mb-3">
-                {(["3m","6m","1y","all"] as const).map(r => (
+                {(["3m", "6m", "1y", "all"] as const).map(r => (
                   <button key={r} onClick={() => setRange(r)}
                     className={`px-3 py-1 rounded-xl text-xs font-semibold transition-colors ${range === r ? "bg-[#118C4C] text-white" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}>
                     {r.toUpperCase()}
@@ -251,16 +250,18 @@ export function CommodityDetailModal({
               </div>
             </div>
 
-            {/* Stats grid */}
+            {/* Stats grid — Lucide icons only */}
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: "All-time High", value: `₦${max.toLocaleString()}`, icon: "📈" },
-                { label: "All-time Low",  value: `₦${min.toLocaleString()}`, icon: "📉" },
-                { label: "Months of data", value: `${hist.length}`, icon: "📅" },
-                { label: "Markets tracked", value: `${item.marketCount}`, icon: "🏪" },
+                { label: "All-time High",   value: `₦${max.toLocaleString()}`,  Icon: Flame,        color: "text-orange-500" },
+                { label: "All-time Low",    value: `₦${min.toLocaleString()}`,  Icon: Snowflake,    color: "text-blue-500" },
+                { label: "Months of data",  value: `${hist.length}`,            Icon: Calendar,     color: "text-purple-500" },
+                { label: "Markets tracked", value: `${item.marketCount}`,       Icon: MapPin,       color: "text-[#118C4C]" },
               ].map(s => (
                 <div key={s.label} className="flex items-center gap-3 bg-muted/50 rounded-2xl p-3">
-                  <span className="text-xl">{s.icon}</span>
+                  <div className="w-8 h-8 rounded-xl bg-background flex items-center justify-center shrink-0 shadow-sm">
+                    <s.Icon className={`h-4 w-4 ${s.color}`} />
+                  </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{s.label}</p>
                     <p className="font-bold text-sm">{s.value}</p>
@@ -269,24 +270,42 @@ export function CommodityDetailModal({
               ))}
             </div>
 
+            {/* AI Trend Estimate */}
+            {prediction !== null && (
+              <div className="flex items-start gap-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl px-4 py-3">
+                <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center shrink-0">
+                  <BrainCircuit className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                    AI Trend Estimate <LineChart className="h-3 w-3" />
+                  </p>
+                  <p className="text-sm font-bold text-indigo-800 dark:text-indigo-200 mt-0.5">
+                    ₦{prediction.toLocaleString()} <span className="text-xs font-normal text-indigo-500">/ {item.unit} next period</span>
+                  </p>
+                  <p className="text-xs text-indigo-400 mt-0.5">Linear regression · indicative only</p>
+                </div>
+              </div>
+            )}
+
             {/* Description */}
             <div className="flex items-start gap-3 bg-muted/40 rounded-2xl p-4">
               <BarChart3 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: meta.color }} />
-              <p className="text-sm text-muted-foreground leading-relaxed">{meta.desc}. Prices are monthly retail averages across {item.marketCount} WFP-monitored Nigerian markets.</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {meta.desc}. Prices shown are monthly retail averages across {item.marketCount} WFP-monitored Nigerian markets.
+              </p>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              <span>Latest data: {new Date(item.date).toLocaleDateString("en-NG", { month: "long", year: "numeric" })}</span>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5" />
+              <span>Latest: {new Date(item.date).toLocaleDateString("en-NG", { month: "long", year: "numeric" })}</span>
               <span>·</span>
-              <MapPin className="h-3 w-3" />
+              <MapPin className="h-3.5 w-3.5" />
               <span>{item.marketCount} markets</span>
             </div>
 
-            <button
-              onClick={() => setStep("buy")}
-              className="w-full rounded-2xl bg-[#118C4C] text-white py-4 font-bold text-base hover:bg-[#0d7a42] transition-colors flex items-center justify-center gap-2"
-            >
+            <button onClick={() => setStep("buy")}
+              className="w-full rounded-2xl bg-[#118C4C] text-white py-4 font-bold text-base hover:bg-[#0d7a42] transition-colors flex items-center justify-center gap-2">
               <ShoppingBag className="h-5 w-5" />
               Buy {item.displayName} as Asset
             </button>

@@ -4,6 +4,7 @@ import type React from "react"
 import { useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion"
+import { useScrollLock } from "@/lib/useScrollLock"
 
 interface ModalProps {
   isOpen: boolean
@@ -17,10 +18,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   const backdropOpacity = useTransform(y, [0, 60, 260], [0.6, 0.6, 0])
   const contentRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : ""
-    return () => { document.body.style.overflow = "" }
-  }, [isOpen])
+  useScrollLock(isOpen)
 
   useEffect(() => { if (isOpen) y.set(0) }, [isOpen, y])
 
