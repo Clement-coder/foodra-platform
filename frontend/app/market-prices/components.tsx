@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"import { motion, AnimatePresence } from "framer-motion"
+import React, { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   ShoppingBag, TrendingUp, TrendingDown, BarChart3, MapPin, Calendar,
   ArrowUpRight, ArrowDownRight, ChevronLeft, Lock, BrainCircuit,
