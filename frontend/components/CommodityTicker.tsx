@@ -5,29 +5,14 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import {
-  TrendingUp, TrendingDown, ArrowRight,
-  Wheat, Leaf, Drumstick, Fish, ShoppingBasket, Activity,
+  TrendingUp, TrendingDown, ArrowRight, Activity,
 } from "lucide-react"
 import type { CommodityPrice } from "@/app/api/commodity-prices/route"
 import type { CommodityHistory } from "@/app/api/commodity-history/route"
+import { CommodityIcon } from "@/app/market-prices/page"
 
 interface TickerItem extends CommodityPrice {
   change: number | null
-}
-
-function CommodityIcon({ commodity, className }: { commodity: string; className?: string }) {
-  const n = commodity.toLowerCase()
-  if (n.includes("rice") || n.includes("maize") || n.includes("millet") || n.includes("sorghum"))
-    return <Wheat className={className} />
-  if (n.includes("fish"))
-    return <Fish className={className} />
-  if (n.includes("meat") || n.includes("beef"))
-    return <Drumstick className={className} />
-  if (n.includes("bean") || n.includes("cowpea") || n.includes("groundnut") ||
-      n.includes("yam") || n.includes("tomato") || n.includes("onion") ||
-      n.includes("oil") || n.includes("palm"))
-    return <Leaf className={className} />
-  return <ShoppingBasket className={className} />
 }
 
 export function CommodityTicker() {

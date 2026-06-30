@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useRef } from "react"
-import { X } from "lucide-react"
+import { useEffect, useRef, useState, useCallback } from "react"
+import { X, ChevronDown } from "lucide-react"
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion"
 import { useScrollLock } from "@/lib/useScrollLock"
 
@@ -17,10 +17,34 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   const y = useMotionValue(0)
   const backdropOpacity = useTransform(y, [0, 60, 260], [0.6, 0.6, 0])
   const contentRef = useRef<HTMLDivElement>(null)
+  const [showScrollHint, setShowScrollHint] = useState(false)
 
   useScrollLock(isOpen)
 
-  useEffect(() => { if (isOpen) y.set(0) }, [isOpen, y])
+  // Check if content is scrollable and not yet scrolled
+  const checkScroll = useCallback(() => {
+    const el = contentRef.current
+    if (!el) return
+    const isScrollable = el.scrollHeight > el.clientHeight + 8
+    const isAtTop = el.scrollTop < 10
+    setShowScrollHint(isScrollable && isAtTop)
+  }, [])
+
+  useEffect(() => {
+    if (isOpen) {
+      y.set(0)
+      // Delay check so children have rendered
+      const t = setTimeout(checkScroll, 120)
+      return () => clearTimeout(t)
+    }
+  }, [isOpen, y, checkScroll])
+
+  const handleContentScroll = () => {
+    const el = contentRef.current
+    if (!el) return
+    if (el.scrollTop > 10) setShowScrollHint(false)
+    else checkScroll()
+  }
 
   const handleDragEnd = (_: any, info: { offset: { y: number }; velocity: { y: number } }) => {
     if (info.offset.y > 100 || info.velocity.y > 400) onClose()
@@ -69,8 +93,41 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                 </button>
               </div>
 
-              {/* Scrollable content */}
-              <div ref={contentRef} className="overflow-y-auto flex-1 px-6 pb-10 touch-auto">{children}</div>
+              {/* Scrollable content + scroll hint overlay */}
+              <div className="relative flex-1 min-h-0">
+                <div
+                  ref={contentRef}
+                  onScroll={handleContentScroll}
+                  className="overflow-y-auto h-full px-6 pb-10 touch-auto"
+                >
+                  {children}
+                </div>
+
+                {/* Scroll hint — fade gradient + bouncing arrow */}
+                <AnimatePresence>
+                  {showScrollHint && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="pointer-events-none absolute bottom-0 inset-x-0 flex flex-col items-center justify-end pb-3"
+                      style={{
+                        background: "linear-gradient(to bottom, transparent 0%, var(--background) 80%)",
+                        height: "80px",
+                      }}
+                    >
+                      <motion.div
+                        animate={{ y: [0, 5, 0] }}
+                        transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                        className="flex items-center justify-center w-7 h-7 rounded-full bg-muted/80 border border-border/60 shadow-sm"
+                      >
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
           </div>
         </>
