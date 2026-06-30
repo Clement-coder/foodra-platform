@@ -252,7 +252,7 @@ export default function AssetsPage() {
                             <div key={p.commodity}>
                               <div className="flex justify-between text-xs font-medium mb-1">
                                 <span className="truncate flex items-center gap-1.5">
-                                  <CommodityIcon commodity={p.commodity} className="h-3 w-3 shrink-0" style={{ color: meta.color }} />
+                                  <span className="text-sm shrink-0">{meta.emoji}</span>
                                   {p.displayName}
                                 </span>
                                 <span className="shrink-0 ml-2 text-muted-foreground">{pct.toFixed(1)}%</span>

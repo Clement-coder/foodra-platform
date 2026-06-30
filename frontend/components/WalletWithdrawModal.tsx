@@ -141,7 +141,7 @@ export function WalletWithdrawModal({ isOpen, onClose, currentBalance, onSuccess
             onClick={step === 3 ? handleClose : undefined} />
 
           <motion.div
-            className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-2xl max-w-lg mx-auto"
+            className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-2xl max-w-lg mx-auto flex flex-col" style={{ maxHeight: "min(74vh, 680px)" }}
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
           >
@@ -149,7 +149,7 @@ export function WalletWithdrawModal({ isOpen, onClose, currentBalance, onSuccess
               <div className="w-10 h-1 rounded-full bg-border" />
             </div>
 
-            <div className="px-6 pt-2 pb-10">
+            <div className="px-6 pt-2 pb-10 overflow-y-auto flex-1">
               {step === 3 ? (
                 <WalletSuccessScreen
                   title="Withdrawal Submitted! 🏦"

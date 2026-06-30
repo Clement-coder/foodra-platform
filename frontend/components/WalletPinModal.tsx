@@ -58,7 +58,7 @@ export function WalletPinModal({ isOpen, onClose, hasPin }: Props) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
 
           <motion.div
-            className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-2xl max-w-lg mx-auto"
+            className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-2xl max-w-lg mx-auto flex flex-col" style={{ maxHeight: "min(74vh, 680px)" }}
             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
           >
@@ -66,7 +66,7 @@ export function WalletPinModal({ isOpen, onClose, hasPin }: Props) {
               <div className="w-10 h-1 rounded-full bg-border" />
             </div>
 
-            <div className="px-6 pt-2 pb-10">
+            <div className="px-6 pt-2 pb-10 overflow-y-auto flex-1">
               {done ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
                   <motion.div

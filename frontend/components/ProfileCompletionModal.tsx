@@ -42,11 +42,11 @@ export function ProfileCompletionModal({ isOpen, onClose, children }: ProfileCom
               dragElastic={{ top: 0.02, bottom: 0.5 }}
               dragMomentum={false}
               onDragEnd={handleDragEnd}
-              style={{ y }}
+              style={{ y, maxHeight: "min(74vh, 680px)" }}
               initial={{ y: "100%" }}
               animate={{ y: 0, transition: { type: "spring", damping: 28, stiffness: 300 } }}
               exit={{ y: "100%", transition: { type: "spring", damping: 32, stiffness: 300 } }}
-              className="pointer-events-auto w-full max-w-lg bg-background rounded-t-3xl shadow-2xl max-h-[92vh] flex flex-col touch-none"
+              className="pointer-events-auto w-full max-w-lg bg-background rounded-t-3xl shadow-2xl flex flex-col touch-none"
             >
               <div className="flex justify-center pt-3 pb-1 shrink-0">
                 <div className="w-10 h-1 rounded-full bg-border" />

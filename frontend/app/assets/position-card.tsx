@@ -6,7 +6,6 @@ import { Bell, BellOff, Package, TrendingUp, TrendingDown, ArrowUpRight, ArrowDo
 import { Modal } from "@/components/Modal"
 import { WalletSuccessScreen } from "@/components/WalletSuccessScreen"
 import { PriceChart, META, DEFAULT_META } from "@/app/market-prices/components"
-import { CommodityIcon } from "@/app/market-prices/page"
 import {
   sellAsset, deliverAsset, setPriceAlert, getPriceHistory,
   predictNextPrice, type AssetPosition,
@@ -45,8 +44,8 @@ export function SellModal({ pos, livePrice, onClose, onDone }: {
         ) : (
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-4">
             <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ background: meta.bg }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: meta.color + "22" }}>
-                <CommodityIcon commodity={pos.commodity} className="h-6 w-6" style={{ color: meta.color }} />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-3xl shrink-0" style={{ background: meta.bg }}>
+                {meta.emoji}
               </div>
               <div>
                 <p className="font-bold">{pos.displayName}</p>
@@ -137,8 +136,8 @@ export function DeliverModal({ pos, livePrice, onClose, onDone }: {
         ) : (
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5 pb-4">
             <div className="flex items-center gap-3 p-4 rounded-2xl" style={{ background: meta.bg }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: meta.color + "22" }}>
-                <CommodityIcon commodity={pos.commodity} className="h-6 w-6" style={{ color: meta.color }} />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-3xl shrink-0" style={{ background: meta.bg }}>
+                {meta.emoji}
               </div>
               <div>
                 <p className="font-bold">{pos.displayName}</p>
@@ -208,9 +207,9 @@ export function AlertModal({ pos, livePrice, onClose, onDone }: {
         {/* ── Current price hero ── */}
         <div className="rounded-2xl border border-border overflow-hidden">
           <div className="flex items-center gap-3 p-4" style={{ background: meta.bg }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: meta.color + "22" }}>
-              <CommodityIcon commodity={pos.commodity} className="h-6 w-6" style={{ color: meta.color }} />
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-3xl shrink-0"
+              style={{ background: meta.bg }}>
+              {meta.emoji}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Live price right now</p>
@@ -337,9 +336,9 @@ export function PositionCard({ pos, livePrice, history, onRefresh }: {
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
                 style={{ background: meta.bg }}>
-                <CommodityIcon commodity={pos.commodity} className="h-5 w-5" style={{ color: meta.color }} />
+                {meta.emoji}
               </div>
               <div>
                 <p className="font-bold text-sm leading-tight">{pos.displayName}</p>

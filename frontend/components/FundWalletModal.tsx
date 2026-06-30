@@ -65,7 +65,7 @@ export function FundWalletModal({ isOpen, onClose }: Props) {
 
           {/* Sheet — slides up from bottom */}
           <motion.div
-            className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-2xl max-w-lg mx-auto"
+            className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-2xl max-w-lg mx-auto flex flex-col" style={{ maxHeight: "min(74vh, 680px)" }}
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -76,7 +76,7 @@ export function FundWalletModal({ isOpen, onClose }: Props) {
               <div className="w-10 h-1 rounded-full bg-border" />
             </div>
 
-            <div className="px-6 pt-2 pb-10 space-y-7">
+            <div className="px-6 pt-2 pb-10 space-y-7 overflow-y-auto flex-1">
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div>

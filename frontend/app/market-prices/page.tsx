@@ -53,10 +53,10 @@ function CommodityCard({ item, history, index, onClick }: {
           <PriceChart history={hist} color={meta.color} unit={item.unit} />
         </div>
         <div className="absolute top-2.5 inset-x-3 flex items-start justify-between">
-          {/* Icon + held badge */}
+          {/* Emoji icon + held badge */}
           <div className="flex items-center gap-1.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm" style={{ background: meta.color + "22" }}>
-              <CommodityIcon commodity={item.commodity} className="h-4 w-4" style={{ color: meta.color }} />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl shadow-sm shrink-0" style={{ background: meta.bg }}>
+              {meta.emoji}
             </div>
             {held != null && (
               <span className="text-[10px] bg-[#118C4C] text-white rounded-full px-1.5 py-0.5 font-semibold shadow">
@@ -143,9 +143,9 @@ function CommodityRow({ item, history, index, onClick }: {
       onClick={onClick}
       className="flex items-center gap-3 px-4 py-3.5 border-b border-border hover:bg-muted/40 cursor-pointer transition-colors last:border-b-0"
     >
-      {/* Icon */}
-      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: meta.bg }}>
-        <CommodityIcon commodity={item.commodity} className="h-4 w-4" style={{ color: meta.color }} />
+      {/* Emoji icon */}
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl shrink-0" style={{ background: meta.bg }}>
+        {meta.emoji}
       </div>
 
       <div className="flex-1 min-w-0">

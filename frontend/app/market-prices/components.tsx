@@ -1,7 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import React, { useState } from "react"import { motion, AnimatePresence } from "framer-motion"
 import {
   ShoppingBag, TrendingUp, TrendingDown, BarChart3, MapPin, Calendar,
   ArrowUpRight, ArrowDownRight, ChevronLeft, Lock, BrainCircuit,
@@ -15,7 +14,6 @@ import type { CommodityHistory } from "@/app/api/commodity-history/route"
 import { buyAsset, predictNextPrice } from "@/lib/assetStore"
 import { WalletSuccessScreen } from "@/components/WalletSuccessScreen"
 import { Modal } from "@/components/Modal"
-import { CommodityIcon } from "./page"
 
 export const META: Record<string, { emoji: string; color: string; bg: string; desc: string }> = {
   "Rice (local)":    { emoji: "🌾", color: "#b45309", bg: "#fef3c7", desc: "Locally grown white rice, a dietary staple across Nigeria" },
@@ -136,8 +134,8 @@ export function CommodityDetailModal({
           /* ── Buy step ── */
           <motion.div key="buy" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5 pb-4">
             <div className="rounded-2xl border border-border bg-muted/40 p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ background: meta.bg }}>
-                <CommodityIcon commodity={item.commodity} className="h-6 w-6" style={{ color: meta.color }} />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-3xl shrink-0" style={{ background: meta.bg }}>
+                {meta.emoji}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-base">{item.displayName}</p>
@@ -212,8 +210,8 @@ export function CommodityDetailModal({
             <div className="flex items-end justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: meta.bg }}>
-                    <CommodityIcon commodity={item.commodity} className="h-4 w-4" style={{ color: meta.color }} />
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center text-2xl" style={{ background: meta.bg }}>
+                    {meta.emoji}
                   </div>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full border" style={{ borderColor: meta.color + "40", background: meta.bg, color: meta.color }}>
                     /{item.unit}
