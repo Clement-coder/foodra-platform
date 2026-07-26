@@ -22,7 +22,7 @@
     "@solana/kit": "^6.10.0",
     "@supabase/supabase-js": "^2.98.0",
     "@types/web-push": "^3.6.4",
-    "@vercel/analytics": "^1.6.1",
+    "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^2.4.3",
     "canvas-confetti": "^1.9.3",
     "date-fns": "^4.1.0",
