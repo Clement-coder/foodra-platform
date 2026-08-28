@@ -50,13 +50,9 @@ async function geocode(location: string): Promise<{ lat: number; lon: number } |
   }
 }
 
-async function run(request: Request) {
-  const secret =
-    request.headers.get("x-cron-secret") ??
-    new URL(request.url).searchParams.get("secret")
-  if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+async function run(_request: Request) {
+  // ── DISABLED: daily weather forecast email notifications are turned off ──
+  return NextResponse.json({ disabled: true, sent: 0 })
 
   const supabase = getSupabaseAdminClient()
   if (!supabase) return NextResponse.json({ error: "DB unavailable" }, { status: 500 })
