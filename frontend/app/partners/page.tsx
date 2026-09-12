@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Handshake, Globe, Mail, ArrowRight, ExternalLink } from "lucide-react"
@@ -38,6 +39,18 @@ function LogoVercel({ size = 36 }: { size?: number }) {
       <rect width="100" height="100" rx="22" fill="#000" />
       <path d="M50 20L82 72H18L50 20z" fill="white" />
     </svg>
+  )
+}
+function LogoBenueTech({ size = 36 }: { size?: number }) {
+  return (
+    <Image
+      src="/Benuetech.jpeg"
+      alt="BenueTech Foundation"
+      width={size}
+      height={size}
+      className="rounded-lg object-contain"
+      style={{ width: size, height: size }}
+    />
   )
 }
 
@@ -86,6 +99,17 @@ const PARTNERS = [
     ring: 1,
     startDeg: 270,
   },
+  {
+    name: "BenueTech Foundation",
+    sub: "NGO Partner",
+    category: "Community & Agriculture",
+    description: "Nigeria's first tech-focused NGO rooted in Benue State — driving digital inclusion, agricultural innovation, and community empowerment from Makurdi.",
+    url: "https://benuetech.org",
+    Logo: LogoBenueTech,
+    accent: "#e67e22",
+    ring: 0,
+    startDeg: 270,
+  },
 ]
 
 const RINGS = [
@@ -95,7 +119,7 @@ const RINGS = [
 
 const partnerTypes = [
   { icon: Globe, title: "Technology Partners", description: "Infrastructure, tools, and APIs powering the Foodra platform." },
-  { icon: Handshake, title: "Agricultural Partners", description: "NGOs, cooperatives, and government bodies supporting food security." },
+  { icon: Handshake, title: "Agricultural & Community Partners", description: "NGOs, cooperatives, and community organisations driving food security and digital inclusion." },
   { icon: Mail, title: "Funding Partners", description: "Investors, grants, and financial institutions fuelling our growth." },
 ]
 
