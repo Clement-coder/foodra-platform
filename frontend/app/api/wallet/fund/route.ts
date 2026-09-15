@@ -14,8 +14,8 @@ export async function POST(request: Request) {
     const auth = await requireAuthenticatedUser(request)
     const { amount_ngn } = await request.json()
 
-    if (!amount_ngn || amount_ngn < 500)
-      return NextResponse.json({ error: "Minimum funding amount is ₦500" }, { status: 400 })
+    if (!amount_ngn || amount_ngn < 100)
+      return NextResponse.json({ error: "Minimum funding amount is ₦100" }, { status: 400 })
     if (amount_ngn > 1_000_000)
       return NextResponse.json({ error: "Maximum funding amount is ₦1,000,000" }, { status: 400 })
 

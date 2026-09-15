@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useToast } from "@/lib/toast"
 import { usePrivy } from "@privy-io/react-auth"
 import { authFetch } from "@/lib/authFetch"
-import { Loader2, Search, X, CheckCircle2, ArrowUpRight, ShieldCheck, Sparkles } from "lucide-react"
+import { Loader2, Search, X, CheckCircle2, ArrowUpRight, ShieldCheck } from "lucide-react"
 import { useDebounce } from "@/lib/useDebounce"
 import { WalletSuccessScreen } from "@/components/WalletSuccessScreen"
 import { useScrollLock } from "@/lib/useScrollLock"
@@ -84,14 +84,14 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
     finally { setLoading(false) }
   }
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onClose()
-    // reset after sheet exit animation (~350ms)
+    // reset after sheet exit animation (~400ms)
     setTimeout(() => {
       setStep("form"); setQuery(""); setRecipient(null); setResults([])
       setAmount(""); setNote(""); setPin("")
     }, 400)
-  }
+  }, [onClose])
 
   const amt = parseFloat(amount) || 0
   const isFormValid = recipient && amt >= 100 && amt <= currentBalance
@@ -102,7 +102,7 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
         <>
           <motion.div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={step === "success" ? handleClose : undefined} />
+            onClick={step !== "success" ? handleClose : undefined} />
 
           <motion.div
             className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-2xl max-w-lg mx-auto flex flex-col" style={{ maxHeight: "min(74vh, 680px)" }}
@@ -135,8 +135,8 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
                   <div className="rounded-2xl bg-[#118C4C]/8 border border-[#118C4C]/20 p-5 text-center space-y-1">
                     <p className="text-xs text-muted-foreground">Sending to {recipient?.name}</p>
                     <p className="text-4xl font-black text-[#118C4C]">₦{parseFloat(amount).toLocaleString()}</p>
-                    <div className="flex items-center justify-center gap-1.5 text-xs text-green-600 font-semibold">
-                      <Sparkles className="h-3 w-3" /> No fees applied
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground font-semibold">
+                      No fees applied
                     </div>
                   </div>
 
@@ -171,11 +171,7 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-xl font-bold">Send Money</h2>
-                      <p className="text-sm text-muted-foreground mt-0.5">
-                        <span className="inline-flex items-center gap-1 text-green-600 font-semibold">
-                          <Sparkles className="h-3 w-3" /> 100% Free — no fees ever
-                        </span>
-                      </p>
+                      <p className="text-sm text-muted-foreground mt-0.5">Send to any Foodra user instantly</p>
                     </div>
                     <button onClick={handleClose} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
                       <X className="h-4 w-4" />

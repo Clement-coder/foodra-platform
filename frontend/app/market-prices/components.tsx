@@ -92,9 +92,9 @@ export function PriceChart({ history, color, unit, height = "100%" }: {
 
 // ─── Detail + Buy modal ───────────────────────────────────────────────────────
 export function CommodityDetailModal({
-  item, history, onClose, onBought
+  item, history, onClose, onBought, onBuyClick
 }: {
-  item: CommodityPrice; history: CommodityHistory | undefined; onClose: () => void; onBought: () => void
+  item: CommodityPrice; history: CommodityHistory | undefined; onClose: () => void; onBought: () => void; onBuyClick: () => void
 }) {
   const meta = META[item.commodity] ?? DEFAULT_META
   const hist = history?.history ?? []
@@ -303,7 +303,7 @@ export function CommodityDetailModal({
               <span>{item.marketCount} markets</span>
             </div>
 
-            <button onClick={() => setStep("buy")}
+            <button onClick={onBuyClick}
               className="w-full rounded-2xl bg-[#118C4C] text-white py-4 font-bold text-base hover:bg-[#0d7a42] transition-colors flex items-center justify-center gap-2">
               <ShoppingBag className="h-5 w-5" />
               Buy {item.displayName} as Asset

@@ -1,235 +1,67 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
-import Link from "next/link"
-import { DollarSign, Plus, TrendingUp, Search } from "lucide-react"
 import { motion } from "framer-motion"
-import { usePrivy } from "@privy-io/react-auth"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { FundingCard } from "@/components/FundingCard"
-import { FundingPageSkeleton } from "@/components/Skeleton"
-import type { FundingApplication } from "@/lib/types"
-import withAuth from "../../components/withAuth";
-import { useUser } from "@/lib/useUser"
-import { authFetch } from "@/lib/authFetch"
-import { computeMembership } from "@/lib/membership"
+import { Clock, Bell, Sprout } from "lucide-react"
+import withAuth from "../../components/withAuth"
 
 function FundingPage() {
-  const { currentUser: user, isLoading } = useUser()
-  const { getAccessToken } = usePrivy()
-  const [applications, setApplications] = useState<FundingApplication[]>([])
-  const [filter, setFilter] = useState<"all" | "Pending" | "Approved" | "Rejected">("all")
-  const [search, setSearch] = useState("")
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!isLoading && user) {
-      loadData()
-    } else if (!isLoading) {
-      setLoading(false)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, user?.id])
-
-  const loadData = async () => {
-    try {
-      const endpoint =
-        user?.role === "admin" ? "/api/funding" : `/api/funding?userId=${user?.id}`;
-      const res = await authFetch(getAccessToken, endpoint);
-      const data = await res.json();
-      setApplications(data);
-    } catch (error) {
-      console.error('Error fetching applications:', error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const filteredApplications = useMemo(() => applications.filter((app) => {
-    const matchStatus = filter === "all" || app.status === filter
-    const q = search.toLowerCase()
-    const matchSearch = !q || app.fullName.toLowerCase().includes(q) || app.location.toLowerCase().includes(q) || app.farmType.toLowerCase().includes(q)
-    return matchStatus && matchSearch
-  }), [applications, filter, search])
-
-  const stats = {
-    total: applications.length,
-    pending: applications.filter((a) => a.status === "Pending").length,
-    approved: applications.filter((a) => a.status === "Approved").length,
-  }
-
-  const membership = user ? computeMembership({
-    hasName: !!user.name,
-    hasPhone: !!user.phone,
-    hasLocation: !!user.location,
-    hasAvatar: !!user.avatar,
-    createdAt: user.createdAt,
-    ordersCount: 0,
-    hasDisputes: false,
-    isVerified: !!user.isVerified,
-  }) : null
-
-  const canApplyForFunding = !!user && user.role !== "admin" && membership?.tier === "Champion"
-  const isAdmin = user?.role === "admin"
-  const isFarmerBelowChampion = !!user && user.role !== "admin" && membership?.tier !== "Champion"
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div className="flex items-center gap-3">
-          <div className="bg-[#118C4C]/10 p-3 rounded-lg">
-            <DollarSign className="h-8 w-8 text-[#118C4C]" />
-          </div>
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">Funding</h1>
-            <p className="text-muted-foreground">Access funding opportunities for your farm</p>
-          </div>
-        </div>
-        {canApplyForFunding && (
-          <Link href="/funding/apply">
-            <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2">
-              <Plus className="h-4 w-4" />
-              Apply for Funding
-            </Button>
-          </Link>
-        )}
-        {isFarmerBelowChampion && (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-400">
-            <span>⭐</span>
-            <span>Reach <strong>Champion</strong> tier to apply — <Link href="/profile" className="underline hover:text-amber-900 dark:hover:text-amber-300">view membership</Link></span>
-          </div>
-        )}
-      </div>
-
-      {/* Stats Cards */}
-      {user && applications.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="bg-blue-100 dark:bg-blue-900/20 p-3 rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-sm text-muted-foreground">Total Applications</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="bg-yellow-100 dark:bg-yellow-900/20 p-3 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.pending}</p>
-                  <p className="text-sm text-muted-foreground">Pending Review</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="bg-green-100 dark:bg-green-900/20 p-3 rounded-lg">
-                  <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.approved}</p>
-                  <p className="text-sm text-muted-foreground">Approved</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Search + Filter */}
-      {applications.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search by name, location, farm type…"
-              className="w-full pl-9 pr-4 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-[#118C4C] focus:border-transparent"
-            />
-          </div>
-          <div className="flex gap-2">
-            {(["all", "Pending", "Approved", "Rejected"] as const).map((f) => (
-              <Button key={f} variant={filter === f ? "default" : "outline"} size="sm"
-                onClick={() => setFilter(f)}
-                className={filter === f ? "bg-[#118C4C] hover:bg-[#0d6d3a] text-white" : "bg-transparent hover:bg-accent"}>
-                {f === "all" ? "All" : f}
-              </Button>
-            ))}
+    <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 120, damping: 18 }}
+        className="max-w-md w-full text-center space-y-6"
+      >
+        {/* Icon */}
+        <div className="flex justify-center">
+          <div className="relative w-24 h-24">
+            <div className="absolute inset-0 rounded-full bg-[#118C4C]/10 animate-ping opacity-30" />
+            <div className="relative w-24 h-24 rounded-full bg-[#118C4C]/10 flex items-center justify-center">
+              <Sprout className="h-10 w-10 text-[#118C4C]" />
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Applications List */}
-      {(isLoading || loading) ? (
-        <FundingPageSkeleton />
-      ) : !user ? (
-        <Card className="p-8 text-center">
-          <DollarSign className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-foreground mb-2">Access Funding Opportunities</h2>
-          <p className="text-muted-foreground mb-6">Sign in to apply for funding and track your applications</p>
-          <Link href="/">
-            <Button className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white">Sign In</Button>
-          </Link>
-        </Card>
-      ) : filteredApplications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#118C4C]/10 mb-5">
-            <DollarSign className="h-10 w-10 text-[#118C4C]" />
+        {/* Text */}
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs font-bold px-3 py-1.5 rounded-full">
+            <Clock className="h-3.5 w-3.5" />
+            Coming Soon
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            {filter === "all" ? "No Applications Yet" : `No ${filter} Applications`}
-          </h2>
-          <p className="text-muted-foreground mb-8 max-w-sm">
-            {filter !== "all"
-              ? "Try changing the filter to see other applications."
-              : isAdmin
-              ? "No funding applications have been submitted yet."
-              : canApplyForFunding
-              ? "Apply for funding to grow your farming business and unlock new opportunities."
-              : "You need to reach Champion membership tier before you can apply for funding."}
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Funding is on its way</h1>
+          <p className="text-muted-foreground leading-relaxed">
+            We&apos;re working on bringing agricultural loans and grants directly to Foodra buyers.
+            This feature is not available yet — check back soon!
           </p>
-          {filter === "all" && canApplyForFunding && (
-            <Link href="/funding/apply">
-              <Button size="lg" className="bg-[#118C4C] hover:bg-[#0d6d3a] text-white gap-2 shadow-lg shadow-[#118C4C]/20 px-8">
-                <Plus className="h-5 w-5" />
-                Apply for Funding
-              </Button>
-            </Link>
-          )}
-          {filter === "all" && isFarmerBelowChampion && (
-            <Link href="/profile">
-              <Button size="lg" variant="outline" className="gap-2 border-amber-400 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 px-8">
-                ⭐ View My Membership Progress
-              </Button>
-            </Link>
-          )}
         </div>
-      ) : (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredApplications.map((application) => (
-              <FundingCard key={application.id} application={application} onStatusChange={loadData} />
-            ))}
-          </div>
-        </motion.div>
-      )}
+
+        {/* Info card */}
+        <div className="rounded-2xl border border-border bg-card p-5 text-left space-y-3">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">What&apos;s coming</p>
+          {[
+            "Agricultural loans & grants",
+            "AI-powered credit scoring",
+            "Fast application & tracking",
+            "Admin review with transparent decisions",
+          ].map((item) => (
+            <div key={item} className="flex items-center gap-3 text-sm text-foreground">
+              <div className="w-5 h-5 rounded-full bg-[#118C4C]/10 flex items-center justify-center shrink-0">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#118C4C]" />
+              </div>
+              {item}
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+          <Bell className="h-4 w-4" />
+          <span>You&apos;ll be notified when funding launches</span>
+        </div>
+      </motion.div>
     </div>
   )
 }
 
-export default withAuth(FundingPage);
+export default withAuth(FundingPage)

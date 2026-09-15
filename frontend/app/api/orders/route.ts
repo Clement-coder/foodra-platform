@@ -203,6 +203,10 @@ export async function POST(request: Request) {
       }
     }
 
+    // Check and notify membership upgrade triggered by this new order
+    const { checkAndNotifyMembershipUpgrade } = await import("@/lib/membershipNotify")
+    checkAndNotifyMembershipUpgrade(supabaseAdmin, buyerId, previousTier)
+
     // No notifications or emails until payment is confirmed via pay-wallet
     return NextResponse.json(order)
   } catch (error: any) {

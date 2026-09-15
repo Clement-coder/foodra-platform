@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useToast } from "@/lib/toast"
 import { usePrivy } from "@privy-io/react-auth"
@@ -126,8 +126,10 @@ export function WalletWithdrawModal({ isOpen, onClose, currentBalance, onSuccess
     finally { setLoading(false) }
   }
 
-  const reset = () => { setStep(1); setBankCode(""); setBankName(""); setAccountNumber(""); setAccountName(""); setAmount(""); setPin("") }
-  const handleClose = () => { onClose(); setTimeout(reset, 400) }
+  const reset = useCallback(() => {
+    setStep(1); setBankCode(""); setBankName(""); setAccountNumber(""); setAccountName(""); setAmount(""); setPin("")
+  }, [])
+  const handleClose = useCallback(() => { onClose(); setTimeout(reset, 400) }, [onClose, reset])
 
   const amt = parseFloat(amount) || 0
   const youReceive = Math.max(0, amt - 50)
@@ -138,7 +140,7 @@ export function WalletWithdrawModal({ isOpen, onClose, currentBalance, onSuccess
         <>
           <motion.div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={step === 3 ? handleClose : undefined} />
+            onClick={step !== 3 ? handleClose : undefined} />
 
           <motion.div
             className="fixed inset-x-0 bottom-0 z-50 bg-background rounded-t-3xl shadow-2xl max-w-lg mx-auto flex flex-col" style={{ maxHeight: "min(74vh, 680px)" }}

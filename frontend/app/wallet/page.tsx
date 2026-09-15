@@ -121,7 +121,11 @@ function WalletPage() {
   const handleToggleVisibility = () => {
     setLeafBurst(true)
     setTimeout(() => setLeafBurst(false), 800)
-    setBalanceVisible(v => !v)
+    setBalanceVisible(v => {
+      const next = !v
+      localStorage.setItem("balanceVisible", String(next))
+      return next
+    })
   }
 
   const loadWallet = useCallback(async () => {
@@ -293,7 +297,7 @@ function WalletPage() {
         <div className="flex items-center gap-2.5 bg-green-50 dark:bg-green-900/20 border border-green-200/70 dark:border-green-800/40 rounded-2xl px-4 py-3">
           <span className="text-base shrink-0">🎉</span>
           <p className="text-xs font-semibold text-green-700 dark:text-green-400 leading-snug">
-            Sending money to Foodra users &amp; paying for orders are <span className="underline underline-offset-2">completely free</span> — no hidden fees, no charges, ever.
+            Sending money to Foodra users &amp; paying for orders are <span className="underline underline-offset-2">completely free</span>. Bank withdrawals carry a ₦50 processing fee.
           </p>
         </div>
 
@@ -301,7 +305,7 @@ function WalletPage() {
         <div className="grid grid-cols-4 gap-3">
           {[
             { label: "Fund", icon: <PlusCircle className="h-5 w-5" />, onClick: () => setFundOpen(true), color: "text-[#118C4C]", bg: "bg-[#118C4C]/10", free: false },
-            { label: "Send", icon: <ArrowUpRight className="h-5 w-5" />, onClick: () => setSendOpen(true), color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", free: true },
+            { label: "Send", icon: <ArrowUpRight className="h-5 w-5" />, onClick: () => setSendOpen(true), color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", free: false },
             { label: "Withdraw", icon: <Banknote className="h-5 w-5" />, onClick: () => setWithdrawOpen(true), color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/20", free: false },
             { label: hasPin ? "Change PIN" : "Set PIN", icon: <ShieldCheck className="h-5 w-5" />, onClick: () => setPinOpen(true), color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20", free: false },
           ].map((a) => (

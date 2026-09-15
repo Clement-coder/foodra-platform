@@ -26,7 +26,7 @@ export function FundWalletModal({ isOpen, onClose }: Props) {
   const numericAmount = parseFloat(amount.replace(/,/g, "")) || 0
 
   const handleSubmit = async () => {
-    if (!numericAmount || numericAmount < 500) { toast.error("Minimum amount is ₦500"); return }
+    if (!numericAmount || numericAmount < 100) { toast.error("Minimum amount is ₦100"); return }
     setLoading(true)
     try {
       const res = await authFetch(getAccessToken, "/api/wallet/fund", {
@@ -107,7 +107,7 @@ export function FundWalletModal({ isOpen, onClose }: Props) {
                     className="flex-1 text-4xl font-black bg-transparent border-none outline-none placeholder:text-muted-foreground/30 w-full"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Min ₦500 &nbsp;·&nbsp; Max ₦1,000,000</p>
+                <p className="text-xs text-muted-foreground">Min ₦100 &nbsp;·&nbsp; Max ₦1,000,000</p>
               </div>
 
               {/* Quick amounts */}
@@ -147,14 +147,14 @@ export function FundWalletModal({ isOpen, onClose }: Props) {
               {/* CTA */}
               <button
                 onClick={handleSubmit}
-                disabled={loading || numericAmount < 500}
+                disabled={loading || numericAmount < 100}
                 className="w-full flex items-center justify-center gap-2 bg-[#118C4C] hover:bg-[#0d6d3a] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-base py-4 rounded-2xl transition-colors"
               >
                 {loading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>
-                    {numericAmount >= 500
+                    {numericAmount >= 100
                       ? `Fund ₦${numericAmount.toLocaleString("en-NG")}`
                       : "Enter an amount"}
                     <ChevronRight className="h-5 w-5" />

@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react"
 import {
   RefreshCcw, Search, LayoutGrid, List, TrendingUp, TrendingDown, Minus,
   ShoppingBag, MapPin, ExternalLink, ArrowUpDown, Check, Wheat, Leaf,
-  Drumstick, Fish, ShoppingBasket, BarChart3, BrainCircuit, LineChart,
+  Drumstick, Fish, ShoppingBasket, BarChart3, BrainCircuit, LineChart, Clock,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { CommodityPrice } from "@/app/api/commodity-prices/route"
@@ -30,8 +30,8 @@ export function CommodityIcon({ commodity, className, style }: { commodity: stri
 }
 
 // ─── Grid Card ────────────────────────────────────────────────────────────────
-function CommodityCard({ item, history, index, onClick }: {
-  item: CommodityPrice; history?: CommodityHistory; index: number; onClick: () => void
+function CommodityCard({ item, history, index, onClick, onBuyClick }: {
+  item: CommodityPrice; history?: CommodityHistory; index: number; onClick: () => void; onBuyClick: () => void
 }) {
   const meta  = META[item.commodity] ?? DEFAULT_META
   const hist  = history?.history ?? []
@@ -114,6 +114,7 @@ function CommodityCard({ item, history, index, onClick }: {
         )}
 
         <button
+          onClick={e => { e.stopPropagation(); onClick() }}
           className="w-full rounded-xl py-2 text-xs font-bold text-white transition-opacity group-hover:opacity-90 flex items-center justify-center gap-1.5"
           style={{ background: meta.color }}
         >
@@ -203,6 +204,7 @@ export default function MarketPricesPage() {
   const [sortBy, setSortBy]     = useState<"name" | "price" | "change">("name")
   const [sortOpen, setSortOpen] = useState(false)
   const [selected, setSelected] = useState<CommodityPrice | null>(null)
+  const [buyComingSoon, setBuyComingSoon] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -468,7 +470,7 @@ export default function MarketPricesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filtered.map((item, i) => (
               <CommodityCard key={item.commodity} item={item} history={histories[item.commodity]}
-                index={i} onClick={() => setSelected(item)} />
+                index={i} onClick={() => setSelected(item)} onBuyClick={() => setBuyComingSoon(true)} />
             ))}
           </div>
         ) : (
@@ -504,7 +506,51 @@ export default function MarketPricesPage() {
             history={histories[selected.commodity]}
             onClose={() => setSelected(null)}
             onBought={() => setAssetCount(getPositions().length)}
+            onBuyClick={() => { setSelected(null); setBuyComingSoon(true) }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* ── Coming Soon alert ──────────────────────────────────────────── */}
+      <AnimatePresence>
+        {buyComingSoon && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setBuyComingSoon(false)}
+            />
+            <div className="fixed inset-0 z-[61] flex items-center justify-center px-4 pointer-events-none">
+              <motion.div
+                initial={{ scale: 0.88, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.92, opacity: 0, y: 10 }}
+                transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                className="pointer-events-auto w-full max-w-sm bg-card rounded-3xl shadow-2xl p-7 text-center space-y-5 border border-border"
+              >
+                <div className="flex justify-center">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                    <Clock className="h-8 w-8 text-amber-500" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs font-bold px-3 py-1 rounded-full">
+                    Coming Soon
+                  </div>
+                  <h3 className="text-xl font-extrabold text-foreground">Asset Trading Not Yet Live</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Buying commodities as assets is coming soon. Check back later — we&apos;re building it for you!
+                  </p>
+                </div>
+                <button
+                  onClick={() => setBuyComingSoon(false)}
+                  className="w-full py-3 rounded-2xl bg-[#118C4C] hover:bg-[#0d6d3a] text-white font-bold text-sm transition-colors"
+                >
+                  Got it
+                </button>
+              </motion.div>
+            </div>
+          </>
         )}
       </AnimatePresence>
     </div>

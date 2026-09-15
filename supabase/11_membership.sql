@@ -55,14 +55,17 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION refresh_user_membership(p_user_id UUID)
 RETURNS VOID AS $$
-DECLARE v_score INTEGER; v_tier TEXT;
+DECLARE 
+  v_score INTEGER; 
+  v_tier  TEXT;
 BEGIN
   v_score := compute_membership_score(p_user_id);
   v_tier  := score_to_tier(v_score);
   UPDATE users SET
     membership_score = v_score,
     membership_tier  = v_tier,
-    is_verified = CASE WHEN v_score >= 80 THEN TRUE ELSE is_verified END
+    -- Auto-verify at Champion (80+), auto-unverify if score drops below 80
+    is_verified      = CASE WHEN v_score >= 80 THEN TRUE ELSE FALSE END
   WHERE id = p_user_id;
 END;
 $$ LANGUAGE plpgsql;

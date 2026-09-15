@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import { CheckCircle2, Sparkles, Zap, Star, Leaf } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -26,10 +26,16 @@ const BURST_ITEMS = [
 ]
 
 export function WalletSuccessScreen({ title, subtitle, onDone, doneLabel = "Done" }: Props) {
+  // Use a ref so the auto-close timeout never re-fires if the parent
+  // re-renders (e.g. balance update) and passes a new function reference.
+  const onDoneRef = useRef(onDone)
+  useEffect(() => { onDoneRef.current = onDone }, [onDone])
+
   useEffect(() => {
-    const t = setTimeout(onDone, 4500)
+    const t = setTimeout(() => onDoneRef.current(), 4500)
     return () => clearTimeout(t)
-  }, [onDone])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // ← run exactly once on mount
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-8">
