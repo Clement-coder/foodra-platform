@@ -17,7 +17,9 @@ import { WishlistButton } from "@/components/WishlistButton"
 import { productJsonLd } from "@/lib/seo"
 import { ProductCard } from "@/components/ProductCard"
 
-function ProductDetailPage() {
+const FOODRA_LOGO = "https://foodramarket.com/foodra_logo.jpeg"
+
+export default function ProductDetailPage() {
   const router = useRouter()
   const { id } = useParams() as { id: string }
   const { currentUser } = useUser()
@@ -176,23 +178,18 @@ function ProductDetailPage() {
               )}
             </div>
 
-            {/* Seller */}
+            {/* Seller — always Foodra */}
             <Link href={`/users/${product.farmerId}`}>
               <div className="flex items-center gap-3 p-3 rounded-2xl border border-border hover:border-[#118C4C]/40 hover:bg-[#118C4C]/5 transition-all group">
                 <div className="relative flex-shrink-0">
-                  {product.farmerAvatar
-                    ? <img src={product.farmerAvatar} alt={product.farmerName} className="w-10 h-10 rounded-full object-contain border border-border bg-white" />
-                    : <div className="w-10 h-10 rounded-full bg-[#118C4C] flex items-center justify-center text-white font-bold">{product.farmerName?.[0]?.toUpperCase()}</div>
-                  }
-                  {product.farmerIsVerified && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#118C4C] rounded-full flex items-center justify-center border border-background">
-                      <BadgeCheck className="h-2.5 w-2.5 text-white" />
-                    </div>
-                  )}
+                  <img src={FOODRA_LOGO} alt="Foodra" className="w-10 h-10 rounded-full object-contain border border-border bg-white p-0.5" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#118C4C] rounded-full flex items-center justify-center border border-background">
+                    <BadgeCheck className="h-2.5 w-2.5 text-white" />
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm">{product.farmerName}</p>
-                  <p className="text-xs text-muted-foreground">{product.farmerIsVerified ? "✓ Verified Seller" : "Seller"} · {product.location}</p>
+                  <p className="font-semibold text-sm">Foodra</p>
+                  <p className="text-xs text-muted-foreground">✓ Official Foodra Store · {product.location}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
               </div>
@@ -351,5 +348,3 @@ function ProductDetailPage() {
     </div>
   )
 }
-
-export default ProductDetailPage

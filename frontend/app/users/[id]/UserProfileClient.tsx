@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { ShareOptionsModal } from "@/components/ShareOptionsModal"
 import { MembershipBadge } from "@/components/MembershipBadge"
+import { ProductCard } from "@/components/ProductCard"
 import type { MembershipScore } from "@/lib/membership"
 import type { User, Product } from "@/lib/types"
 
@@ -22,9 +23,10 @@ interface Props {
 export default function UserProfileClient({ user, membership, products, ordersCount }: Props) {
   const router = useRouter()
   const [shareOpen, setShareOpen] = useState(false)
+  const [tab, setTab] = useState<"about" | "products">("about")
 
   const joinedDate = new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })
-  const isFoodra = user.role === "owner"
+  const isFoodra = user.role === "owner" || user.role === "admin"
 
   return (
     <div className="max-w-2xl mx-auto pb-12">
@@ -121,17 +123,39 @@ export default function UserProfileClient({ user, membership, products, ordersCo
         {/* Divider */}
         <div className="border-t border-border mt-5 mx-4" />
 
-        {/* Tabs — single About tab for all users (Foodra is the sole merchant) */}
+        {/* Tabs */}
         <div className="flex border-b border-border mt-1 px-4">
-          <button className="px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px border-[#118C4C] text-[#118C4C]">
+          <button
+            onClick={() => setTab("about")}
+            className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              tab === "about" ? "border-[#118C4C] text-[#118C4C]" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
             About
           </button>
+          {isFoodra && (
+            <button
+              onClick={() => setTab("products")}
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                tab === "products" ? "border-[#118C4C] text-[#118C4C]" : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Products Listed
+              {products.length > 0 && (
+                <span className="ml-1.5 text-xs bg-[#118C4C]/10 text-[#118C4C] px-1.5 py-0.5 rounded-full font-bold">
+                  {products.length}
+                </span>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Tab content */}
         <div className="px-4 pt-5">
-          {/* About tab */}
-          <div className="space-y-4">
+
+          {/* ── ABOUT ─────────────────────────────────────────────── */}
+          {tab === "about" && (
+            <div className="space-y-4">
               {isFoodra ? (
                 <>
                   <div className="p-4 rounded-2xl border border-[#118C4C]/25 bg-gradient-to-br from-[#118C4C]/8 to-transparent">
@@ -140,7 +164,7 @@ export default function UserProfileClient({ user, membership, products, ordersCo
                       <span className="text-sm font-bold text-[#118C4C]">About Foodra</span>
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Foodra is Nigeria's leading AgriTech marketplace. All products listed here are curated and managed directly by the Foodra team — ensuring quality, fair pricing, and reliable delivery.
+                      Foodra is Nigeria&apos;s leading AgriTech marketplace. All products listed here are curated and managed directly by the Foodra team — ensuring quality, fair pricing, and reliable delivery.
                     </p>
                   </div>
                   <a href="mailto:support@foodramarket.com" className="flex items-center gap-3 p-3.5 rounded-2xl border border-border bg-card hover:border-[#118C4C]/40 hover:bg-[#118C4C]/5 transition-all group">
@@ -190,6 +214,31 @@ export default function UserProfileClient({ user, membership, products, ordersCo
                 </div>
               )}
             </div>
+          )}
+
+          {/* ── PRODUCTS LISTED (Foodra only) ─────────────────────── */}
+          {tab === "products" && isFoodra && (
+            <div className="pb-8">
+              {products.length === 0 ? (
+                <div className="py-16 text-center text-muted-foreground">
+                  <ShoppingBag className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                  <p className="text-sm">No products listed yet</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Showing {products.length} product{products.length !== 1 ? "s" : ""} available on Foodra
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {products.map(p => (
+                      <ProductCard key={p.id} product={p} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
         </div>
 
       </motion.div>
