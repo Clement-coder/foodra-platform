@@ -151,10 +151,43 @@ function WalletPage() {
   useEffect(() => { loadWallet() }, [loadWallet])
 
   useEffect(() => {
-    if (searchParams.get("funded") === "1") {
-      toast.success("Payment received! Your balance will update shortly.")
+    const funded = searchParams.get("funded")
+    const ref = searchParams.get("reference") || searchParams.get("trxref")
+
+    if (funded === "1") {
       router.replace("/wallet")
-      setTimeout(loadWallet, 3000)
+
+      if (ref) {
+        // Verify with Paystack directly and credit if webhook hasn't fired yet
+        const verify = async () => {
+          try {
+            const res = await authFetch(getAccessToken, "/api/wallet/verify-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ reference: ref }),
+            })
+            const data = await res.json()
+            if (res.ok) {
+              toast.success(`₦${Number(data.amount_ngn).toLocaleString()} added to your wallet!`)
+              loadWallet()
+            } else {
+              // Payment not confirmed yet — poll a couple more times for the webhook
+              toast.success("Payment received! Your balance will update shortly.")
+              setTimeout(loadWallet, 3000)
+              setTimeout(loadWallet, 8000)
+            }
+          } catch {
+            toast.success("Payment received! Your balance will update shortly.")
+            setTimeout(loadWallet, 3000)
+          }
+        }
+        verify()
+      } else {
+        // No reference in URL — fall back to polling for webhook
+        toast.success("Payment received! Your balance will update shortly.")
+        setTimeout(loadWallet, 3000)
+        setTimeout(loadWallet, 8000)
+      }
     }
   }, [searchParams]) // eslint-disable-line
 
