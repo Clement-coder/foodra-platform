@@ -41,7 +41,8 @@ export async function POST(request: Request) {
     if (!data.status || data.data?.status !== "success")
       return NextResponse.json({ error: "Payment not confirmed by Paystack", paystackStatus: data.data?.status }, { status: 402 })
 
-    const amount_ngn = data.data.amount / 100
+    // Use the originally requested amount stored in DB, not Paystack's charged amount (which includes fees)
+    const amount_ngn = existing.amount_ngn
 
     // Credit the wallet via the same idempotent RPC the webhook uses
     const { data: rpcResult, error: rpcError } = await supabase.rpc("process_paystack_webhook", {

@@ -18,13 +18,23 @@ export async function POST(request: Request) {
   const event = JSON.parse(rawBody)
   if (event.event !== "charge.success") return NextResponse.json({ received: true })
 
-  const { reference, amount, metadata } = event.data
-  const amount_ngn = amount / 100
+  const { reference, metadata } = event.data
   const user_id = metadata?.user_id
 
   if (!user_id) return NextResponse.json({ error: "Missing user_id in metadata" }, { status: 400 })
 
   const supabase = getSupabaseAdminClient()!
+
+  // Use the originally requested amount (not Paystack's charged amount which includes fees)
+  const { data: payment } = await supabase
+    .from("paystack_payments")
+    .select("amount_ngn")
+    .eq("reference", reference)
+    .single()
+
+  if (!payment) return NextResponse.json({ error: "Payment record not found" }, { status: 400 })
+
+  const amount_ngn = payment.amount_ngn
 
   // Idempotent credit via RPC — handles race conditions atomically
   const { data: result, error } = await supabase.rpc("process_paystack_webhook", {
