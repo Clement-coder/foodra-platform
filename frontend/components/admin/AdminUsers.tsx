@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { X, MapPin, Phone, Mail, Wallet, Package, Calendar, Home, Download, Send } from "lucide-react"
+import { X, MapPin, Phone, Mail, Wallet, Calendar, Home, Download, Send } from "lucide-react"
 import type { AdminData } from "@/app/admin/page"
 import { useToast } from "@/lib/toast"
 import { CustomSelect } from "@/components/CustomSelect"
@@ -40,10 +40,11 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
   // Load on mount
   if (addresses === null && !loadingAddr) loadAddresses()
 
-  const userProducts = data.products.filter((p: any) => p.farmer_id === user.id)
   const userOrders = data.orders.filter((o: any) => o.buyer_id === user.id)
   const userFunding = data.funding.filter((f: any) => f.user_id === user.id)
   const userEnrollments = data.enrollments.filter((e: any) => e.user_id === user.id)
+  const userWallet = data.walletAccounts.find((a: any) => a.user_id === user.id)
+  const userWalletTx = data.walletTransactions.filter((t: any) => t.user_id === user.id)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
@@ -102,8 +103,10 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
             <div className="flex items-center gap-3 p-3 bg-card rounded-xl">
               <Wallet className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               <div>
-                <p className="text-xs text-muted-foreground">Wallet</p>
-                <p className="text-sm font-medium text-foreground dark:text-white font-mono truncate">{user.wallet_address ? `${user.wallet_address.slice(0, 10)}…${user.wallet_address.slice(-6)}` : "—"}</p>
+                <p className="text-xs text-muted-foreground">Foodra Tag</p>
+                <p className="text-sm font-medium text-foreground dark:text-white font-mono">{
+                  data.walletAccounts.find((a: any) => a.user_id === user.id)?.foodra_tag || "—"
+                }</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-card rounded-xl">
@@ -118,10 +121,10 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
           {/* Stats */}
           <div className="grid grid-cols-4 gap-3">
             {[
-              { label: "Products", value: userProducts.length, color: "green" },
               { label: "Orders", value: userOrders.length, color: "blue" },
               { label: "Funding", value: userFunding.length, color: "yellow" },
               { label: "Trainings", value: userEnrollments.length, color: "purple" },
+              { label: "Wallet Txns", value: userWalletTx.length, color: "green" },
             ].map(({ label, value, color }) => (
               <div key={label} className={`p-3 rounded-xl text-center bg-${color}-50 dark:bg-${color}-900/20`}>
                 <p className={`text-2xl font-bold text-${color}-600 dark:text-${color}-400`}>{value}</p>
@@ -129,6 +132,37 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
               </div>
             ))}
           </div>
+
+          {/* Wallet Summary */}
+          {userWallet && (
+            <div className="rounded-xl border border-border overflow-hidden">
+              <div className="px-4 py-2 bg-[#118C4C]/10 border-b border-border">
+                <p className="text-xs font-bold text-[#118C4C] uppercase tracking-wide">Wallet</p>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-border">
+                <div className="p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-0.5">Balance</p>
+                  <p className="text-lg font-black text-[#118C4C]">₦{Number(userWallet.balance_ngn).toLocaleString()}</p>
+                </div>
+                <div className="p-3 text-center">
+                  <p className="text-xs text-muted-foreground mb-0.5">Foodra Tag</p>
+                  <p className="text-sm font-bold font-mono">{userWallet.foodra_tag || "—"}</p>
+                </div>
+              </div>
+              {userWalletTx.length > 0 && (
+                <div className="border-t border-border divide-y divide-border max-h-48 overflow-y-auto">
+                  {userWalletTx.slice(0, 10).map((tx: any) => (
+                    <div key={tx.id} className="flex items-center justify-between px-4 py-2 text-xs">
+                      <span className="text-muted-foreground capitalize">{tx.category}</span>
+                      <span className={tx.type === "credit" ? "font-semibold text-green-600" : "font-semibold text-red-500"}>
+                        {tx.type === "credit" ? "+" : "-"}₦{Number(tx.amount_ngn).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Delivery Addresses */}
           <div>
@@ -156,30 +190,6 @@ function UserProfileModal({ user, data, onClose, privyId }: { user: any; data: A
               <p className="text-sm text-muted-foreground py-2">No delivery addresses saved</p>
             )}
           </div>
-
-          {/* Products */}
-          {userProducts.length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Package className="w-4 h-4" /> Listed Products
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {userProducts.map((p: any) => (
-                  <div key={p.id} className="rounded-xl overflow-hidden border border-border">
-                    {p.image_url ? (
-                      <img src={p.image_url} alt={p.name} className="w-full h-20 object-cover" />
-                    ) : (
-                      <div className="w-full h-20 bg-card flex items-center justify-center text-muted-foreground text-xs">No image</div>
-                    )}
-                    <div className="p-2">
-                      <p className="text-xs font-medium text-foreground dark:text-white truncate">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">₦{Number(p.price).toLocaleString()}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Message user */}
           <div>
@@ -313,8 +323,8 @@ export default function AdminUsers({
                     onChange={(v) => updateRole(u.id, v)}
                     options={[
                       { value: "buyer", label: "Buyer" },
-                      { value: "farmer", label: "Farmer" },
                       { value: "admin", label: "Admin" },
+                      { value: "owner", label: "Owner" },
                     ]}
                     className="w-28"
                   />

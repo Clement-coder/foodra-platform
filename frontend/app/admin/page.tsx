@@ -80,7 +80,7 @@ function AdminPage() {
     { key: "users",      label: "Users",       icon: Users },
     { key: "products",   label: "Products",    icon: Package },
     { key: "orders",     label: "Orders",      icon: ShoppingBag },
-    { key: "wallet",     label: "Withdrawals", icon: Wallet,        badge: pendingWithdrawals },
+    { key: "wallet",     label: "Wallet",      icon: Wallet,        badge: pendingWithdrawals },
     { key: "funding",    label: "Funding",     icon: DollarSign,    badge: pendingFunding },
     { key: "disputes",   label: "Disputes",    icon: AlertTriangle, badge: openDisputes },
     { key: "trainings",  label: "Trainings",   icon: BookOpen },

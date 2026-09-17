@@ -17,8 +17,8 @@ function DisputeModal({ dispute, order, onClose, onRefresh }: {
   const resolve = async (action: "release" | "refund") => {
     const ok = await confirm({
       title: "Resolve Dispute",
-      message: action === "release" ? "Release payment to the seller?" : "Refund the buyer?",
-      confirmLabel: action === "release" ? "Release to Seller" : "Refund Buyer",
+      message: action === "release" ? "Mark as resolved in favour of Foodra (no refund)?" : "Refund the buyer's wallet?",
+      confirmLabel: action === "release" ? "Mark Resolved" : "Refund Buyer",
       danger: action === "refund",
     })
     if (!ok) return
@@ -29,7 +29,7 @@ function DisputeModal({ dispute, order, onClose, onRefresh }: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ disputeId: dispute.id, status: "resolved", resolution: action }),
       })
-      toast.success(action === "release" ? "Payment released to seller" : "Buyer refunded")
+      toast.success(action === "release" ? "Dispute resolved (no refund)" : "Buyer refunded")
       onRefresh()
       onClose()
     } catch (e: any) {
@@ -86,7 +86,7 @@ function DisputeModal({ dispute, order, onClose, onRefresh }: {
                 <button onClick={() => resolve("release")} disabled={saving}
                   className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium disabled:opacity-40 flex items-center justify-center gap-2">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  Release to Seller
+                  Mark Resolved
                 </button>
                 <button onClick={() => resolve("refund")} disabled={saving}
                   className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium disabled:opacity-40 flex items-center justify-center gap-2">

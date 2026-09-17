@@ -34,20 +34,6 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
     setSaving(false)
   }
 
-  const resolveEscrow = async (action: "release" | "refund") => {
-    const ok = await confirm({ title: "Resolve Escrow", message: action === "release" ? "Release payment to the farmer?" : "Refund payment to the buyer?", confirmLabel: action === "release" ? "Release to Farmer" : "Refund Buyer", danger: action === "refund" })
-    if (!ok) return
-    setSaving(true)
-    const res = await authFetch(getAccessToken, `/api/orders/${order.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ escrow_status: action === "release" ? "released" : "refunded" }),
-    })
-    if (res.ok) { toast.success(action === "release" ? "Escrow released to farmer" : "Escrow refunded to buyer"); onRefresh(); onClose() }
-    else toast.error("Failed to resolve escrow.")
-    setSaving(false)
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-card dark:bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -143,10 +129,10 @@ function OrderModal({ order, buyer, privyId, onClose, onRefresh }: {
 
 function exportCSV(orders: any[], users: any[]) {
   const getUser = (id: string) => users.find((u: any) => u.id === id)
-  const headers = ["Order ID", "Buyer", "Amount (₦)", "Status", "Escrow", "Date"]
+  const headers = ["Order ID", "Buyer", "Amount (₦)", "Status", "Wallet Paid", "Date"]
   const rows = orders.map(o => {
     const buyer = getUser(o.buyer_id)
-    return [o.id, buyer?.name || "—", o.total_amount, o.status, o.escrow_status || "—", new Date(o.created_at).toLocaleDateString()]
+    return [o.id, buyer?.name || "—", o.total_amount, o.status, o.wallet_paid ? "Yes" : "No", new Date(o.created_at).toLocaleDateString()]
   })
   const csv = [headers, ...rows].map(r => r.map((v: any) => `"${v ?? ""}"`).join(",")).join("\n")
   const blob = new Blob([csv], { type: "text/csv" })
