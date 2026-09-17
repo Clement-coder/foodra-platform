@@ -76,7 +76,7 @@ function exportWalletsCSV(rows: any[], userMap: Record<string, any>) {
 }
 
 // ── Sub-tab type ───────────────────────────────────────────────────────────────
-type WalletSubTab = "overview" | "withdrawals" | "users"
+type WalletSubTab = "overview" | "treasury" | "withdrawals" | "users"
 
 export default function AdminWalletRequests({ data, onRefresh }: {
   data: AdminData; privyId?: string; onRefresh: () => void
@@ -163,7 +163,8 @@ export default function AdminWalletRequests({ data, onRefresh }: {
   // ── sub-tab pills ─────────────────────────────────────────────────────────
   const subTabs: { key: WalletSubTab; label: string }[] = [
     { key: "overview",    label: "📊 Overview" },
-    { key: "withdrawals", label: `🏦 Withdrawals (${withdrawals.length})` },
+    { key: "treasury",    label: "🏦 Treasury" },
+    { key: "withdrawals", label: `💸 Withdrawals (${withdrawals.length})` },
     { key: "users",       label: `👥 Per-User (${accounts.length})` },
   ]
 
@@ -250,6 +251,152 @@ export default function AdminWalletRequests({ data, onRefresh }: {
           </div>
         </div>
       )}
+
+      {/* ── TREASURY ──────────────────────────────────────────────────────── */}
+      {subTab === "treasury" && (() => {
+        // ── Money that came IN to Foodra's Paystack account ──────────────────
+        // Every successful Paystack payment = user paid this much (incl. Paystack fee)
+        // The amount_ngn in paystack_payments is what the USER intended to fund
+        // Paystack charged more on top (their fee) which Foodra absorbs as a cost
+        const paystackFeeRate    = 0.015  // 1.5% Paystack fee (Nigerian cards)
+        const paystackFeeCap     = 2000   // ₦2,000 cap per transaction
+        const paystackFlatFee    = 100    // ₦100 flat above ₦2,500
+
+        // Estimate Paystack fees paid on each top-up
+        const totalPaystackFeePaid = successPayments.reduce((s: number, p: any) => {
+          const amt = Number(p.amount_ngn)
+          const fee = Math.min(amt * paystackFeeRate + (amt > 2500 ? paystackFlatFee : 0), paystackFeeCap)
+          return s + fee
+        }, 0)
+
+        // Actual cash Paystack deposited to Foodra = inflow − Paystack fees
+        const actualCashReceived = totalInflow - totalPaystackFeePaid
+
+        // ── Withdrawal fees earned ──────────────────────────────────────────
+        const WITHDRAWAL_FEE     = 50  // ₦50 per withdrawal
+        const completedWd        = withdrawals.filter((w: any) => w.status === "completed")
+        const processingWd       = withdrawals.filter((w: any) => w.status === "processing")
+        const withdrawalFeesEarned = (completedWd.length + processingWd.length) * WITHDRAWAL_FEE
+
+        // ── Revenue from orders (wallet purchases = Foodra's sales) ──────────
+        const orderRevenue       = totalPurchased   // users spent this on orders
+        const refundsTx          = txAll.filter((t: any) => t.category === "refund")
+        const totalRefunds       = sum(refundsTx, "amount_ngn")
+        const netOrderRevenue    = orderRevenue - totalRefunds
+
+        // ── What Foodra owes users (liabilities) ─────────────────────────────
+        // = sum of all current user wallet balances (Foodra must keep this liquid)
+        const totalUserLiability = totalUserBalances
+
+        // ── Cash paid out to users via bank withdrawals ───────────────────────
+        const totalPaidOut       = sum(completedWd, "amount_ngn")
+        const pendingPayout      = sum(withdrawals.filter((w: any) => ["pending","processing"].includes(w.status)), "amount_ngn")
+
+        // ── Foodra's earned money (what belongs to Foodra) ───────────────────
+        // = order revenue (net) + withdrawal fees − refunds
+        const foodraEarned       = netOrderRevenue + withdrawalFeesEarned
+
+        // ── What Foodra can safely spend ─────────────────────────────────────
+        // = actual cash on Paystack − user balances owed − pending payouts
+        const safeToSpend        = Math.max(0, actualCashReceived - totalUserLiability - pendingPayout + foodraEarned)
+
+        // ── Exposure / loss indicators ────────────────────────────────────────
+        const paystackFeesBurned = totalPaystackFeePaid  // cost Foodra absorbed
+
+        const Row = ({ label, value, sub, color, bold }: {
+          label: string; value: string; sub?: string; color?: string; bold?: boolean
+        }) => (
+          <div className="flex items-center justify-between py-3 border-b border-border last:border-0">
+            <div>
+              <p className={`text-sm ${bold ? "font-bold" : "font-medium"}`}>{label}</p>
+              {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+            </div>
+            <p className={`text-sm font-black tabular-nums ${color ?? "text-foreground"}`}>{value}</p>
+          </div>
+        )
+
+        const Section = ({ title, accent, children }: { title: string; accent: string; children: React.ReactNode }) => (
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: accent + "40" }}>
+            <div className="px-4 py-2.5 text-xs font-bold uppercase tracking-widest" style={{ background: accent + "15", color: accent }}>
+              {title}
+            </div>
+            <div className="px-4 divide-y divide-border bg-card">{children}</div>
+          </div>
+        )
+
+        return (
+          <div className="space-y-4">
+            {/* Top banner */}
+            <div className="rounded-2xl p-5 text-white relative overflow-hidden" style={{ background: "linear-gradient(135deg, #118C4C, #0a5c31)" }}>
+              <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
+              <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5" />
+              <p className="text-xs font-semibold opacity-70 uppercase tracking-widest mb-1">Foodra Can Safely Spend</p>
+              <p className="text-4xl font-black">{NGN(safeToSpend)}</p>
+              <p className="text-xs opacity-60 mt-1">Cash earned after covering all user liabilities & pending payouts</p>
+            </div>
+
+            {/* KPI grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Foodra Earned",     value: NGN(foodraEarned),       color: "#118C4C", sub: "Orders + fees" },
+                { label: "Users' Money",       value: NGN(totalUserLiability), color: "#3b82f6", sub: "Owed to users" },
+                { label: "Pending Payouts",   value: NGN(pendingPayout),      color: "#f97316", sub: "Must be kept liquid" },
+                { label: "Paystack Fees Lost", value: NGN(paystackFeesBurned), color: "#ef4444", sub: "Absorbed by Foodra" },
+              ].map(({ label, value, color, sub }) => (
+                <div key={label} className="rounded-xl border bg-card p-3" style={{ borderColor: color + "33" }}>
+                  <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                  <p className="text-lg font-black" style={{ color }}>{value}</p>
+                  <p className="text-[10px] text-muted-foreground">{sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Money In */}
+            <Section title="💰 Money Coming In" accent="#118C4C">
+              <Row label="Total User Top-Ups (Paystack)" value={NGN(totalInflow)}
+                sub={`${successPayments.length} successful payments`} color="text-[#118C4C]" />
+              <Row label="Paystack Processing Fees (absorbed)" value={`-${NGN(paystackFeesBurned)}`}
+                sub="~1.5% per transaction — Foodra's cost" color="text-red-500" />
+              <Row label="Net Cash Received from Paystack" value={NGN(actualCashReceived)}
+                sub="What actually landed in Foodra's Paystack balance" color="text-[#118C4C]" bold />
+              <Row label="Order Revenue (wallet purchases)" value={NGN(orderRevenue)}
+                sub={`${txAll.filter((t:any) => t.category === "purchase").length} purchases`} color="text-[#118C4C]" />
+              <Row label="Refunds Issued" value={`-${NGN(totalRefunds)}`}
+                sub={`${refundsTx.length} refunds`} color="text-red-500" />
+              <Row label="Net Order Revenue" value={NGN(netOrderRevenue)}
+                sub="Revenue after refunds" color="text-[#118C4C]" bold />
+              <Row label="Withdrawal Fees Earned (₦50 each)" value={NGN(withdrawalFeesEarned)}
+                sub={`${completedWd.length + processingWd.length} completed/processing withdrawals`} color="text-[#118C4C]" />
+            </Section>
+
+            {/* Money Out */}
+            <Section title="💸 Money Going Out" accent="#ef4444">
+              <Row label="Completed Bank Payouts" value={`-${NGN(totalPaidOut)}`}
+                sub={`${completedWd.length} withdrawals paid`} color="text-red-500" />
+              <Row label="Pending/Processing Payouts" value={`-${NGN(pendingPayout)}`}
+                sub={`${withdrawals.filter((w:any) => ["pending","processing"].includes(w.status)).length} in queue — must keep liquid`} color="text-orange-500" />
+              <Row label="Paystack Fees Absorbed" value={`-${NGN(paystackFeesBurned)}`}
+                sub="Cost of accepting card/bank payments" color="text-red-500" />
+            </Section>
+
+            {/* What belongs to whom */}
+            <Section title="📦 Balance Ownership" accent="#3b82f6">
+              <Row label="Users' Money (you owe this)" value={NGN(totalUserLiability)}
+                sub={`${accounts.filter((a:any) => Number(a.balance_ngn) > 0).length} wallets with balance — never touch this`} color="text-blue-600" bold />
+              <Row label="Foodra's Earned Revenue" value={NGN(foodraEarned)}
+                sub="Orders + withdrawal fees − refunds" color="text-[#118C4C]" bold />
+              <Row label="Pending Payouts (locked)" value={NGN(pendingPayout)}
+                sub="Reserved for in-queue withdrawals" color="text-orange-500" />
+              <Row label="✅ Safe to Spend" value={NGN(safeToSpend)}
+                sub="Foodra's free cash after all obligations" color="text-[#118C4C]" bold />
+            </Section>
+
+            <p className="text-[10px] text-muted-foreground text-center pb-2">
+              * Paystack fee estimate: 1.5% + ₦100 (above ₦2,500), capped at ₦2,000. Actual fees visible in your Paystack dashboard.
+            </p>
+          </div>
+        )
+      })()}
 
       {/* ── WITHDRAWALS ───────────────────────────────────────────────────── */}
       {subTab === "withdrawals" && (
