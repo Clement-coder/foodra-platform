@@ -15,8 +15,8 @@ export async function POST(request: Request) {
 
     if (!amount_ngn || !bank_code || !account_number || !account_name || !pin)
       return NextResponse.json({ error: "All fields are required" }, { status: 400 })
-    if (amount_ngn < 500)
-      return NextResponse.json({ error: "Minimum withdrawal is ₦500" }, { status: 400 })
+    if (amount_ngn < 100)
+      return NextResponse.json({ error: "Minimum withdrawal is ₦100" }, { status: 400 })
     if (amount_ngn > DAILY_LIMIT)
       return NextResponse.json({ error: `Maximum single withdrawal is ₦${DAILY_LIMIT.toLocaleString()}` }, { status: 400 })
 

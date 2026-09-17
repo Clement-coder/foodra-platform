@@ -108,7 +108,7 @@ export function WalletWithdrawModal({ isOpen, onClose, currentBalance, onSuccess
 
   const handleWithdraw = async () => {
     const amt = parseFloat(amount)
-    if (!amt || amt < 500) { toast.error("Minimum withdrawal is ₦500"); return }
+    if (!amt || amt < 100) { toast.error("Minimum withdrawal is ₦100"); return }
     if (amt > currentBalance) { toast.error("Insufficient balance"); return }
     if (!pin || pin.length !== 4) { toast.error("Enter your 4-digit PIN"); return }
     setLoading(true)
@@ -187,13 +187,13 @@ export function WalletWithdrawModal({ isOpen, onClose, currentBalance, onSuccess
                     <div className="relative flex items-center border-b-2 border-[#118C4C] pb-2">
                       <span className="text-3xl font-bold text-muted-foreground mr-1">₦</span>
                       <input
-                        type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" min={500}
+                        type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" min={100}
                         className="flex-1 text-4xl font-black bg-transparent border-none outline-none placeholder:text-muted-foreground/30"
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">Available: ₦{currentBalance.toLocaleString()} · Min ₦500</p>
+                    <p className="text-xs text-muted-foreground">Available: ₦{currentBalance.toLocaleString()} · Min ₦100</p>
 
-                    {amt >= 500 && (
+                    {amt >= 100 && (
                       <div className="rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-800/30 px-4 py-3 space-y-1.5">
                         <div className="flex justify-between text-xs">
                           <span className="text-muted-foreground">You withdraw</span>
