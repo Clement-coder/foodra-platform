@@ -108,18 +108,9 @@ export async function POST(request: Request) {
       account_name,
     }).select().single()
 
-    // ── Ledger entry ───────────────────────────────────────────
-    await supabase.from("wallet_transactions").insert({
-      user_id: auth.user.id,
-      type: "debit",
-      category: "withdraw",
-      amount_ngn,
-      balance_after: new_balance,
-      note: `Withdrawal to ${bank_name} ${account_number}`,
-    })
-
     // ── Attempt Paystack transfer ──────────────────────────────
     let transferOk = false
+    let ledgerTxId: string | null = null
     try {
       const recipientRes = await fetch("https://api.paystack.co/transferrecipient", {
         method: "POST",
@@ -147,21 +138,38 @@ export async function POST(request: Request) {
             status: "processing",
             paystack_transfer_code: transferData.data.transfer_code,
           }).eq("id", withdrawal!.id)
+
+          // Only write the ledger entry after Paystack confirms the transfer
+          const { data: ledgerTx } = await supabase.from("wallet_transactions").insert({
+            user_id: auth.user.id,
+            type: "debit",
+            category: "withdraw",
+            amount_ngn,
+            balance_after: new_balance,
+            note: `Withdrawal to ${bank_name} ${account_number}`,
+          }).select("id").single()
+          ledgerTxId = ledgerTx?.id ?? null
         }
       }
     } catch {
       // Paystack unreachable — stays "pending" for admin to retry
     }
 
-    // ── Rollback if Paystack failed (refund balance + daily tally) ─
+    // ── Rollback if Paystack failed ────────────────────────────
     if (!transferOk) {
+      // Restore balance
       await supabase.from("wallet_accounts")
         .update({ balance_ngn: balance })
         .eq("user_id", auth.user.id)
+      // Mark withdrawal failed
       await supabase.from("wallet_withdrawals")
         .update({ status: "failed" })
         .eq("id", withdrawal!.id)
-      // Reverse the daily tally directly
+      // Delete ledger entry if it was somehow created
+      if (ledgerTxId) {
+        await supabase.from("wallet_transactions").delete().eq("id", ledgerTxId)
+      }
+      // Reverse the daily tally
       await supabase.from("wallet_daily_withdrawals")
         .update({ total_ngn: Math.max(0, (limit.withdrawn_today ?? amount_ngn) - amount_ngn) })
         .eq("user_id", auth.user.id)
