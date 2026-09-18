@@ -78,7 +78,6 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
       const data = await res.json()
       if (!res.ok) { toast.error(data.error || "Transfer failed"); return }
       setSuccessBalance(data.new_balance)
-      onSuccess(data.new_balance)
       setStep("success")
     } catch { toast.error("Something went wrong") }
     finally { setLoading(false) }
@@ -86,12 +85,16 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
 
   const handleClose = useCallback(() => {
     onClose()
-    // reset after sheet exit animation (~400ms)
     setTimeout(() => {
       setStep("form"); setQuery(""); setRecipient(null); setResults([])
       setAmount(""); setNote(""); setPin("")
     }, 400)
   }, [onClose])
+
+  const handleSuccess = useCallback(() => {
+    onSuccess(successBalance)
+    handleClose()
+  }, [onSuccess, successBalance, handleClose])
 
   const amt = parseFloat(amount) || 0
   const isFormValid = recipient && amt >= 100 && amt <= currentBalance
@@ -118,7 +121,7 @@ export function WalletSendModal({ isOpen, onClose, currentBalance, onSuccess }: 
                 <WalletSuccessScreen
                   title="Money Sent! 🎉"
                   subtitle={`₦${parseFloat(amount).toLocaleString()} sent to ${recipient?.name}. Balance: ₦${successBalance.toLocaleString()}`}
-                  onDone={handleClose}
+                  onDone={handleSuccess}
                 />
               ) : step === "pin" ? (
                 <div className="space-y-6">
